@@ -117,47 +117,64 @@ python scripts/import_colDigOS.py \
 
 ## 🎨 Frontend
 
-O frontend ainda não foi criado. Para criar:
+Frontend React + Vite + TypeScript já implementado. Veja [`frontend/README.md`](frontend/README.md) para detalhes.
 
-1. **React + TypeScript (Recomendado):**
-
-```bash
-cd app
-npx create-react-app frontend --template typescript
-cd frontend
-npm install axios react-router-dom @tanstack/react-query
-```
-
-2. **Ou Next.js:**
+### Executar Frontend Localmente
 
 ```bash
-cd app
-npx create-next-app@latest frontend --typescript --tailwind --app
 cd frontend
-npm install axios @tanstack/react-query
+npm install
+npm run dev
 ```
 
-Veja o guia completo: [`ESTRUTURA_MONOREPO.md`](ESTRUTURA_MONOREPO.md)
+O frontend estará disponível em: `http://localhost:3000`
 
 ## 📚 Documentação
 
+- [`README_DOCKER.md`](README_DOCKER.md) - Guia completo de Docker
 - [`PROXIMOS_PASSOS.md`](PROXIMOS_PASSOS.md) - Guia completo passo a passo
 - [`ESTRUTURA_MONOREPO.md`](ESTRUTURA_MONOREPO.md) - Guia de estrutura monorepo
 - [`backend/README.md`](backend/README.md) - Documentação do backend
+- [`frontend/README.md`](frontend/README.md) - Documentação do frontend
 - [`backend/scripts/README.md`](backend/scripts/README.md) - Documentação dos scripts
 
 ## 🐳 Docker Compose
 
-Para subir tudo com Docker:
+O projeto suporta Docker para facilitar desenvolvimento e deploy. Veja [`README_DOCKER.md`](README_DOCKER.md) para documentação completa.
+
+### Início Rápido com Docker
+
+1. **Configurar variáveis de ambiente:**
 
 ```bash
-cd app/backend
-docker-compose up -d
+cp .env.example .env
+# Editar .env com suas configurações (especialmente JWT_SECRET_KEY)
 ```
 
-Isso subirá:
-- PostgreSQL (porta 5432)
-- Backend API (porta 8000)
+2. **Desenvolvimento (com hot-reload):**
+
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+3. **Produção/Staging:**
+
+```bash
+docker-compose up -d --build
+```
+
+### Serviços Docker
+
+- **PostgreSQL** (porta 5432) - Banco de dados
+- **Backend API** (porta 8000) - FastAPI
+- **Frontend** (porta 3000) - React + Vite (desenvolvimento) ou Nginx (produção)
+
+### Acessos
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
 
 ## 🛠️ Tecnologias
 
@@ -169,11 +186,17 @@ Isso subirá:
 - Wasabi - Armazenamento de objetos (S3-compatible)
 - JWT - Autenticação
 
-### Frontend (a ser implementado)
-- React/Next.js - Framework frontend
+### Frontend
+- React 19 - Framework frontend
+- Vite - Build tool e dev server
 - TypeScript - Tipagem estática
+- React Router - Roteamento
+- TanStack Query - Gerenciamento de estado e cache
+- Zustand - Estado global (autenticação)
 - Axios - Cliente HTTP
-- React Query - Gerenciamento de estado
+- React Hook Form + Zod - Formulários e validação
+- Tailwind CSS - Estilização
+- Nginx - Servidor web em produção (Docker)
 
 ## 📝 Scripts Disponíveis
 
@@ -213,14 +236,15 @@ Veja [`PROXIMOS_PASSOS.md`](PROXIMOS_PASSOS.md) para detalhes completos de deplo
 
 ✅ **Concluído:**
 - Backend FastAPI estruturado
+- Frontend React + Vite completo
 - Integração com PostgreSQL
 - Integração com Wasabi
 - Sistema de autenticação JWT
+- CRUD completo de Praises, Tags, Materiais e Material Kinds
+- Upload de arquivos e gerenciamento de materiais
+- Docker configuration para desenvolvimento e produção
 - Scripts de importação
 - Documentação completa
-
-⏳ **Em Andamento:**
-- Frontend (a ser criado)
 
 ## 🤝 Contribuindo
 

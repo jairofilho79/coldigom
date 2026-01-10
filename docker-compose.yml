@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: praise_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-praise_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-praise_password}
+      POSTGRES_DB: ${POSTGRES_DB:-praise_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-praise_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - praise-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: praise_api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-praise_user}:${POSTGRES_PASSWORD:-praise_password}@db:5432/${POSTGRES_DB:-praise_db}
+      - STORAGE_MODE=${STORAGE_MODE:-wasabi}
+      - STORAGE_LOCAL_PATH=${STORAGE_LOCAL_PATH:-/storage/assets}
+      - WASABI_ACCESS_KEY=${WASABI_ACCESS_KEY:-}
+      - WASABI_SECRET_KEY=${WASABI_SECRET_KEY:-}
+      - WASABI_ENDPOINT=${WASABI_ENDPOINT:-https://s3.wasabisys.com}
+      - WASABI_BUCKET=${WASABI_BUCKET:-}
+      - WASABI_REGION=${WASABI_REGION:-us-east-1}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost}
+    volumes:
+      - ./backend:/app
+      - "${STORAGE_LOCAL_PATH:-./storage/assets}:/storage/assets"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    networks:
+      - praise-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${FRONTEND_API_BASE_URL:-}
+    container_name: praise_frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - praise-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  praise-network:
+    driver: bridge

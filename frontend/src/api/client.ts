@@ -1,7 +1,18 @@
 import axios from 'axios';
 
+// In Docker, use relative paths (nginx will proxy /api to backend)
+// In development, use the env variable or localhost
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    return envUrl;
+  }
+  // If no URL is set, use relative path (works with nginx proxy in Docker)
+  return '';
+};
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },

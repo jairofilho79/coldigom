@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
-from typing import List
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+from typing import List, Union
 
 
 class Settings(BaseSettings):
@@ -30,14 +31,24 @@ class Settings(BaseSettings):
 
     # API
     API_PORT: int = 8000
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: Union[str, List[str]] = "*"
     
     # Nginx (para configuração do docker-compose, não usado pela aplicação Python)
     NGINX_PORT: int = 8080
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            if v == "*" or v == "":
+                return ["*"]
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v if isinstance(v, list) else ["*"]
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
 
 
 settings = Settings()

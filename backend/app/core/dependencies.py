@@ -7,6 +7,8 @@ from fastapi.security import OAuth2PasswordBearer
 from app.core.security import decode_access_token
 from app.domain.models.user import User
 from app.infrastructure.database.repositories.user_repository import UserRepository
+from app.infrastructure.storage.storage_factory import get_storage_client
+from app.infrastructure.storage.storage_client import StorageClient
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -50,4 +52,10 @@ async def get_current_user(
         raise credentials_exception
     
     return user
+
+
+def get_storage() -> Generator[StorageClient, None, None]:
+    """Dependência para obter cliente de storage (Wasabi ou Local)"""
+    client = get_storage_client()
+    yield client
 

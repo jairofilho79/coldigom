@@ -25,7 +25,8 @@ from app.domain.models.praise import Praise
 from app.domain.models.praise_material import PraiseMaterial, MaterialType
 from app.domain.models.praise_tag import PraiseTag
 from app.domain.models.material_kind import MaterialKind
-from app.infrastructure.storage.wasabi_client import WasabiClient
+from app.infrastructure.storage.storage_factory import get_storage_client
+from app.infrastructure.storage.storage_client import StorageClient
 from app.application.services.praise_service import PraiseService
 from app.application.services.praise_tag_service import PraiseTagService
 from app.application.services.material_kind_service import MaterialKindService
@@ -149,7 +150,7 @@ def load_metadata_file(metadata_path: Path) -> Optional[Dict]:
 
 def process_praise_folder(
     db: Session,
-    wasabi_client: WasabiClient,
+    storage_client: StorageClient,
     praise_folder: Path,
     dry_run: bool = False
 ) -> Tuple[bool, str]:
@@ -281,17 +282,18 @@ def process_praise_folder(
                 )
                 material_kind = get_or_create_material_kind(db, material_kind_name)
                 
-                # Fazer upload para Wasabi
+                # Fazer upload para storage (Wasabi ou Local)
                 try:
                     with open(file_found, 'rb') as f:
                         content_type, _ = mimetypes.guess_type(str(file_found))
-                        wasabi_path = wasabi_client.upload_file(
+                        storage_path = storage_client.upload_file(
                             f,
                             file_found.name,
                             content_type=content_type,
-                            folder=f"praises/{praise_id}"
+                            folder=f"praises/{praise_id}",
+                            material_id=material_id
                         )
-                    print(f"    ✅ Upload: {file_found.name} → {wasabi_path}")
+                    print(f"    ✅ Upload: {file_found.name} → {storage_path}")
                 except Exception as e:
                     print(f"    ❌ Erro no upload de {file_found.name}: {e}")
                     continue
@@ -303,7 +305,7 @@ def process_praise_folder(
                 if material:
                     # Atualizar material existente
                     material.material_kind_id = material_kind.id
-                    material.path = wasabi_path
+                    material.path = storage_path
                     material.type = MaterialType.FILE
                     material = material_repo.update(material)
                     print(f"    ✅ Material atualizado: {material_id}")
@@ -312,7 +314,7 @@ def process_praise_folder(
                     material = PraiseMaterial(
                         id=material_id,
                         material_kind_id=material_kind.id,
-                        path=wasabi_path,
+                        path=storage_path,
                         type=MaterialType.FILE,
                         praise_id=praise_id
                     )
@@ -350,7 +352,7 @@ def main():
     
     # Inicializar serviços
     db: Session = SessionLocal()
-    wasabi_client = WasabiClient()
+    storage_client = get_storage_client()
     
     try:
         # Encontrar todas as pastas de praise
@@ -368,7 +370,7 @@ def main():
         
         for i, folder in enumerate(praise_folders, 1):
             print(f"\n[{i}/{len(praise_folders)}] {folder.name}")
-            success, message = process_praise_folder(db, wasabi_client, folder, args.dry_run)
+            success, message = process_praise_folder(db, storage_client, folder, args.dry_run)
             
             if success:
                 success_count += 1

@@ -43,6 +43,13 @@ logs/
 # Docker
 docker-compose.override.yml
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.vite/
+frontend/.env*.local
+
 # Node (caso haja frontend)
 node_modules/
 npm-debug.log*

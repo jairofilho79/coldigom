@@ -14,6 +14,7 @@ class PraiseMaterialService:
         self.repository = PraiseMaterialRepository(db)
         self.material_kind_repo = MaterialKindRepository(db)
         self.praise_repo = PraiseRepository(db)
+        self.praise_repo = PraiseRepository(db)
 
     def get_by_id(self, material_id: UUID) -> PraiseMaterial:
         material = self.repository.get_by_id(material_id)

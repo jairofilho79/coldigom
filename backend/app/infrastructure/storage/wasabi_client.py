@@ -2,6 +2,7 @@ import boto3
 from botocore.exceptions import ClientError
 from typing import Optional, BinaryIO
 from datetime import timedelta
+from uuid import UUID
 from app.core.config import settings
 import uuid
 import os
@@ -23,28 +24,33 @@ class WasabiClient:
         file_obj: BinaryIO,
         file_name: str,
         content_type: Optional[str] = None,
-        folder: Optional[str] = None
+        folder: Optional[str] = None,
+        material_id: Optional[UUID] = None
     ) -> str:
         """
         Faz upload de um arquivo para o Wasabi
         
         Args:
             file_obj: Objeto de arquivo (BinaryIO)
-            file_name: Nome do arquivo
+            file_name: Nome original do arquivo
             content_type: Tipo MIME do arquivo
             folder: Pasta onde o arquivo será salvo (opcional)
+            material_id: ID do material para usar como nome do arquivo (opcional)
         
         Returns:
             Path do arquivo no Wasabi
         """
-        # Generate unique file name to avoid conflicts
+        # Use material_id as file name if provided, otherwise generate UUID
         file_ext = os.path.splitext(file_name)[1]
-        unique_file_name = f"{uuid.uuid4()}{file_ext}"
+        if material_id:
+            file_name_to_use = f"{material_id}{file_ext}"
+        else:
+            file_name_to_use = f"{uuid.uuid4()}{file_ext}"
         
         if folder:
-            key = f"{folder}/{unique_file_name}"
+            key = f"{folder}/{file_name_to_use}"
         else:
-            key = unique_file_name
+            key = file_name_to_use
         
         extra_args = {}
         if content_type:
@@ -101,6 +107,12 @@ class WasabiClient:
             return url
         except ClientError as e:
             raise Exception(f"Error generating presigned URL: {str(e)}")
+    
+    def generate_url(self, file_path: str, expiration: int = 3600) -> str:
+        """
+        Alias para generate_presigned_url para compatibilidade com StorageClient protocol
+        """
+        return self.generate_presigned_url(file_path, expiration)
 
     def file_exists(self, file_path: str) -> bool:
         """

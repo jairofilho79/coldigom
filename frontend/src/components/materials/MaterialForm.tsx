@@ -67,18 +67,33 @@ export const MaterialForm = ({
           <p className="mt-1 text-sm text-red-600">{errors.type.message}</p>
         )}
       </div>
-      <Input
-        label={
-          materialType === MaterialType.TEXT
-            ? 'Texto'
-            : materialType === MaterialType.FILE
-            ? 'Caminho do Arquivo'
-            : 'URL'
-        }
-        error={errors.path?.message}
-        {...register('path')}
-        {...(materialType === MaterialType.TEXT && { as: 'textarea', rows: 5 })}
-      />
+      {materialType === MaterialType.TEXT ? (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Texto
+          </label>
+          <textarea
+            {...register('path')}
+            rows={5}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors.path ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.path && (
+            <p className="mt-1 text-sm text-red-600">{errors.path.message}</p>
+          )}
+        </div>
+      ) : (
+        <Input
+          label={
+            materialType === MaterialType.FILE
+              ? 'Caminho do Arquivo'
+              : 'URL'
+          }
+          error={errors.path?.message}
+          {...register('path')}
+        />
+      )}
       <Input
         label="ID do Tipo de Material"
         type="text"

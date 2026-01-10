@@ -9,6 +9,11 @@ import { PraiseList } from '@/pages/Praises/PraiseList';
 import { PraiseDetail } from '@/pages/Praises/PraiseDetail';
 import { PraiseCreate } from '@/pages/Praises/PraiseCreate';
 import { PraiseEdit } from '@/pages/Praises/PraiseEdit';
+import { TagList } from '@/pages/Tags/TagList';
+import { MaterialList } from '@/pages/Materials/MaterialList';
+import { MaterialUploadPage } from '@/pages/Materials/MaterialUpload';
+import { MaterialCreate } from '@/pages/Materials/MaterialCreate';
+import { MaterialKindList } from '@/pages/MaterialKinds/MaterialKindList';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect } from 'react';
 
@@ -71,6 +76,56 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PraiseEdit />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tags"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TagList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/materials"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MaterialList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/materials/upload"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MaterialUploadPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/materials/create"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MaterialCreate />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/material-kinds"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MaterialKindList />
                 </Layout>
               </ProtectedRoute>
             }

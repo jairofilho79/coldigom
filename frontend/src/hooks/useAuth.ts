@@ -15,12 +15,11 @@ export const useAuth = () => {
       setIsLoading(true);
       const tokenData = await authApi.login(username, password);
       
-      // Buscar dados do usuário (o backend não retorna no login, então vamos buscar)
-      // Por enquanto, vamos criar um objeto básico
-      // Em uma implementação real, você pode ter um endpoint /me ou similar
-      const userData = {
-        id: '',
-        email: '',
+      // Por enquanto, criamos um objeto básico com o username
+      // TODO: Implementar endpoint /me no backend ou ajustar login para retornar dados do usuário
+      const userData: any = {
+        id: '', // Será preenchido quando tivermos endpoint /me
+        email: '', // Será preenchido quando tivermos endpoint /me
         username,
         is_active: true,
         created_at: new Date().toISOString(),

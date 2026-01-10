@@ -5,6 +5,10 @@ import { Layout } from '@/components/layout/Layout';
 import { Login } from '@/pages/Login';
 import { Register } from '@/pages/Register';
 import { Dashboard } from '@/pages/Dashboard';
+import { PraiseList } from '@/pages/Praises/PraiseList';
+import { PraiseDetail } from '@/pages/Praises/PraiseDetail';
+import { PraiseCreate } from '@/pages/Praises/PraiseCreate';
+import { PraiseEdit } from '@/pages/Praises/PraiseEdit';
 import { useAuthStore } from '@/store/authStore';
 import { useEffect } from 'react';
 
@@ -27,6 +31,46 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praises"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praises/create"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseCreate />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praises/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praises/:id/edit"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseEdit />
                 </Layout>
               </ProtectedRoute>
             }

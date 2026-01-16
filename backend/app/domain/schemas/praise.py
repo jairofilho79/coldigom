@@ -31,9 +31,10 @@ class PraiseTagSimple(BaseModel):
 class PraiseMaterialSimple(BaseModel):
     id: UUID
     material_kind_id: UUID
+    material_type_id: UUID
     path: str
-    type: str
     material_kind: Optional["MaterialKindResponse"] = None
+    material_type: Optional["MaterialTypeResponse"] = None
 
     class Config:
         from_attributes = True
@@ -53,6 +54,7 @@ class PraiseResponse(PraiseBase):
 # Forward reference resolution
 from app.domain.schemas.praise_material import PraiseMaterialCreate
 from app.domain.schemas.material_kind import MaterialKindResponse
+from app.domain.schemas.material_type import MaterialTypeResponse
 PraiseCreate.model_rebuild()
 PraiseMaterialSimple.model_rebuild()
 

@@ -67,8 +67,8 @@ class PraiseService:
             for material_data in praise_data.materials:
                 material = PraiseMaterial(
                     material_kind_id=material_data.material_kind_id,
+                    material_type_id=material_data.material_type_id,
                     path=material_data.path,
-                    type=material_data.type,
                     praise_id=praise.id
                 )
                 self.material_repo.create(material)

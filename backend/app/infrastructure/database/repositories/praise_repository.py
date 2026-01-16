@@ -15,7 +15,8 @@ class PraiseRepository(BaseRepository):
             self.db.query(Praise)
             .options(
                 joinedload(Praise.tags),
-                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
             )
             .filter(Praise.id == id)
             .first()
@@ -26,7 +27,8 @@ class PraiseRepository(BaseRepository):
             self.db.query(Praise)
             .options(
                 joinedload(Praise.tags),
-                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
             )
             .filter(Praise.number == number)
             .first()
@@ -37,7 +39,8 @@ class PraiseRepository(BaseRepository):
             self.db.query(Praise)
             .options(
                 joinedload(Praise.tags),
-                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
             )
             .offset(skip)
             .limit(limit)
@@ -49,7 +52,8 @@ class PraiseRepository(BaseRepository):
             self.db.query(Praise)
             .options(
                 joinedload(Praise.tags),
-                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
             )
             .filter(Praise.name.ilike(f"%{name}%"))
             .offset(skip)

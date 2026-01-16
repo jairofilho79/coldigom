@@ -1,0 +1,56 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { languagesApi, type LanguageResponse, type LanguageCreate, type LanguageUpdate } from '@/api/languages';
+import toast from 'react-hot-toast';
+
+export const useLanguages = () => {
+  return useQuery<LanguageResponse[]>({
+    queryKey: ['languages'],
+    queryFn: () => languagesApi.getAll(true),
+  });
+};
+
+export const useCreateLanguage = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: LanguageCreate) => languagesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      toast.success('Linguagem criada com sucesso');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Erro ao criar linguagem');
+    },
+  });
+};
+
+export const useUpdateLanguage = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ code, data }: { code: string; data: LanguageUpdate }) =>
+      languagesApi.update(code, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      toast.success('Linguagem atualizada com sucesso');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Erro ao atualizar linguagem');
+    },
+  });
+};
+
+export const useDeleteLanguage = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (code: string) => languagesApi.delete(code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      toast.success('Linguagem deletada com sucesso');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Erro ao deletar linguagem');
+    },
+  });
+};

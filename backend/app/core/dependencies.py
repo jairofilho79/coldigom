@@ -59,3 +59,16 @@ def get_storage() -> Generator[StorageClient, None, None]:
     client = get_storage_client()
     yield client
 
+
+def get_language_code(accept_language: str = None) -> str:
+    """Extrai o código da linguagem do header Accept-Language"""
+    if not accept_language:
+        return "pt-BR"  # Default fallback
+    
+    # Accept-Language format: "pt-BR,pt;q=0.9,en-US;q=0.8"
+    # Extract first language
+    first_lang = accept_language.split(',')[0].strip()
+    # Remove quality values if present
+    lang_code = first_lang.split(';')[0].strip()
+    return lang_code
+

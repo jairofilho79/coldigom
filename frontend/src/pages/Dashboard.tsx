@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePraises } from '@/hooks/usePraises';
 import { useTags } from '@/hooks/useTags';
 import { Loading } from '@/components/ui/Loading';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Music, Tag, Plus } from 'lucide-react';
 
 export const Dashboard = () => {
+  const { t } = useTranslation('common');
   const { data: praises, isLoading: praisesLoading } = usePraises({ limit: 5 });
   const { data: tags, isLoading: tagsLoading } = useTags({ limit: 5 });
 
@@ -19,14 +21,14 @@ export const Dashboard = () => {
 
   const stats = [
     {
-      name: 'Praises',
+      name: t('page.praises'),
       count: praises?.length || 0,
       icon: Music,
       color: 'bg-blue-500',
       link: '/praises',
     },
     {
-      name: 'Tags',
+      name: t('page.tags'),
       count: tags?.length || 0,
       icon: Tag,
       color: 'bg-green-500',
@@ -37,11 +39,11 @@ export const Dashboard = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('page.dashboard')}</h1>
         <Link to="/praises/create">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Novo Praise
+            {t('action.newPraise')}
           </Button>
         </Link>
       </div>
@@ -73,7 +75,7 @@ export const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Praises Recentes</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('label.recentPraises')}</h2>
           {praises && praises.length > 0 ? (
             <ul className="space-y-2">
               {praises.map((praise) => (
@@ -88,26 +90,26 @@ export const Dashboard = () => {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">Nenhum praise cadastrado</p>
+            <p className="text-gray-500">{t('message.noPraises')}</p>
           )}
           <Link to="/praises" className="text-blue-600 hover:underline text-sm mt-4 inline-block">
-            Ver todos →
+            {t('message.seeAll')}
           </Link>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Ações Rápidas</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('label.quickActions')}</h2>
           <div className="space-y-3">
             <Link to="/praises/create">
               <Button variant="outline" className="w-full justify-start">
                 <Plus className="w-4 h-4 mr-2" />
-                Criar Novo Praise
+                {t('action.createNewPraise')}
               </Button>
             </Link>
             <Link to="/tags">
               <Button variant="outline" className="w-full justify-start">
                 <Tag className="w-4 h-4 mr-2" />
-                Gerenciar Tags
+                {t('action.manageTags')}
               </Button>
             </Link>
           </div>

@@ -17,6 +17,9 @@ class PraiseTag(Base):
         secondary="praise_tag_association",
         back_populates="tags"
     )
+    
+    # One-to-many relationship with translations
+    translations = relationship("PraiseTagTranslation", back_populates="praise_tag", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<PraiseTag(id={self.id}, name='{self.name}')>"

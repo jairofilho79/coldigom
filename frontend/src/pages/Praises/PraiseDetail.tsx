@@ -1,5 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePraise, useDeletePraise } from '@/hooks/usePraises';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 import { Loading } from '@/components/ui/Loading';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -8,6 +10,8 @@ import { Edit, Trash2, ArrowLeft, Tag } from 'lucide-react';
 import { useState } from 'react';
 
 export const PraiseDetail = () => {
+  const { t } = useTranslation('common');
+  const { getPraiseTagName } = useEntityTranslations();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -37,7 +41,7 @@ export const PraiseDetail = () => {
   if (error || !praise) {
     return (
       <div className="text-center text-red-600">
-        Erro ao carregar praise ou praise não encontrado.
+        {t('message.errorLoadingData')}
       </div>
     );
   }
@@ -48,7 +52,7 @@ export const PraiseDetail = () => {
         <Link to="/praises">
           <Button variant="outline" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Voltar
+            {t('button.back')}
           </Button>
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">{praise.name}</h1>
@@ -61,7 +65,7 @@ export const PraiseDetail = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Tag className="w-5 h-5 mr-2" />
-            Tags
+            {t('label.tags')}
           </h2>
           {praise.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -70,12 +74,12 @@ export const PraiseDetail = () => {
                   key={tag.id}
                   className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                 >
-                  {tag.name}
+                  {getPraiseTagName(tag.id, tag.name)}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">Nenhuma tag associada</p>
+            <p className="text-gray-500">{t('message.noTags')}</p>
           )}
         </div>
 
@@ -87,7 +91,7 @@ export const PraiseDetail = () => {
           <Link to={`/praises/${id}/edit`}>
             <Button variant="secondary">
               <Edit className="w-4 h-4 mr-2" />
-              Editar
+              {t('button.edit')}
             </Button>
           </Link>
           <Button
@@ -95,7 +99,7 @@ export const PraiseDetail = () => {
             onClick={() => setShowDeleteDialog(true)}
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Deletar
+            {t('button.delete')}
           </Button>
         </div>
       </div>
@@ -104,9 +108,9 @@ export const PraiseDetail = () => {
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={handleDelete}
-        title="Deletar Praise"
-        message="Tem certeza que deseja deletar este praise? Esta ação não pode ser desfeita."
-        confirmText="Deletar"
+        title={t('modal.deletePraise')}
+        message={t('confirmDialog.deletePraiseMessage')}
+        confirmText={t('button.delete')}
         variant="danger"
         isLoading={deletePraise.isPending}
       />

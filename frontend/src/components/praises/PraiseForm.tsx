@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import {
@@ -21,6 +22,7 @@ export const PraiseForm = ({
   onSubmit,
   isLoading = false,
 }: PraiseFormProps) => {
+  const { t } = useTranslation('common');
   const schema = initialData ? praiseUpdateSchema : praiseCreateSchema;
   const {
     register,
@@ -39,19 +41,19 @@ export const PraiseForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input
-        label="Nome do Praise"
+        label={t('label.praiseName')}
         error={errors.name?.message}
         {...register('name')}
       />
       <Input
-        label="Número (opcional)"
+        label={t('label.numberOptional')}
         type="number"
         error={errors.number?.message}
         {...register('number', { valueAsNumber: true })}
       />
       <div className="flex justify-end space-x-3">
         <Button type="submit" isLoading={isLoading}>
-          {initialData ? 'Atualizar' : 'Criar'}
+          {initialData ? t('button.update') : t('button.create')}
         </Button>
       </div>
     </form>

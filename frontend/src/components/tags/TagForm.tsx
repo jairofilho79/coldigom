@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import {
@@ -21,6 +22,7 @@ export const TagForm = ({
   onSubmit,
   isLoading = false,
 }: TagFormProps) => {
+  const { t } = useTranslation('common');
   const schema = initialData ? tagUpdateSchema : tagCreateSchema;
   const {
     register,
@@ -34,13 +36,13 @@ export const TagForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input
-        label="Nome da Tag"
+        label={t('label.tagName')}
         error={errors.name?.message}
         {...register('name')}
       />
       <div className="flex justify-end space-x-3">
         <Button type="submit" isLoading={isLoading}>
-          {initialData ? 'Atualizar' : 'Criar'}
+          {initialData ? t('button.update') : t('button.create')}
         </Button>
       </div>
     </form>

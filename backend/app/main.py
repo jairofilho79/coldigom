@@ -7,7 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from typing import Tuple
 from pathlib import Path
 from app.core.config import settings
-from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises
+from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises, languages, translations
 from app.infrastructure.database.database import engine, Base
 
 app = FastAPI(
@@ -46,6 +46,8 @@ app.include_router(material_kinds.router, prefix="/api/v1/material-kinds", tags=
 app.include_router(material_types.router, prefix="/api/v1/material-types", tags=["Material Types"])
 app.include_router(praise_materials.router, prefix="/api/v1/praise-materials", tags=["Praise Materials"])
 app.include_router(praises.router, prefix="/api/v1/praises", tags=["Praises"])
+app.include_router(languages.router, prefix="/api/v1/languages", tags=["Languages"])
+app.include_router(translations.router, prefix="/api/v1/translations", tags=["Translations"])
 
 
 # Helper function para verificar origem permitida

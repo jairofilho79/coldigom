@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMaterialKinds, useDeleteMaterialKind } from '@/hooks/useMaterialKinds';
 import { MaterialKindForm } from '@/components/materialKinds/MaterialKindForm';
 import { Button } from '@/components/ui/Button';
@@ -8,13 +9,16 @@ import { Loading } from '@/components/ui/Loading';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import type { MaterialKindCreateFormData, MaterialKindUpdateFormData } from '@/utils/validation';
 import { useCreateMaterialKind, useUpdateMaterialKind } from '@/hooks/useMaterialKinds';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 
 export const MaterialKindList = () => {
+  const { t } = useTranslation('common');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingKind, setEditingKind] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: kinds, isLoading } = useMaterialKinds({ limit: 1000 });
+  const { getMaterialKindName } = useEntityTranslations();
   const createKind = useCreateMaterialKind();
   const updateKind = useUpdateMaterialKind();
   const deleteKind = useDeleteMaterialKind();
@@ -59,10 +63,10 @@ export const MaterialKindList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Tipos de Material</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('page.materialKinds')}</h1>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Novo Tipo
+          {t('action.newType')}
         </Button>
       </div>
 
@@ -73,7 +77,7 @@ export const MaterialKindList = () => {
               key={kind.id}
               className="bg-white rounded-lg shadow-md p-4 flex justify-between items-center"
             >
-              <span className="text-lg font-medium">{kind.name}</span>
+              <span className="text-lg font-medium">{getMaterialKindName(kind.id, kind.name)}</span>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
@@ -95,14 +99,14 @@ export const MaterialKindList = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nenhum tipo de material cadastrado</p>
+          <p className="text-gray-500 text-lg">{t('message.noMaterialKindsRegistered')}</p>
         </div>
       )}
 
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Criar Novo Tipo de Material"
+        title={t('modal.createMaterialKind')}
       >
         <MaterialKindForm
           onSubmit={handleCreate}
@@ -113,7 +117,7 @@ export const MaterialKindList = () => {
       <Modal
         isOpen={!!editingKind}
         onClose={() => setEditingKind(null)}
-        title="Editar Tipo de Material"
+        title={t('modal.editMaterialKind')}
       >
         <MaterialKindForm
           initialData={editingKind}
@@ -126,9 +130,9 @@ export const MaterialKindList = () => {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Deletar Tipo de Material"
-        message="Tem certeza que deseja deletar este tipo de material?"
-        confirmText="Deletar"
+        title={t('modal.deleteMaterialKind')}
+        message={t('confirmDialog.deleteMaterialKindMessage')}
+        confirmText={t('button.delete')}
         variant="danger"
         isLoading={deleteKind.isPending}
       />

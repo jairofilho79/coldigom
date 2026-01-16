@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTags, useDeleteTag } from '@/hooks/useTags';
 import { TagForm } from '@/components/tags/TagForm';
 import { Button } from '@/components/ui/Button';
@@ -8,13 +9,16 @@ import { Loading } from '@/components/ui/Loading';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import type { TagCreateFormData, TagUpdateFormData } from '@/utils/validation';
 import { useCreateTag, useUpdateTag } from '@/hooks/useTags';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 
 export const TagList = () => {
+  const { t } = useTranslation('common');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: tags, isLoading } = useTags({ limit: 1000 });
+  const { getPraiseTagName } = useEntityTranslations();
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
   const deleteTag = useDeleteTag();
@@ -59,10 +63,10 @@ export const TagList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Tags</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('page.tags')}</h1>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Nova Tag
+          {t('action.newTag')}
         </Button>
       </div>
 
@@ -73,7 +77,7 @@ export const TagList = () => {
               key={tag.id}
               className="bg-white rounded-lg shadow-md p-4 flex justify-between items-center"
             >
-              <span className="text-lg font-medium">{tag.name}</span>
+              <span className="text-lg font-medium">{getPraiseTagName(tag.id, tag.name)}</span>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
@@ -95,14 +99,14 @@ export const TagList = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nenhuma tag cadastrada</p>
+          <p className="text-gray-500 text-lg">{t('message.noTagsRegistered')}</p>
         </div>
       )}
 
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Criar Nova Tag"
+        title={t('modal.createTag')}
       >
         <TagForm
           onSubmit={handleCreate}
@@ -113,7 +117,7 @@ export const TagList = () => {
       <Modal
         isOpen={!!editingTag}
         onClose={() => setEditingTag(null)}
-        title="Editar Tag"
+        title={t('modal.editTag')}
       >
         <TagForm
           initialData={editingTag}
@@ -126,9 +130,9 @@ export const TagList = () => {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Deletar Tag"
-        message="Tem certeza que deseja deletar esta tag?"
-        confirmText="Deletar"
+        title={t('modal.deleteTag')}
+        message={t('confirmDialog.deleteTagMessage')}
+        confirmText={t('button.delete')}
         variant="danger"
         isLoading={deleteTag.isPending}
       />

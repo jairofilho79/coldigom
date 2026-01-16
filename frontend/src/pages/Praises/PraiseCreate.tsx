@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCreatePraise } from '@/hooks/usePraises';
 import { PraiseForm } from '@/components/praises/PraiseForm';
 import { Button } from '@/components/ui/Button';
@@ -7,6 +8,7 @@ import { Link } from 'react-router-dom';
 import type { PraiseCreateFormData } from '@/utils/validation';
 
 export const PraiseCreate = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const createPraise = useCreatePraise();
 
@@ -25,10 +27,10 @@ export const PraiseCreate = () => {
         <Link to="/praises">
           <Button variant="outline" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Voltar
+            {t('button.back')}
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Criar Novo Praise</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('page.createPraise')}</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">

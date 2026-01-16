@@ -8,6 +8,7 @@ import { Loading } from '@/components/ui/Loading';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import type { MaterialTypeCreateFormData, MaterialTypeUpdateFormData } from '@/utils/validation';
 import { useCreateMaterialType, useUpdateMaterialType } from '@/hooks/useMaterialTypes';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 
 export const MaterialTypeList = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -18,6 +19,7 @@ export const MaterialTypeList = () => {
   const createType = useCreateMaterialType();
   const updateType = useUpdateMaterialType();
   const deleteType = useDeleteMaterialType();
+  const { getMaterialTypeName } = useEntityTranslations();
 
   const handleCreate = async (data: MaterialTypeCreateFormData) => {
     try {
@@ -59,10 +61,10 @@ export const MaterialTypeList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Tipos de Arquivo</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('page.materialTypes')}</h1>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Novo Tipo
+          {t('action.newType')}
         </Button>
       </div>
 
@@ -73,7 +75,7 @@ export const MaterialTypeList = () => {
               key={type.id}
               className="bg-white rounded-lg shadow-md p-4 flex justify-between items-center"
             >
-              <span className="text-lg font-medium">{type.name}</span>
+              <span className="text-lg font-medium">{getMaterialTypeName(type.id, type.name)}</span>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
@@ -95,14 +97,14 @@ export const MaterialTypeList = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nenhum tipo de arquivo cadastrado</p>
+          <p className="text-gray-500 text-lg">{t('message.noMaterialTypesRegistered')}</p>
         </div>
       )}
 
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Criar Novo Tipo de Arquivo"
+        title={t('modal.createMaterialType')}
       >
         <MaterialTypeForm
           onSubmit={handleCreate}
@@ -113,7 +115,7 @@ export const MaterialTypeList = () => {
       <Modal
         isOpen={!!editingType}
         onClose={() => setEditingType(null)}
-        title="Editar Tipo de Arquivo"
+        title={t('modal.editMaterialType')}
       >
         <MaterialTypeForm
           initialData={editingType}
@@ -126,9 +128,9 @@ export const MaterialTypeList = () => {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Deletar Tipo de Arquivo"
-        message="Tem certeza que deseja deletar este tipo de arquivo?"
-        confirmText="Deletar"
+        title={t('modal.deleteMaterialType')}
+        message={t('confirmDialog.deleteMaterialTypeMessage')}
+        confirmText={t('button.delete')}
         variant="danger"
         isLoading={deleteType.isPending}
       />

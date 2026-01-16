@@ -12,6 +12,7 @@ import { PraiseEdit } from '@/pages/Praises/PraiseEdit';
 import { TagList } from '@/pages/Tags/TagList';
 import { MaterialKindList } from '@/pages/MaterialKinds/MaterialKindList';
 import { MaterialTypeList } from '@/pages/MaterialTypes/MaterialTypeList';
+import { TranslationList } from '@/pages/Translations/TranslationList';
 import { useAuthStore } from '@/store/authStore';
 
 function App() {
@@ -99,6 +100,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <MaterialTypeList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/translations"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TranslationList />
                 </Layout>
               </ProtectedRoute>
             }

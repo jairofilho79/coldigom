@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import {
@@ -21,6 +22,7 @@ export const MaterialTypeForm = ({
   onSubmit,
   isLoading = false,
 }: MaterialTypeFormProps) => {
+  const { t } = useTranslation('common');
   const schema = initialData ? materialTypeUpdateSchema : materialTypeCreateSchema;
   const {
     register,
@@ -34,13 +36,13 @@ export const MaterialTypeForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input
-        label="Nome do Tipo de Arquivo"
+        label={t('label.materialTypeName')}
         error={errors.name?.message}
         {...register('name')}
       />
       <div className="flex justify-end space-x-3">
         <Button type="submit" isLoading={isLoading}>
-          {initialData ? 'Atualizar' : 'Criar'}
+          {initialData ? t('button.update') : t('button.create')}
         </Button>
       </div>
     </form>

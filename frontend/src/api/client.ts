@@ -18,13 +18,18 @@ const apiClient = axios.create({
   },
 });
 
-// Interceptor para adicionar token em todas as requisições
+// Interceptor para adicionar token e Accept-Language em todas as requisições
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Adicionar Accept-Language header baseado na linguagem atual
+    const currentLanguage = localStorage.getItem('i18n_language') || 'pt-BR';
+    config.headers['Accept-Language'] = currentLanguage;
+    
     return config;
   },
   (error) => {

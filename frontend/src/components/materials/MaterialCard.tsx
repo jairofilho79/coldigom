@@ -1,6 +1,8 @@
 import type { PraiseMaterialResponse } from '@/types';
+import { useTranslation } from 'react-i18next';
 import { File, Youtube, Music, FileText, Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 
 interface MaterialCardProps {
   material: PraiseMaterialResponse;
@@ -15,6 +17,8 @@ export const MaterialCard = ({
   onDownload,
   showActions = true,
 }: MaterialCardProps) => {
+  const { t } = useTranslation('common');
+  const { getMaterialTypeName, getMaterialKindName } = useEntityTranslations();
   const getIcon = () => {
     switch (material.type) {
       case 'file':
@@ -37,12 +41,17 @@ export const MaterialCard = ({
           {getIcon()}
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">
-              {material.material_kind?.name || 'Material'}
+              {material.material_kind 
+                ? getMaterialKindName(material.material_kind.id, material.material_kind.name)
+                : t('entity.material')
+              }
             </p>
             <p className="text-sm text-gray-500 truncate">{material.path}</p>
-            <p className="text-xs text-gray-400 mt-1">
-              Tipo: {material.type}
-            </p>
+            {material.material_type && (
+              <p className="text-xs text-gray-400 mt-1">
+                Tipo: {getMaterialTypeName(material.material_type.id, material.material_type.name)}
+              </p>
+            )}
           </div>
         </div>
         {showActions && (

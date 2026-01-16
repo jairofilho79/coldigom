@@ -13,6 +13,9 @@ class MaterialKind(Base):
 
     # One-to-many relationship with PraiseMaterial
     materials = relationship("PraiseMaterial", back_populates="material_kind")
+    
+    # One-to-many relationship with translations
+    translations = relationship("MaterialKindTranslation", back_populates="material_kind", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<MaterialKind(id={self.id}, name='{self.name}')>"

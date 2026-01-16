@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PraiseMaterialSimple } from '@/types';
 import { 
   File, 
@@ -14,6 +15,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useDeleteMaterial, useUpdateMaterial, useUpdateMaterialWithFile, useCreateMaterial, useUploadMaterial } from '@/hooks/useMaterials';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { MaterialForm } from '@/components/materials/MaterialForm';
@@ -26,6 +28,8 @@ interface PraiseMaterialsListProps {
 }
 
 export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsListProps) => {
+  const { t } = useTranslation('common');
+  const { getMaterialKindName } = useEntityTranslations();
   const [editingMaterial, setEditingMaterial] = useState<PraiseMaterialSimple | null>(null);
   const [creatingMaterial, setCreatingMaterial] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -178,17 +182,17 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Materiais</h2>
+        <h2 className="text-xl font-semibold">{t('label.materials')}</h2>
         <Button
           onClick={() => setCreatingMaterial(true)}
           size="sm"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Novo Material
+          {t('action.newMaterial')}
         </Button>
       </div>
       {materials.length === 0 ? (
-        <div className="text-sm text-gray-500 mb-4">Nenhum material adicionado</div>
+        <div className="text-sm text-gray-500 mb-4">{t('message.noMaterialsAdded')}</div>
       ) : (
         <div className="space-y-3">
         {materials.map((material) => {
@@ -204,11 +208,11 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
                 <div className="flex items-center space-x-2">
                   {material.material_kind ? (
                     <span className="text-sm font-medium text-gray-900 truncate">
-                      {material.material_kind.name}
+                      {getMaterialKindName(material.material_kind.id, material.material_kind.name)}
                     </span>
                   ) : (
                     <span className="text-sm font-medium text-gray-900 truncate">
-                      Material
+                      {t('entity.material')}
                     </span>
                   )}
                   {isClickable && (
@@ -258,7 +262,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
                     handleEdit(material);
                   }}
                   className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                  title="Editar material"
+                  title={t('button.edit')}
                 >
                   <Edit className="w-4 h-4" />
                 </button>
@@ -268,7 +272,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
                     setDeleteId(material.id);
                   }}
                   className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  title="Remover material"
+                  title={t('button.delete')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -284,7 +288,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
         <Modal
           isOpen={creatingMaterial}
           onClose={() => setCreatingMaterial(false)}
-          title="Novo Material"
+          title={t('action.newMaterial')}
           size="lg"
         >
           <MaterialForm
@@ -300,7 +304,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
         <Modal
           isOpen={!!editingMaterial}
           onClose={() => setEditingMaterial(null)}
-          title="Editar Material"
+          title={t('button.edit') + ' ' + t('label.materials').toLowerCase()}
           size="lg"
         >
           <MaterialForm
@@ -317,9 +321,9 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Remover Material"
-        message="Tem certeza que deseja remover este material? Esta ação não pode ser desfeita."
-        confirmText="Remover"
+        title={t('button.delete') + ' ' + t('label.materials').toLowerCase()}
+        message={t('confirmDialog.deleteMaterialMessage')}
+        confirmText={t('button.delete')}
         variant="danger"
         isLoading={deleteMaterial.isPending}
       />

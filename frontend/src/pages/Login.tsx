@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
@@ -8,6 +9,7 @@ import { loginSchema, type LoginFormData } from '@/utils/validation';
 import { Music } from 'lucide-react';
 
 export const Login = () => {
+  const { t } = useTranslation('common');
   const { login, isLoading } = useAuth();
   const {
     register,
@@ -33,29 +35,29 @@ export const Login = () => {
             <Music className="w-12 h-12 text-blue-600" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Faça login na sua conta
+            {t('auth.loginTitle')}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Ou{' '}
+            {t('auth.loginSubtitle')}{' '}
             <Link
               to="/register"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              crie uma nova conta
+              {t('auth.createAccount')}
             </Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <Input
-              label="Username"
+              label={t('label.username')}
               type="text"
               autoComplete="username"
               error={errors.username?.message}
               {...register('username')}
             />
             <Input
-              label="Senha"
+              label={t('label.password')}
               type="password"
               autoComplete="current-password"
               error={errors.password?.message}
@@ -64,7 +66,7 @@ export const Login = () => {
           </div>
           <div>
             <Button type="submit" className="w-full" isLoading={isLoading}>
-              Entrar
+              {t('auth.loginButton')}
             </Button>
           </div>
         </form>

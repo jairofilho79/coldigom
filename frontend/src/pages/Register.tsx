@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/Input';
@@ -8,6 +9,7 @@ import { registerSchema, type RegisterFormData } from '@/utils/validation';
 import { Music } from 'lucide-react';
 
 export const Register = () => {
+  const { t } = useTranslation('common');
   const { register: registerUser, isLoading } = useAuth();
   const {
     register,
@@ -37,43 +39,43 @@ export const Register = () => {
             <Music className="w-12 h-12 text-blue-600" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Crie sua conta
+            {t('auth.registerTitle')}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Já tem uma conta?{' '}
+            {t('auth.registerSubtitle')}{' '}
             <Link
               to="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              Faça login
+              {t('auth.loginLink')}
             </Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <Input
-              label="Email"
+              label={t('label.email')}
               type="email"
               autoComplete="email"
               error={errors.email?.message}
               {...register('email')}
             />
             <Input
-              label="Username"
+              label={t('label.username')}
               type="text"
               autoComplete="username"
               error={errors.username?.message}
               {...register('username')}
             />
             <Input
-              label="Senha"
+              label={t('label.password')}
               type="password"
               autoComplete="new-password"
               error={errors.password?.message}
               {...register('password')}
             />
             <Input
-              label="Confirmar Senha"
+              label={t('auth.confirmPassword')}
               type="password"
               autoComplete="new-password"
               error={errors.confirmPassword?.message}
@@ -82,7 +84,7 @@ export const Register = () => {
           </div>
           <div>
             <Button type="submit" className="w-full" isLoading={isLoading}>
-              Registrar
+              {t('auth.registerButton')}
             </Button>
           </div>
         </form>

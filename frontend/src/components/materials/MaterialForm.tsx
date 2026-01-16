@@ -8,9 +8,11 @@ import {
   type MaterialCreateFormData,
   type MaterialUpdateFormData,
 } from '@/utils/validation';
+import { useTranslation } from 'react-i18next';
 import { useMaterialKinds } from '@/hooks/useMaterialKinds';
 import { useMaterialTypes } from '@/hooks/useMaterialTypes';
-import { useState, useRef, useEffect } from 'react';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
+import { useState, useRef } from 'react';
 import { Upload, X } from 'lucide-react';
 
 interface MaterialFormProps {
@@ -26,12 +28,13 @@ export const MaterialForm = ({
   onSubmit,
   isLoading = false,
 }: MaterialFormProps) => {
+  const { t } = useTranslation('common');
   const { data: materialKinds, isLoading: materialKindsLoading } = useMaterialKinds({ limit: 1000 });
   const { data: materialTypes, isLoading: materialTypesLoading } = useMaterialTypes({ limit: 1000 });
+  const { getMaterialTypeName, getMaterialKindName } = useEntityTranslations();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCreating = !initialData;
-  const isCreatingFile = isCreating && !selectedFile; // Se está criando e ainda não selecionou arquivo
   
   // Helper function to detect material type from file extension
   const detectMaterialTypeFromExtension = (fileName: string): string | null => {
@@ -136,7 +139,7 @@ export const MaterialForm = ({
       )}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tipo de Arquivo
+          {t('label.fileType')}
         </label>
         <select
           {...register('material_type_id')}
@@ -158,26 +161,29 @@ export const MaterialForm = ({
           }}
         >
           <option value="">
-            {materialTypesLoading ? 'Carregando...' : 'Selecione um tipo de arquivo'}
+            {materialTypesLoading ? t('message.loading') : t('message.selectFileType')}
           </option>
-          {materialTypes?.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.name.charAt(0).toUpperCase() + type.name.slice(1)}
-            </option>
-          ))}
+          {materialTypes?.map((type) => {
+            const translatedName = getMaterialTypeName(type.id, type.name);
+            return (
+              <option key={type.id} value={type.id}>
+                {translatedName.charAt(0).toUpperCase() + translatedName.slice(1)}
+              </option>
+            );
+          })}
         </select>
         {errors.material_type_id && (
           <p className="mt-1 text-sm text-red-600">{errors.material_type_id.message}</p>
         )}
         {isCreating && isFileType && selectedFile && (
-          <p className="mt-1 text-sm text-gray-500">Tipo detectado automaticamente do arquivo</p>
+          <p className="mt-1 text-sm text-gray-500">{t('message.autoDetectedFromFile')}</p>
         )}
       </div>
       
       {materialType?.name.toLowerCase() === 'text' ? (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Texto
+            {t('label.textContent')}
           </label>
           <textarea
             {...register('path')}
@@ -194,13 +200,13 @@ export const MaterialForm = ({
         // Quando é arquivo (criando ou editando), mostra input de arquivo
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Arquivo
+            {t('label.file')}
           </label>
           <div className="space-y-2">
             {initialData && !selectedFile && (
               <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200">
                 <span className="text-sm text-gray-600">
-                  Arquivo atual: {initialData.path?.split('/').pop() || initialData.path}
+                  {t('label.currentFile')}: {initialData.path?.split('/').pop() || initialData.path}
                 </span>
               </div>
             )}
@@ -217,7 +223,7 @@ export const MaterialForm = ({
               className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
               <Upload className="w-4 h-4 mr-2" />
-              {selectedFile ? 'Trocar Arquivo' : (initialData ? 'Substituir Arquivo' : 'Selecionar Arquivo')}
+              {selectedFile ? t('label.changeFile') : (initialData ? t('label.replaceFile') : t('label.selectFile'))}
             </label>
             {selectedFile && (
               <div className="flex items-center space-x-2 mt-2">
@@ -232,21 +238,21 @@ export const MaterialForm = ({
               </div>
             )}
             {!selectedFile && isCreating && errors.path && (
-              <p className="mt-1 text-sm text-red-600">Arquivo é obrigatório</p>
+              <p className="mt-1 text-sm text-red-600">{t('validation.fileRequired')}</p>
             )}
           </div>
         </div>
       ) : (
         // Para outros tipos (YouTube, Spotify, links)
         <Input
-          label="URL"
+          label={t('label.url')}
           error={errors.path?.message}
           {...register('path')}
         />
       )}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tipo de Material (Kind)
+          {t('label.materialKind')}
         </label>
         <select
           {...register('material_kind_id')}
@@ -256,11 +262,11 @@ export const MaterialForm = ({
           disabled={materialKindsLoading}
         >
           <option value="">
-            {materialKindsLoading ? 'Carregando...' : 'Selecione um tipo de material'}
+            {materialKindsLoading ? t('message.loading') : t('label.selectMaterialKind')}
           </option>
           {materialKinds?.map((kind) => (
             <option key={kind.id} value={kind.id}>
-              {kind.name}
+              {getMaterialKindName(kind.id, kind.name)}
             </option>
           ))}
         </select>
@@ -274,7 +280,7 @@ export const MaterialForm = ({
           isLoading={isLoading}
           disabled={isCreating && isFileType && !selectedFile}
         >
-          {initialData ? 'Atualizar' : 'Criar'}
+          {initialData ? t('button.update') : t('button.create')}
         </Button>
       </div>
     </form>

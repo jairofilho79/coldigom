@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { usePraises } from '@/hooks/usePraises';
 import { PraiseCard } from '@/components/praises/PraiseCard';
@@ -7,6 +8,7 @@ import { Loading } from '@/components/ui/Loading';
 import { Plus, Search } from 'lucide-react';
 
 export const PraiseList = () => {
+  const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState('');
   const [skip, setSkip] = useState(0);
   const limit = 20;
@@ -28,7 +30,7 @@ export const PraiseList = () => {
   if (error) {
     return (
       <div className="text-center text-red-600">
-        Erro ao carregar praises. Tente novamente.
+        {t('message.errorLoadingData')}
       </div>
     );
   }
@@ -36,11 +38,11 @@ export const PraiseList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Praises</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('page.praises')}</h1>
         <Link to="/praises/create">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            Novo Praise
+            {t('action.newPraise')}
           </Button>
         </Link>
       </div>
@@ -49,7 +51,7 @@ export const PraiseList = () => {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
           type="text"
-          placeholder="Buscar por nome..."
+          placeholder={t('message.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
@@ -68,11 +70,11 @@ export const PraiseList = () => {
       ) : (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">
-            {searchTerm ? 'Nenhum praise encontrado' : 'Nenhum praise cadastrado'}
+            {searchTerm ? t('message.noPraisesFound') : t('message.noPraises')}
           </p>
           {!searchTerm && (
             <Link to="/praises/create" className="mt-4 inline-block">
-              <Button>Criar primeiro praise</Button>
+              <Button>{t('action.createFirstPraise')}</Button>
             </Link>
           )}
         </div>
@@ -85,14 +87,14 @@ export const PraiseList = () => {
             onClick={() => setSkip(Math.max(0, skip - limit))}
             disabled={skip === 0}
           >
-            Anterior
+            {t('pagination.previous')}
           </Button>
           <Button
             variant="outline"
             onClick={() => setSkip(skip + limit)}
             disabled={praises.length < limit}
           >
-            Próximo
+            {t('pagination.next')}
           </Button>
         </div>
       )}

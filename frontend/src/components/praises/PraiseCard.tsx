@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { PraiseResponse } from '@/types';
 import { Music, Tag, File } from 'lucide-react';
 
@@ -7,6 +8,8 @@ interface PraiseCardProps {
 }
 
 export const PraiseCard = ({ praise }: PraiseCardProps) => {
+  const { t } = useTranslation('common');
+  
   return (
     <Link
       to={`/praises/${praise.id}`}
@@ -25,13 +28,17 @@ export const PraiseCard = ({ praise }: PraiseCardProps) => {
             {praise.tags.length > 0 && (
               <div className="flex items-center space-x-1">
                 <Tag className="w-4 h-4" />
-                <span>{praise.tags.length} tag(s)</span>
+                <span>
+                  {praise.tags.length} {praise.tags.length === 1 ? t('material.tag') : t('material.tags')}
+                </span>
               </div>
             )}
             {praise.materials.length > 0 && (
               <div className="flex items-center space-x-1">
                 <File className="w-4 h-4" />
-                <span>{praise.materials.length} material(is)</span>
+                <span>
+                  {praise.materials.length} {praise.materials.length === 1 ? t('material.material') : t('material.materials')}
+                </span>
               </div>
             )}
           </div>

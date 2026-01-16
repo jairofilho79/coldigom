@@ -44,6 +44,8 @@ services:
     volumes:
       - ./backend:/app
       - "${STORAGE_LOCAL_PATH:-./storage/assets}:/storage/assets"
+      # Volume para dados de praises (ajuste o caminho se necessário)
+      - "/Volumes/SSD 2TB SD/storage/assets:/data/assets:ro"
     depends_on:
       db:
         condition: service_healthy

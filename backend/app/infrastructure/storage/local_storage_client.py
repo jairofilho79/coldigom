@@ -57,6 +57,10 @@ class LocalStorageClient:
             relative_path = file_name_to_use
         
         try:
+            # Se o arquivo já existir, deleta primeiro (para garantir que seja substituído)
+            if file_path.exists():
+                file_path.unlink()
+            
             # Salvar arquivo
             with open(file_path, 'wb') as f:
                 shutil.copyfileobj(file_obj, f)

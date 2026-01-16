@@ -80,8 +80,7 @@ export const PraiseDetail = () => {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4">Materiais</h2>
-          <PraiseMaterialsList materials={praise.materials} />
+          <PraiseMaterialsList materials={praise.materials} praiseId={id || ''} />
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">

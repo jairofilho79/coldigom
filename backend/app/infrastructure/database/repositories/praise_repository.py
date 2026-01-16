@@ -2,6 +2,7 @@ from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
 from app.domain.models.praise import Praise
+from app.domain.models.praise_material import PraiseMaterial
 from app.application.repositories import BaseRepository
 
 
@@ -12,7 +13,10 @@ class PraiseRepository(BaseRepository):
     def get_by_id(self, id: UUID) -> Optional[Praise]:
         return (
             self.db.query(Praise)
-            .options(joinedload(Praise.tags), joinedload(Praise.materials))
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+            )
             .filter(Praise.id == id)
             .first()
         )
@@ -20,7 +24,10 @@ class PraiseRepository(BaseRepository):
     def get_by_number(self, number: int) -> Optional[Praise]:
         return (
             self.db.query(Praise)
-            .options(joinedload(Praise.tags), joinedload(Praise.materials))
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+            )
             .filter(Praise.number == number)
             .first()
         )
@@ -28,7 +35,10 @@ class PraiseRepository(BaseRepository):
     def get_all(self, skip: int = 0, limit: int = 100) -> List[Praise]:
         return (
             self.db.query(Praise)
-            .options(joinedload(Praise.tags), joinedload(Praise.materials))
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+            )
             .offset(skip)
             .limit(limit)
             .all()
@@ -37,7 +47,10 @@ class PraiseRepository(BaseRepository):
     def search_by_name(self, name: str, skip: int = 0, limit: int = 100) -> List[Praise]:
         return (
             self.db.query(Praise)
-            .options(joinedload(Praise.tags), joinedload(Praise.materials))
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind)
+            )
             .filter(Praise.name.ilike(f"%{name}%"))
             .offset(skip)
             .limit(limit)

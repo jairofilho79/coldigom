@@ -70,12 +70,64 @@ export const useUpdateMaterial = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: PraiseMaterialUpdate }) =>
       praiseMaterialsApi.updateMaterial(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['material', variables.id] });
+      // Invalida todos os praises para garantir que o praise com este material seja atualizado
+      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      // Invalida o praise específico se tiver praise_id no response
+      if (response.praise_id) {
+        queryClient.invalidateQueries({ queryKey: ['praise', response.praise_id] });
+      } else {
+        // Se não tiver, invalida todos os praises
+        queryClient.invalidateQueries({ queryKey: ['praise'] });
+      }
       toast.success('Material atualizado com sucesso!');
     },
     onError: (error: any) => {
+      const message = error.response?.data?.detail || 'Erro ao atualizar material';
+      toast.error(message);
+    },
+  });
+};
+
+export const useUpdateMaterialWithFile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      file,
+      materialKindId,
+      praiseId,
+    }: {
+      id: string;
+      file: File;
+      materialKindId?: string;
+      praiseId?: string;
+    }) => {
+      console.log('useUpdateMaterialWithFile - chamando API', { id, fileName: file.name, materialKindId, praiseId });
+      return praiseMaterialsApi.updateMaterialWithFile(id, file, materialKindId);
+    },
+    onSuccess: (response, variables) => {
+      console.log('useUpdateMaterialWithFile - sucesso', { response, variables });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['material', variables.id] });
+      // Invalida todos os praises para garantir que o praise com este material seja atualizado
+      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      // Invalida o praise específico se fornecido, ou tenta pegar do response
+      const praiseIdToInvalidate = variables.praiseId || response.praise_id;
+      console.log('useUpdateMaterialWithFile - invalidando praise', { praiseIdToInvalidate });
+      if (praiseIdToInvalidate) {
+        queryClient.invalidateQueries({ queryKey: ['praise', praiseIdToInvalidate] });
+      } else {
+        // Se não tiver, invalida todos os praises
+        queryClient.invalidateQueries({ queryKey: ['praise'] });
+      }
+      toast.success('Material atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      console.error('useUpdateMaterialWithFile - erro', error);
       const message = error.response?.data?.detail || 'Erro ao atualizar material';
       toast.error(message);
     },
@@ -89,6 +141,9 @@ export const useDeleteMaterial = () => {
     mutationFn: (id: string) => praiseMaterialsApi.deleteMaterial(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
+      // Invalida todos os praises para garantir que o praise com este material seja atualizado
+      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      queryClient.invalidateQueries({ queryKey: ['praise'] });
       toast.success('Material deletado com sucesso!');
     },
     onError: (error: any) => {

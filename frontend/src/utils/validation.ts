@@ -70,20 +70,33 @@ export const materialKindUpdateSchema = z.object({
 
 export type MaterialKindUpdateFormData = z.infer<typeof materialKindUpdateSchema>;
 
+// Material Type Schemas
+export const materialTypeCreateSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório').max(255, 'Nome muito longo'),
+});
+
+export type MaterialTypeCreateFormData = z.infer<typeof materialTypeCreateSchema>;
+
+export const materialTypeUpdateSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório').max(255, 'Nome muito longo').optional(),
+});
+
+export type MaterialTypeUpdateFormData = z.infer<typeof materialTypeUpdateSchema>;
+
 // Material Schemas
 export const materialCreateSchema = z.object({
   praise_id: z.string().uuid('ID do praise inválido'),
   material_kind_id: z.string().uuid('ID do tipo de material inválido'),
+  material_type_id: z.string().uuid('ID do tipo de arquivo inválido'),
   path: z.string().min(1, 'Path/URL é obrigatório'),
-  type: z.enum(['file', 'youtube', 'spotify', 'text']),
 });
 
 export type MaterialCreateFormData = z.infer<typeof materialCreateSchema>;
 
 export const materialUpdateSchema = z.object({
   material_kind_id: z.string().uuid('ID do tipo de material inválido').optional(),
+  material_type_id: z.string().uuid('ID do tipo de arquivo inválido').optional(),
   path: z.string().min(1, 'Path/URL é obrigatório').optional(),
-  type: z.enum(['file', 'youtube', 'spotify', 'text']).optional(),
 });
 
 export type MaterialUpdateFormData = z.infer<typeof materialUpdateSchema>;

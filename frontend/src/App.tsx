@@ -10,19 +10,12 @@ import { PraiseDetail } from '@/pages/Praises/PraiseDetail';
 import { PraiseCreate } from '@/pages/Praises/PraiseCreate';
 import { PraiseEdit } from '@/pages/Praises/PraiseEdit';
 import { TagList } from '@/pages/Tags/TagList';
-import { MaterialList } from '@/pages/Materials/MaterialList';
-import { MaterialUploadPage } from '@/pages/Materials/MaterialUpload';
-import { MaterialCreate } from '@/pages/Materials/MaterialCreate';
 import { MaterialKindList } from '@/pages/MaterialKinds/MaterialKindList';
+import { MaterialTypeList } from '@/pages/MaterialTypes/MaterialTypeList';
 import { useAuthStore } from '@/store/authStore';
-import { useEffect } from 'react';
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <ErrorBoundary>
@@ -91,41 +84,21 @@ function App() {
             }
           />
           <Route
-            path="/materials"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <MaterialList />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/materials/upload"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <MaterialUploadPage />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/materials/create"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <MaterialCreate />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/material-kinds"
             element={
               <ProtectedRoute>
                 <Layout>
                   <MaterialKindList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/material-types"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MaterialTypeList />
                 </Layout>
               </ProtectedRoute>
             }

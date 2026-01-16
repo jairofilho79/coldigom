@@ -1,17 +1,15 @@
 import { Link } from 'react-router-dom';
 import { usePraises } from '@/hooks/usePraises';
 import { useTags } from '@/hooks/useTags';
-import { useMaterials } from '@/hooks/useMaterials';
 import { Loading } from '@/components/ui/Loading';
 import { Button } from '@/components/ui/Button';
-import { Music, Tag, File, Plus } from 'lucide-react';
+import { Music, Tag, Plus } from 'lucide-react';
 
 export const Dashboard = () => {
   const { data: praises, isLoading: praisesLoading } = usePraises({ limit: 5 });
   const { data: tags, isLoading: tagsLoading } = useTags({ limit: 5 });
-  const { data: materials, isLoading: materialsLoading } = useMaterials({ limit: 5 });
 
-  if (praisesLoading || tagsLoading || materialsLoading) {
+  if (praisesLoading || tagsLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <Loading size="lg" />
@@ -33,13 +31,6 @@ export const Dashboard = () => {
       icon: Tag,
       color: 'bg-green-500',
       link: '/tags',
-    },
-    {
-      name: 'Materiais',
-      count: materials?.length || 0,
-      icon: File,
-      color: 'bg-purple-500',
-      link: '/materials',
     },
   ];
 
@@ -111,12 +102,6 @@ export const Dashboard = () => {
               <Button variant="outline" className="w-full justify-start">
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Novo Praise
-              </Button>
-            </Link>
-            <Link to="/materials/upload">
-              <Button variant="outline" className="w-full justify-start">
-                <Plus className="w-4 h-4 mr-2" />
-                Upload de Material
               </Button>
             </Link>
             <Link to="/tags">

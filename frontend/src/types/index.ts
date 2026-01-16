@@ -19,7 +19,22 @@ export interface Token {
   token_type: 'bearer';
 }
 
-// Material Type Enum
+// Material Type Types (replaced enum with entity)
+export interface MaterialTypeResponse {
+  id: string; // UUID
+  name: string; // min: 1, max: 255
+}
+
+export interface MaterialTypeCreate {
+  name: string;
+}
+
+export interface MaterialTypeUpdate {
+  name?: string;
+}
+
+// Legacy enum deprecated - kept for backward compatibility during migration
+// @deprecated Use MaterialTypeResponse from API instead
 export enum MaterialType {
   FILE = 'file',
   YOUTUBE = 'youtube',
@@ -64,30 +79,33 @@ export interface MaterialKindUpdate {
 export interface PraiseMaterialResponse {
   id: string; // UUID
   material_kind_id: string; // UUID
+  material_type_id: string; // UUID
   praise_id: string; // UUID
   path: string; // URL ou caminho do arquivo
-  type: MaterialType;
   material_kind?: MaterialKindResponse;
+  material_type?: MaterialTypeResponse;
 }
 
 export interface PraiseMaterialCreate {
   praise_id: string; // UUID
   material_kind_id: string; // UUID
+  material_type_id: string; // UUID
   path: string;
-  type: MaterialType;
 }
 
 export interface PraiseMaterialUpdate {
   material_kind_id?: string; // UUID
+  material_type_id?: string; // UUID
   path?: string;
-  type?: MaterialType;
 }
 
 export interface PraiseMaterialSimple {
   id: string;
   material_kind_id: string;
+  material_type_id: string;
   path: string;
-  type: string;
+  material_kind?: MaterialKindResponse;
+  material_type?: MaterialTypeResponse;
 }
 
 // Praise Types

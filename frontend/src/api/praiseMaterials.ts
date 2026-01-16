@@ -73,6 +73,29 @@ export const praiseMaterialsApi = {
     return response.data;
   },
 
+  updateMaterialWithFile: async (
+    id: string,
+    file: File,
+    materialKindId?: string
+  ): Promise<PraiseMaterialResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (materialKindId) {
+      formData.append('material_kind_id', materialKindId);
+    }
+
+    const response = await apiClient.put<PraiseMaterialResponse>(
+      `/api/v1/praise-materials/${id}/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
   deleteMaterial: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/v1/praise-materials/${id}`);
   },

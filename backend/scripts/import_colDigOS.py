@@ -22,19 +22,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy.orm import Session
 from app.infrastructure.database.database import SessionLocal
 from app.domain.models.praise import Praise
-from app.domain.models.praise_material import PraiseMaterial, MaterialType
+from app.domain.models.praise_material import PraiseMaterial
 from app.domain.models.praise_tag import PraiseTag
 from app.domain.models.material_kind import MaterialKind
 from app.infrastructure.storage.storage_factory import get_storage_client
 from app.infrastructure.storage.storage_client import StorageClient
+from app.core.config import settings
 from app.application.services.praise_service import PraiseService
 from app.application.services.praise_tag_service import PraiseTagService
 from app.application.services.material_kind_service import MaterialKindService
 from app.application.services.praise_material_service import PraiseMaterialService
 from app.infrastructure.database.repositories.material_kind_repository import MaterialKindRepository
+from app.infrastructure.database.repositories.material_type_repository import MaterialTypeRepository
 from app.infrastructure.database.repositories.praise_tag_repository import PraiseTagRepository
 from app.infrastructure.database.repositories.praise_repository import PraiseRepository
 from app.infrastructure.database.repositories.praise_material_repository import PraiseMaterialRepository
+import os
 
 
 # Mapeamento de tipos em português (do YAML) para MaterialKind em inglês
@@ -273,40 +276,86 @@ def process_praise_folder(
                 continue
             
             if dry_run:
-                print(f"    [DRY RUN] Faria upload: {file_found.name}")
+                if settings.STORAGE_MODE.lower() == "local":
+                    print(f"    [DRY RUN] Referenciaria: {file_found.name}")
+                else:
+                    print(f"    [DRY RUN] Faria upload: {file_found.name}")
             else:
-                # Normalizar material kind name
-                material_kind_name = normalize_material_kind_name(
-                    material_type_str,
-                    file_found.suffix
-                )
-                material_kind = get_or_create_material_kind(db, material_kind_name)
+                # Usar material_kind_id do metadata se disponível, senão normalizar
+                material_kind = None
+                if material_kind_id_str:
+                    try:
+                        material_kind_id = UUID(material_kind_id_str)
+                        material_kind_repo = MaterialKindRepository(db)
+                        material_kind = material_kind_repo.get_by_id(material_kind_id)
+                        if not material_kind:
+                            print(f"    ⚠️  material_kind_id {material_kind_id_str} não encontrado, usando normalização")
+                            material_kind = None
+                    except ValueError:
+                        print(f"    ⚠️  material_kind_id {material_kind_id_str} inválido, usando normalização")
+                        material_kind = None
                 
-                # Fazer upload para storage (Wasabi ou Local)
-                try:
-                    with open(file_found, 'rb') as f:
-                        content_type, _ = mimetypes.guess_type(str(file_found))
-                        storage_path = storage_client.upload_file(
-                            f,
-                            file_found.name,
-                            content_type=content_type,
-                            folder=f"praises/{praise_id}",
-                            material_id=material_id
-                        )
-                    print(f"    ✅ Upload: {file_found.name} → {storage_path}")
-                except Exception as e:
-                    print(f"    ❌ Erro no upload de {file_found.name}: {e}")
-                    continue
+                # Se não encontrou pelo ID, usar normalização como fallback
+                if not material_kind:
+                    material_kind_name = normalize_material_kind_name(
+                        material_type_str,
+                        file_found.suffix
+                    )
+                    material_kind = get_or_create_material_kind(db, material_kind_name)
+                
+                # Com STORAGE_MODE=local, apenas referenciar arquivos existentes
+                # Sem copiá-los, pois já estão no storage local
+                if settings.STORAGE_MODE.lower() == "local":
+                    # Path relativo ao STORAGE_LOCAL_PATH
+                    # O arquivo já está em: /storage/assets/praises/{praise_id}/{material_id}.ext
+                    storage_path = f"praises/{praise_id}/{material_id}{file_found.suffix}"
+                    print(f"    ✅ Referenciado: {file_found.name} → {storage_path}")
+                else:
+                    # Fazer upload para Wasabi
+                    try:
+                        with open(file_found, 'rb') as f:
+                            content_type, _ = mimetypes.guess_type(str(file_found))
+                            storage_path = storage_client.upload_file(
+                                f,
+                                file_found.name,
+                                content_type=content_type,
+                                folder=f"praises/{praise_id}",
+                                material_id=material_id
+                            )
+                        print(f"    ✅ Upload: {file_found.name} → {storage_path}")
+                    except Exception as e:
+                        print(f"    ❌ Erro no upload de {file_found.name}: {e}")
+                        continue
                 
                 # Criar ou atualizar PraiseMaterial
                 material_repo = PraiseMaterialRepository(db)
+                # Detect material type from file extension
+                material_type_repo = MaterialTypeRepository(db)
+                file_ext = os.path.splitext(file_found.name.lower())[1]
+                
+                audio_extensions = {'.mp3', '.wav', '.m4a', '.wma', '.ogg', '.flac'}
+                if file_ext == '.pdf':
+                    material_type = material_type_repo.get_by_name('pdf')
+                elif file_ext in audio_extensions:
+                    material_type = material_type_repo.get_by_name('audio')
+                else:
+                    # Default to PDF if extension not recognized
+                    material_type = material_type_repo.get_by_name('pdf')
+                
+                if not material_type:
+                    print(f"    ⚠️  MaterialType não encontrado para extensão {file_ext}, usando PDF como padrão")
+                    material_type = material_type_repo.get_by_name('pdf')
+                    if not material_type:
+                        print(f"    ❌ MaterialType 'pdf' não encontrado no banco. Execute o script de seed primeiro.")
+                        continue
+                
                 material = material_repo.get_by_id(material_id)
                 
                 if material:
                     # Atualizar material existente
                     material.material_kind_id = material_kind.id
+                    material.material_type_id = material_type.id
                     material.path = storage_path
-                    material.type = MaterialType.FILE
                     material = material_repo.update(material)
                     print(f"    ✅ Material atualizado: {material_id}")
                 else:
@@ -314,8 +363,8 @@ def process_praise_folder(
                     material = PraiseMaterial(
                         id=material_id,
                         material_kind_id=material_kind.id,
+                        material_type_id=material_type.id,
                         path=storage_path,
-                        type=MaterialType.FILE,
                         praise_id=praise_id
                     )
                     material = material_repo.create(material)
@@ -340,10 +389,19 @@ def main():
         print(f"❌ Erro: Caminho não encontrado: {colDigOS_path}")
         return 1
     
-    praise_folder = colDigOS_path / "praise"
-    if not praise_folder.exists():
-        print(f"❌ Erro: Pasta 'praise' não encontrada em {colDigOS_path}")
-        return 1
+    # Verifica se o caminho passado já é a pasta de praises diretamente
+    # ou se precisa adicionar "praise" ou "praises"
+    if colDigOS_path.name in ["praise", "praises"]:
+        # O caminho já aponta para a pasta de praises
+        praise_folder = colDigOS_path
+    else:
+        # Tenta primeiro "praises" (plural), depois "praise" (singular)
+        praise_folder = colDigOS_path / "praises"
+        if not praise_folder.exists():
+            praise_folder = colDigOS_path / "praise"
+            if not praise_folder.exists():
+                print(f"❌ Erro: Pasta 'praise' ou 'praises' não encontrada em {colDigOS_path}")
+                return 1
     
     print(f"🚀 Iniciando importação de {praise_folder}")
     if args.dry_run:

@@ -43,6 +43,61 @@ python scripts/seed_material_kinds.py --dry-run
 
 ---
 
+### `import_seed_data.py`
+Importa dados iniciais de arquivos CSV para o banco de dados (praise_tags e material_kinds com IDs específicos).
+
+**Uso:**
+```bash
+# Dry-run (não faz alterações)
+python scripts/import_seed_data.py --dry-run
+
+# Importar com caminhos padrão
+python scripts/import_seed_data.py
+
+# Importar com caminhos personalizados
+python scripts/import_seed_data.py \
+  --praise-tags-csv "/caminho/para/praise_tags_unique.csv" \
+  --material-kinds-csv "/caminho/para/material_kinds_unique.csv"
+```
+
+**Parâmetros:**
+- `--praise-tags-csv` (opcional): Caminho para o arquivo CSV de praise_tags (padrão: `/Volumes/SSD 2TB SD/assets2/praise_tags_unique.csv`)
+- `--material-kinds-csv` (opcional): Caminho para o arquivo CSV de material_kinds (padrão: `/Volumes/SSD 2TB SD/assets2/material_kinds_unique.csv`)
+- `--dry-run` (opcional): Modo de simulação (não faz alterações no banco)
+
+**Formato dos CSVs:**
+
+**praise_tags_unique.csv:**
+```csv
+praise_tag_id,praise_tag_name
+45ab58b2-d293-45c7-aa75-090fcd968b24,Avulsos
+c113296e-a8f6-4f07-83ba-f055c125542f,CIAs
+...
+```
+
+**material_kinds_unique.csv:**
+```csv
+material_kind_id,material_kind_name
+6d35011f-b98b-436f-b4f7-92c3cff413c5,Alto Saxophone
+8ddc2fed-5298-4ead-bc71-e529921c00ac,Alto Voice
+...
+```
+
+**O que faz:**
+1. Lê os arquivos CSV de praise_tags e material_kinds
+2. Cria/atualiza registros no banco de dados usando os IDs específicos do CSV
+3. Mantém a consistência dos IDs (importante para relacionamentos existentes)
+4. Atualiza nomes se o ID já existir mas com nome diferente
+5. Pula registros que já existem com o mesmo ID e nome
+
+**Notas:**
+- Os IDs do CSV são preservados (não são gerados novos)
+- Se um ID já existir, o nome será atualizado se for diferente
+- Se um nome já existir com outro ID, o registro será ignorado
+- Use `--dry-run` primeiro para ver o que seria importado
+
+---
+
 ### `import_colDigOS.py`
 Importa arquivos da pasta ColDigOS para Wasabi e sincroniza com o banco de dados.
 
@@ -149,7 +204,16 @@ Antes de executar os scripts:
 
 ## 📝 Ordem Recomendada de Execução
 
-1. **Popular MaterialKinds primeiro:**
+1. **Importar dados iniciais (praise_tags e material_kinds com IDs específicos):**
+   ```bash
+   # Ver o que seria importado
+   python scripts/import_seed_data.py --dry-run
+   
+   # Importar
+   python scripts/import_seed_data.py
+   ```
+
+   **OU popular MaterialKinds manualmente:**
    ```bash
    python scripts/seed_material_kinds.py
    ```

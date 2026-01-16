@@ -36,16 +36,16 @@ export const Header = () => {
               Tags
             </Link>
             <Link
-              to="/materials"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Materiais
-            </Link>
-            <Link
               to="/material-kinds"
               className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
             >
               Tipos de Material
+            </Link>
+            <Link
+              to="/material-types"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Tipos de Arquivo
             </Link>
             <div className="flex items-center space-x-3">
               <span className="text-sm text-gray-600">{user?.username}</span>

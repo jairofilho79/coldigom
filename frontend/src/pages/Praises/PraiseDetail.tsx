@@ -70,12 +70,13 @@ export const PraiseDetail = () => {
           {praise.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {praise.tags.map((tag) => (
-                <span
+                <Link
                   key={tag.id}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  to={`/praises?tag_id=${tag.id}`}
+                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors cursor-pointer"
                 >
                   {getPraiseTagName(tag.id, tag.name)}
-                </span>
+                </Link>
               ))}
             </div>
           ) : (

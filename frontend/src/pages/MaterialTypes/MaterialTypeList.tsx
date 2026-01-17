@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMaterialTypes, useDeleteMaterialType } from '@/hooks/useMaterialTypes';
 import { MaterialTypeForm } from '@/components/materialTypes/MaterialTypeForm';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +12,7 @@ import { useCreateMaterialType, useUpdateMaterialType } from '@/hooks/useMateria
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 
 export const MaterialTypeList = () => {
+  const { t } = useTranslation('common');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingType, setEditingType] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);

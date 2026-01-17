@@ -9,7 +9,8 @@
     "update": "Update",
     "confirm": "Confirm",
     "close": "Close",
-    "logout": "Logout"
+    "logout": "Logout",
+    "removeFilter": "Remove Filter"
   },
   "label": {
     "tags": "Tags",
@@ -100,7 +101,8 @@
     "errorLoadingTranslations": "Error loading translations",
     "errorSavingTranslations": "Error saving translations",
     "noTranslationsToSave": "No translations to save",
-    "translationsSaved": "{count} translation(s) saved successfully"
+    "translationsSaved": "{count} translation(s) saved successfully",
+    "filteringByTag": "Filtering by tag"
   },
   "page": {
     "dashboard": "Dashboard",
@@ -120,7 +122,8 @@
     "newMaterial": "New Material",
     "newTag": "New Tag",
     "newType": "New Type",
-    "createFirstPraise": "Create first praise"
+    "createFirstPraise": "Create first praise",
+    "listPraises": "List Praises"
   },
   "modal": {
     "createTag": "Create New Tag",

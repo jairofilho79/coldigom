@@ -1,23 +1,38 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { usePraises } from '@/hooks/usePraises';
+import { useTag } from '@/hooks/useTags';
+import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 import { PraiseCard } from '@/components/praises/PraiseCard';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X, Tag } from 'lucide-react';
 
 export const PraiseList = () => {
   const { t } = useTranslation('common');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { getPraiseTagName } = useEntityTranslations();
   const [searchTerm, setSearchTerm] = useState('');
   const [skip, setSkip] = useState(0);
   const limit = 20;
+  const tagId = searchParams.get('tag_id') || undefined;
 
   const { data: praises, isLoading, error } = usePraises({
     skip,
     limit,
     name: searchTerm || undefined,
+    tag_id: tagId,
   });
+
+  const { data: tag } = useTag(tagId || '');
+
+  const handleRemoveTagFilter = () => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('tag_id');
+    setSearchParams(newSearchParams);
+    setSkip(0);
+  };
 
   if (isLoading) {
     return (
@@ -46,6 +61,26 @@ export const PraiseList = () => {
           </Button>
         </Link>
       </div>
+
+      {tagId && tag && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Tag className="w-5 h-5 text-blue-600" />
+            <span className="text-blue-800 font-medium">
+              {t('message.filteringByTag')}: <span className="font-semibold">{getPraiseTagName(tag.id, tag.name)}</span>
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRemoveTagFilter}
+            className="flex items-center space-x-1"
+          >
+            <X className="w-4 h-4" />
+            <span>{t('button.removeFilter')}</span>
+          </Button>
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

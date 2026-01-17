@@ -26,7 +26,9 @@ class PraiseService:
             )
         return praise
 
-    def get_all(self, skip: int = 0, limit: int = 100, name: Optional[str] = None) -> List[Praise]:
+    def get_all(self, skip: int = 0, limit: int = 100, name: Optional[str] = None, tag_id: Optional[UUID] = None) -> List[Praise]:
+        if tag_id:
+            return self.repository.get_by_tag_id(tag_id, skip=skip, limit=limit)
         if name:
             return self.repository.search_by_name(name, skip=skip, limit=limit)
         return self.repository.get_all(skip=skip, limit=limit)

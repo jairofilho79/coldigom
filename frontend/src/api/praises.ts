@@ -9,6 +9,7 @@ export interface GetPraisesParams {
   skip?: number;
   limit?: number;
   name?: string;
+  tag_id?: string;
 }
 
 export const praisesApi = {

@@ -61,6 +61,22 @@ class PraiseRepository(BaseRepository):
             .all()
         )
 
+    def get_by_tag_id(self, tag_id: UUID, skip: int = 0, limit: int = 100) -> List[Praise]:
+        from app.domain.models.praise import praise_tag_association
+        return (
+            self.db.query(Praise)
+            .join(praise_tag_association)
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
+            )
+            .filter(praise_tag_association.c.tag_id == tag_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
     def create(self, praise: Praise) -> Praise:
         self.db.add(praise)
         self.db.commit()

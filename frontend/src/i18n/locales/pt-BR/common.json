@@ -9,7 +9,8 @@
     "update": "Atualizar",
     "confirm": "Confirmar",
     "close": "Fechar",
-    "logout": "Sair"
+    "logout": "Sair",
+    "removeFilter": "Remover Filtro"
   },
   "label": {
     "tags": "Tags",
@@ -96,7 +97,8 @@
     "errorLoadingTranslations": "Erro ao carregar traduções",
     "errorSavingTranslations": "Erro ao salvar traduções",
     "noTranslationsToSave": "Nenhuma tradução para salvar",
-    "translationsSaved": "{count} tradução(ões) salva(s) com sucesso"
+    "translationsSaved": "{count} tradução(ões) salva(s) com sucesso",
+    "filteringByTag": "Filtrando por tag"
   },
   "page": {
     "dashboard": "Dashboard",
@@ -116,7 +118,8 @@
     "newMaterial": "Novo Material",
     "newTag": "Nova Tag",
     "newType": "Novo Tipo",
-    "createFirstPraise": "Criar primeiro louvor"
+    "createFirstPraise": "Criar primeiro louvor",
+    "listPraises": "Listar Louvores"
   },
   "modal": {
     "createTag": "Criar Nova Tag",

@@ -15,12 +15,13 @@ def list_praises(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     name: Optional[str] = Query(None),
+    tag_id: Optional[UUID] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Lista todos os praises com paginação e busca opcional"""
+    """Lista todos os praises com paginação e busca opcional por nome ou tag"""
     service = PraiseService(db)
-    praises = service.get_all(skip=skip, limit=limit, name=name)
+    praises = service.get_all(skip=skip, limit=limit, name=name, tag_id=tag_id)
     return praises
 
 

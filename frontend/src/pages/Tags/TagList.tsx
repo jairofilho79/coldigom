@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useTags, useDeleteTag } from '@/hooks/useTags';
 import { TagForm } from '@/components/tags/TagForm';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Loading } from '@/components/ui/Loading';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, List } from 'lucide-react';
 import type { TagCreateFormData, TagUpdateFormData } from '@/utils/validation';
 import { useCreateTag, useUpdateTag } from '@/hooks/useTags';
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
@@ -79,6 +80,15 @@ export const TagList = () => {
             >
               <span className="text-lg font-medium">{getPraiseTagName(tag.id, tag.name)}</span>
               <div className="flex space-x-2">
+                <Link to={`/praises?tag_id=${tag.id}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title={t('action.listPraises')}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
                   size="sm"

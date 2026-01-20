@@ -79,3 +79,18 @@ class StorageClient(Protocol):
             Tamanho do arquivo em bytes ou None se não existir
         """
         ...
+    
+    def download_file(self, file_path: str) -> bytes:
+        """
+        Baixa um arquivo do storage e retorna seu conteúdo binário
+        
+        Args:
+            file_path: Path do arquivo no storage
+        
+        Returns:
+            Conteúdo binário do arquivo
+        
+        Raises:
+            Exception: Se o arquivo não existir ou houver erro ao baixar
+        """
+        ...

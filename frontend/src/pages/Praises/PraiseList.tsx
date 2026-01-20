@@ -5,9 +5,10 @@ import { usePraises } from '@/hooks/usePraises';
 import { useTag } from '@/hooks/useTags';
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 import { PraiseCard } from '@/components/praises/PraiseCard';
+import { DownloadByMaterialKindModal } from '@/components/praises/DownloadByMaterialKindModal';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
-import { Plus, Search, X, Tag } from 'lucide-react';
+import { Plus, Search, X, Tag, Download } from 'lucide-react';
 
 export const PraiseList = () => {
   const { t } = useTranslation('common');
@@ -15,6 +16,7 @@ export const PraiseList = () => {
   const { getPraiseTagName } = useEntityTranslations();
   const [searchTerm, setSearchTerm] = useState('');
   const [skip, setSkip] = useState(0);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const limit = 20;
   const tagId = searchParams.get('tag_id') || undefined;
 
@@ -54,12 +56,21 @@ export const PraiseList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">{t('page.praises')}</h1>
-        <Link to="/praises/create">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            {t('action.newPraise')}
+        <div className="flex space-x-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsDownloadModalOpen(true)}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {t('button.downloadByMaterialKind') || 'Baixar por Material Kind'}
           </Button>
-        </Link>
+          <Link to="/praises/create">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              {t('action.newPraise')}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {tagId && tag && (
@@ -133,6 +144,13 @@ export const PraiseList = () => {
           </Button>
         </div>
       )}
+
+      <DownloadByMaterialKindModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        tagId={tagId}
+        tagName={tag ? getPraiseTagName(tag.id, tag.name) : undefined}
+      />
     </div>
   );
 };

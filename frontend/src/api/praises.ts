@@ -44,4 +44,35 @@ export const praisesApi = {
   deletePraise: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/v1/praises/${id}`);
   },
+
+  downloadPraiseZip: async (id: string): Promise<Blob> => {
+    const response = await apiClient.get(`/api/v1/praises/${id}/download-zip`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadPraisesByMaterialKind: async (
+    materialKindId: string,
+    tagId?: string,
+    maxZipSizeMb?: number
+  ): Promise<Blob> => {
+    const params: Record<string, string | number> = {
+      material_kind_id: materialKindId,
+    };
+    
+    if (tagId) {
+      params.tag_id = tagId;
+    }
+    
+    if (maxZipSizeMb !== undefined) {
+      params.max_zip_size_mb = maxZipSizeMb;
+    }
+    
+    const response = await apiClient.get('/api/v1/praises/download-by-material-kind', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };

@@ -145,6 +145,33 @@ class WasabiClient:
             return response.get('ContentLength')
         except ClientError:
             return None
+    
+    def download_file(self, file_path: str) -> bytes:
+        """
+        Baixa um arquivo do Wasabi e retorna seu conteúdo binário
+        
+        Args:
+            file_path: Path do arquivo no Wasabi
+        
+        Returns:
+            Conteúdo binário do arquivo
+        
+        Raises:
+            Exception: Se o arquivo não existir ou houver erro ao baixar
+        """
+        from io import BytesIO
+        
+        try:
+            buffer = BytesIO()
+            self.s3_client.download_fileobj(
+                Bucket=self.bucket_name,
+                Key=file_path,
+                Fileobj=buffer
+            )
+            buffer.seek(0)
+            return buffer.read()
+        except ClientError as e:
+            raise Exception(f"Error downloading file from Wasabi: {str(e)}")
 
 
 

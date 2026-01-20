@@ -10,7 +10,11 @@
     "confirm": "Confirmar",
     "close": "Fechar",
     "logout": "Sair",
-    "removeFilter": "Remover Filtro"
+    "removeFilter": "Remover Filtro",
+    "download": "Baixar",
+    "downloading": "Baixando...",
+    "downloadByMaterialKind": "Baixar por Material Kind",
+    "downloadZip": "Download ZIP"
   },
   "label": {
     "tags": "Tags",
@@ -36,7 +40,8 @@
     "selectMaterialKind": "Selecione um tipo de material",
     "selectFile": "Selecionar Arquivo",
     "replaceFile": "Substituir Arquivo",
-    "changeFile": "Trocar Arquivo"
+    "changeFile": "Trocar Arquivo",
+    "maxZipSize": "Tamanho máximo por ZIP (MB)"
   },
   "message": {
     "noTags": "Nenhuma tag associada",
@@ -98,7 +103,10 @@
     "errorSavingTranslations": "Erro ao salvar traduções",
     "noTranslationsToSave": "Nenhuma tradução para salvar",
     "translationsSaved": "{count} tradução(ões) salva(s) com sucesso",
-    "filteringByTag": "Filtrando por tag"
+    "filteringByTag": "Filtrando por tag",
+    "tagFilterActive": "Filtro de tag ativo",
+    "downloadLimitedToTag": "O download será limitado aos praises com a tag",
+    "maxZipSizeHint": "Os arquivos serão divididos em múltiplos ZIPs quando excederem este tamanho"
   },
   "page": {
     "dashboard": "Dashboard",

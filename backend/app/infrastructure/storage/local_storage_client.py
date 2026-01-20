@@ -130,8 +130,18 @@ class LocalStorageClient:
         Returns:
             True se o arquivo existe
         """
+        # Tentar múltiplos caminhos, igual ao endpoint de download
+        # Primeiro tenta o caminho configurado
         full_path = self.storage_path / file_path
-        return full_path.exists() and full_path.is_file()
+        if full_path.exists() and full_path.is_file():
+            return True
+        
+        # Se não existir, tenta o caminho padrão do container
+        container_path = Path("/storage/assets") / file_path
+        if container_path.exists() and container_path.is_file():
+            return True
+        
+        return False
     
     def get_file_size(self, file_path: str) -> Optional[int]:
         """
@@ -151,3 +161,36 @@ class LocalStorageClient:
             return None
         except Exception:
             return None
+    
+    def download_file(self, file_path: str) -> bytes:
+        """
+        Baixa um arquivo do armazenamento local e retorna seu conteúdo binário
+        
+        Args:
+            file_path: Path relativo do arquivo no storage
+        
+        Returns:
+            Conteúdo binário do arquivo
+        
+        Raises:
+            Exception: Se o arquivo não existir ou houver erro ao ler
+        """
+        # Tentar múltiplos caminhos, igual ao endpoint de download
+        # Primeiro tenta o caminho configurado
+        full_path = self.storage_path / file_path
+        
+        # Se o caminho configurado não existir, tenta o caminho padrão do container
+        if not full_path.exists() or not full_path.is_file():
+            container_path = Path("/storage/assets") / file_path
+            if container_path.exists() and container_path.is_file():
+                full_path = container_path
+            else:
+                raise Exception(f"File not found: {file_path} (tried {self.storage_path / file_path} and {container_path})")
+        
+        try:
+            with open(full_path, 'rb') as f:
+                return f.read()
+        except FileNotFoundError:
+            raise Exception(f"File not found: {file_path} (tried {self.storage_path / file_path} and {Path('/storage/assets') / file_path})")
+        except Exception as e:
+            raise Exception(f"Error downloading file from local storage: {str(e)} (path: {full_path})")

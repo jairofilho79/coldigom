@@ -6,8 +6,9 @@ import { Loading } from '@/components/ui/Loading';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PraiseMaterialsList } from '@/components/praises/PraiseMaterialsList';
-import { Edit, Trash2, ArrowLeft, Tag } from 'lucide-react';
+import { Edit, Trash2, ArrowLeft, Tag, Download } from 'lucide-react';
 import { useState } from 'react';
+import { praisesApi } from '@/api/praises';
 
 export const PraiseDetail = () => {
   const { t } = useTranslation('common');
@@ -15,6 +16,7 @@ export const PraiseDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data: praise, isLoading, error } = usePraise(id || '');
   const deletePraise = useDeletePraise();
@@ -28,6 +30,46 @@ export const PraiseDetail = () => {
       // Erro já tratado no hook
     }
     setShowDeleteDialog(false);
+  };
+
+  const handleDownloadZip = async () => {
+    if (!id) return;
+    
+    setIsDownloading(true);
+    try {
+      const blob = await praisesApi.downloadPraiseZip(id);
+      
+      // Criar URL do blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Criar elemento <a> temporário para download
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Obter nome do arquivo do Content-Disposition header ou usar padrão
+      const praiseName = praise?.name || 'praise';
+      const praiseNumber = praise?.number;
+      const fileName = praiseNumber 
+        ? `${praiseName}_${praiseNumber}.zip`
+        : `${praiseName}.zip`;
+      
+      // Sanitizar nome do arquivo
+      const sanitizedFileName = fileName.replace(/[^a-z0-9._-]/gi, '_').toLowerCase();
+      link.download = sanitizedFileName;
+      
+      // Disparar download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao baixar ZIP:', error);
+      // TODO: Mostrar mensagem de erro ao usuário
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   if (isLoading) {
@@ -89,6 +131,14 @@ export const PraiseDetail = () => {
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">
+          <Button
+            variant="primary"
+            onClick={handleDownloadZip}
+            disabled={isDownloading}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {isDownloading ? t('button.downloading') || 'Baixando...' : t('button.downloadZip') || 'Download ZIP'}
+          </Button>
           <Link to={`/praises/${id}/edit`}>
             <Button variant="secondary">
               <Edit className="w-4 h-4 mr-2" />

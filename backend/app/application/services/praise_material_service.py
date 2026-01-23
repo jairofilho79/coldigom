@@ -90,7 +90,9 @@ class PraiseMaterialService:
             material_kind_id=material_data.material_kind_id,
             material_type_id=material_data.material_type_id,
             path=material_data.path,
-            praise_id=material_data.praise_id
+            praise_id=material_data.praise_id,
+            is_old=material_data.is_old or False,
+            old_description=material_data.old_description or None
         )
         return self.repository.create(material)
 
@@ -118,6 +120,11 @@ class PraiseMaterialService:
         if material_data.path is not None:
             material.path = material_data.path
         
+        if material_data.is_old is not None:
+            material.is_old = material_data.is_old
+        if material_data.old_description is not None:
+            material.old_description = material_data.old_description or None
+        
         return self.repository.update(material)
 
     def update_with_file(
@@ -126,7 +133,9 @@ class PraiseMaterialService:
         file_obj: BinaryIO,
         file_name: str,
         storage: StorageClient,
-        material_kind_id: Optional[UUID] = None
+        material_kind_id: Optional[UUID] = None,
+        is_old: Optional[bool] = None,
+        old_description: Optional[str] = None
     ) -> PraiseMaterial:
         """Atualiza um material com um novo arquivo"""
         material = self.get_by_id(material_id)
@@ -190,6 +199,11 @@ class PraiseMaterialService:
         
         # Atualiza o path do material
         material.path = new_path
+        
+        if is_old is not None:
+            material.is_old = is_old
+        if old_description is not None:
+            material.old_description = old_description or None
         
         return self.repository.update(material)
 

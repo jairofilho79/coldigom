@@ -41,7 +41,12 @@
     "selectFile": "Selecionar Arquivo",
     "replaceFile": "Substituir Arquivo",
     "changeFile": "Trocar Arquivo",
-    "maxZipSize": "Tamanho máximo por ZIP (MB)"
+    "maxZipSize": "Tamanho máximo por ZIP (MB)",
+    "materialIsOld": "Material antigo",
+    "materialOldDescription": "Observação (material antigo)",
+    "badgeOld": "Antigo",
+    "viewOldMaterials": "Ver Materiais Antigos",
+    "hideOldMaterials": "Ocultar Materiais Antigos"
   },
   "message": {
     "noTags": "Nenhuma tag associada",
@@ -199,6 +204,21 @@
     "kb": "KB",
     "mb": "MB",
     "gb": "GB"
+  },
+  "review": {
+    "sectionTitle": "Revisão",
+    "inReview": "Em revisão",
+    "reviewCancelled": "Revisão cancelada",
+    "reviewFinished": "Revisão finalizada",
+    "markInReview": "Marcar em revisão",
+    "startReview": "Iniciar revisão",
+    "cancelReview": "Cancelar revisão",
+    "finishReview": "Finalizar revisão",
+    "inReviewDescription": "Observação (em revisão)",
+    "history": "Histórico de revisão",
+    "noHistory": "Nenhum evento de revisão",
+    "confirmCancel": "Tem certeza que deseja cancelar a revisão?",
+    "confirmFinish": "Tem certeza que deseja finalizar a revisão?"
   },
   "confirmDialog": {
     "defaultConfirm": "Confirmar",

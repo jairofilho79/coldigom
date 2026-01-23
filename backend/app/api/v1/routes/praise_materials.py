@@ -3,7 +3,24 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
 import os
+import logging
 from app.core.dependencies import get_db, get_current_user, get_storage
+
+logger = logging.getLogger(__name__)
+
+
+def _parse_form_bool(val: Optional[str], default: bool = False) -> bool:
+    """Converte string de Form (true/false/1/on/yes) para bool."""
+    if val is None or (isinstance(val, str) and val.strip() == ''):
+        return default
+    return str(val).strip().lower() in ('true', '1', 'on', 'yes')
+
+
+def _parse_form_optional_bool(val: Optional[str]) -> Optional[bool]:
+    """Converte string de Form para Optional[bool]; None ou vazio = None (não alterar)."""
+    if val is None or (isinstance(val, str) and val.strip() == ''):
+        return None
+    return str(val).strip().lower() in ('true', '1', 'on', 'yes')
 from app.domain.models.user import User
 from app.domain.schemas.praise_material import PraiseMaterialCreate, PraiseMaterialUpdate, PraiseMaterialResponse
 from app.application.services.praise_material_service import PraiseMaterialService
@@ -181,11 +198,16 @@ async def upload_praise_material(
     file: UploadFile = File(...),
     material_kind_id: UUID = Form(...),
     praise_id: UUID = Form(...),
+    is_old: Optional[str] = Form("false"),
+    old_description: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     storage: StorageClient = Depends(get_storage)
 ):
     """Faz upload de um arquivo e cria um material de praise"""
+    is_old_bool = _parse_form_bool(is_old, default=False)
+    old_desc_clean = (old_description or '').strip() or None
+    logger.info("upload_praise_material form params: is_old=%s->%s, old_description=%s->%s", is_old, is_old_bool, repr(old_description), repr(old_desc_clean))
     # Generate material ID first
     from uuid import uuid4
     material_id = uuid4()
@@ -251,12 +273,15 @@ async def upload_praise_material(
         material_kind_id=material_kind_id,
         material_type_id=material_type.id,
         path=file_path,
-        praise_id=praise_id
+        praise_id=praise_id,
+        is_old=is_old_bool,
+        old_description=old_desc_clean
     )
     repo = PraiseMaterialRepository(db)
     material = repo.create(material)
     db.commit()
     db.refresh(material)
+    logger.info("upload_praise_material created: id=%s is_old=%s old_description=%s", material.id, material.is_old, repr(material.old_description))
     return material
 
 
@@ -277,38 +302,44 @@ async def update_praise_material_with_file(
     material_id: UUID,
     file: UploadFile = File(...),
     material_kind_id: Optional[UUID] = Form(None),
+    is_old: Optional[str] = Form(None),
+    old_description: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     storage: StorageClient = Depends(get_storage)
 ):
     """Atualiza um material de praise com um novo arquivo"""
-    import logging
-    logger = logging.getLogger(__name__)
+    # Form envia strings: is_old chega como "true"/"false"
+    is_old_parsed = _parse_form_optional_bool(is_old)
+    _old_desc = None if old_description is None else (old_description or '').strip()
+    logger.info("update_praise_material_with_file form: is_old=%s->%s, old_description=%s->%s", repr(is_old), is_old_parsed, repr(old_description), repr(_old_desc))
     
     # Resetar o ponteiro do arquivo para o início
     await file.seek(0)
-    logger.info(f"Updating material {material_id} with new file: {file.filename}")
+    logger.info("Updating material %s with new file: %s", material_id, file.filename)
     
     service = PraiseMaterialService(db)
     material_before = service.get_by_id(material_id)
-    logger.info(f"Material before update - path: {material_before.path}")
+    logger.info("Material before update - path: %s is_old: %s old_description: %s", material_before.path, material_before.is_old, repr(material_before.old_description))
     
     material = service.update_with_file(
         material_id=material_id,
         file_obj=file.file,
         file_name=file.filename,
         storage=storage,
-        material_kind_id=material_kind_id
+        material_kind_id=material_kind_id,
+        is_old=is_old_parsed,
+        old_description=_old_desc
     )
     db.commit()
     db.refresh(material)
-    logger.info(f"Material after update - path: {material.path}, old path was: {material_before.path}")
+    logger.info("Material after update - path: %s, is_old: %s, old_description: %s", material.path, material.is_old, repr(material.old_description))
     
     # Verificar se o arquivo foi realmente substituído
     if material.path == material_before.path:
-        logger.warning(f"AVISO: O path não mudou após atualização. Pode ser que o arquivo não foi substituído no storage.")
+        logger.warning("AVISO: O path não mudou após atualização. Pode ser que o arquivo não foi substituído no storage.")
     else:
-        logger.info(f"Path atualizado de {material_before.path} para {material.path}")
+        logger.info("Path atualizado de %s para %s", material_before.path, material.path)
     
     return material
 
@@ -321,8 +352,10 @@ def update_praise_material(
     current_user: User = Depends(get_current_user)
 ):
     """Atualiza um material de praise"""
+    logger.info("update_praise_material JSON: id=%s is_old=%s old_description=%s", material_id, material_data.is_old, repr(material_data.old_description))
     service = PraiseMaterialService(db)
     material = service.update(material_id, material_data)
+    logger.info("update_praise_material after: is_old=%s old_description=%s", material.is_old, repr(material.old_description))
     return material
 
 

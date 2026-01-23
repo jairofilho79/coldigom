@@ -1,10 +1,11 @@
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.domain.models.praise import Praise
 from app.domain.models.praise_tag import PraiseTag
-from app.domain.schemas.praise import PraiseCreate, PraiseUpdate
+from app.domain.schemas.praise import PraiseCreate, PraiseUpdate, ReviewActionRequest
 from app.infrastructure.database.repositories.praise_repository import PraiseRepository
 from app.infrastructure.database.repositories.praise_tag_repository import PraiseTagRepository
 from app.infrastructure.database.repositories.praise_material_repository import PraiseMaterialRepository
@@ -43,11 +44,20 @@ class PraiseService:
                     detail=f"Praise with number {praise_data.number} already exists"
                 )
         
+        in_review = praise_data.in_review or False
+        if in_review:
+            review_history = [{"type": "in_review", "date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}]
+        else:
+            review_history = []
+
         praise = Praise(
             name=praise_data.name,
-            number=praise_data.number
+            number=praise_data.number,
+            in_review=in_review,
+            in_review_description=praise_data.in_review_description or None,
+            review_history=review_history,
         )
-        
+
         # Add tags if provided
         if praise_data.tag_ids:
             tags = []
@@ -71,7 +81,9 @@ class PraiseService:
                     material_kind_id=material_data.material_kind_id,
                     material_type_id=material_data.material_type_id,
                     path=material_data.path,
-                    praise_id=praise.id
+                    praise_id=praise.id,
+                    is_old=material_data.is_old or False,
+                    old_description=material_data.old_description or None
                 )
                 self.material_repo.create(material)
         
@@ -106,12 +118,55 @@ class PraiseService:
                     )
                 tags.append(tag)
             praise.tags = tags
-        
+
+        if praise_data.in_review_description is not None:
+            praise.in_review_description = praise_data.in_review_description
+
         return self.repository.update(praise)
 
     def delete(self, praise_id: UUID) -> bool:
         praise = self.get_by_id(praise_id)
         return self.repository.delete(praise_id)
+
+    def review_action(self, praise_id: UUID, data: ReviewActionRequest) -> Praise:
+        praise = self.get_by_id(praise_id)
+        history = list(praise.review_history or [])
+        last = history[-1] if history else None
+        now_str = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        if data.action == "start":
+            if last and last.get("type") == "in_review":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Already in review",
+                )
+            history.append({"type": "in_review", "date": now_str})
+            praise.review_history = history
+            praise.in_review = True
+            if data.in_review_description is not None:
+                praise.in_review_description = data.in_review_description
+
+        elif data.action == "cancel":
+            if not last or last.get("type") != "in_review":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Not in review",
+                )
+            history.append({"type": "review_cancelled", "date": now_str})
+            praise.review_history = history
+            praise.in_review = False
+
+        elif data.action == "finish":
+            if not last or last.get("type") != "in_review":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Not in review",
+                )
+            history.append({"type": "review_finished", "date": now_str})
+            praise.review_history = history
+            praise.in_review = False
+
+        return self.repository.update(praise)
 
 
 

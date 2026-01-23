@@ -8,7 +8,7 @@ import io
 import os
 from app.core.dependencies import get_db, get_current_user, get_storage
 from app.domain.models.user import User
-from app.domain.schemas.praise import PraiseCreate, PraiseUpdate, PraiseResponse
+from app.domain.schemas.praise import PraiseCreate, PraiseUpdate, PraiseResponse, ReviewActionRequest
 from app.application.services.praise_service import PraiseService
 from app.infrastructure.storage.storage_client import StorageClient
 from app.infrastructure.database.repositories.material_type_repository import MaterialTypeRepository
@@ -471,6 +471,18 @@ def get_praise(
     service = PraiseService(db)
     praise = service.get_by_id(praise_id)
     return praise
+
+
+@router.post("/{praise_id}/review", response_model=PraiseResponse)
+def review_action(
+    praise_id: UUID,
+    data: ReviewActionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Inicia, cancela ou finaliza a revisão do praise (action: start, cancel, finish)."""
+    service = PraiseService(db)
+    return service.review_action(praise_id, data)
 
 
 @router.post("/", response_model=PraiseResponse, status_code=status.HTTP_201_CREATED)

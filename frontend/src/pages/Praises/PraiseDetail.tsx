@@ -1,14 +1,28 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { usePraise, useDeletePraise } from '@/hooks/usePraises';
+import { usePraise, useDeletePraise, useReviewAction } from '@/hooks/usePraises';
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 import { Loading } from '@/components/ui/Loading';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Modal } from '@/components/ui/Modal';
 import { PraiseMaterialsList } from '@/components/praises/PraiseMaterialsList';
-import { Edit, Trash2, ArrowLeft, Tag, Download } from 'lucide-react';
+import { Edit, Trash2, ArrowLeft, Tag, Download, FileSearch, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { praisesApi } from '@/api/praises';
+import type { ReviewEventType } from '@/types';
+
+const REVIEW_EVENT_LABEL: Record<ReviewEventType, string> = {
+  in_review: 'review.inReview',
+  review_cancelled: 'review.reviewCancelled',
+  review_finished: 'review.reviewFinished',
+};
+
+const REVIEW_EVENT_DOT: Record<ReviewEventType, string> = {
+  in_review: 'bg-amber-500',
+  review_cancelled: 'bg-red-400',
+  review_finished: 'bg-green-500',
+};
 
 export const PraiseDetail = () => {
   const { t } = useTranslation('common');
@@ -16,10 +30,16 @@ export const PraiseDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showStartReviewModal, setShowStartReviewModal] = useState(false);
+  const [showCancelReviewDialog, setShowCancelReviewDialog] = useState(false);
+  const [showFinishReviewDialog, setShowFinishReviewDialog] = useState(false);
+  const [startReviewDescription, setStartReviewDescription] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   const { data: praise, isLoading, error } = usePraise(id || '');
   const deletePraise = useDeletePraise();
+  const reviewAction = useReviewAction();
 
   const handleDelete = async () => {
     if (!id) return;
@@ -30,6 +50,40 @@ export const PraiseDetail = () => {
       // Erro já tratado no hook
     }
     setShowDeleteDialog(false);
+  };
+
+  const handleStartReview = async () => {
+    if (!id) return;
+    try {
+      await reviewAction.mutateAsync({
+        id,
+        data: { action: 'start', in_review_description: startReviewDescription || undefined },
+      });
+      setShowStartReviewModal(false);
+      setStartReviewDescription('');
+    } catch {
+      // Erro já tratado no hook
+    }
+  };
+
+  const handleCancelReview = async () => {
+    if (!id) return;
+    try {
+      await reviewAction.mutateAsync({ id, data: { action: 'cancel' } });
+      setShowCancelReviewDialog(false);
+    } catch {
+      // Erro já tratado no hook
+    }
+  };
+
+  const handleFinishReview = async () => {
+    if (!id) return;
+    try {
+      await reviewAction.mutateAsync({ id, data: { action: 'finish' } });
+      setShowFinishReviewDialog(false);
+    } catch {
+      // Erro já tratado no hook
+    }
   };
 
   const handleDownloadZip = async () => {
@@ -127,6 +181,95 @@ export const PraiseDetail = () => {
         </div>
 
         <div>
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <FileSearch className="w-5 h-5 mr-2" />
+            {t('review.sectionTitle')}
+          </h2>
+          {praise.in_review ? (
+            <div className="space-y-3">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                {t('review.inReview')}
+              </span>
+              {praise.in_review_description && (
+                <p className="text-gray-600">{praise.in_review_description}</p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCancelReviewDialog(true)}
+                  disabled={reviewAction.isPending}
+                >
+                  {t('review.cancelReview')}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowFinishReviewDialog(true)}
+                  disabled={reviewAction.isPending}
+                >
+                  {t('review.finishReview')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStartReviewModal(true)}
+                disabled={reviewAction.isPending}
+              >
+                {t('review.markInReview')}
+              </Button>
+            </div>
+          )}
+          {praise.review_history && praise.review_history.length > 0 && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setHistoryExpanded((v) => !v)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer hover:text-gray-900 transition-colors"
+              >
+                {historyExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+                {t('review.history')} ({praise.review_history.length})
+              </button>
+              {historyExpanded && (
+                <div className="mt-2 max-h-48 overflow-y-auto border-l-2 border-gray-200 pl-3">
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    {(() => {
+                      const reversed = [...praise.review_history].reverse();
+                      const firstInReviewIndex = reversed.findIndex((e) => e.type === 'in_review');
+                      return reversed.map((evt, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${REVIEW_EVENT_DOT[evt.type]}`}
+                          />
+                          <div className="min-w-0">
+                              <span className="font-medium">{t(REVIEW_EVENT_LABEL[evt.type])}</span>
+                              <span> – </span>
+                              <span>{new Date(evt.date).toLocaleString()}</span>
+                              {i === firstInReviewIndex && praise.in_review_description && (
+                                <p className="text-gray-500 text-xs mt-0.5">
+                                  {praise.in_review_description}
+                                </p>
+                              )}
+                          </div>
+                        </li>
+                      ));
+                    })()}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div>
           <PraiseMaterialsList materials={praise.materials} praiseId={id || ''} />
         </div>
 
@@ -164,6 +307,66 @@ export const PraiseDetail = () => {
         confirmText={t('button.delete')}
         variant="danger"
         isLoading={deletePraise.isPending}
+      />
+
+      <Modal
+        isOpen={showStartReviewModal}
+        onClose={() => { setShowStartReviewModal(false); setStartReviewDescription(''); }}
+        title={t('review.startReview')}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('review.inReviewDescription')}
+            </label>
+            <textarea
+              value={startReviewDescription}
+              onChange={(e) => setStartReviewDescription(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={t('review.inReviewDescription')}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setShowStartReviewModal(false); setStartReviewDescription(''); }}
+              disabled={reviewAction.isPending}
+            >
+              {t('button.close')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleStartReview}
+              isLoading={reviewAction.isPending}
+            >
+              {t('review.startReview')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={showCancelReviewDialog}
+        onClose={() => setShowCancelReviewDialog(false)}
+        onConfirm={handleCancelReview}
+        title={t('review.cancelReview')}
+        message={t('review.confirmCancel')}
+        confirmText={t('review.cancelReview')}
+        variant="danger"
+        isLoading={reviewAction.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={showFinishReviewDialog}
+        onClose={() => setShowFinishReviewDialog(false)}
+        onConfirm={handleFinishReview}
+        title={t('review.finishReview')}
+        message={t('review.confirmFinish')}
+        confirmText={t('review.finishReview')}
+        variant="primary"
+        isLoading={reviewAction.isPending}
       />
     </div>
   );

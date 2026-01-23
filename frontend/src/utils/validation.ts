@@ -32,6 +32,8 @@ export const praiseCreateSchema = z.object({
   number: z.number().int().positive().nullable().optional(),
   tag_ids: z.array(z.string().uuid()).optional(),
   materials: z.array(z.any()).optional(),
+  in_review: z.boolean().optional(),
+  in_review_description: z.string().max(2000).nullable().optional(),
 });
 
 export type PraiseCreateFormData = z.infer<typeof praiseCreateSchema>;
@@ -40,6 +42,7 @@ export const praiseUpdateSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(255, 'Nome muito longo').optional(),
   number: z.number().int().positive().nullable().optional(),
   tag_ids: z.array(z.string().uuid()).nullable().optional(),
+  in_review_description: z.string().max(2000).nullable().optional(),
 });
 
 export type PraiseUpdateFormData = z.infer<typeof praiseUpdateSchema>;
@@ -89,6 +92,8 @@ export const materialCreateSchema = z.object({
   material_kind_id: z.string().uuid('ID do tipo de material inválido'),
   material_type_id: z.string().uuid('ID do tipo de arquivo inválido'),
   path: z.string().min(1, 'Path/URL é obrigatório'),
+  is_old: z.boolean().optional(),
+  old_description: z.string().max(2000).nullable().optional(),
 });
 
 export type MaterialCreateFormData = z.infer<typeof materialCreateSchema>;
@@ -97,6 +102,8 @@ export const materialUpdateSchema = z.object({
   material_kind_id: z.string().uuid('ID do tipo de material inválido').optional(),
   material_type_id: z.string().uuid('ID do tipo de arquivo inválido').optional(),
   path: z.string().min(1, 'Path/URL é obrigatório').optional(),
+  is_old: z.boolean().optional(),
+  old_description: z.string().max(2000).nullable().optional(),
 });
 
 export type MaterialUpdateFormData = z.infer<typeof materialUpdateSchema>;

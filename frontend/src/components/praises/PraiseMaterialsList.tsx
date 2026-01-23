@@ -33,6 +33,11 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
   const [editingMaterial, setEditingMaterial] = useState<PraiseMaterialSimple | null>(null);
   const [creatingMaterial, setCreatingMaterial] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showOldMaterials, setShowOldMaterials] = useState<boolean>(false);
+
+  const hasOldMaterials = materials.some((m) => m.is_old === true);
+  const displayedMaterials = showOldMaterials ? materials : materials.filter((m) => !m.is_old);
+
   const deleteMaterial = useDeleteMaterial();
   const updateMaterial = useUpdateMaterial();
   const updateMaterialWithFile = useUpdateMaterialWithFile();
@@ -111,7 +116,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     setEditingMaterial(material);
   };
 
-  const handleUpdate = async (data: MaterialUpdateFormData | { file: File; material_kind_id?: string }) => {
+  const handleUpdate = async (data: MaterialUpdateFormData | { file: File; material_kind_id?: string; is_old?: boolean; old_description?: string | null }) => {
     if (!editingMaterial) return;
     
     console.log('handleUpdate - dados recebidos', { data, editingMaterial });
@@ -119,17 +124,20 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     try {
       // Se o data contém file, usa updateMaterialWithFile
       if ('file' in data && data.file) {
+        const fileData = data as { file: File; material_kind_id?: string; is_old?: boolean; old_description?: string | null };
         console.log('handleUpdate - usando updateMaterialWithFile', {
           id: editingMaterial.id,
           fileName: data.file.name,
-          materialKindId: data.material_kind_id,
+          materialKindId: fileData.material_kind_id,
           praiseId,
         });
         await updateMaterialWithFile.mutateAsync({
           id: editingMaterial.id,
           file: data.file,
-          materialKindId: data.material_kind_id,
+          materialKindId: fileData.material_kind_id,
           praiseId: praiseId,
+          isOld: fileData.is_old,
+          oldDescription: fileData.old_description,
         });
       } else {
         console.log('handleUpdate - usando updateMaterial', {
@@ -149,15 +157,17 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     }
   };
 
-  const handleCreate = async (data: MaterialCreateFormData | { file?: File }) => {
+  const handleCreate = async (data: MaterialCreateFormData | { file?: File; material_kind_id?: string; is_old?: boolean; old_description?: string | null }) => {
     try {
       // Se tiver arquivo, usa upload
       if ('file' in data && data.file) {
-        const { file, material_kind_id } = data as { file: File; material_kind_id: string };
+        const { file, material_kind_id, is_old, old_description } = data as { file: File; material_kind_id: string; is_old?: boolean; old_description?: string | null };
         await uploadMaterial.mutateAsync({
           file,
           materialKindId: material_kind_id,
           praiseId,
+          isOld: is_old,
+          oldDescription: old_description,
         });
       } else {
         // Senão, cria normalmente (link, texto, etc)
@@ -183,19 +193,30 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     <>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">{t('label.materials')}</h2>
-        <Button
-          onClick={() => setCreatingMaterial(true)}
-          size="sm"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('action.newMaterial')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {hasOldMaterials && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowOldMaterials((v) => !v)}
+            >
+              {showOldMaterials ? t('label.hideOldMaterials') : t('label.viewOldMaterials')}
+            </Button>
+          )}
+          <Button
+            onClick={() => setCreatingMaterial(true)}
+            size="sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {t('action.newMaterial')}
+          </Button>
+        </div>
       </div>
-      {materials.length === 0 ? (
+      {displayedMaterials.length === 0 ? (
         <div className="text-sm text-gray-500 mb-4">{t('message.noMaterialsAdded')}</div>
       ) : (
         <div className="space-y-3">
-        {materials.map((material) => {
+        {displayedMaterials.map((material) => {
           const materialUrl = getMaterialUrl(material);
           const isFile = material.type === 'file';
           const isText = material.type === 'text';
@@ -205,7 +226,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
             <>
               {getIcon(material.type, material.path)}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-wrap gap-1">
                   {material.material_kind ? (
                     <span className="text-sm font-medium text-gray-900 truncate">
                       {getMaterialKindName(material.material_kind.id, material.material_kind.name)}
@@ -213,6 +234,14 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
                   ) : (
                     <span className="text-sm font-medium text-gray-900 truncate">
                       {t('entity.material')}
+                    </span>
+                  )}
+                  {material.is_old && (
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800"
+                      title={material.old_description || undefined}
+                    >
+                      {t('label.badgeOld')}
                     </span>
                   )}
                   {isClickable && (

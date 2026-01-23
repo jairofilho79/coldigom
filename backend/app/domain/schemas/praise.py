@@ -1,7 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from pydantic import BaseModel, Field, field_validator
+from typing import Optional, List, Literal
 from uuid import UUID
 from datetime import datetime
+
+
+class ReviewHistoryEvent(BaseModel):
+    type: Literal["in_review", "review_cancelled", "review_finished"]
+    date: str  # ISO 8601 datetime string
 
 
 class PraiseBase(BaseModel):
@@ -12,12 +17,15 @@ class PraiseBase(BaseModel):
 class PraiseCreate(PraiseBase):
     tag_ids: Optional[List[UUID]] = []
     materials: Optional[List["PraiseMaterialCreate"]] = []
+    in_review: Optional[bool] = False
+    in_review_description: Optional[str] = None
 
 
 class PraiseUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     number: Optional[int] = None
     tag_ids: Optional[List[UUID]] = None
+    in_review_description: Optional[str] = None
 
 
 class PraiseTagSimple(BaseModel):
@@ -33,6 +41,8 @@ class PraiseMaterialSimple(BaseModel):
     material_kind_id: UUID
     material_type_id: UUID
     path: str
+    is_old: bool = False
+    old_description: Optional[str] = None
     material_kind: Optional["MaterialKindResponse"] = None
     material_type: Optional["MaterialTypeResponse"] = None
 
@@ -46,9 +56,22 @@ class PraiseResponse(PraiseBase):
     updated_at: datetime
     tags: List[PraiseTagSimple] = []
     materials: List[PraiseMaterialSimple] = []
+    in_review: bool = False
+    in_review_description: Optional[str] = None
+    review_history: List[ReviewHistoryEvent] = []
+
+    @field_validator("review_history", mode="before")
+    @classmethod
+    def coerce_review_history_none(cls, v: object) -> list:
+        return v if v is not None else []
 
     class Config:
         from_attributes = True
+
+
+class ReviewActionRequest(BaseModel):
+    action: Literal["start", "cancel", "finish"]
+    in_review_description: Optional[str] = None  # used only for "start"
 
 
 # Forward reference resolution

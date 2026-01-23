@@ -34,6 +34,7 @@ export const PraiseForm = ({
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<PraiseCreateFormData | PraiseUpdateFormData>({
     resolver: zodResolver(schema),
@@ -43,8 +44,16 @@ export const PraiseForm = ({
           number: initialData.number ?? undefined,
           tag_ids: initialData.tags?.map((tag) => tag.id) || [],
         }
-      : undefined,
+      : {
+          name: '',
+          number: undefined,
+          tag_ids: [],
+          in_review: false,
+          in_review_description: '',
+        },
   });
+
+  const inReview = watch('in_review');
 
   // Inicializar selectedTagIds quando initialData mudar
   useEffect(() => {
@@ -94,6 +103,37 @@ export const PraiseForm = ({
         onSelect={handleSelectTag}
         onRemove={handleRemoveTag}
       />
+      {!initialData && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="in_review"
+              {...register('in_review')}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="in_review" className="text-sm font-medium text-gray-700">
+              {t('review.inReview')}
+            </label>
+          </div>
+          {inReview && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('review.inReviewDescription')}
+              </label>
+              <textarea
+                {...register('in_review_description')}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder={t('review.inReviewDescription')}
+              />
+              {errors.in_review_description?.message && (
+                <p className="mt-1 text-sm text-red-600">{errors.in_review_description.message}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex justify-end space-x-3">
         <Button type="submit" isLoading={isLoading}>
           {initialData ? t('button.update') : t('button.create')}

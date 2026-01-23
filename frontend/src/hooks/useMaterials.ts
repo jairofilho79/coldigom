@@ -29,11 +29,15 @@ export const useUploadMaterial = () => {
       file,
       materialKindId,
       praiseId,
+      isOld,
+      oldDescription,
     }: {
       file: File;
       materialKindId: string;
       praiseId: string;
-    }) => praiseMaterialsApi.uploadMaterial(file, materialKindId, praiseId),
+      isOld?: boolean;
+      oldDescription?: string | null;
+    }) => praiseMaterialsApi.uploadMaterial(file, materialKindId, praiseId, isOld, oldDescription),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['praise', variables.praiseId] });
@@ -100,14 +104,18 @@ export const useUpdateMaterialWithFile = () => {
       file,
       materialKindId,
       praiseId,
+      isOld,
+      oldDescription,
     }: {
       id: string;
       file: File;
       materialKindId?: string;
       praiseId?: string;
+      isOld?: boolean;
+      oldDescription?: string | null;
     }) => {
       console.log('useUpdateMaterialWithFile - chamando API', { id, fileName: file.name, materialKindId, praiseId });
-      return praiseMaterialsApi.updateMaterialWithFile(id, file, materialKindId);
+      return praiseMaterialsApi.updateMaterialWithFile(id, file, materialKindId, isOld, oldDescription);
     },
     onSuccess: (response, variables) => {
       console.log('useUpdateMaterialWithFile - sucesso', { response, variables });

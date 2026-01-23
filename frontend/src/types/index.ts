@@ -82,6 +82,8 @@ export interface PraiseMaterialResponse {
   material_type_id: string; // UUID
   praise_id: string; // UUID
   path: string; // URL ou caminho do arquivo
+  is_old?: boolean;
+  old_description?: string | null;
   material_kind?: MaterialKindResponse;
   material_type?: MaterialTypeResponse;
 }
@@ -91,12 +93,16 @@ export interface PraiseMaterialCreate {
   material_kind_id: string; // UUID
   material_type_id: string; // UUID
   path: string;
+  is_old?: boolean;
+  old_description?: string | null;
 }
 
 export interface PraiseMaterialUpdate {
   material_kind_id?: string; // UUID
   material_type_id?: string; // UUID
   path?: string;
+  is_old?: boolean;
+  old_description?: string | null;
 }
 
 export interface PraiseMaterialSimple {
@@ -104,8 +110,25 @@ export interface PraiseMaterialSimple {
   material_kind_id: string;
   material_type_id: string;
   path: string;
+  is_old?: boolean;
+  old_description?: string | null;
   material_kind?: MaterialKindResponse;
   material_type?: MaterialTypeResponse;
+}
+
+// Review types
+export type ReviewEventType = 'in_review' | 'review_cancelled' | 'review_finished';
+
+export interface ReviewHistoryEvent {
+  type: ReviewEventType;
+  date: string; // ISO datetime
+}
+
+export type ReviewAction = 'start' | 'cancel' | 'finish';
+
+export interface ReviewActionRequest {
+  action: ReviewAction;
+  in_review_description?: string | null;
 }
 
 // Praise Types
@@ -117,6 +140,9 @@ export interface PraiseResponse {
   updated_at: string; // ISO datetime
   tags: PraiseTagSimple[];
   materials: PraiseMaterialSimple[];
+  in_review: boolean;
+  in_review_description?: string | null;
+  review_history: ReviewHistoryEvent[];
 }
 
 export interface PraiseCreate {
@@ -124,12 +150,15 @@ export interface PraiseCreate {
   number?: number | null;
   tag_ids?: string[]; // UUID[]
   materials?: PraiseMaterialCreate[];
+  in_review?: boolean;
+  in_review_description?: string | null;
 }
 
 export interface PraiseUpdate {
   name?: string;
   number?: number | null;
   tag_ids?: string[] | null; // UUID[]
+  in_review_description?: string | null;
 }
 
 // Download URL Response

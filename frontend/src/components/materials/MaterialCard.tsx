@@ -40,12 +40,22 @@ export const MaterialCard = ({
         <div className="flex items-start space-x-3 flex-1">
           {getIcon()}
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">
-              {material.material_kind 
-                ? getMaterialKindName(material.material_kind.id, material.material_kind.name)
-                : t('entity.material')
-              }
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-medium text-gray-900">
+                {material.material_kind 
+                  ? getMaterialKindName(material.material_kind.id, material.material_kind.name)
+                  : t('entity.material')
+                }
+              </p>
+              {material.is_old && (
+                <span
+                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800"
+                  title={material.old_description || undefined}
+                >
+                  {t('label.badgeOld')}
+                </span>
+              )}
+            </div>
             <p className="text-sm text-gray-500 truncate">{material.path}</p>
             {material.material_type && (
               <p className="text-xs text-gray-400 mt-1">

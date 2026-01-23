@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Integer, DateTime, Table, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Integer, DateTime, Table, ForeignKey, Boolean, text
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -22,6 +22,10 @@ class Praise(Base):
     number = Column(Integer, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    in_review = Column(Boolean, nullable=False, default=False, server_default=text("false"))
+    in_review_description = Column(String(2000), nullable=True)
+    review_history = Column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
 
     # Many-to-many relationship with PraiseTag
     tags = relationship(

@@ -3,6 +3,7 @@ import type {
   PraiseResponse,
   PraiseCreate,
   PraiseUpdate,
+  ReviewActionRequest,
 } from '@/types';
 
 export interface GetPraisesParams {
@@ -36,6 +37,17 @@ export const praisesApi = {
   ): Promise<PraiseResponse> => {
     const response = await apiClient.put<PraiseResponse>(
       `/api/v1/praises/${id}`,
+      data
+    );
+    return response.data;
+  },
+
+  reviewAction: async (
+    id: string,
+    data: ReviewActionRequest
+  ): Promise<PraiseResponse> => {
+    const response = await apiClient.post<PraiseResponse>(
+      `/api/v1/praises/${id}/review`,
       data
     );
     return response.data;

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { praisesApi, type GetPraisesParams } from '@/api/praises';
-import type { PraiseCreate, PraiseUpdate } from '@/types';
+import type { PraiseCreate, PraiseUpdate, ReviewActionRequest } from '@/types';
 import { toast } from 'react-hot-toast';
 
 export const usePraises = (params: GetPraisesParams = {}) => {
@@ -63,6 +63,24 @@ export const useDeletePraise = () => {
     },
     onError: (error: any) => {
       const message = error.response?.data?.detail || 'Erro ao deletar praise';
+      toast.error(message);
+    },
+  });
+};
+
+export const useReviewAction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ReviewActionRequest }) =>
+      praisesApi.reviewAction(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      queryClient.invalidateQueries({ queryKey: ['praise', variables.id] });
+      toast.success('Revisão atualizada com sucesso!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.detail || 'Erro ao atualizar revisão';
       toast.error(message);
     },
   });

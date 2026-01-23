@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy import Boolean, Column, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -24,6 +24,8 @@ class PraiseMaterial(Base):
     path = Column(String, nullable=False)  # Path no Wasabi ou URL para links externos
     # type = Column(Enum(MaterialType), nullable=False, default=MaterialType.FILE)  # Removido - usar material_type_id
     praise_id = Column(UUID(as_uuid=True), ForeignKey("praises.id"), nullable=False)
+    is_old = Column(Boolean, nullable=False, default=False, server_default='false')
+    old_description = Column(String(2000), nullable=True)
 
     # Relationships
     material_kind = relationship("MaterialKind", back_populates="materials")

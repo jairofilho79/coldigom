@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,13 @@ import { Upload, X } from 'lucide-react';
 interface MaterialFormProps {
   praiseId: string;
   initialData?: any;
-  onSubmit: (data: MaterialCreateFormData | MaterialUpdateFormData | { file: File; material_kind_id: string } | { file: File; material_kind_id?: string }) => void;
+  onSubmit: (
+    data:
+      | MaterialCreateFormData
+      | MaterialUpdateFormData
+      | { file: File; material_kind_id: string; is_old?: boolean; old_description?: string | null }
+      | { file: File; material_kind_id?: string; is_old?: boolean; old_description?: string | null }
+  ) => void;
   isLoading?: boolean;
 }
 
@@ -57,6 +63,7 @@ export const MaterialForm = ({
     watch,
     getValues,
     setValue,
+    control,
   } = useForm<MaterialCreateFormData | MaterialUpdateFormData>({
     resolver: zodResolver(schema),
     defaultValues: initialData
@@ -64,15 +71,20 @@ export const MaterialForm = ({
           material_kind_id: initialData.material_kind_id,
           material_type_id: initialData.material_type_id,
           path: initialData.path,
+          is_old: initialData.is_old ?? false,
+          old_description: initialData.old_description ?? '',
         }
       : {
           praise_id: praiseId,
           path: '', // Path vazio para criação (será ignorado se for arquivo)
+          is_old: false,
+          old_description: '',
         },
   });
 
   const materialTypeId = watch('material_type_id');
   const materialKindId = watch('material_kind_id');
+  const isOld = watch('is_old');
   
   // Get material type name for display
   const materialType = materialTypes?.find(t => t.id === materialTypeId);
@@ -116,10 +128,14 @@ export const MaterialForm = ({
         console.log('MaterialForm - material_kind_id não encontrado');
         return;
       }
-      console.log('MaterialForm - enviando arquivo', { file: selectedFile.name, material_kind_id: kindId });
+      const isOldVal = getValues('is_old') ?? false;
+      const oldDescVal = (getValues('old_description') || '').trim() || null;
+      console.log('MaterialForm - enviando arquivo', { file: selectedFile.name, material_kind_id: kindId, is_old: isOldVal, old_description: oldDescVal });
       onSubmit({
         file: selectedFile,
         material_kind_id: kindId,
+        is_old: isOldVal,
+        old_description: oldDescVal,
       });
     } else if (isCreating && isFileType && !selectedFile) {
       // Se está criando arquivo mas não tem arquivo selecionado, não submete
@@ -272,6 +288,45 @@ export const MaterialForm = ({
         </select>
         {errors.material_kind_id && (
           <p className="mt-1 text-sm text-red-600">{errors.material_kind_id.message}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center">
+          <Controller
+            name="is_old"
+            control={control}
+            render={({ field }) => (
+              <input
+                type="checkbox"
+                id="is_old"
+                checked={!!field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                onBlur={field.onBlur}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+            )}
+          />
+          <label htmlFor="is_old" className="ml-2 block text-sm text-gray-700">
+            {t('label.materialIsOld')}
+          </label>
+        </div>
+        {isOld && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('label.materialOldDescription')}
+            </label>
+            <textarea
+              {...register('old_description')}
+              rows={3}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.old_description ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder={t('label.materialOldDescription')}
+            />
+            {errors.old_description && (
+              <p className="mt-1 text-sm text-red-600">{errors.old_description.message}</p>
+            )}
+          </div>
         )}
       </div>
       <div className="flex justify-end space-x-3">

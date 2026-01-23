@@ -33,12 +33,18 @@ export const praiseMaterialsApi = {
   uploadMaterial: async (
     file: File,
     materialKindId: string,
-    praiseId: string
+    praiseId: string,
+    isOld?: boolean,
+    oldDescription?: string | null
   ): Promise<PraiseMaterialResponse> => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('material_kind_id', materialKindId);
     formData.append('praise_id', praiseId);
+    formData.append('is_old', String(isOld ?? false));
+    if (oldDescription != null && oldDescription !== '') {
+      formData.append('old_description', oldDescription);
+    }
 
     const response = await apiClient.post<PraiseMaterialResponse>(
       '/api/v1/praise-materials/upload',
@@ -76,12 +82,20 @@ export const praiseMaterialsApi = {
   updateMaterialWithFile: async (
     id: string,
     file: File,
-    materialKindId?: string
+    materialKindId?: string,
+    isOld?: boolean,
+    oldDescription?: string | null
   ): Promise<PraiseMaterialResponse> => {
     const formData = new FormData();
     formData.append('file', file);
     if (materialKindId) {
       formData.append('material_kind_id', materialKindId);
+    }
+    if (isOld !== undefined) {
+      formData.append('is_old', String(isOld));
+    }
+    if (oldDescription !== undefined) {
+      formData.append('old_description', oldDescription ?? '');
     }
 
     const response = await apiClient.put<PraiseMaterialResponse>(

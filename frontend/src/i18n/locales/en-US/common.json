@@ -40,7 +40,12 @@
     "textContent": "Text Content",
     "file": "File",
     "currentFile": "Current file",
-    "url": "YouTube/Spotify URL or File Path"
+    "url": "YouTube/Spotify URL or File Path",
+    "materialIsOld": "Old material",
+    "materialOldDescription": "Note (old material)",
+    "badgeOld": "Old",
+    "viewOldMaterials": "View Old Materials",
+    "hideOldMaterials": "Hide Old Materials"
   },
   "message": {
     "noTags": "No tags associated",
@@ -196,6 +201,21 @@
     "kb": "KB",
     "mb": "MB",
     "gb": "GB"
+  },
+  "review": {
+    "sectionTitle": "Review",
+    "inReview": "In review",
+    "reviewCancelled": "Review cancelled",
+    "reviewFinished": "Review finished",
+    "markInReview": "Mark in review",
+    "startReview": "Start review",
+    "cancelReview": "Cancel review",
+    "finishReview": "Finish review",
+    "inReviewDescription": "Note (in review)",
+    "history": "Review history",
+    "noHistory": "No review events",
+    "confirmCancel": "Are you sure you want to cancel the review?",
+    "confirmFinish": "Are you sure you want to finish the review?"
   },
   "confirmDialog": {
     "defaultConfirm": "Confirm",

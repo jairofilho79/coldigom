@@ -181,3 +181,48 @@ export interface UserMaterialKindPreferenceResponse {
 export interface MaterialKindOrderUpdate {
   material_kind_ids: string[]; // UUID[], máximo 5 itens
 }
+
+// Praise List Types
+export interface PraiseListResponse {
+  id: string; // UUID
+  name: string; // min: 1, max: 255
+  description?: string | null; // max: 1000
+  is_public: boolean;
+  user_id: string; // UUID
+  owner?: string | null; // username do dono
+  praises_count: number;
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+}
+
+export interface PraiseListCreate {
+  name: string;
+  description?: string | null;
+  is_public?: boolean; // default: true
+}
+
+export interface PraiseListUpdate {
+  name?: string;
+  description?: string | null;
+  is_public?: boolean;
+}
+
+export interface PraiseInList {
+  id: string; // UUID
+  name: string;
+  number: number | null;
+  order: number;
+}
+
+export interface PraiseListDetailResponse extends PraiseListResponse {
+  praises: PraiseInList[];
+  is_owner: boolean;
+  is_following: boolean;
+}
+
+export interface ReorderPraisesRequest {
+  praise_orders: Array<{
+    praise_id: string; // UUID
+    order: number;
+  }>;
+}

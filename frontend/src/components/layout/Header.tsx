@@ -56,6 +56,12 @@ export const Header = () => {
             >
               {t('page.translations')}
             </Link>
+            <Link
+              to="/praise-lists"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+            >
+              {t('page.praiseLists') || 'Listas'}
+            </Link>
             <div className="flex items-center space-x-3">
               <LanguageSelector />
               <Link

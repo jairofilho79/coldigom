@@ -14,6 +14,10 @@ import { MaterialKindList } from '@/pages/MaterialKinds/MaterialKindList';
 import { MaterialTypeList } from '@/pages/MaterialTypes/MaterialTypeList';
 import { TranslationList } from '@/pages/Translations/TranslationList';
 import { UserPreferences } from '@/pages/UserPreferences/UserPreferences';
+import { PraiseListList } from '@/pages/PraiseLists/PraiseListList';
+import { PraiseListDetailPage } from '@/pages/PraiseLists/PraiseListDetail';
+import { PraiseListCreate } from '@/pages/PraiseLists/PraiseListCreate';
+import { PraiseListEdit } from '@/pages/PraiseLists/PraiseListEdit';
 import { useAuthStore } from '@/store/authStore';
 
 function App() {
@@ -121,6 +125,46 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <UserPreferences />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praise-lists"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseListList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praise-lists/create"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseListCreate />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praise-lists/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseListDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/praise-lists/:id/edit"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PraiseListEdit />
                 </Layout>
               </ProtectedRoute>
             }

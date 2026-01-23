@@ -9,6 +9,7 @@ from app.domain.models.material_kind_translation import MaterialKindTranslation
 from app.domain.models.praise_tag_translation import PraiseTagTranslation
 from app.domain.models.material_type_translation import MaterialTypeTranslation
 from app.domain.models.user_material_kind_preference import UserMaterialKindPreference
+from app.domain.models.praise_list import PraiseList, PraiseListFollow
 
 __all__ = [
     "PraiseTag",
@@ -23,6 +24,8 @@ __all__ = [
     "PraiseTagTranslation",
     "MaterialTypeTranslation",
     "UserMaterialKindPreference",
+    "PraiseList",
+    "PraiseListFollow",
 ]
 
 

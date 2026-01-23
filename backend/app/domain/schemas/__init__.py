@@ -7,6 +7,13 @@ from app.domain.schemas.user_preference import (
     UserMaterialKindPreferenceResponse,
     MaterialKindOrderUpdate
 )
+from app.domain.schemas.praise_list import (
+    PraiseListCreate,
+    PraiseListUpdate,
+    PraiseListResponse,
+    PraiseListDetailResponse,
+    ReorderPraisesRequest
+)
 
 __all__ = [
     "PraiseTagCreate",
@@ -27,6 +34,11 @@ __all__ = [
     "Token",
     "UserMaterialKindPreferenceResponse",
     "MaterialKindOrderUpdate",
+    "PraiseListCreate",
+    "PraiseListUpdate",
+    "PraiseListResponse",
+    "PraiseListDetailResponse",
+    "ReorderPraisesRequest",
 ]
 
 

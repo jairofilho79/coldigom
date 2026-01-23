@@ -58,7 +58,12 @@ export const Header = () => {
             </Link>
             <div className="flex items-center space-x-3">
               <LanguageSelector />
-              <span className="text-sm text-gray-600">{user?.username}</span>
+              <Link
+                to="/user-preferences"
+                className="text-sm text-gray-600 hover:text-blue-600 cursor-pointer transition-colors"
+              >
+                {user?.username}
+              </Link>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-1" />
                 {t('button.logout')}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { PraiseMaterialSimple } from '@/types';
 import { 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useDeleteMaterial, useUpdateMaterial, useUpdateMaterialWithFile, useCreateMaterial, useUploadMaterial } from '@/hooks/useMaterials';
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
+import { useUserMaterialKindPreferences } from '@/hooks/useUserPreferences';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { MaterialForm } from '@/components/materials/MaterialForm';
@@ -30,13 +31,62 @@ interface PraiseMaterialsListProps {
 export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsListProps) => {
   const { t } = useTranslation('common');
   const { getMaterialKindName } = useEntityTranslations();
+  const { data: preferences } = useUserMaterialKindPreferences();
   const [editingMaterial, setEditingMaterial] = useState<PraiseMaterialSimple | null>(null);
   const [creatingMaterial, setCreatingMaterial] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showOldMaterials, setShowOldMaterials] = useState<boolean>(false);
 
   const hasOldMaterials = materials.some((m) => m.is_old === true);
-  const displayedMaterials = showOldMaterials ? materials : materials.filter((m) => !m.is_old);
+  const filteredMaterials = showOldMaterials ? materials : materials.filter((m) => !m.is_old);
+
+  // Criar mapa de preferências: material_kind_id -> order
+  const preferenceMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (preferences) {
+      preferences.forEach((pref) => {
+        map.set(pref.material_kind_id, pref.order);
+      });
+    }
+    return map;
+  }, [preferences]);
+
+  // Ordenar materiais: preferidos primeiro (na ordem das preferências), depois os outros (alfabético)
+  const displayedMaterials = useMemo(() => {
+    const sorted = [...filteredMaterials].sort((a, b) => {
+      const aKindId = a.material_kind?.id;
+      const bKindId = b.material_kind?.id;
+      
+      const aOrder = aKindId ? preferenceMap.get(aKindId) : undefined;
+      const bOrder = bKindId ? preferenceMap.get(bKindId) : undefined;
+
+      // Se ambos têm preferência, ordena pela ordem da preferência
+      if (aOrder !== undefined && bOrder !== undefined) {
+        return aOrder - bOrder;
+      }
+      
+      // Se apenas A tem preferência, A vem primeiro
+      if (aOrder !== undefined) {
+        return -1;
+      }
+      
+      // Se apenas B tem preferência, B vem primeiro
+      if (bOrder !== undefined) {
+        return 1;
+      }
+      
+      // Se nenhum tem preferência, ordena alfabeticamente pelo nome traduzido
+      const aName = a.material_kind 
+        ? getMaterialKindName(a.material_kind.id, a.material_kind.name).toLowerCase()
+        : '';
+      const bName = b.material_kind 
+        ? getMaterialKindName(b.material_kind.id, b.material_kind.name).toLowerCase()
+        : '';
+      return aName.localeCompare(bName);
+    });
+    
+    return sorted;
+  }, [filteredMaterials, preferenceMap, getMaterialKindName]);
 
   const deleteMaterial = useDeleteMaterial();
   const updateMaterial = useUpdateMaterial();

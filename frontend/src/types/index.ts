@@ -166,3 +166,18 @@ export interface DownloadUrlResponse {
   download_url: string;
   expires_in: number;
 }
+
+// User Preferences Types
+export interface UserMaterialKindPreferenceResponse {
+  id: string; // UUID
+  user_id: string; // UUID
+  material_kind_id: string; // UUID
+  order: number; // 0-4
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+  material_kind?: MaterialKindResponse;
+}
+
+export interface MaterialKindOrderUpdate {
+  material_kind_ids: string[]; // UUID[], máximo 5 itens
+}

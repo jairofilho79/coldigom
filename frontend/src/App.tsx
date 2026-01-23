@@ -13,6 +13,7 @@ import { TagList } from '@/pages/Tags/TagList';
 import { MaterialKindList } from '@/pages/MaterialKinds/MaterialKindList';
 import { MaterialTypeList } from '@/pages/MaterialTypes/MaterialTypeList';
 import { TranslationList } from '@/pages/Translations/TranslationList';
+import { UserPreferences } from '@/pages/UserPreferences/UserPreferences';
 import { useAuthStore } from '@/store/authStore';
 
 function App() {
@@ -110,6 +111,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <TranslationList />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-preferences"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <UserPreferences />
                 </Layout>
               </ProtectedRoute>
             }

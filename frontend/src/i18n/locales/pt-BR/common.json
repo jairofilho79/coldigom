@@ -107,7 +107,7 @@
     "errorLoadingTranslations": "Erro ao carregar traduções",
     "errorSavingTranslations": "Erro ao salvar traduções",
     "noTranslationsToSave": "Nenhuma tradução para salvar",
-    "translationsSaved": "{count} tradução(ões) salva(s) com sucesso",
+    "translationsSaved": "{{count}} tradução(ões) salva(s) com sucesso",
     "filteringByTag": "Filtrando por tag",
     "tagFilterActive": "Filtro de tag ativo",
     "downloadLimitedToTag": "O download será limitado aos praises com a tag",
@@ -122,7 +122,8 @@
     "translations": "Traduções",
     "appName": "Praise Manager",
     "createPraise": "Criar Novo Louvor",
-    "editPraise": "Editar Louvor"
+    "editPraise": "Editar Louvor",
+    "userPreferences": "Preferências do Usuário"
   },
   "action": {
     "newPraise": "Novo Louvor",
@@ -148,12 +149,12 @@
   },
   "validation": {
     "required": "Este campo é obrigatório",
-    "minLength": "Mínimo de {min} caracteres",
-    "maxLength": "Máximo de {max} caracteres",
+    "minLength": "Mínimo de {{min}} caracteres",
+    "maxLength": "Máximo de {{max}} caracteres",
     "email": "Email inválido",
-    "usernameMinLength": "Username deve ter no mínimo {min} caracteres",
-    "usernameMaxLength": "Username deve ter no máximo {max} caracteres",
-    "passwordMinLength": "Senha deve ter no mínimo {min} caracteres",
+    "usernameMinLength": "Username deve ter no mínimo {{min}} caracteres",
+    "usernameMaxLength": "Username deve ter no máximo {{max}} caracteres",
+    "passwordMinLength": "Senha deve ter no mínimo {{min}} caracteres",
     "passwordMismatch": "As senhas não coincidem",
     "nameRequired": "Nome é obrigatório",
     "nameTooLong": "Nome muito longo",
@@ -190,7 +191,7 @@
     "loadTranslations": "Carregar Traduções",
     "saveAll": "Salvar Todas",
     "saving": "Salvando...",
-    "saveAllWithCount": "Salvar Todas ({count})",
+    "saveAllWithCount": "Salvar Todas ({{count}})",
     "loadTranslationsToStart": "Clique em \"Carregar Traduções\" para começar",
     "loadingTranslations": "Carregando traduções...",
     "translationPlaceholder": "Digite a tradução..."
@@ -228,5 +229,19 @@
     "deleteMaterialKindMessage": "Tem certeza que deseja deletar este tipo de material?",
     "deleteMaterialTypeMessage": "Tem certeza que deseja deletar este tipo de arquivo?",
     "deleteMaterialMessage": "Tem certeza que deseja remover este material? Esta ação não pode ser desfeita."
+  },
+  "preferences": {
+    "materialKind": {
+      "title": "Preferências de Material Kind",
+      "description": "Selecione até 5 tipos de material em ordem de preferência",
+      "selected": "Selecionados ({{count}}/5)",
+      "add": "Adicionar Material Kind",
+      "remove": "Remover",
+      "moveUp": "Mover para cima",
+      "moveDown": "Mover para baixo",
+      "maxReached": "Limite de 5 material kinds atingido",
+      "saveSuccess": "Preferências salvas com sucesso",
+      "saveError": "Erro ao salvar preferências"
+    }
   }
 }

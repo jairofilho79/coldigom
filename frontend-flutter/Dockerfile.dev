@@ -1,0 +1,25 @@
+# Dockerfile para desenvolvimento e builds nativos
+FROM ghcr.io/cirruslabs/flutter:stable
+
+WORKDIR /app
+
+# Instalar dependências do sistema para builds nativos
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    unzip \
+    xz-utils \
+    zip \
+    libglu1-mesa \
+    && rm -rf /var/lib/apt/lists/*
+
+# Para builds Android (se necessário)
+# RUN sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
+
+COPY . .
+
+# Comando padrão: manter container rodando para desenvolvimento
+CMD ["tail", "-f", "/dev/null"]

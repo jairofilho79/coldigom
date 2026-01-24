@@ -1,0 +1,84 @@
+name: coldigom_flutter
+description: "Coldigom Flutter App - Mobile-first cross-platform application"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # HTTP & API
+  dio: ^5.7.0
+  json_annotation: ^4.9.0
+
+  # Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.5
+
+  # Download & Files
+  background_downloader: ^9.5.2
+  permission_handler: ^11.3.1
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Forms & Validation
+  reactive_forms: ^17.0.1
+
+  # UI & Design
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.1
+  flutter_launcher_icons: ^0.14.1
+
+  # i18n
+  intl: ^0.20.2
+
+  # SSE
+  flutter_client_sse: ^2.0.3
+
+  # PDF Viewer
+  syncfusion_flutter_pdfviewer: ^28.1.45
+  pdfx: ^2.0.0
+
+  # Utilities
+  connectivity_plus: ^6.1.0
+  package_info_plus: ^8.1.1
+  url_launcher: ^6.3.1
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code Generation
+  build_runner: ^2.4.13
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.6.2
+
+flutter:
+  uses-material-design: true
+
+  # Assets will be added later
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+
+  # Generate launcher icons
+  # flutter_launcher_icons:
+  #   android: true
+  #   ios: true
+  #   image_path: "assets/icon/icon.png"

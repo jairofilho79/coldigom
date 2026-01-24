@@ -43,6 +43,24 @@ logs/
 # Docker
 docker-compose.override.yml
 
+# Frontend Flutter
+frontend-flutter/.dart_tool/
+frontend-flutter/.flutter-plugins
+frontend-flutter/.flutter-plugins-dependencies
+frontend-flutter/.packages
+frontend-flutter/.pub-cache/
+frontend-flutter/.pub/
+frontend-flutter/build/
+frontend-flutter/.idea/
+frontend-flutter/*.iml
+frontend-flutter/.metadata
+frontend-flutter/.flutter/
+frontend-flutter/**/generated_plugin_registrant.dart
+frontend-flutter/**/*.g.dart
+frontend-flutter/**/*.freezed.dart
+frontend-flutter/**/*.config.dart
+frontend-flutter/pubspec.lock
+
 # Frontend
 frontend/node_modules/
 frontend/dist/

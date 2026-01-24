@@ -73,6 +73,24 @@ services:
       - praise-network
     restart: unless-stopped
 
+  frontend-flutter-dev:
+    build:
+      context: ./frontend-flutter
+      dockerfile: Dockerfile.dev
+    container_name: praise_frontend_flutter_dev
+    working_dir: /app
+    volumes:
+      - ./frontend-flutter:/app
+      - /app/.dart_tool
+      - /app/build
+    environment:
+      - FLUTTER_API_BASE_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - praise-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
 

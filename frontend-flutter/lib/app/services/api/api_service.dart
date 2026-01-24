@@ -27,12 +27,16 @@ class ApiService {
   }
 
   Future<Token> login(String username, String password) async {
+    // OAuth2PasswordRequestForm espera application/x-www-form-urlencoded
     final response = await _dio.post(
       '/api/v1/auth/login',
       data: {
         'username': username,
         'password': password,
       },
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
     );
     return Token.fromJson(response.data);
   }
@@ -189,7 +193,7 @@ class ApiService {
 
 /// Provider do serviço de API
 final apiServiceProvider = Provider<ApiService>((ref) {
-  final apiClient = ApiClient(baseUrl: AppConstants.defaultApiBaseUrl);
+  final apiClient = ApiClient(baseUrl: AppConstants.apiBaseUrl);
   return ApiService(apiClient);
 });
 

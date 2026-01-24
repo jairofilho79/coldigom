@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/config/hive_config.dart';
 import 'core/theme/app_theme.dart';
+import 'core/constants/app_constants.dart';
 import 'app/routes/app_router.dart';
 
 void main() async {
@@ -10,6 +12,12 @@ void main() async {
   
   // Inicializar Hive
   await HiveConfig.init();
+  
+  // Log da URL da API em modo debug
+  if (kDebugMode) {
+    debugPrint('🚀 Coldigom Flutter iniciando...');
+    debugPrint('📡 API Base URL: ${AppConstants.apiBaseUrl}');
+  }
   
   runApp(
     const ProviderScope(

@@ -1,7 +1,15 @@
+import 'dart:io';
+
 /// Constantes da aplicação
 class AppConstants {
-  // API
-  static const String defaultApiBaseUrl = 'http://localhost:8000';
+  // API - pode ser configurado via variável de ambiente FLUTTER_API_BASE_URL
+  static String get apiBaseUrl {
+    final envUrl = Platform.environment['FLUTTER_API_BASE_URL'];
+    return envUrl ?? defaultApiBaseUrl;
+  }
+  
+  // Usar 127.0.0.1 ao invés de localhost para evitar problemas de firewall no macOS
+  static const String defaultApiBaseUrl = 'http://127.0.0.1:8000';
   
   // Storage keys
   static const String tokenKey = 'token';
@@ -13,4 +21,11 @@ class AppConstants {
   
   // Offline storage
   static const String offlinePdfsDir = 'offline_pdfs';
+  
+  // Debug
+  static bool get isDebugMode {
+    bool inDebugMode = false;
+    assert(inDebugMode = true);
+    return inDebugMode;
+  }
 }

@@ -65,8 +65,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         context.go('/');
       }
     } catch (e) {
+      String errorMsg = 'Erro ao fazer login';
+      
+      // Mensagens de erro mais amigáveis
+      if (e.toString().contains('Connection failed') || 
+          e.toString().contains('SocketException')) {
+        errorMsg = 'Não foi possível conectar ao servidor.\n'
+            'Verifique se o backend está rodando em http://127.0.0.1:8000';
+      } else if (e.toString().contains('401') || 
+                 e.toString().contains('Unauthorized')) {
+        errorMsg = 'Usuário ou senha incorretos';
+      } else {
+        errorMsg = 'Erro ao fazer login: ${e.toString()}';
+      }
+      
       setState(() {
-        _errorMessage = 'Erro ao fazer login: ${e.toString()}';
+        _errorMessage = errorMsg;
       });
     } finally {
       if (mounted) {

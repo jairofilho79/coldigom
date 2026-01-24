@@ -3,6 +3,7 @@ from app.infrastructure.database.repositories.material_kind_repository import Ma
 from app.infrastructure.database.repositories.praise_material_repository import PraiseMaterialRepository
 from app.infrastructure.database.repositories.praise_repository import PraiseRepository
 from app.infrastructure.database.repositories.user_repository import UserRepository
+from app.infrastructure.database.repositories.room_repository import RoomRepository
 
 __all__ = [
     "PraiseTagRepository",
@@ -10,6 +11,7 @@ __all__ = [
     "PraiseMaterialRepository",
     "PraiseRepository",
     "UserRepository",
+    "RoomRepository",
 ]
 
 

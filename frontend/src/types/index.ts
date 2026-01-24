@@ -226,3 +226,104 @@ export interface ReorderPraisesRequest {
     order: number;
   }>;
 }
+
+// Room Types
+export type RoomAccessType = 'public' | 'password' | 'approval';
+export type RoomJoinRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface RoomResponse {
+  id: string; // UUID
+  code: string; // 8-character code
+  name: string;
+  description?: string | null;
+  creator_id: string; // UUID
+  access_type: RoomAccessType;
+  is_open_for_requests?: boolean | null;
+  auto_destroy_on_empty: boolean;
+  created_at: string; // ISO datetime
+  updated_at: string; // ISO datetime
+  last_activity_at: string; // ISO datetime
+  participants_count: number;
+  praises_count: number;
+}
+
+export interface RoomCreate {
+  name: string;
+  description?: string | null;
+  access_type: RoomAccessType;
+  password?: string | null;
+  is_open_for_requests?: boolean | null;
+  auto_destroy_on_empty: boolean;
+}
+
+export interface RoomUpdate {
+  name?: string;
+  description?: string | null;
+  access_type?: RoomAccessType;
+  password?: string | null;
+  is_open_for_requests?: boolean | null;
+  auto_destroy_on_empty?: boolean;
+}
+
+export interface RoomDetailResponse extends RoomResponse {
+  creator_username?: string | null;
+  is_creator: boolean;
+  is_participant: boolean;
+  praises: Array<{
+    id: string;
+    praise_id: string;
+    praise_name: string | null;
+    praise_number: number | null;
+    order: number;
+    added_at: string;
+  }>;
+  participants: Array<{
+    id: string;
+    user_id: string;
+    username: string | null;
+    material_kind_name?: string | null;
+    joined_at: string;
+    last_seen_at: string;
+  }>;
+}
+
+export interface RoomJoinRequest {
+  password?: string | null;
+}
+
+export interface RoomMessageResponse {
+  id: string; // UUID
+  room_id: string; // UUID
+  user_id: string; // UUID
+  username: string;
+  material_kind_name?: string | null;
+  message: string; // max 140 chars
+  created_at: string; // ISO datetime
+}
+
+export interface RoomMessageCreate {
+  message: string; // max 140 chars
+}
+
+export interface RoomParticipantResponse {
+  id: string; // UUID
+  user_id: string; // UUID
+  username: string;
+  material_kind_name?: string | null;
+  joined_at: string; // ISO datetime
+  last_seen_at: string; // ISO datetime
+}
+
+export interface RoomJoinRequestDetail {
+  id: string; // UUID
+  room_id: string; // UUID
+  user_id: string; // UUID
+  username: string;
+  status: RoomJoinRequestStatus;
+  requested_at: string; // ISO datetime
+  responded_at?: string | null; // ISO datetime
+}
+
+export interface RoomPraiseReorder {
+  praise_orders: Array<{ praise_id: string; order: number }>;
+}

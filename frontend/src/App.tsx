@@ -18,6 +18,9 @@ import { PraiseListList } from '@/pages/PraiseLists/PraiseListList';
 import { PraiseListDetailPage } from '@/pages/PraiseLists/PraiseListDetail';
 import { PraiseListCreate } from '@/pages/PraiseLists/PraiseListCreate';
 import { PraiseListEdit } from '@/pages/PraiseLists/PraiseListEdit';
+import { RoomListPage } from '@/pages/Rooms/RoomListPage';
+import { RoomDetailPage } from '@/pages/Rooms/RoomDetailPage';
+import { RoomCreatePage } from '@/pages/Rooms/RoomCreatePage';
 import { useAuthStore } from '@/store/authStore';
 
 function App() {
@@ -165,6 +168,46 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PraiseListEdit />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rooms"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RoomListPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rooms/create"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RoomCreatePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rooms/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RoomDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rooms/code/:code"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RoomDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

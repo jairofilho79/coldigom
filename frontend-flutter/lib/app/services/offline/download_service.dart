@@ -1,44 +1,74 @@
 import 'dart:io';
-import 'package:background_downloader/background_downloader.dart';
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../models/praise_material_model.dart';
+import '../api/api_service.dart';
+
+/// Provider do serviço de download offline
+final offlineDownloadServiceProvider = Provider<OfflineDownloadService>((ref) {
+  final apiService = ref.read(apiServiceProvider);
+  return OfflineDownloadService(apiService);
+});
 
 /// Serviço para gerenciar downloads offline de PDFs
 class OfflineDownloadService {
+  final ApiService _apiService;
+
+  OfflineDownloadService(this._apiService);
+
   /// Baixa um material PDF para armazenamento offline
+  /// Usa o endpoint /download diretamente (igual ao frontend React)
   Future<String> downloadMaterial(
     PraiseMaterialResponse material,
-    String downloadUrl,
     Function(double progress)? onProgress,
+    Function(String? error)? onError,
   ) async {
     try {
       final directory = await _getOfflinePdfsDirectory();
       final fileName = '${material.id}.pdf';
       final filePath = '${directory.path}/$fileName';
 
-      final task = DownloadTask(
-        url: downloadUrl,
-        filename: fileName,
-        directory: directory.path,
-        updates: Updates.statusAndProgress,
+      // Se o arquivo já existe, retornar imediatamente
+      final existingFile = File(filePath);
+      if (await existingFile.exists()) {
+        onProgress?.call(1.0);
+        return filePath;
+      }
+
+      onProgress?.call(0.1);
+
+      // Usar o endpoint /download diretamente (igual ao frontend React)
+      // Este endpoint já trata autenticação e redireciona para URL assinada se necessário
+      final response = await _apiService.dio.get<List<int>>(
+        "/api/v1/praise-materials/${material.id}/download",
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: true,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+        onReceiveProgress: (received, total) {
+          if (total > 0) {
+            final progress = 0.1 + (received / total) * 0.9;
+            onProgress?.call(progress);
+          }
+        },
       );
 
-      // Monitorar progresso via stream global
-      FileDownloader().updates.listen((update) {
-        if (update.task.taskId == task.taskId) {
-          if (update is TaskStatusUpdate) {
-            // Status atualizado
-          } else if (update is TaskProgressUpdate) {
-            onProgress?.call(update.progress);
-          }
-        }
-      });
-
-      await FileDownloader().enqueue(task);
-
-      return filePath;
+      if (response.statusCode == 200 && response.data != null) {
+        // Salvar arquivo
+        final file = File(filePath);
+        await file.writeAsBytes(response.data!);
+        onProgress?.call(1.0);
+        return filePath;
+      } else {
+        throw Exception('Download falhou com status: ${response.statusCode}');
+      }
     } catch (e) {
+      onError?.call(e.toString());
       throw Exception('Erro ao baixar material: $e');
     }
   }
@@ -122,6 +152,120 @@ class OfflineDownloadService {
       return totalSize;
     } catch (e) {
       return 0;
+    }
+  }
+
+  /// Baixa um praise completo em ZIP
+  /// Permite ao usuário escolher onde salvar usando file picker
+  Future<String?> downloadPraiseZip(
+    String praiseId,
+    String praiseName, {
+    Function(double progress)? onProgress,
+    Function(String? error)? onError,
+  }) async {
+    try {
+      // Primeiro, baixar os dados do ZIP
+      onProgress?.call(0.1);
+      final response = await _apiService.downloadPraiseZip(praiseId);
+      
+      if (response.statusCode != 200) {
+        throw Exception('Erro ao baixar ZIP: ${response.statusCode}');
+      }
+
+      if (response.data is! Uint8List) {
+        throw Exception('Formato de resposta inválido');
+      }
+
+      onProgress?.call(0.5);
+
+      // Preparar nome do arquivo sugerido
+      final safeName = praiseName.replaceAll(RegExp(r'[^\w\s-]'), '_');
+      final suggestedFileName = '${safeName}_${praiseId.substring(0, 8)}.zip';
+
+      // Permitir ao usuário escolher onde salvar
+      final String? savePath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Salvar ZIP do Praise',
+        fileName: suggestedFileName,
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+      );
+
+      if (savePath == null) {
+        // Usuário cancelou
+        return null;
+      }
+
+      onProgress?.call(0.8);
+
+      // Salvar bytes no arquivo escolhido pelo usuário
+      final file = File(savePath);
+      await file.writeAsBytes(response.data as Uint8List);
+      
+      onProgress?.call(1.0);
+      return file.path;
+    } catch (e) {
+      onError?.call(e.toString());
+      throw Exception('Erro ao baixar ZIP do praise: $e');
+    }
+  }
+
+  /// Baixa materiais por Material Kind em ZIP
+  /// Permite ao usuário escolher onde salvar usando file picker
+  Future<String?> downloadByMaterialKind(
+    String materialKindId,
+    String materialKindName, {
+    String? tagId,
+    int? maxZipSizeMb,
+    Function(double progress)? onProgress,
+    Function(String? error)? onError,
+  }) async {
+    try {
+      // Primeiro, baixar os dados do ZIP
+      onProgress?.call(0.1);
+      final response = await _apiService.downloadByMaterialKind(
+        materialKindId,
+        tagId: tagId,
+        maxZipSizeMb: maxZipSizeMb,
+      );
+      
+      if (response.statusCode != 200) {
+        throw Exception('Erro ao baixar ZIP: ${response.statusCode}');
+      }
+
+      if (response.data is! Uint8List) {
+        throw Exception('Formato de resposta inválido');
+      }
+
+      onProgress?.call(0.5);
+
+      // Preparar nome do arquivo sugerido
+      final safeName = materialKindName.replaceAll(RegExp(r'[^\w\s-]'), '_');
+      final suggestedFileName = 'materials_${safeName}_${materialKindId.substring(0, 8)}.zip';
+
+      // Permitir ao usuário escolher onde salvar
+      final String? savePath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Salvar ZIP de Materiais',
+        fileName: suggestedFileName,
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+      );
+
+      if (savePath == null) {
+        // Usuário cancelou
+        return null;
+      }
+
+      onProgress?.call(0.8);
+
+      // Salvar bytes no arquivo escolhido pelo usuário
+      final file = File(savePath);
+      await file.writeAsBytes(response.data as Uint8List);
+      
+      onProgress?.call(1.0);
+      return file.path;
+    } catch (e) {
+      onError?.call(e.toString());
+      throw Exception('Erro ao baixar ZIP por Material Kind: $e');
     }
   }
 }

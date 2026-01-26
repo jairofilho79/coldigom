@@ -4,6 +4,12 @@ import '../pages/login_page.dart';
 import '../pages/dashboard_page.dart';
 import '../pages/register_page.dart';
 import '../pages/praise_list_page.dart';
+import '../pages/praise_detail_page.dart';
+import '../pages/praise_create_page.dart';
+import '../pages/praise_edit_page.dart';
+import '../pages/tag_list_page.dart';
+import '../pages/tag_form_page.dart';
+import '../pages/pdf_viewer_page.dart';
 import '../stores/auth_store.dart';
 
 class AppRouter {
@@ -47,6 +53,59 @@ class AppRouter {
         path: '/praises',
         name: 'praises',
         builder: (context, state) => const PraiseListPage(),
+      ),
+      GoRoute(
+        path: '/praises/create',
+        name: 'praise-create',
+        builder: (context, state) => const PraiseCreatePage(),
+      ),
+      GoRoute(
+        path: '/praises/:id/edit',
+        name: 'praise-edit',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return PraiseEditPage(praiseId: id);
+        },
+      ),
+      GoRoute(
+        path: '/praises/:id',
+        name: 'praise-detail',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return PraiseDetailPage(praiseId: id);
+        },
+      ),
+      GoRoute(
+        path: '/tags',
+        name: 'tags',
+        builder: (context, state) => const TagListPage(),
+      ),
+      GoRoute(
+        path: '/tags/create',
+        name: 'tag-create',
+        builder: (context, state) => const TagFormPage(),
+      ),
+      GoRoute(
+        path: '/tags/:id/edit',
+        name: 'tag-edit',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return TagFormPage(tagId: id);
+        },
+      ),
+      GoRoute(
+        path: '/materials/:materialId/view',
+        name: 'pdf-viewer',
+        builder: (context, state) {
+          final materialId = state.pathParameters['materialId']!;
+          final praiseName = state.uri.queryParameters['praiseName'] ?? '';
+          final materialKindName = state.uri.queryParameters['materialKindName'] ?? '';
+          return PdfViewerPage(
+            materialId: materialId,
+            praiseName: praiseName,
+            materialKindName: materialKindName,
+          );
+        },
       ),
     ],
   );

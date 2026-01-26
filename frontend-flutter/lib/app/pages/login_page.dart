@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:intl/intl.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../stores/auth_store.dart';
@@ -20,6 +22,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  PackageInfo? _packageInfo;
+  DateTime? _buildTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+    _buildTime = DateTime.now(); // Data/hora do build (quando o app foi iniciado)
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = packageInfo;
+    });
+  }
 
   @override
   void dispose() {
@@ -179,6 +197,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     },
                     child: const Text('Não tem conta? Registre-se'),
                   ),
+                  const SizedBox(height: 24),
+                  // Informações do build
+                  if (_buildTime != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          if (_packageInfo != null) ...[
+                            Text(
+                              'Versão: ${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                          ],
+                          Text(
+                            'Build: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_buildTime!)}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                              fontSize: 11,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),

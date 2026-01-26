@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/app_status_widgets.dart';
+import '../widgets/material_kind_download_dialog.dart';
 import '../stores/auth_store.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -72,6 +73,16 @@ class DashboardPage extends ConsumerWidget {
                         title: 'Material Kinds',
                         onTap: () {
                           // Navegar para material kinds
+                        },
+                      ),
+                      _DashboardCard(
+                        icon: Icons.download,
+                        title: 'Baixar por Material Kind',
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const MaterialKindDownloadDialog(),
+                          );
                         },
                       ),
                       _DashboardCard(

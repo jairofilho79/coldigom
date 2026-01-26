@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
@@ -16,6 +17,9 @@ class ApiService {
   ApiService(this._apiClient);
 
   Dio get _dio => _apiClient.dio;
+  
+  /// Expõe o Dio para uso em outros serviços (ex: download direto)
+  Dio get dio => _apiClient.dio;
 
   // Auth
   Future<Token> register(UserCreate user) async {
@@ -87,6 +91,14 @@ class ApiService {
     await _dio.delete('/api/v1/praises/$id');
   }
 
+  Future<PraiseResponse> reviewAction(String praiseId, ReviewActionRequest request) async {
+    final response = await _dio.post(
+      '/api/v1/praises/$praiseId/review',
+      data: request.toJson(),
+    );
+    return PraiseResponse.fromJson(response.data);
+  }
+
   // Tags
   Future<List<PraiseTagResponse>> getTags({
     int? skip,
@@ -102,6 +114,11 @@ class ApiService {
     return (response.data as List)
         .map((json) => PraiseTagResponse.fromJson(json))
         .toList();
+  }
+
+  Future<PraiseTagResponse> getTagById(String id) async {
+    final response = await _dio.get('/api/v1/praise-tags/$id');
+    return PraiseTagResponse.fromJson(response.data);
   }
 
   Future<PraiseTagResponse> createTag(PraiseTagCreate tag) async {
@@ -188,6 +205,88 @@ class ApiService {
       },
     );
     return DownloadUrlResponse.fromJson(response.data);
+  }
+
+  Future<PraiseMaterialResponse> getMaterialById(String id) async {
+    final response = await _dio.get('/api/v1/praise-materials/$id');
+    return PraiseMaterialResponse.fromJson(response.data);
+  }
+
+  Future<PraiseMaterialResponse> updateMaterial(String id, PraiseMaterialUpdate material) async {
+    final response = await _dio.put(
+      '/api/v1/praise-materials/$id',
+      data: material.toJson(),
+    );
+    return PraiseMaterialResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteMaterial(String id) async {
+    await _dio.delete('/api/v1/praise-materials/$id');
+  }
+
+  Future<PraiseMaterialResponse> uploadMaterial(
+    String praiseId,
+    File file,
+    String materialKindId, {
+    bool? isOld,
+    String? oldDescription,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(file.path, filename: file.path.split('/').last),
+      'praise_id': praiseId,
+      'material_kind_id': materialKindId,
+      if (isOld != null) 'is_old': isOld.toString(),
+      if (oldDescription != null && oldDescription.isNotEmpty) 'old_description': oldDescription,
+    });
+
+    final response = await _dio.post(
+      '/api/v1/praise-materials/upload',
+      data: formData,
+      options: Options(
+        contentType: Headers.multipartFormDataContentType,
+      ),
+    );
+    return PraiseMaterialResponse.fromJson(response.data);
+  }
+
+  Future<PraiseMaterialResponse> createMaterial(PraiseMaterialCreate material) async {
+    final response = await _dio.post(
+      '/api/v1/praise-materials/',
+      data: material.toJson(),
+    );
+    return PraiseMaterialResponse.fromJson(response.data);
+  }
+
+  // Downloads ZIP
+  Future<Response> downloadPraiseZip(String praiseId) async {
+    return await _dio.get(
+      '/api/v1/praises/$praiseId/download-zip',
+      options: Options(
+        responseType: ResponseType.bytes,
+        followRedirects: false,
+        validateStatus: (status) => status! < 500,
+      ),
+    );
+  }
+
+  Future<Response> downloadByMaterialKind(
+    String materialKindId, {
+    String? tagId,
+    int? maxZipSizeMb,
+  }) async {
+    return await _dio.get(
+      '/api/v1/praises/download-by-material-kind',
+      queryParameters: {
+        'material_kind_id': materialKindId,
+        if (tagId != null) 'tag_id': tagId,
+        if (maxZipSizeMb != null) 'max_zip_size_mb': maxZipSizeMb,
+      },
+      options: Options(
+        responseType: ResponseType.bytes,
+        followRedirects: false,
+        validateStatus: (status) => status! < 500,
+      ),
+    );
   }
 }
 

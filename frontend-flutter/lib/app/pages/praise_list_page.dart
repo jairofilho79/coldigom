@@ -1,30 +1,171 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
+import '../widgets/app_text_field.dart';
 import '../services/api/api_service.dart';
 import '../models/praise_model.dart';
+import '../models/praise_tag_model.dart';
+import '../widgets/app_button.dart';
+
+/// Classe wrapper para parâmetros de busca de praises
+/// Implementa == e hashCode para evitar requisições duplicadas
+class PraiseQueryParams {
+  final int skip;
+  final int limit;
+  final String? name;
+  final String? tagId;
+
+  PraiseQueryParams({
+    required this.skip,
+    required this.limit,
+    this.name,
+    this.tagId,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PraiseQueryParams &&
+          runtimeType == other.runtimeType &&
+          skip == other.skip &&
+          limit == other.limit &&
+          name == other.name &&
+          tagId == other.tagId;
+
+  @override
+  int get hashCode => skip.hashCode ^ limit.hashCode ^ (name?.hashCode ?? 0) ^ (tagId?.hashCode ?? 0);
+}
 
 /// Provider para lista de praises
-final praisesProvider = FutureProvider.family<List<PraiseResponse>, Map<String, dynamic>>(
+final praisesProvider = FutureProvider.family<List<PraiseResponse>, PraiseQueryParams>(
   (ref, params) async {
     final apiService = ref.read(apiServiceProvider);
     return await apiService.getPraises(
-      skip: params['skip'] as int?,
-      limit: params['limit'] as int?,
-      name: params['name'] as String?,
-      tagId: params['tagId'] as String?,
+      skip: params.skip,
+      limit: params.limit,
+      name: params.name,
+      tagId: params.tagId,
     );
   },
 );
 
-class PraiseListPage extends ConsumerWidget {
+/// Provider para lista de tags (para filtros)
+final tagsProvider = FutureProvider<List<PraiseTagResponse>>((ref) async {
+  final apiService = ref.read(apiServiceProvider);
+  return await apiService.getTags(limit: 1000);
+});
+
+/// StateProvider para busca
+final searchQueryProvider = StateProvider<String>((ref) => '');
+
+/// StateProvider para tag selecionada no filtro
+final selectedTagFilterProvider = StateProvider<String?>((ref) => null);
+
+class PraiseListPage extends ConsumerStatefulWidget {
   const PraiseListPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final praisesAsync = ref.watch(praisesProvider({'skip': 0, 'limit': 50}));
+  ConsumerState<PraiseListPage> createState() => _PraiseListPageState();
+}
+
+class _PraiseListPageState extends ConsumerState<PraiseListPage> {
+  final _searchController = TextEditingController();
+  Timer? _debounceTimer;
+  int _skip = 0;
+  final int _limit = 50;
+  final List<PraiseResponse> _allPraises = [];
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  PraiseQueryParams? _lastQueryParams; // Rastrear último query params usado
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      ref.read(searchQueryProvider.notifier).state = _searchController.text.trim();
+      _resetPagination();
+    });
+  }
+
+  void _resetPagination() {
+    setState(() {
+      _skip = 0;
+      _allPraises.clear();
+      _hasMore = true;
+      _isLoadingMore = false;
+      _lastQueryParams = null; // Resetar para forçar atualização
+    });
+  }
+
+  void _loadMore(BuildContext context, WidgetRef ref, PraiseQueryParams baseQueryParams) {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _skip += _limit;
+    });
+
+    // Criar novos query params com skip atualizado
+    final queryParams = PraiseQueryParams(
+      skip: _skip,
+      limit: _limit,
+      name: baseQueryParams.name,
+      tagId: baseQueryParams.tagId,
+    );
+
+    // Buscar mais dados
+    ref.read(praisesProvider(queryParams).future).then((newPraises) {
+      if (mounted) {
+        setState(() {
+          _allPraises.addAll(newPraises);
+          _hasMore = newPraises.length == _limit;
+          _isLoadingMore = false;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+          _skip -= _limit; // Reverter skip em caso de erro
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar mais: $error')),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final searchQuery = ref.watch(searchQueryProvider);
+    final selectedTagId = ref.watch(selectedTagFilterProvider);
+    
+    // Criar queryParams usando classe wrapper que implementa == e hashCode
+    // Isso evita requisições duplicadas porque o Riverpod pode comparar corretamente
+    final queryParams = PraiseQueryParams(
+      skip: 0, // Sempre começar do início, paginação será feita via estado local
+      limit: _limit,
+      name: searchQuery.isEmpty ? null : searchQuery,
+      tagId: selectedTagId,
+    );
+
+    final praisesAsync = ref.watch(praisesProvider(queryParams));
+    final tagsAsync = ref.watch(tagsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -33,78 +174,262 @@ class PraiseListPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // Navegar para criar praise
               context.push('/praises/create');
             },
           ),
         ],
       ),
-      body: praisesAsync.when(
-        data: (praises) {
-          if (praises.isEmpty) {
-            return const AppEmptyWidget(
-              message: 'Nenhum praise encontrado',
-              icon: Icons.music_note,
-            );
-          }
-
-          return ListView.builder(
+      body: Column(
+        children: [
+          // Barra de busca
+          Padding(
             padding: const EdgeInsets.all(16),
-            itemCount: praises.length,
-            itemBuilder: (context, index) {
-              final praise = praises[index];
-              return AppCard(
-                onTap: () {
-                  context.push('/praises/${praise.id}');
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: AppTextField(
+              label: 'Buscar',
+              hint: 'Digite o nome do praise...',
+              controller: _searchController,
+              prefixIcon: Icons.search,
+            ),
+          ),
+
+          // Filtros de tags
+          tagsAsync.when(
+            data: (tags) {
+              if (tags.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              return Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            praise.name,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                        if (praise.number != null)
-                          Chip(
-                            label: Text('#${praise.number}'),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                      ],
-                    ),
-                    if (praise.tags.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 4,
-                        children: praise.tags
-                            .map((tag) => Chip(
-                                  label: Text(tag.name),
-                                  visualDensity: VisualDensity.compact,
-                                ))
-                            .toList(),
+                    // Botão "Todas"
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('Todas'),
+                        selected: selectedTagId == null,
+                        onSelected: (_) {
+                          ref.read(selectedTagFilterProvider.notifier).state = null;
+                          _resetPagination();
+                        },
                       ),
-                    ],
-                    const SizedBox(height: 8),
-                    Text(
-                      '${praise.materials.length} material(is)',
-                      style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    // Chips de tags
+                    ...tags.map((tag) {
+                      final isSelected = selectedTagId == tag.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(tag.name),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            ref.read(selectedTagFilterProvider.notifier).state = 
+                                isSelected ? null : tag.id;
+                            _resetPagination();
+                          },
+                        ),
+                      );
+                    }),
                   ],
                 ),
               );
             },
-          );
-        },
-        loading: () => const AppLoadingIndicator(message: 'Carregando praises...'),
-        error: (error, stack) => AppErrorWidget(
-          message: 'Erro ao carregar praises: $error',
-          onRetry: () {
-            ref.invalidate(praisesProvider({'skip': 0, 'limit': 50}));
-          },
-        ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
+          // Lista de praises
+          Expanded(
+            child: praisesAsync.when(
+              data: (praises) {
+                // Atualizar lista apenas quando os query params mudaram (busca/filtro mudou)
+                // Isso evita múltiplas atualizações e requisições
+                final queryParamsChanged = _lastQueryParams != queryParams;
+                
+                if (queryParamsChanged && _skip == 0) {
+                  // Query params mudaram, atualizar lista
+                  _lastQueryParams = queryParams;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _lastQueryParams == queryParams) {
+                      setState(() {
+                        _allPraises.clear();
+                        _allPraises.addAll(praises);
+                        _hasMore = praises.length == _limit;
+                        _isLoadingMore = false;
+                        _skip = 0;
+                      });
+                    }
+                  });
+                }
+
+                // Usar lista atual enquanto processa
+                final currentPraises = _allPraises.isEmpty ? praises : _allPraises;
+
+                if (currentPraises.isEmpty) {
+                  return const AppEmptyWidget(
+                    message: 'Nenhum praise encontrado',
+                    icon: Icons.music_note,
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: currentPraises.length + (_hasMore && !_isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == currentPraises.length) {
+                      // Botão "Carregar mais"
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Center(
+                          child: AppButton(
+                            text: 'Carregar mais',
+                            icon: Icons.expand_more,
+                            onPressed: () => _loadMore(context, ref, queryParams),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final praise = currentPraises[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: AppCard(
+                        onTap: () {
+                          context.push('/praises/${praise.id}');
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    praise.name,
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                ),
+                                if (praise.number != null)
+                                  Chip(
+                                    label: Text('#${praise.number}'),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                if (praise.inReview)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: Chip(
+                                      label: const Text('Em Revisão'),
+                                      visualDensity: VisualDensity.compact,
+                                      backgroundColor: Colors.orange.shade100,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            if (praise.tags.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 4,
+                                children: praise.tags
+                                    .map((tag) => Chip(
+                                          label: Text(tag.name),
+                                          visualDensity: VisualDensity.compact,
+                                        ))
+                                    .toList(),
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            Text(
+                              '${praise.materials.length} material(is)',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              loading: () => _allPraises.isEmpty 
+                  ? const AppLoadingIndicator(message: 'Carregando praises...')
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _allPraises.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == _allPraises.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final praise = _allPraises[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: AppCard(
+                            onTap: () {
+                              context.push('/praises/${praise.id}');
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        praise.name,
+                                        style: Theme.of(context).textTheme.titleLarge,
+                                      ),
+                                    ),
+                                    if (praise.number != null)
+                                      Chip(
+                                        label: Text('#${praise.number}'),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    if (praise.inReview)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Chip(
+                                          label: const Text('Em Revisão'),
+                                          visualDensity: VisualDensity.compact,
+                                          backgroundColor: Colors.orange.shade100,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                if (praise.tags.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 4,
+                                    children: praise.tags
+                                        .map((tag) => Chip(
+                                              label: Text(tag.name),
+                                              visualDensity: VisualDensity.compact,
+                                            ))
+                                        .toList(),
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${praise.materials.length} material(is)',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+              error: (error, stack) => AppErrorWidget(
+                message: 'Erro ao carregar praises: $error',
+                onRetry: () {
+                  _resetPagination();
+                  ref.invalidate(praisesProvider(queryParams));
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

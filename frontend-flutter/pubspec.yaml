@@ -49,8 +49,7 @@ dependencies:
   flutter_client_sse: ^2.0.3
 
   # PDF Viewer
-  syncfusion_flutter_pdfviewer: ^28.1.45
-  pdfx: ^2.0.0
+  pdfrx: ^2.2.24
 
   # Utilities
   connectivity_plus: ^6.1.0

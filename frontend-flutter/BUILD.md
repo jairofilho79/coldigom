@@ -44,12 +44,69 @@ flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
+## Otimização para Builds de Release
+
+### Remover Módulos WASM do pdfrx
+
+O pdfrx inclui módulos PDFium WASM (~4MB) que são necessários apenas para builds Web. Para builds nativos (Android, iOS, Windows, macOS), você deve remover esses módulos antes de fazer o build de release para reduzir o tamanho do app.
+
+**IMPORTANTE:** Execute este comando **antes** de cada build de release:
+
+```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
+flutter build <platform> --release
+```
+
+**Nota:** Este passo não é necessário para builds Web, pois o WASM é necessário nessa plataforma.
+
+**Exemplo completo para Android:**
+```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
+flutter build apk --release
+# ou
+flutter build appbundle --release
+```
+
+**Exemplo completo para iOS:**
+```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
+flutter build ios --release
+# ou
+flutter build ipa --release
+```
+
+**Exemplo completo para Windows:**
+```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
+flutter build windows --release
+```
+
+**Exemplo completo para macOS:**
+```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
+flutter build macos --release
+```
+
+### Sobre os Warnings de WASM
+
+Durante desenvolvimento, você pode ver warnings sobre o PDFium WASM module. Esses warnings são silenciados automaticamente no código (veja `lib/main.dart`). Eles não afetam a funcionalidade, apenas informam sobre o tamanho do app.
+
 ## Build para Android
 
 ### Desenvolvimento (APK)
 ```bash
 flutter build apk --debug
-# ou
+```
+
+### Release (APK)
+```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
 flutter build apk --release
 ```
 
@@ -57,6 +114,8 @@ O APK será gerado em: `build/app/outputs/flutter-apk/app-release.apk`
 
 ### Produção (AAB - Android App Bundle)
 ```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
 flutter build appbundle --release
 ```
 
@@ -84,6 +143,8 @@ open ios/Runner.xcworkspace
 
 3. Build via Flutter:
 ```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
 flutter build ios --release
 ```
 
@@ -93,6 +154,8 @@ flutter build ios --release
 
 ### Gerar IPA
 ```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
 flutter build ipa --release
 ```
 
@@ -107,6 +170,8 @@ flutter doctor
 
 2. Build:
 ```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
 flutter build windows --release
 ```
 
@@ -131,6 +196,8 @@ open macos/Runner.xcworkspace
 
 3. Build:
 ```bash
+flutter pub get
+dart run pdfrx:remove_wasm_modules
 flutter build macos --release
 ```
 
@@ -190,6 +257,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
+      - run: dart run pdfrx:remove_wasm_modules
       - run: flutter build appbundle --release
 
   build-ios:
@@ -198,6 +266,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
+      - run: dart run pdfrx:remove_wasm_modules
       - run: flutter build ios --release --no-codesign
 
   build-windows:
@@ -206,6 +275,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
+      - run: dart run pdfrx:remove_wasm_modules
       - run: flutter build windows --release
 
   build-macos:
@@ -214,6 +284,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
+      - run: dart run pdfrx:remove_wasm_modules
       - run: flutter build macos --release
 ```
 

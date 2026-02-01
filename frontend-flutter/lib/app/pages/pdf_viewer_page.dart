@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pdfx/pdfx.dart';
+import 'package:pdfrx/pdfrx.dart';
 import '../services/offline/download_service.dart';
 import '../services/api/api_service.dart';
 import '../widgets/app_status_widgets.dart';
@@ -24,7 +24,8 @@ class PdfViewerPage extends ConsumerStatefulWidget {
 }
 
 class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
-  PdfControllerPinch? _pdfController;
+  PdfViewerController? _pdfController;
+  String? _filePath;
   bool _isLoading = true;
   bool _isDownloading = false;
   String? _errorMessage;
@@ -35,12 +36,13 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
   @override
   void initState() {
     super.initState();
+    _pdfController = PdfViewerController();
     _loadPdf();
   }
 
   @override
   void dispose() {
-    _pdfController?.dispose();
+    // PdfViewerController não precisa de dispose explícito
     super.dispose();
   }
 
@@ -95,31 +97,9 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
         throw Exception('Arquivo PDF não encontrado');
       }
 
-      // Carregar PDF
-      final document = await PdfDocument.openFile(filePath);
-      
-      final controller = PdfControllerPinch(
-        document: Future.value(document),
-        initialPage: 1,
-      );
-      
-      // Adicionar listener para mudanças de página via pageListenable
-      // Este é o mecanismo correto do pdfx para detectar mudanças de página
-      controller.pageListenable.addListener(() {
-        if (mounted) {
-          final newPage = controller.page;
-          if (newPage != _currentPage && newPage >= 1 && newPage <= _totalPages) {
-            setState(() {
-              _currentPage = newPage;
-            });
-          }
-        }
-      });
-      
+      // Armazenar o caminho do arquivo para usar no PdfViewer
       setState(() {
-        _pdfController = controller;
-        _totalPages = document.pagesCount;
-        _currentPage = 1;
+        _filePath = filePath;
         _isLoading = false;
       });
     } catch (e) {
@@ -133,18 +113,18 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
 
   Future<void> _goToPreviousPage() async {
     if (_pdfController != null && _currentPage > 1) {
-      await _pdfController!.previousPage(
+      await _pdfController!.goToPage(
+        pageNumber: _currentPage - 1,
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
       );
     }
   }
 
   Future<void> _goToNextPage() async {
     if (_pdfController != null && _currentPage < _totalPages) {
-      await _pdfController!.nextPage(
+      await _pdfController!.goToPage(
+        pageNumber: _currentPage + 1,
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
       );
     }
   }
@@ -228,7 +208,7 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
       );
     }
 
-    if (_pdfController == null) {
+    if (_filePath == null) {
       return const AppEmptyWidget(
         message: 'PDF não disponível',
         icon: Icons.picture_as_pdf,
@@ -250,14 +230,38 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
           }
         }
       },
-      child: PdfViewPinch(
-        controller: _pdfController!,
-        builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          pageLoaderBuilder: (context) => const Center(
+      child: PdfViewer.file(
+        _filePath!,
+        controller: _pdfController,
+        initialPageNumber: 1,
+        params: PdfViewerParams(
+          // Configurar cache extent para renderizar mais páginas
+          // 2.0 significa 200% do viewport (viewport + 1 viewport extra em cada direção)
+          // Isso garante que páginas adjacentes sejam renderizadas mesmo em janelas pequenas
+          horizontalCacheExtent: 2.0,
+          verticalCacheExtent: 2.0,
+          // Callback para detectar mudanças de página
+          onPageChanged: (pageNumber) {
+            if (mounted && pageNumber != null && pageNumber != _currentPage) {
+              setState(() {
+                _currentPage = pageNumber;
+              });
+            }
+          },
+          // Callback quando o documento é carregado
+          onDocumentLoadFinished: (documentRef, loadSucceeded) {
+            // Não precisamos fazer nada aqui, usaremos onViewerReady para obter o total de páginas
+          },
+          // Callback quando o viewer está pronto para obter o total de páginas
+          onViewerReady: (document, controller) {
+            if (mounted) {
+              setState(() {
+                _totalPages = document.pages.length;
+              });
+            }
+          },
+          // Loading banner customizado
+          loadingBannerBuilder: (context, bytesDownloaded, totalBytes) => const Center(
             child: CircularProgressIndicator(),
           ),
         ),

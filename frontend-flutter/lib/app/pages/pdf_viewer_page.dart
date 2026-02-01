@@ -98,10 +98,26 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
       // Carregar PDF
       final document = await PdfDocument.openFile(filePath);
       
+      final controller = PdfControllerPinch(
+        document: Future.value(document),
+        initialPage: 1,
+      );
+      
+      // Adicionar listener para mudanças de página via pageListenable
+      // Este é o mecanismo correto do pdfx para detectar mudanças de página
+      controller.pageListenable.addListener(() {
+        if (mounted) {
+          final newPage = controller.page;
+          if (newPage != _currentPage && newPage >= 1 && newPage <= _totalPages) {
+            setState(() {
+              _currentPage = newPage;
+            });
+          }
+        }
+      });
+      
       setState(() {
-        _pdfController = PdfControllerPinch(
-          document: Future.value(document),
-        );
+        _pdfController = controller;
         _totalPages = document.pagesCount;
         _currentPage = 1;
         _isLoading = false;
@@ -121,11 +137,6 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      if (mounted) {
-        setState(() {
-          _currentPage--;
-        });
-      }
     }
   }
 
@@ -135,11 +146,6 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      if (mounted) {
-        setState(() {
-          _currentPage++;
-        });
-      }
     }
   }
 
@@ -229,15 +235,31 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
       );
     }
 
-    return PdfViewPinch(
-      controller: _pdfController!,
-      builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
-        options: const DefaultBuilderOptions(),
-        documentLoaderBuilder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        pageLoaderBuilder: (context) => const Center(
-          child: CircularProgressIndicator(),
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        // Threshold mínimo de velocidade para evitar navegação acidental
+        const minVelocity = 300.0;
+        
+        if (details.primaryVelocity != null) {
+          if (details.primaryVelocity! > minVelocity) {
+            // Swipe para direita = página anterior
+            _goToPreviousPage();
+          } else if (details.primaryVelocity! < -minVelocity) {
+            // Swipe para esquerda = próxima página
+            _goToNextPage();
+          }
+        }
+      },
+      child: PdfViewPinch(
+        controller: _pdfController!,
+        builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+          options: const DefaultBuilderOptions(),
+          documentLoaderBuilder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+          pageLoaderBuilder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
         ),
       ),
     );

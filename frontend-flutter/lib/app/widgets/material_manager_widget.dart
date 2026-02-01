@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../models/praise_material_model.dart';
 import '../models/praise_model.dart';
 import '../services/api/api_service.dart';
@@ -254,6 +255,26 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
           ..._materials.map((material) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: AppCard(
+                  onTap: widget.isEditMode ? null : () {
+                    final typeName = (material.materialType?.name ?? '').toLowerCase();
+                    final path = material.path.toLowerCase();
+                    
+                    final isPdf = typeName == 'pdf' || 
+                                  typeName.contains('file') && path.endsWith('.pdf');
+                    final isAudio = typeName == 'audio' ||
+                                   ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg']
+                                       .any((ext) => path.endsWith(ext));
+                    
+                    if (isPdf) {
+                      context.push(
+                        '/materials/${material.id}/view?praiseName=${Uri.encodeComponent('')}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
+                      );
+                    } else if (isAudio) {
+                      context.push(
+                        '/materials/${material.id}/audio?praiseName=${Uri.encodeComponent('')}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
+                      );
+                    }
+                  },
                   child: ListTile(
                     leading: Icon(
                       _getMaterialIcon(material),

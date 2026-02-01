@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_text_field.dart';
+import '../widgets/app_scaffold.dart';
 import '../services/api/api_service.dart';
 import '../models/praise_model.dart';
 import '../models/praise_tag_model.dart';
@@ -167,7 +168,7 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
     final praisesAsync = ref.watch(praisesProvider(queryParams));
     final tagsAsync = ref.watch(tagsProvider);
 
-    return Scaffold(
+    return AppScaffold(
       appBar: AppBar(
         title: const Text('Praises'),
         actions: [

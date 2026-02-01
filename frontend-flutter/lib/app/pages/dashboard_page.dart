@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/material_kind_download_dialog.dart';
+import '../widgets/app_scaffold.dart';
 import '../stores/auth_store.dart';
 
 class DashboardPage extends ConsumerWidget {
@@ -12,7 +13,7 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
 
-    return Scaffold(
+    return AppScaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [

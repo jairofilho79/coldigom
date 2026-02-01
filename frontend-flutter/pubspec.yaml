@@ -51,6 +51,9 @@ dependencies:
   # PDF Viewer
   pdfrx: ^2.2.24
 
+  # Audio Player
+  just_audio: ^0.9.40
+
   # Utilities
   connectivity_plus: ^6.1.0
   package_info_plus: ^8.1.1

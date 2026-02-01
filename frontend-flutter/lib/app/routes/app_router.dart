@@ -10,6 +10,7 @@ import '../pages/praise_edit_page.dart';
 import '../pages/tag_list_page.dart';
 import '../pages/tag_form_page.dart';
 import '../pages/pdf_viewer_page.dart';
+import '../pages/audio_player_page.dart';
 import '../stores/auth_store.dart';
 
 class AppRouter {
@@ -101,6 +102,20 @@ class AppRouter {
           final praiseName = state.uri.queryParameters['praiseName'] ?? '';
           final materialKindName = state.uri.queryParameters['materialKindName'] ?? '';
           return PdfViewerPage(
+            materialId: materialId,
+            praiseName: praiseName,
+            materialKindName: materialKindName,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/materials/:materialId/audio',
+        name: 'audio-player',
+        builder: (context, state) {
+          final materialId = state.pathParameters['materialId']!;
+          final praiseName = state.uri.queryParameters['praiseName'] ?? '';
+          final materialKindName = state.uri.queryParameters['materialKindName'] ?? '';
+          return AudioPlayerPage(
             materialId: materialId,
             praiseName: praiseName,
             materialKindName: materialKindName,

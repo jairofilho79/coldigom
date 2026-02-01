@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_button.dart';
+import '../widgets/app_scaffold.dart';
 import '../services/api/api_service.dart';
 import '../services/offline/download_service.dart';
 import '../models/praise_model.dart';
@@ -47,7 +48,7 @@ class PraiseDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final praiseAsync = ref.watch(praiseProvider(praiseId));
 
-    return Scaffold(
+    return AppScaffold(
       appBar: AppBar(
         title: const Text('Detalhes do Praise'),
         actions: [
@@ -159,11 +160,22 @@ class PraiseDetailPage extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: AppCard(
                         onTap: () {
-                          final isPdf = ((material.materialType?.name ?? '').toUpperCase().contains('FILE')) || 
-                                        material.path.endsWith('.pdf');
+                          final typeName = (material.materialType?.name ?? '').toLowerCase();
+                          final path = material.path.toLowerCase();
+                          
+                          final isPdf = typeName == 'pdf' || 
+                                        typeName.contains('file') && path.endsWith('.pdf');
+                          final isAudio = typeName == 'audio' ||
+                                         ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg']
+                                             .any((ext) => path.endsWith(ext));
+                          
                           if (isPdf) {
                             context.push(
                               '/materials/${material.id}/view?praiseName=${Uri.encodeComponent(praise.name)}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
+                            );
+                          } else if (isAudio) {
+                            context.push(
+                              '/materials/${material.id}/audio?praiseName=${Uri.encodeComponent(praise.name)}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
                             );
                           } else {
                             // Comportamento para outros tipos de material

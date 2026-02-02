@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_dialog.dart';
@@ -25,10 +26,11 @@ class LanguageListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final languagesAsync = ref.watch(languagesProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Linguagens'),
+        title: Text(l10n.pageTitleLanguages),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -41,7 +43,7 @@ class LanguageListPage extends ConsumerWidget {
       body: languagesAsync.when(
         data: (languages) {
           if (languages.isEmpty) {
-            return const AppEmptyWidget(
+            return AppEmptyWidget(
               message: 'Nenhuma linguagem encontrada',
               icon: Icons.language,
             );
@@ -57,7 +59,7 @@ class LanguageListPage extends ConsumerWidget {
                 child: AppCard(
                   child: ListTile(
                     title: Text(language.name),
-                    subtitle: Text('Código: ${language.code}'),
+                    subtitle: Text(l10n.messageCode.replaceAll('{code}', language.code)),
                     leading: Icon(
                       Icons.language,
                       color: language.isActive ? Colors.green : Colors.grey,
@@ -67,7 +69,7 @@ class LanguageListPage extends ConsumerWidget {
                       children: [
                         Chip(
                           label: Text(
-                            language.isActive ? 'Ativa' : 'Inativa',
+                            language.isActive ? l10n.labelActive : 'Inativa',
                             style: TextStyle(
                               color: language.isActive 
                                   ? Colors.green.shade700 
@@ -98,7 +100,7 @@ class LanguageListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const AppLoadingIndicator(message: 'Carregando linguagens...'),
+        loading: () => AppLoadingIndicator(message: l10n.statusLoading),
         error: (error, stack) => AppErrorWidget(
           message: 'Erro ao carregar linguagens: $error',
           onRetry: () {
@@ -110,11 +112,12 @@ class LanguageListPage extends ConsumerWidget {
   }
 
   Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref, LanguageResponse language) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await AppDialog.showConfirm(
       context: context,
-      title: 'Confirmar Exclusão',
-      message: 'Tem certeza que deseja excluir a linguagem "${language.name}" (${language.code})? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
+      title: l10n.dialogTitleConfirmDelete,
+      message: l10n.dialogMessageDeleteLanguage,
+      confirmText: l10n.buttonDelete,
     );
 
     if (confirmed == true) {
@@ -123,6 +126,7 @@ class LanguageListPage extends ConsumerWidget {
   }
 
   Future<void> _deleteLanguage(BuildContext context, WidgetRef ref, String code) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       await apiService.deleteLanguage(code);
@@ -133,13 +137,13 @@ class LanguageListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Linguagem excluída com sucesso')),
+        SnackBar(content: Text(l10n.successLanguageDeleted)),
       );
     } catch (e) {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir linguagem: $e')),
+        SnackBar(content: Text(l10n.errorDeleteLanguage.replaceAll('{error}', e.toString()))),
       );
     }
   }

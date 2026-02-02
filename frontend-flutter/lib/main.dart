@@ -6,7 +6,9 @@ import 'package:pdfrx/pdfrx.dart';
 import 'core/config/hive_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
+import 'core/i18n/generated/app_localizations.dart';
 import 'app/routes/app_router.dart';
+import 'app/stores/language_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,18 +32,22 @@ void main() async {
   );
 }
 
-class ColdigomApp extends StatelessWidget {
+class ColdigomApp extends ConsumerWidget {
   const ColdigomApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(currentLocaleProvider);
+    
     return MaterialApp.router(
       title: 'Coldigom',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
+      locale: locale,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

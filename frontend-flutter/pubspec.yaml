@@ -74,6 +74,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   # Assets will be added later
   # assets:

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdfrx/pdfrx.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../services/offline/download_service.dart';
 import '../services/api/api_service.dart';
 import '../widgets/app_status_widgets.dart';
@@ -103,8 +104,9 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
         _isLoading = false;
       });
     } catch (e) {
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _errorMessage = 'Erro ao carregar PDF: $e';
+        _errorMessage = l10n?.errorLoadPdf ?? 'Erro ao carregar PDF: $e';
         _isLoading = false;
         _isDownloading = false;
       });
@@ -161,9 +163,17 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Center(
-                child: Text(
-                  '$_currentPage / $_totalPages',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Text(
+                      l10n?.messagePageOf
+                          .replaceAll('{current}', _currentPage.toString())
+                          .replaceAll('{total}', _totalPages.toString()) ?? 
+                      '$_currentPage / $_totalPages',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    );
+                  },
                 ),
               ),
             ),
@@ -183,16 +193,28 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
             if (_isDownloading) ...[
               CircularProgressIndicator(value: _downloadProgress),
               const SizedBox(height: 16),
-              Text(
-                'Baixando PDF... ${(_downloadProgress * 100).toStringAsFixed(0)}%',
-                style: Theme.of(context).textTheme.bodyMedium,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Text(
+                    '${l10n?.statusDownloadingZip ?? 'Baixando PDF...'} ${(_downloadProgress * 100).toStringAsFixed(0)}%',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  );
+                },
               ),
             ] else
               const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text(
-              _isDownloading ? 'Baixando PDF...' : 'Carregando PDF...',
-              style: Theme.of(context).textTheme.bodyMedium,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(
+                  _isDownloading 
+                      ? (l10n?.statusDownloadingZip ?? 'Baixando PDF...')
+                      : (l10n?.statusLoading ?? 'Carregando PDF...'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                );
+              },
             ),
           ],
         ),

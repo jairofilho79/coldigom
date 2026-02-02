@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:intl/intl.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../stores/auth_store.dart';
@@ -83,18 +84,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         context.go('/');
       }
     } catch (e) {
-      String errorMsg = 'Erro ao fazer login';
+      final l10n = AppLocalizations.of(context);
+      if (l10n == null) return;
+      
+      String errorMsg = l10n.errorLogin.replaceAll('{error}', e.toString());
       
       // Mensagens de erro mais amigáveis
       if (e.toString().contains('Connection failed') || 
           e.toString().contains('SocketException')) {
-        errorMsg = 'Não foi possível conectar ao servidor.\n'
-            'Verifique se o backend está rodando em http://127.0.0.1:8000';
+        errorMsg = l10n.errorConnectionFailed;
       } else if (e.toString().contains('401') || 
                  e.toString().contains('Unauthorized')) {
-        errorMsg = 'Usuário ou senha incorretos';
-      } else {
-        errorMsg = 'Erro ao fazer login: ${e.toString()}';
+        errorMsg = l10n.errorInvalidCredentials;
       }
       
       setState(() {
@@ -111,6 +112,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -129,13 +132,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Coldigom',
+                    l10n.appName,
                     style: Theme.of(context).textTheme.headlineLarge,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Gerenciamento de Louvores',
+                    l10n.appSubtitle,
                     style: Theme.of(context).textTheme.bodyLarge,
                     textAlign: TextAlign.center,
                   ),
@@ -157,34 +160,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     const SizedBox(height: 16),
                   ],
                   AppTextField(
-                    label: 'Usuário',
-                    hint: 'Digite seu usuário',
+                    label: l10n.labelUsername,
+                    hint: l10n.hintEnterUsername,
                     controller: _usernameController,
                     prefixIcon: Icons.person,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor, digite seu usuário';
+                        return l10n.validationEnterUsername;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
-                    label: 'Senha',
-                    hint: 'Digite sua senha',
+                    label: l10n.labelPassword,
+                    hint: l10n.hintEnterPassword,
                     controller: _passwordController,
                     prefixIcon: Icons.lock,
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Por favor, digite sua senha';
+                        return l10n.validationEnterPassword;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
                   AppButton(
-                    text: 'Entrar',
+                    text: l10n.buttonEnter,
                     onPressed: _handleLogin,
                     isLoading: _isLoading,
                     icon: Icons.login,
@@ -195,7 +198,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       // Navegar para registro
                       context.push('/register');
                     },
-                    child: const Text('Não tem conta? Registre-se'),
+                    child: Text(l10n.messageNoAccount),
                   ),
                   const SizedBox(height: 24),
                   // Informações do build
@@ -210,14 +213,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         children: [
                           if (_packageInfo != null) ...[
                             Text(
-                              'Versão: ${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+                              l10n.messageVersion
+                                  .replaceAll('{version}', _packageInfo!.version)
+                                  .replaceAll('{buildNumber}', _packageInfo!.buildNumber),
                               style: Theme.of(context).textTheme.bodySmall,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 4),
                           ],
                           Text(
-                            'Build: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_buildTime!)}',
+                            l10n.messageBuild.replaceAll('{date}', DateFormat('dd/MM/yyyy HH:mm:ss').format(_buildTime!)),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey.shade600,
                               fontSize: 11,

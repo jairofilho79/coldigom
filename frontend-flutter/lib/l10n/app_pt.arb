@@ -1,0 +1,543 @@
+{
+  "@@locale": "pt",
+  "appName": "Coldigom",
+  "appSubtitle": "Gerenciamento de Louvores",
+  "@appSubtitle": {
+    "description": "Subtítulo do aplicativo"
+  },
+  
+  "buttonBack": "Voltar",
+  "buttonEdit": "Editar",
+  "buttonDelete": "Deletar",
+  "buttonSave": "Salvar",
+  "buttonCancel": "Cancelar",
+  "buttonCreate": "Criar",
+  "buttonUpdate": "Atualizar",
+  "buttonConfirm": "Confirmar",
+  "buttonClose": "Fechar",
+  "buttonLogout": "Sair",
+  "buttonRemoveFilter": "Remover Filtro",
+  "buttonDownload": "Baixar",
+  "buttonDownloading": "Baixando...",
+  "buttonDownloadByMaterialKind": "Baixar por Material Kind",
+  "buttonDownloadZip": "Download ZIP",
+  "buttonEnter": "Entrar",
+  "buttonRegister": "Registrar",
+  "buttonTryAgain": "Tentar Novamente",
+  
+  "labelTags": "Tags",
+  "labelMaterials": "Materiais",
+  "labelName": "Nome",
+  "labelEmail": "Email",
+  "labelPassword": "Senha",
+  "labelConfirmPassword": "Confirmar Senha",
+  "labelUsername": "Usuário",
+  "labelType": "Tipo",
+  "labelMaterialKind": "Tipo de Material",
+  "labelMaterialType": "Tipo de Material",
+  "labelPath": "Caminho",
+  "labelSearch": "Buscar",
+  "labelPraiseName": "Nome do Louvor",
+  "labelNumber": "Número",
+  "labelNumberOptional": "Número (opcional)",
+  "labelFileType": "Tipo de Arquivo",
+  "labelCode": "Código",
+  "labelText": "Texto",
+  "labelUrl": "URL",
+  "labelActive": "Ativa",
+  "labelMaterialKindRequired": "Material Kind *",
+  "labelMaterialTypeRequired": "Tipo de Material *",
+  "labelSelectMaterialKind": "Selecione o Material Kind",
+  "labelSelectFile": "Selecionar Arquivo",
+  "labelSelectNewFile": "Selecionar Novo Arquivo",
+  "labelCurrentFile": "Arquivo Atual",
+  "labelMaxZipSize": "Tamanho máximo por ZIP (MB)",
+  "labelMaterialIsOld": "Material Antigo",
+  "labelMaterialOldDescription": "Descrição do Material Antigo",
+  "labelSelectTag": "Selecione uma tag (opcional)",
+  "labelSelectMaterialKindForDownload": "Selecione um Material Kind",
+  
+  "hintEnterUsername": "Digite seu usuário",
+  "hintEnterPassword": "Digite sua senha",
+  "hintEnterEmail": "Digite seu email",
+  "hintConfirmPassword": "Confirme sua senha",
+  "hintEnterPraiseName": "Digite o nome do praise",
+  "hintEnterPraiseNumber": "Digite o número do praise (opcional)",
+  "hintEnterTagName": "Digite o nome da tag",
+  "hintEnterMaterialKindName": "Digite o nome do material kind",
+  "hintEnterMaterialTypeName": "Digite o nome do material type",
+  "hintEnterLanguageCode": "Ex: pt-BR, en-US",
+  "hintEnterLanguageName": "Digite o nome da linguagem",
+  "hintEnterSearchPraise": "Digite o nome do praise...",
+  "hintEnterUrl": "Cole a URL do {platform}",
+  "@hintEnterUrl": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "hintEnterText": "Digite o texto do material",
+  "hintEnterOldDescription": "Descreva por que este material está antigo (opcional)",
+  "hintEnterReviewDescription": "Descreva o motivo da revisão...",
+  "hintSelectFile": "Selecione um arquivo PDF ou de áudio",
+  "hintSelectNewFileToReplace": "Selecione um novo arquivo para substituir",
+  
+  "validationRequired": "Este campo é obrigatório",
+  "validationMinLength": "Mínimo de {min} caracteres",
+  "@validationMinLength": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "validationMaxLength": "Máximo de {max} caracteres",
+  "@validationMaxLength": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "validationEnterUsername": "Por favor, digite seu usuário",
+  "validationEnterPassword": "Por favor, digite sua senha",
+  "validationEnterEmail": "Por favor, digite seu email",
+  "validationValidEmail": "Por favor, digite um email válido",
+  "validationUsernameMinLength": "Usuário deve ter pelo menos 3 caracteres",
+  "validationPasswordMinLength": "Senha deve ter pelo menos 6 caracteres",
+  "validationConfirmPassword": "Por favor, confirme sua senha",
+  "validationPasswordMismatch": "As senhas não coincidem",
+  "validationUrlRequired": "URL é obrigatória",
+  "validationUrlInvalid": "URL inválida",
+  "validationTextRequired": "Texto é obrigatório",
+  "validationMaterialKindRequired": "Material Kind é obrigatório",
+  "validationSelectMaterialType": "Selecione o tipo de material",
+  "validationSelectMaterialKind": "Selecione o Material Kind",
+  
+  "pageTitleDashboard": "Dashboard",
+  "pageTitlePraises": "Praises",
+  "pageTitleTags": "Tags",
+  "pageTitleMaterialKinds": "Material Kinds",
+  "pageTitleMaterialTypes": "Material Types",
+  "pageTitleLanguages": "Linguagens",
+  "pageTitleCreatePraise": "Criar Praise",
+  "pageTitleEditPraise": "Editar Praise",
+  "pageTitlePraiseDetails": "Detalhes do Praise",
+  "pageTitleRegister": "Registro",
+  "pageTitleCreateTag": "Criar Tag",
+  "pageTitleEditTag": "Editar Tag",
+  "pageTitleCreateMaterialKind": "Criar Material Kind",
+  "pageTitleEditMaterialKind": "Editar Material Kind",
+  "pageTitleCreateMaterialType": "Criar Material Type",
+  "pageTitleEditMaterialType": "Editar Material Type",
+  "pageTitleCreateLanguage": "Criar Linguagem",
+  "pageTitleEditLanguage": "Editar Linguagem",
+  
+  "messageWelcome": "Bem-vindo, {username}!",
+  "@messageWelcome": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "messageNotAuthenticated": "Não autenticado",
+  "messageNoTagsAvailable": "Nenhuma tag disponível",
+  "messageNoMaterialsAdded": "Nenhum material adicionado",
+  "messageNoMaterialKindsAvailable": "Nenhum Material Kind disponível",
+  "messageNoTagsForFilter": "Nenhuma tag (todos os praises)",
+  "messageNoMaterials": "Nenhum material cadastrado",
+  "messageCreatePraiseFirst": "É necessário criar o praise primeiro",
+  "messageFileSelected": "Novo arquivo selecionado. O arquivo atual será substituído.",
+  "messageNewFile": "Novo Arquivo: {fileName}",
+  "@messageNewFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "messageVersion": "Versão: {version} ({buildNumber})",
+  "@messageVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "messageBuild": "Build: {date}",
+  "@messageBuild": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "messageNoAccount": "Não tem conta? Registre-se",
+  "messageHasAccount": "Já tem conta? Faça login",
+  "messageLanguageAvailable": "Linguagem disponível para uso",
+  "messageMaterialOld": "Marcar se este material está desatualizado",
+  "messageZipSaved": "ZIP salvo em: {path}",
+  "@messageZipSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messagePageOf": "Página {current} de {total}",
+  "@messagePageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "messageId": "ID: {id}",
+  "@messageId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageCode": "Código: {code}",
+  "@messageCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "messageMaxZipSize": "{size} MB",
+  "@messageMaxZipSize": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "sectionTags": "Tags",
+  "sectionMaterials": "Materiais",
+  "sectionReviewHistory": "Histórico de Revisão",
+  
+  "statusInReview": "Em Revisão",
+  "statusLoading": "Carregando...",
+  "statusDownloadingZip": "Baixando ZIP...",
+  
+  "badgeInReview": "Em Revisão",
+  "badgeOld": "Antigo",
+  "badgeNumber": "#{number}",
+  "@badgeNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "actionAddMaterial": "Adicionar Material",
+  "actionEdit": "Editar",
+  "actionDelete": "Excluir",
+  "actionDownload": "Baixar",
+  "actionPlay": "Reproduzir",
+  "actionView": "Visualizar",
+  "actionStartReview": "Iniciar Revisão",
+  "actionCancelReview": "Cancelar Revisão",
+  "actionFinishReview": "Finalizar Revisão",
+  "actionFilter": "Filtrar",
+  "actionAll": "Todas",
+  "actionViewOldMaterials": "Ver Antigos",
+  "actionHideOldMaterials": "Ocultar Antigos",
+  
+  "dialogTitleConfirmDelete": "Confirmar Exclusão",
+  "dialogTitleStartReview": "Iniciar Revisão",
+  "dialogTitleDownloadZip": "Baixar Praise em ZIP",
+  "dialogMessageDeletePraise": "Tem certeza que deseja excluir este praise? Esta ação não pode ser desfeita.",
+  "dialogMessageDeleteTag": "Tem certeza que deseja excluir esta tag?",
+  "dialogMessageDeleteMaterialKind": "Tem certeza que deseja excluir este material kind?",
+  "dialogMessageDeleteMaterialType": "Tem certeza que deseja excluir este material type?",
+  "dialogMessageDeleteLanguage": "Tem certeza que deseja excluir esta linguagem?",
+  "dialogMessageDeleteMaterial": "Tem certeza que deseja excluir este material?",
+  "dialogMessageNoFileMaterials": "Este praise não possui materiais de arquivo para download",
+  "dialogLabelReviewDescription": "Descrição (opcional)",
+  
+  "errorConnectionFailed": "Não foi possível conectar ao servidor.\nVerifique se o backend está rodando em http://127.0.0.1:8000",
+  "errorInvalidCredentials": "Usuário ou senha incorretos",
+  "errorLogin": "Erro ao fazer login: {error}",
+  "@errorLogin": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorRegister": "Erro ao registrar: {error}",
+  "@errorRegister": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSelectFile": "Erro ao selecionar arquivo: {error}",
+  "@errorSelectFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveMaterial": "Erro ao salvar material: {error}",
+  "@errorSaveMaterial": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteMaterial": "Erro ao excluir material: {error}",
+  "@errorDeleteMaterial": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadMaterials": "Erro ao carregar materiais: {error}",
+  "@errorLoadMaterials": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadZip": "Erro ao baixar ZIP: {error}",
+  "@errorDownloadZip": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadPraise": "Erro ao carregar praise: {error}",
+  "@errorLoadPraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadMaterialKind": "Erro ao carregar material kind: {error}",
+  "@errorLoadMaterialKind": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadMaterialType": "Erro ao carregar material type: {error}",
+  "@errorLoadMaterialType": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadAudio": "Erro ao carregar áudio: {error}",
+  "@errorLoadAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadPdf": "Erro ao carregar PDF",
+  "errorCreatePraise": "Erro ao criar praise: {error}",
+  "@errorCreatePraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUpdatePraise": "Erro ao atualizar praise: {error}",
+  "@errorUpdatePraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeletePraise": "Erro ao excluir: {error}",
+  "@errorDeletePraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorStartReview": "Erro ao iniciar revisão: {error}",
+  "@errorStartReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCancelReview": "Erro ao cancelar revisão: {error}",
+  "@errorCancelReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorFinishReview": "Erro ao finalizar revisão: {error}",
+  "@errorFinishReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveTag": "Erro ao salvar tag: {error}",
+  "@errorSaveTag": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteTag": "Erro ao excluir tag: {error}",
+  "@errorDeleteTag": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveMaterialKind": "Erro ao salvar material kind: {error}",
+  "@errorSaveMaterialKind": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteMaterialKind": "Erro ao excluir material kind: {error}",
+  "@errorDeleteMaterialKind": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveMaterialType": "Erro ao salvar material type: {error}",
+  "@errorSaveMaterialType": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteMaterialType": "Erro ao excluir material type: {error}",
+  "@errorDeleteMaterialType": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveLanguage": "Erro ao salvar linguagem: {error}",
+  "@errorSaveLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteLanguage": "Erro ao excluir linguagem: {error}",
+  "@errorDeleteLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorNeedCreatePraiseFirst": "É necessário criar o praise primeiro",
+  "errorDownloadCanceled": "Download cancelado",
+  
+  "successRegister": "Registro realizado com sucesso! Faça login.",
+  "successPraiseCreated": "Praise criado com sucesso. Você pode adicionar materiais na página de edição.",
+  "successPraiseUpdated": "Praise atualizado com sucesso",
+  "successPraiseDeleted": "Praise excluído com sucesso",
+  "successReviewStarted": "Revisão iniciada com sucesso",
+  "successReviewCanceled": "Revisão cancelada com sucesso",
+  "successReviewFinished": "Revisão finalizada com sucesso",
+  "successMaterialDeleted": "Material excluído com sucesso",
+  "successTagSaved": "Tag salva com sucesso",
+  "successTagDeleted": "Tag excluída com sucesso",
+  "successMaterialKindSaved": "Material kind salvo com sucesso",
+  "successMaterialKindDeleted": "Material kind excluído com sucesso",
+  "successMaterialTypeSaved": "Material type salvo com sucesso",
+  "successMaterialTypeDeleted": "Material type excluído com sucesso",
+  "successLanguageSaved": "Linguagem salva com sucesso",
+  "successLanguageDeleted": "Linguagem excluída com sucesso",
+  
+  "enumMaterialFormTypeFile": "Arquivo",
+  "enumMaterialFormTypeYoutube": "YouTube",
+  "enumMaterialFormTypeSpotify": "Spotify",
+  "enumMaterialFormTypeText": "Texto",
+  
+  "enumRoomAccessTypePublic": "Público",
+  "enumRoomAccessTypePassword": "Com Senha",
+  "enumRoomAccessTypeApproval": "Com Aprovação",
+  
+  "enumRoomJoinRequestStatusPending": "Pendente",
+  "enumRoomJoinRequestStatusApproved": "Aprovado",
+  "enumRoomJoinRequestStatusRejected": "Rejeitado",
+  
+  "reviewActionStart": "Iniciar",
+  "reviewActionCancel": "Cancelar",
+  "reviewActionFinish": "Finalizar",
+  
+  "tooltipDownloadZip": "Baixar ZIP",
+  "tooltipEdit": "Editar",
+  "tooltipDelete": "Excluir",
+  
+  "drawerUser": "Usuário",
+  "drawerDashboard": "Dashboard",
+  "drawerPraises": "Praises",
+  "drawerTags": "Tags",
+  "drawerLanguages": "Linguagens",
+  "drawerLanguage": "Idioma",
+  "drawerMaterialKinds": "Material Kinds",
+  "drawerMaterialTypes": "Material Types",
+  "drawerLogout": "Sair",
+  
+  "languagePortuguese": "Português",
+  "languageEnglish": "Inglês",
+  "languageCurrent": "Idioma atual: {name}",
+  "@languageCurrent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "cardPraises": "Praises",
+  "cardTags": "Tags",
+  "cardMaterialKinds": "Material Kinds",
+  "cardDownloadByMaterialKind": "Baixar por Material Kind",
+  "cardLists": "Listas"
+}

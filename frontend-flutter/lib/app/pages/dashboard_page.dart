@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/material_kind_download_dialog.dart';
 import '../widgets/app_scaffold.dart';
@@ -13,10 +14,11 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(l10n.pageTitleDashboard),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -45,7 +47,7 @@ class DashboardPage extends ConsumerWidget {
                           const Icon(Icons.person, size: 48),
                           const SizedBox(height: 8),
                           Text(
-                            'Bem-vindo, ${authState.user?.username ?? "Usuário"}!',
+                            l10n.messageWelcome.replaceAll('{username}', authState.user?.username ?? l10n.drawerUser),
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                         ],
@@ -62,22 +64,22 @@ class DashboardPage extends ConsumerWidget {
                     children: [
                       _DashboardCard(
                         icon: Icons.music_note,
-                        title: 'Praises',
+                        title: l10n.cardPraises,
                         onTap: () => context.push('/praises'),
                       ),
                       _DashboardCard(
                         icon: Icons.label,
-                        title: 'Tags',
+                        title: l10n.cardTags,
                         onTap: () => context.push('/tags'),
                       ),
                       _DashboardCard(
                         icon: Icons.folder,
-                        title: 'Material Kinds',
+                        title: l10n.cardMaterialKinds,
                         onTap: () => context.push('/material-kinds'),
                       ),
                       _DashboardCard(
                         icon: Icons.download,
-                        title: 'Baixar por Material Kind',
+                        title: l10n.cardDownloadByMaterialKind,
                         onTap: () {
                           showDialog(
                             context: context,
@@ -87,7 +89,7 @@ class DashboardPage extends ConsumerWidget {
                       ),
                       _DashboardCard(
                         icon: Icons.list,
-                        title: 'Listas',
+                        title: l10n.cardLists,
                         onTap: () {
                           // Navegar para listas
                         },
@@ -97,8 +99,8 @@ class DashboardPage extends ConsumerWidget {
                 ],
               ),
             )
-          : const AppEmptyWidget(
-              message: 'Não autenticado',
+          : AppEmptyWidget(
+              message: l10n.messageNotAuthenticated,
               icon: Icons.lock,
             ),
     );

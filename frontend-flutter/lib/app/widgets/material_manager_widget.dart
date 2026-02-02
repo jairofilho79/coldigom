@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../models/praise_material_model.dart';
 import '../models/praise_model.dart';
 import '../services/api/api_service.dart';
@@ -134,9 +136,10 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
   }
 
   Future<void> _addMaterial() async {
+    final l10n = AppLocalizations.of(context);
     if (widget.praiseId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('É necessário criar o praise primeiro')),
+        SnackBar(content: Text(l10n?.messageCreatePraiseFirst ?? 'É necessário criar o praise primeiro')),
       );
       return;
     }
@@ -174,20 +177,21 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
   }
 
   Future<void> _deleteMaterial(PraiseMaterialResponse material) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text('Tem certeza que deseja excluir este material?'),
+        title: Text(l10n.dialogTitleConfirmDelete),
+        content: Text(l10n.dialogMessageDeleteMaterial),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.buttonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Excluir'),
+            child: Text(l10n.buttonDelete),
           ),
         ],
       ),
@@ -212,13 +216,13 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Material excluído com sucesso')),
+            SnackBar(content: Text(l10n.successMaterialDeleted)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao excluir material: $e')),
+            SnackBar(content: Text(l10n.errorDeleteMaterial.replaceAll('{error}', e.toString()))),
           );
         }
       }
@@ -258,6 +262,7 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -265,18 +270,18 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
           children: [
             Expanded(
               child: Text(
-                'Materiais (${_materials.length})',
+                '${l10n.sectionMaterials} (${_materials.length})',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             AppButton(
-              text: _showOldMaterials ? 'Ocultar Antigos' : 'Ver Antigos',
+              text: _showOldMaterials ? l10n.actionHideOldMaterials : l10n.actionViewOldMaterials,
               icon: Icons.history,
               onPressed: _toggleShowOldMaterials,
             ),
             const SizedBox(width: 8),
             AppButton(
-              text: 'Adicionar',
+              text: l10n.actionAddMaterial,
               icon: Icons.add,
               onPressed: _addMaterial,
             ),
@@ -284,8 +289,8 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
         ),
         const SizedBox(height: 8),
         if (_materials.isEmpty)
-          const AppEmptyWidget(
-            message: 'Nenhum material cadastrado',
+          AppEmptyWidget(
+            message: l10n.messageNoMaterials,
             icon: Icons.insert_drive_file,
           )
         else
@@ -318,13 +323,17 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                       color: _getMaterialIconColor(material),
                     ),
                     title: Text(
-                      material.materialKind?.name ?? material.materialKindId,
+                      material.materialKind != null
+                          ? getMaterialKindName(ref, material.materialKind!.id, material.materialKind!.name)
+                          : material.materialKindId,
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          material.materialType?.name ?? material.materialTypeId,
+                          material.materialType != null
+                              ? getMaterialTypeName(ref, material.materialType!.id, material.materialType!.name)
+                              : material.materialTypeId,
                         ),
                         if (material.isOld == true) ...[
                           const SizedBox(height: 4),
@@ -337,12 +346,17 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                               ),
                               const SizedBox(width: 4),
                               Expanded(
-                                child: Text(
-                                  'Material Antigo',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(color: Colors.orange),
+                                child: Builder(
+                                  builder: (context) {
+                                    final l10n = AppLocalizations.of(context);
+                                    return Text(
+                                      l10n?.labelMaterialIsOld ?? 'Material Antigo',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(color: Colors.orange),
+                                    );
+                                  },
                                 ),
                               ),
                             ],

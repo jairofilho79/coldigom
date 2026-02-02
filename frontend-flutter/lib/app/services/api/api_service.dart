@@ -9,6 +9,7 @@ import '../../models/language_model.dart';
 import '../../models/material_kind_model.dart';
 import '../../models/material_type_model.dart';
 import '../../models/praise_material_model.dart';
+import '../../models/translation_model.dart';
 import '../../../core/constants/app_constants.dart';
 
 /// Serviço de API usando Dio diretamente
@@ -409,6 +410,147 @@ class ApiService {
         validateStatus: (status) => status! < 500,
       ),
     );
+  }
+
+  // Translations - MaterialKind
+  Future<List<MaterialKindTranslationResponse>> getMaterialKindTranslations({
+    String? materialKindId,
+    String? languageCode,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/translations/material-kinds',
+      queryParameters: {
+        if (materialKindId != null) 'material_kind_id': materialKindId,
+        if (languageCode != null) 'language_code': languageCode,
+      },
+    );
+    return (response.data as List)
+        .map((json) => MaterialKindTranslationResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<MaterialKindTranslationResponse> getMaterialKindTranslation(String id) async {
+    final response = await _dio.get('/api/v1/translations/material-kinds/$id');
+    return MaterialKindTranslationResponse.fromJson(response.data);
+  }
+
+  Future<MaterialKindTranslationResponse> createMaterialKindTranslation(
+    MaterialKindTranslationCreate data,
+  ) async {
+    final response = await _dio.post(
+      '/api/v1/translations/material-kinds',
+      data: data.toJson(),
+    );
+    return MaterialKindTranslationResponse.fromJson(response.data);
+  }
+
+  Future<MaterialKindTranslationResponse> updateMaterialKindTranslation(
+    String id,
+    MaterialKindTranslationUpdate data,
+  ) async {
+    final response = await _dio.put(
+      '/api/v1/translations/material-kinds/$id',
+      data: data.toJson(),
+    );
+    return MaterialKindTranslationResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteMaterialKindTranslation(String id) async {
+    await _dio.delete('/api/v1/translations/material-kinds/$id');
+  }
+
+  // Translations - PraiseTag
+  Future<List<PraiseTagTranslationResponse>> getPraiseTagTranslations({
+    String? praiseTagId,
+    String? languageCode,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/translations/praise-tags',
+      queryParameters: {
+        if (praiseTagId != null) 'praise_tag_id': praiseTagId,
+        if (languageCode != null) 'language_code': languageCode,
+      },
+    );
+    return (response.data as List)
+        .map((json) => PraiseTagTranslationResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<PraiseTagTranslationResponse> getPraiseTagTranslation(String id) async {
+    final response = await _dio.get('/api/v1/translations/praise-tags/$id');
+    return PraiseTagTranslationResponse.fromJson(response.data);
+  }
+
+  Future<PraiseTagTranslationResponse> createPraiseTagTranslation(
+    PraiseTagTranslationCreate data,
+  ) async {
+    final response = await _dio.post(
+      '/api/v1/translations/praise-tags',
+      data: data.toJson(),
+    );
+    return PraiseTagTranslationResponse.fromJson(response.data);
+  }
+
+  Future<PraiseTagTranslationResponse> updatePraiseTagTranslation(
+    String id,
+    PraiseTagTranslationUpdate data,
+  ) async {
+    final response = await _dio.put(
+      '/api/v1/translations/praise-tags/$id',
+      data: data.toJson(),
+    );
+    return PraiseTagTranslationResponse.fromJson(response.data);
+  }
+
+  Future<void> deletePraiseTagTranslation(String id) async {
+    await _dio.delete('/api/v1/translations/praise-tags/$id');
+  }
+
+  // Translations - MaterialType
+  Future<List<MaterialTypeTranslationResponse>> getMaterialTypeTranslations({
+    String? materialTypeId,
+    String? languageCode,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/translations/material-types',
+      queryParameters: {
+        if (materialTypeId != null) 'material_type_id': materialTypeId,
+        if (languageCode != null) 'language_code': languageCode,
+      },
+    );
+    return (response.data as List)
+        .map((json) => MaterialTypeTranslationResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<MaterialTypeTranslationResponse> getMaterialTypeTranslation(String id) async {
+    final response = await _dio.get('/api/v1/translations/material-types/$id');
+    return MaterialTypeTranslationResponse.fromJson(response.data);
+  }
+
+  Future<MaterialTypeTranslationResponse> createMaterialTypeTranslation(
+    MaterialTypeTranslationCreate data,
+  ) async {
+    final response = await _dio.post(
+      '/api/v1/translations/material-types',
+      data: data.toJson(),
+    );
+    return MaterialTypeTranslationResponse.fromJson(response.data);
+  }
+
+  Future<MaterialTypeTranslationResponse> updateMaterialTypeTranslation(
+    String id,
+    MaterialTypeTranslationUpdate data,
+  ) async {
+    final response = await _dio.put(
+      '/api/v1/translations/material-types/$id',
+      data: data.toJson(),
+    );
+    return MaterialTypeTranslationResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteMaterialTypeTranslation(String id) async {
+    await _dio.delete('/api/v1/translations/material-types/$id');
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../services/api/api_service.dart';
@@ -52,17 +53,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       await apiService.register(userCreate);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registro realizado com sucesso! Faça login.'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.successRegister),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
         context.go('/login');
       }
     } catch (e) {
+      final l10n = AppLocalizations.of(context);
       setState(() {
-        _errorMessage = 'Erro ao registrar: ${e.toString()}';
+        _errorMessage = l10n?.errorRegister.replaceAll('{error}', e.toString()) ?? 'Erro ao registrar: ${e.toString()}';
       });
     } finally {
       if (mounted) {
@@ -75,9 +80,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro'),
+        title: Text(l10n.pageTitleRegister),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -104,74 +111,74 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   const SizedBox(height: 16),
                 ],
                 AppTextField(
-                  label: 'Email',
-                  hint: 'Digite seu email',
+                  label: l10n.labelEmail,
+                  hint: l10n.hintEnterEmail,
                   controller: _emailController,
                   prefixIcon: Icons.email,
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, digite seu email';
+                      return l10n.validationEnterEmail;
                     }
                     if (!value.contains('@')) {
-                      return 'Por favor, digite um email válido';
+                      return l10n.validationValidEmail;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
-                  label: 'Usuário',
-                  hint: 'Digite seu usuário',
+                  label: l10n.labelUsername,
+                  hint: l10n.hintEnterUsername,
                   controller: _usernameController,
                   prefixIcon: Icons.person,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, digite seu usuário';
+                      return l10n.validationEnterUsername;
                     }
                     if (value.length < 3) {
-                      return 'Usuário deve ter pelo menos 3 caracteres';
+                      return l10n.validationUsernameMinLength;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
-                  label: 'Senha',
-                  hint: 'Digite sua senha',
+                  label: l10n.labelPassword,
+                  hint: l10n.hintEnterPassword,
                   controller: _passwordController,
                   prefixIcon: Icons.lock,
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, digite sua senha';
+                      return l10n.validationEnterPassword;
                     }
                     if (value.length < 6) {
-                      return 'Senha deve ter pelo menos 6 caracteres';
+                      return l10n.validationPasswordMinLength;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
-                  label: 'Confirmar Senha',
-                  hint: 'Confirme sua senha',
+                  label: l10n.labelConfirmPassword,
+                  hint: l10n.hintConfirmPassword,
                   controller: _confirmPasswordController,
                   prefixIcon: Icons.lock_outline,
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, confirme sua senha';
+                      return l10n.validationConfirmPassword;
                     }
                     if (value != _passwordController.text) {
-                      return 'As senhas não coincidem';
+                      return l10n.validationPasswordMismatch;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
                 AppButton(
-                  text: 'Registrar',
+                  text: l10n.buttonRegister,
                   onPressed: _handleRegister,
                   isLoading: _isLoading,
                   icon: Icons.person_add,
@@ -181,7 +188,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   onPressed: () {
                     context.go('/login');
                   },
-                  child: const Text('Já tem conta? Faça login'),
+                  child: Text(l10n.messageHasAccount),
                 ),
               ],
             ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../stores/auth_store.dart';
 import '../stores/audio_player_store.dart';
 import '../services/offline/download_service.dart';
 import 'mini_audio_player.dart';
+import 'language_selector_widget.dart';
 
 /// Navigation drawer com mini player no footer quando áudio está em background
 class AppDrawer extends ConsumerWidget {
@@ -14,6 +16,7 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final playerState = ref.watch(audioPlayerStateProvider);
+    final l10n = AppLocalizations.of(context)!;
     
     // Verificar se áudio está em background (escondido)
     final showMiniPlayerInDrawer = playerState.currentMaterial != null && 
@@ -25,7 +28,7 @@ class AppDrawer extends ConsumerWidget {
           // Header do drawer
           UserAccountsDrawerHeader(
             accountName: Text(
-              authState.user?.username ?? 'Usuário',
+              authState.user?.username ?? l10n.drawerUser,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             accountEmail: Text(
@@ -52,7 +55,7 @@ class AppDrawer extends ConsumerWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.dashboard),
-                  title: const Text('Dashboard'),
+                  title: Text(l10n.drawerDashboard),
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/');
@@ -60,7 +63,7 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.music_note),
-                  title: const Text('Praises'),
+                  title: Text(l10n.drawerPraises),
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/praises');
@@ -68,7 +71,7 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.label),
-                  title: const Text('Tags'),
+                  title: Text(l10n.drawerTags),
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/tags');
@@ -76,7 +79,7 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.language),
-                  title: const Text('Linguagens'),
+                  title: Text(l10n.drawerLanguages),
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/languages');
@@ -84,7 +87,7 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.folder),
-                  title: const Text('Material Kinds'),
+                  title: Text(l10n.drawerMaterialKinds),
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/material-kinds');
@@ -92,16 +95,17 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.category),
-                  title: const Text('Material Types'),
+                  title: Text(l10n.drawerMaterialTypes),
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/material-types');
                   },
                 ),
                 const Divider(),
+                const LanguageSelectorWidget(),
                 ListTile(
                   leading: const Icon(Icons.logout),
-                  title: const Text('Sair'),
+                  title: Text(l10n.drawerLogout),
                   onTap: () async {
                     Navigator.pop(context);
                     // Limpar cache de URLs antes de fazer logout

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/extensions/material_form_type_extension.dart';
 import '../models/praise_material_model.dart';
 import '../models/material_kind_model.dart';
 import '../models/material_type_model.dart';
@@ -144,9 +146,10 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao selecionar arquivo: $e'),
+            content: Text(l10n?.errorSelectFile.replaceAll('{error}', e.toString()) ?? 'Erro ao selecionar arquivo: $e'),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -181,16 +184,17 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context);
     if (_formData.type == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione o tipo de material')),
+        SnackBar(content: Text(l10n?.validationSelectMaterialType ?? 'Selecione o tipo de material')),
       );
       return;
     }
 
     if (_formData.materialKindId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione o Material Kind')),
+        SnackBar(content: Text(l10n?.validationSelectMaterialKind ?? 'Selecione o Material Kind')),
       );
       return;
     }
@@ -300,8 +304,9 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar material: $e')),
+          SnackBar(content: Text(l10n?.errorSaveMaterial.replaceAll('{error}', e.toString()) ?? 'Erro ao salvar material: $e')),
         );
       }
     } finally {
@@ -316,6 +321,7 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
   @override
   Widget build(BuildContext context) {
     final kindsAsync = ref.watch(materialKindsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Dialog(
       child: Container(
@@ -350,31 +356,31 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                     children: [
                       // Tipo de Material
                       Text(
-                        'Tipo de Material *',
+                        '${l10n.labelMaterialTypeRequired}',
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<MaterialFormType>(
-                        segments: const [
+                        segments: [
                           ButtonSegment(
                             value: MaterialFormType.file,
-                            label: Text('Arquivo'),
-                            icon: Icon(Icons.insert_drive_file),
+                            label: Text(MaterialFormType.file.localizedName(context)),
+                            icon: const Icon(Icons.insert_drive_file),
                           ),
                           ButtonSegment(
                             value: MaterialFormType.youtube,
-                            label: Text('YouTube'),
-                            icon: Icon(Icons.play_circle),
+                            label: Text(MaterialFormType.youtube.localizedName(context)),
+                            icon: const Icon(Icons.play_circle),
                           ),
                           ButtonSegment(
                             value: MaterialFormType.spotify,
-                            label: Text('Spotify'),
-                            icon: Icon(Icons.music_note),
+                            label: Text(MaterialFormType.spotify.localizedName(context)),
+                            icon: const Icon(Icons.music_note),
                           ),
                           ButtonSegment(
                             value: MaterialFormType.text,
-                            label: Text('Texto'),
-                            icon: Icon(Icons.text_fields),
+                            label: Text(MaterialFormType.text.localizedName(context)),
+                            icon: const Icon(Icons.text_fields),
                           ),
                         ],
                         selected: _formData.type != null ? {_formData.type!} : {},
@@ -489,16 +495,16 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                       ] else if (_formData.type == MaterialFormType.youtube ||
                           _formData.type == MaterialFormType.spotify) ...[
                         AppTextField(
-                          label: 'URL',
+                          label: l10n.labelUrl,
                           hint: 'Cole a URL do ${_formData.type == MaterialFormType.youtube ? "YouTube" : "Spotify"}',
                           controller: _urlController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'URL é obrigatória';
+                              return l10n.validationUrlRequired;
                             }
                             final uri = Uri.tryParse(value);
                             if (uri == null || !uri.hasAbsolutePath) {
-                              return 'URL inválida';
+                              return l10n.validationUrlInvalid;
                             }
                             return null;
                           },
@@ -506,12 +512,12 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                         ),
                       ] else if (_formData.type == MaterialFormType.text) ...[
                         AppTextField(
-                          label: 'Texto',
-                          hint: 'Digite o texto do material',
+                          label: l10n.labelText,
+                          hint: l10n.hintEnterText,
                           controller: _textController,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Texto é obrigatório';
+                              return l10n.validationTextRequired;
                             }
                             return null;
                           },
@@ -524,22 +530,22 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
 
                       // Material Kind
                       Text(
-                        'Material Kind *',
+                        l10n.labelMaterialKindRequired,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
                       kindsAsync.when(
                         data: (kinds) {
                           if (kinds.isEmpty) {
-                            return const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Text('Nenhum Material Kind disponível'),
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(l10n.messageNoMaterialKindsAvailable),
                             );
                           }
                           return DropdownButtonFormField<String>(
                             value: _formData.materialKindId,
-                            decoration: const InputDecoration(
-                              hintText: 'Selecione o Material Kind',
+                            decoration: InputDecoration(
+                              hintText: l10n.labelSelectMaterialKind,
                             ),
                             items: kinds.map((kind) {
                               return DropdownMenuItem(
@@ -554,13 +560,13 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                             },
                             validator: (value) {
                               if (value == null) {
-                                return 'Material Kind é obrigatório';
+                                return l10n.validationSelectMaterialKind;
                               }
                               return null;
                             },
                           );
                         },
-                        loading: () => const AppLoadingIndicator(message: 'Carregando...'),
+                        loading: () => AppLoadingIndicator(message: l10n.statusLoading),
                         error: (error, stack) => AppErrorWidget(
                           message: 'Erro ao carregar Material Kinds: $error',
                           onRetry: () {
@@ -573,8 +579,8 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
 
                       // Opções
                       CheckboxListTile(
-                        title: const Text('Material Antigo'),
-                        subtitle: const Text('Marcar se este material está desatualizado'),
+                        title: Text(l10n.labelMaterialIsOld),
+                        subtitle: Text(l10n.hintEnterOldDescription),
                         value: _formData.isOld,
                         onChanged: (value) {
                           setState(() {
@@ -586,8 +592,8 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                       if (_formData.isOld) ...[
                         const SizedBox(height: 8),
                         AppTextField(
-                          label: 'Descrição do Material Antigo',
-                          hint: 'Descreva por que este material está antigo (opcional)',
+                          label: l10n.labelMaterialOldDescription,
+                          hint: l10n.hintEnterOldDescription,
                           controller: _oldDescriptionController,
                           maxLines: 3,
                           prefixIcon: Icons.description,
@@ -604,11 +610,11 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                   children: [
                     TextButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
-                      child: const Text('Cancelar'),
+                      child: Text(l10n.buttonCancel),
                     ),
                     const SizedBox(width: 8),
                     AppButton(
-                      text: 'Salvar',
+                      text: l10n.buttonSave,
                       icon: Icons.save,
                       onPressed: _isLoading ? null : _handleSave,
                       isLoading: _isLoading,

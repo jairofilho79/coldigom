@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../models/praise_tag_model.dart';
 import '../services/api/api_service.dart';
 import '../services/offline/download_service.dart';
@@ -30,6 +32,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
   Widget build(BuildContext context) {
     final kindsAsync = ref.watch(materialKindsProvider);
     final tagsAsync = ref.watch(tagsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Dialog(
       child: Container(
@@ -43,7 +46,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                 children: [
                   Expanded(
                     child: Text(
-                      'Baixar por Material Kind',
+                      l10n.buttonDownloadByMaterialKind,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
@@ -62,22 +65,22 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                   children: [
                     // Material Kind
                     Text(
-                      'Material Kind *',
+                      l10n.labelMaterialKindRequired,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
                     kindsAsync.when(
                       data: (kinds) {
                         if (kinds.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text('Nenhum Material Kind disponível'),
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(l10n.messageNoMaterialKindsAvailable),
                           );
                         }
                         return DropdownButtonFormField<String>(
                           initialValue: _selectedMaterialKindId,
-                          decoration: const InputDecoration(
-                            hintText: 'Selecione o Material Kind',
+                          decoration: InputDecoration(
+                            hintText: l10n.labelSelectMaterialKindForDownload,
                           ),
                           items: kinds.map((kind) {
                             return DropdownMenuItem(
@@ -94,13 +97,13 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                                 },
                           validator: (value) {
                             if (value == null) {
-                              return 'Material Kind é obrigatório';
+                              return l10n.validationSelectMaterialKind;
                             }
                             return null;
                           },
                         );
                       },
-                      loading: () => const AppLoadingIndicator(message: 'Carregando...'),
+                      loading: () => AppLoadingIndicator(message: l10n.statusLoading),
                       error: (error, stack) => AppErrorWidget(
                         message: 'Erro ao carregar Material Kinds: $error',
                         onRetry: () {
@@ -121,18 +124,19 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                       data: (tags) {
                         return DropdownButtonFormField<String?>(
                           initialValue: _selectedTagId,
-                          decoration: const InputDecoration(
-                            hintText: 'Selecione uma tag (opcional)',
+                          decoration: InputDecoration(
+                            hintText: l10n.labelSelectTag,
                           ),
                           items: [
-                            const DropdownMenuItem<String?>(
+                            DropdownMenuItem<String?>(
                               value: null,
                               child: Text('Nenhuma tag (todos os praises)'),
                             ),
                             ...tags.map((tag) {
+                              final tagName = getPraiseTagName(ref, tag.id, tag.name);
                               return DropdownMenuItem<String?>(
                                 value: tag.id,
-                                child: Text(tag.name),
+                                child: Text(tagName),
                               );
                             }),
                           ],
@@ -145,7 +149,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                                 },
                         );
                       },
-                      loading: () => const AppLoadingIndicator(message: 'Carregando tags...'),
+                      loading: () => AppLoadingIndicator(message: l10n.statusLoading),
                       error: (error, stack) => AppErrorWidget(
                         message: 'Erro ao carregar tags: $error',
                         onRetry: () {
@@ -158,7 +162,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
 
                     // Tamanho máximo do ZIP
                     Text(
-                      'Tamanho máximo por ZIP: $_maxZipSizeMb MB',
+                      '${l10n.labelMaxZipSize}: $_maxZipSizeMb MB',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
@@ -167,7 +171,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                       min: 10,
                       max: 1000,
                       divisions: 99,
-                      label: '$_maxZipSizeMb MB',
+                      label: l10n.messageMaxZipSize.replaceAll('{size}', _maxZipSizeMb.toString()),
                       onChanged: _isDownloading
                           ? null
                           : (value) {
@@ -212,11 +216,11 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                 children: [
                   TextButton(
                     onPressed: _isDownloading ? null : () => Navigator.of(context).pop(false),
-                    child: const Text('Cancelar'),
+                    child: Text(l10n.buttonCancel),
                   ),
                   const SizedBox(width: 8),
                   AppButton(
-                    text: 'Baixar',
+                    text: l10n.buttonDownload,
                     icon: Icons.download,
                     onPressed: _isDownloading ? null : _handleDownload,
                     isLoading: _isDownloading,
@@ -231,9 +235,10 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
   }
 
   Future<void> _handleDownload() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedMaterialKindId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione um Material Kind')),
+        SnackBar(content: Text(l10n.validationSelectMaterialKind)),
       );
       return;
     }
@@ -246,13 +251,14 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
       // Obter nome do Material Kind
       final kindsAsync = await ref.read(materialKindsProvider.future);
       final materialKind = kindsAsync.firstWhere((k) => k.id == _selectedMaterialKindId);
+      final materialKindName = getMaterialKindName(ref, materialKind.id, materialKind.name);
       
       final downloadService = ref.read(offlineDownloadServiceProvider);
       
       String? errorMessage;
       final filePath = await downloadService.downloadByMaterialKind(
         _selectedMaterialKindId!,
-        materialKind.name,
+        materialKindName,
         tagId: _selectedTagId,
         maxZipSizeMb: _maxZipSizeMb,
         onProgress: (progress) {
@@ -269,22 +275,22 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
       if (errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao baixar ZIP: $errorMessage'),
+            content: Text(l10n.errorDownloadZip.replaceAll('{error}', errorMessage!)),
             duration: const Duration(seconds: 5),
           ),
         );
       } else if (filePath == null) {
         // Usuário cancelou a seleção de arquivo
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Download cancelado'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(l10n.errorDownloadCanceled),
+            duration: const Duration(seconds: 2),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('ZIP salvo em: $filePath'),
+            content: Text(l10n.messageZipSaved.replaceAll('{path}', filePath)),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -294,7 +300,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
       Navigator.of(context).pop(false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao baixar ZIP: $e'),
+          content: Text(l10n.errorDownloadZip.replaceAll('{error}', e.toString())),
           duration: const Duration(seconds: 5),
         ),
       );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_dialog.dart';
@@ -25,10 +26,11 @@ class TagListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(tagsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Tags'),
+        title: Text(l10n.pageTitleTags),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -41,8 +43,8 @@ class TagListPage extends ConsumerWidget {
       body: tagsAsync.when(
         data: (tags) {
           if (tags.isEmpty) {
-            return const AppEmptyWidget(
-              message: 'Nenhuma tag encontrada',
+            return AppEmptyWidget(
+              message: l10n.messageNoTagsAvailable,
               icon: Icons.label,
             );
           }
@@ -56,13 +58,13 @@ class TagListPage extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: AppCard(
                   child: ListTile(
-                    title: Text(tag.name),
+                    title: Text(getPraiseTagName(ref, tag.id, tag.name)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ActionChip(
                           avatar: const Icon(Icons.filter_list, size: 18),
-                          label: const Text('Filtrar'),
+                          label: Text(l10n.actionFilter),
                           tooltip: 'Filtrar praises por esta tag',
                           onPressed: () {
                             context.push('/praises?tagId=${tag.id}');
@@ -87,7 +89,7 @@ class TagListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const AppLoadingIndicator(message: 'Carregando tags...'),
+        loading: () => AppLoadingIndicator(message: l10n.statusLoading),
         error: (error, stack) => AppErrorWidget(
           message: 'Erro ao carregar tags: $error',
           onRetry: () {
@@ -99,11 +101,12 @@ class TagListPage extends ConsumerWidget {
   }
 
   Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref, PraiseTagResponse tag) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await AppDialog.showConfirm(
       context: context,
-      title: 'Confirmar Exclusão',
-      message: 'Tem certeza que deseja excluir a tag "${tag.name}"? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
+      title: l10n.dialogTitleConfirmDelete,
+      message: l10n.dialogMessageDeleteTag,
+      confirmText: l10n.buttonDelete,
     );
 
     if (confirmed == true) {
@@ -112,6 +115,7 @@ class TagListPage extends ConsumerWidget {
   }
 
   Future<void> _deleteTag(BuildContext context, WidgetRef ref, String tagId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       await apiService.deleteTag(tagId);
@@ -122,13 +126,13 @@ class TagListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tag excluída com sucesso')),
+        SnackBar(content: Text(l10n.successTagDeleted)),
       );
     } catch (e) {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir tag: $e')),
+        SnackBar(content: Text(l10n.errorDeleteTag.replaceAll('{error}', e.toString()))),
       );
     }
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_button.dart';
@@ -48,14 +50,15 @@ class PraiseDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final praiseAsync = ref.watch(praiseProvider(praiseId));
+    final l10n = AppLocalizations.of(context)!;
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Detalhes do Praise'),
+        title: Text(l10n.pageTitlePraiseDetails),
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
-            tooltip: 'Baixar ZIP',
+            tooltip: l10n.tooltipDownloadZip,
             onPressed: () => _downloadPraiseZip(context, ref, praiseId),
           ),
           IconButton(
@@ -87,7 +90,7 @@ class PraiseDetailPage extends ConsumerWidget {
                   ),
                   if (praise.number != null)
                     Chip(
-                      label: Text('#${praise.number}'),
+                      label: Text(l10n.badgeNumber.replaceAll('{number}', praise.number.toString())),
                       visualDensity: VisualDensity.compact,
                     ),
                 ],
@@ -106,7 +109,7 @@ class PraiseDetailPage extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Em Revisão',
+                              l10n.statusInReview,
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
                             if (praise.inReviewDescription != null) ...[
@@ -128,7 +131,7 @@ class PraiseDetailPage extends ConsumerWidget {
               // Tags
               if (praise.tags.isNotEmpty) ...[
                 Text(
-                  'Tags',
+                  l10n.sectionTags,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -136,14 +139,17 @@ class PraiseDetailPage extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: praise.tags
-                      .map((tag) => ActionChip(
-                            label: Text(tag.name),
-                            visualDensity: VisualDensity.compact,
-                            onPressed: () {
-                              // Navegar para lista de praises filtrada por esta tag
-                              context.push('/praises?tagId=${tag.id}');
-                            },
-                          ))
+                      .map((tag) {
+                        final tagName = getPraiseTagName(ref, tag.id, tag.name);
+                        return ActionChip(
+                          label: Text(tagName),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            // Navegar para lista de praises filtrada por esta tag
+                            context.push('/praises?tagId=${tag.id}');
+                          },
+                        );
+                      })
                       .toList(),
                 ),
                 const SizedBox(height: 24),
@@ -161,16 +167,16 @@ class PraiseDetailPage extends ConsumerWidget {
               // Histórico de revisão
               if (praise.reviewHistory.isNotEmpty) ...[
                 Text(
-                  'Histórico de Revisão',
+                  l10n.sectionReviewHistory,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
                 ...praise.reviewHistory.map((event) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: AppCard(
+                        child: AppCard(
                         child: ListTile(
                           leading: Icon(_getReviewIcon(event.type)),
-                          title: Text(_getReviewActionName(event.type)),
+                          title: Text(_getReviewActionName(event.type, context)),
                           subtitle: Text(_formatDate(event.date)),
                         ),
                       ),
@@ -182,7 +188,7 @@ class PraiseDetailPage extends ConsumerWidget {
               // Ações de revisão
               if (!praise.inReview)
                 AppButton(
-                  text: 'Iniciar Revisão',
+                  text: l10n.actionStartReview,
                   icon: Icons.rate_review,
                   onPressed: () => _showStartReviewDialog(context, ref, praiseId),
                 )
@@ -191,7 +197,7 @@ class PraiseDetailPage extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: AppButton(
-                        text: 'Cancelar Revisão',
+                        text: l10n.actionCancelReview,
                         icon: Icons.cancel,
                         onPressed: () => _cancelReview(context, ref, praiseId),
                       ),
@@ -199,7 +205,7 @@ class PraiseDetailPage extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: AppButton(
-                        text: 'Finalizar Revisão',
+                        text: l10n.actionFinishReview,
                         icon: Icons.check_circle,
                         onPressed: () => _finishReview(context, ref, praiseId),
                       ),
@@ -222,7 +228,7 @@ class PraiseDetailPage extends ConsumerWidget {
             ],
           ),
         ),
-        loading: () => const AppLoadingIndicator(message: 'Carregando praise...'),
+        loading: () => AppLoadingIndicator(message: l10n.statusLoading),
         error: (error, stack) => AppErrorWidget(
           message: 'Erro ao carregar praise: $error',
           onRetry: () {
@@ -246,14 +252,17 @@ class PraiseDetailPage extends ConsumerWidget {
     }
   }
 
-  String _getReviewActionName(String type) {
+  String _getReviewActionName(String type, BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return type;
+    
     switch (type) {
       case 'in_review':
-        return 'Revisão Iniciada';
+        return l10n.reviewActionStart;
       case 'review_cancelled':
-        return 'Revisão Cancelada';
+        return l10n.reviewActionCancel;
       case 'review_finished':
-        return 'Revisão Finalizada';
+        return l10n.reviewActionFinish;
       default:
         return type;
     }
@@ -281,10 +290,11 @@ class PraiseDetailPage extends ConsumerWidget {
 
     if (fileMaterials.isEmpty) {
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Este praise não possui materiais de arquivo para download'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(l10n.dialogMessageNoFileMaterials),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -293,21 +303,22 @@ class PraiseDetailPage extends ConsumerWidget {
 
     // Mostrar dialog de confirmação
     if (!context.mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Baixar Praise em ZIP'),
+        title: Text(l10n.dialogTitleDownloadZip),
         content: Text(
           'Será baixado um arquivo ZIP contendo ${fileMaterials.length} material(is) de arquivo do praise "${praise.name}".',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.buttonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Baixar'),
+            child: Text(l10n.buttonDownload),
           ),
         ],
       ),
@@ -340,37 +351,39 @@ class PraiseDetailPage extends ConsumerWidget {
       );
 
       if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       Navigator.of(context).pop(); // Fechar dialog de progresso
 
       if (errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao baixar ZIP: $errorMessage'),
+            content: Text(l10n.errorDownloadZip.replaceAll('{error}', errorMessage!)),
             duration: const Duration(seconds: 5),
           ),
         );
       } else if (filePath == null) {
         // Usuário cancelou a seleção de arquivo
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Download cancelado'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(l10n.errorDownloadCanceled),
+            duration: const Duration(seconds: 2),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('ZIP salvo em: $filePath'),
+            content: Text(l10n.messageZipSaved.replaceAll('{path}', filePath)),
             duration: const Duration(seconds: 4),
           ),
         );
       }
     } catch (e) {
       if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       Navigator.of(context).pop(); // Fechar dialog de progresso
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao baixar ZIP: $e'),
+          content: Text(l10n.errorDownloadZip.replaceAll('{error}', e.toString())),
           duration: const Duration(seconds: 5),
         ),
       );
@@ -378,22 +391,23 @@ class PraiseDetailPage extends ConsumerWidget {
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text('Tem certeza que deseja excluir este praise? Esta ação não pode ser desfeita.'),
+        title: Text(l10n.dialogTitleConfirmDelete),
+        content: Text(l10n.dialogMessageDeletePraise),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: Text(l10n.buttonCancel),
           ),
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
               await _deletePraise(context, ref);
             },
-            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.buttonDelete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -401,50 +415,52 @@ class PraiseDetailPage extends ConsumerWidget {
   }
 
   Future<void> _deletePraise(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       await apiService.deletePraise(praiseId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Praise excluído com sucesso')),
+          SnackBar(content: Text(l10n.successPraiseDeleted)),
         );
         context.go('/praises');
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao excluir: $e')),
+          SnackBar(content: Text(l10n.errorDeletePraise.replaceAll('{error}', e.toString()))),
         );
       }
     }
   }
 
   void _showStartReviewDialog(BuildContext context, WidgetRef ref, String praiseId) {
+    final l10n = AppLocalizations.of(context)!;
     final descriptionController = TextEditingController();
     
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Iniciar Revisão'),
+        title: Text(l10n.dialogTitleStartReview),
         content: TextField(
           controller: descriptionController,
-          decoration: const InputDecoration(
-            labelText: 'Descrição (opcional)',
-            hintText: 'Descreva o motivo da revisão...',
+          decoration: InputDecoration(
+            labelText: l10n.dialogLabelReviewDescription,
+            hintText: l10n.hintEnterReviewDescription,
           ),
           maxLines: 3,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: Text(l10n.buttonCancel),
           ),
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
               await _startReview(context, ref, praiseId, descriptionController.text);
             },
-            child: const Text('Iniciar'),
+            child: Text(l10n.reviewActionStart),
           ),
         ],
       ),
@@ -452,6 +468,7 @@ class PraiseDetailPage extends ConsumerWidget {
   }
 
   Future<void> _startReview(BuildContext context, WidgetRef ref, String praiseId, String description) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       final request = ReviewActionRequest(
@@ -466,19 +483,20 @@ class PraiseDetailPage extends ConsumerWidget {
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Revisão iniciada com sucesso')),
+          SnackBar(content: Text(l10n.successReviewStarted)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao iniciar revisão: $e')),
+          SnackBar(content: Text(l10n.errorStartReview.replaceAll('{error}', e.toString()))),
         );
       }
     }
   }
 
   Future<void> _cancelReview(BuildContext context, WidgetRef ref, String praiseId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       final request = ReviewActionRequest(action: 'cancel');
@@ -490,19 +508,20 @@ class PraiseDetailPage extends ConsumerWidget {
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Revisão cancelada com sucesso')),
+          SnackBar(content: Text(l10n.successReviewCanceled)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cancelar revisão: $e')),
+          SnackBar(content: Text(l10n.errorCancelReview.replaceAll('{error}', e.toString()))),
         );
       }
     }
   }
 
   Future<void> _finishReview(BuildContext context, WidgetRef ref, String praiseId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       final request = ReviewActionRequest(action: 'finish');
@@ -514,13 +533,13 @@ class PraiseDetailPage extends ConsumerWidget {
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Revisão finalizada com sucesso')),
+          SnackBar(content: Text(l10n.successReviewFinished)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao finalizar revisão: $e')),
+          SnackBar(content: Text(l10n.errorFinishReview.replaceAll('{error}', e.toString()))),
         );
       }
     }
@@ -539,7 +558,12 @@ class _DownloadProgressDialog extends StatelessWidget {
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 16),
-          const Text('Baixando ZIP...'),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return Text(l10n?.statusDownloadingZip ?? 'Baixando ZIP...');
+            },
+          ),
           const SizedBox(height: 8),
           Text(
             'Por favor, aguarde.',

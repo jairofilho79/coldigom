@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/app_status_widgets.dart';
@@ -76,19 +77,19 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
       ref.invalidate(tagsProvider);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.tagId != null 
-                ? 'Tag atualizada com sucesso' 
-                : 'Tag criada com sucesso'),
+            content: Text(l10n.successTagSaved),
           ),
         );
         context.go('/tags');
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar tag: $e')),
+          SnackBar(content: Text(l10n.errorSaveTag.replaceAll('{error}', e.toString()))),
         );
       }
     } finally {
@@ -111,23 +112,29 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
           _initializeFromTag(tag);
           return _buildForm(context);
         },
-        loading: () => Scaffold(
-          appBar: AppBar(
-            title: const Text('Editar Tag'),
-          ),
-          body: const AppLoadingIndicator(message: 'Carregando tag...'),
-        ),
-        error: (error, stack) => Scaffold(
-          appBar: AppBar(
-            title: const Text('Editar Tag'),
-          ),
-          body: AppErrorWidget(
-            message: 'Erro ao carregar tag: $error',
-            onRetry: () {
-              ref.invalidate(tagByIdProvider(widget.tagId!));
-            },
-          ),
-        ),
+        loading: () {
+          final l10n = AppLocalizations.of(context)!;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.pageTitleEditTag),
+            ),
+            body: AppLoadingIndicator(message: l10n.statusLoading),
+          );
+        },
+        error: (error, stack) {
+          final l10n = AppLocalizations.of(context)!;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.pageTitleEditTag),
+            ),
+            body: AppErrorWidget(
+              message: 'Erro ao carregar tag: $error',
+              onRetry: () {
+                ref.invalidate(tagByIdProvider(widget.tagId!));
+              },
+            ),
+          );
+        },
       );
     }
 
@@ -135,9 +142,10 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
   }
 
   Widget _buildForm(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.tagId != null ? 'Editar Tag' : 'Criar Tag'),
+        title: Text(widget.tagId != null ? l10n.pageTitleEditTag : l10n.pageTitleCreateTag),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -147,23 +155,23 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppTextField(
-                label: 'Nome *',
-                hint: 'Digite o nome da tag',
+                label: '${l10n.labelName} *',
+                hint: l10n.hintEnterTagName,
                 controller: _nameController,
                 prefixIcon: Icons.label,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'O nome é obrigatório';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length < 1) {
-                    return 'O nome deve ter pelo menos 1 caractere';
+                    return l10n.validationRequired;
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 32),
               AppButton(
-                text: 'Salvar',
+                text: l10n.buttonSave,
                 icon: Icons.save,
                 onPressed: _handleSave,
                 isLoading: _isLoading,

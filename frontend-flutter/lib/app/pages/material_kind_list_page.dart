@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_scaffold.dart';
@@ -15,10 +17,11 @@ class MaterialKindListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final materialKindsAsync = ref.watch(materialKindsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Material Kinds'),
+        title: Text(l10n.pageTitleMaterialKinds),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -31,8 +34,8 @@ class MaterialKindListPage extends ConsumerWidget {
       body: materialKindsAsync.when(
         data: (materialKinds) {
           if (materialKinds.isEmpty) {
-            return const AppEmptyWidget(
-              message: 'Nenhum material kind encontrado',
+            return AppEmptyWidget(
+              message: l10n.messageNoMaterialKindsAvailable,
               icon: Icons.folder_outlined,
             );
           }
@@ -47,8 +50,8 @@ class MaterialKindListPage extends ConsumerWidget {
                 child: AppCard(
                   child: ListTile(
                     leading: const Icon(Icons.folder),
-                    title: Text(materialKind.name),
-                    subtitle: Text('ID: ${materialKind.id}'),
+                    title: Text(getMaterialKindName(ref, materialKind.id, materialKind.name)),
+                    subtitle: Text(l10n.messageId.replaceAll('{id}', materialKind.id)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -57,12 +60,12 @@ class MaterialKindListPage extends ConsumerWidget {
                           onPressed: () {
                             context.push('/material-kinds/${materialKind.id}/edit');
                           },
-                          tooltip: 'Editar',
+                          tooltip: l10n.tooltipEdit,
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _showDeleteDialog(context, ref, materialKind),
-                          tooltip: 'Excluir',
+                          tooltip: l10n.tooltipDelete,
                         ),
                       ],
                     ),
@@ -72,7 +75,7 @@ class MaterialKindListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const AppLoadingIndicator(message: 'Carregando material kinds...'),
+        loading: () => AppLoadingIndicator(message: l10n.statusLoading),
         error: (error, stack) => AppErrorWidget(
           message: 'Erro ao carregar material kinds: $error',
           onRetry: () {
@@ -84,11 +87,12 @@ class MaterialKindListPage extends ConsumerWidget {
   }
 
   Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref, MaterialKindResponse materialKind) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await AppDialog.showConfirm(
       context: context,
-      title: 'Confirmar Exclusão',
-      message: 'Tem certeza que deseja excluir o material kind "${materialKind.name}"? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
+      title: l10n.dialogTitleConfirmDelete,
+      message: l10n.dialogMessageDeleteMaterialKind,
+      confirmText: l10n.buttonDelete,
     );
 
     if (confirmed == true) {
@@ -97,6 +101,7 @@ class MaterialKindListPage extends ConsumerWidget {
   }
 
   Future<void> _deleteMaterialKind(BuildContext context, WidgetRef ref, String kindId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       await apiService.deleteMaterialKind(kindId);
@@ -107,13 +112,13 @@ class MaterialKindListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Material kind excluído com sucesso')),
+        SnackBar(content: Text(l10n.successMaterialKindDeleted)),
       );
     } catch (e) {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir material kind: $e')),
+        SnackBar(content: Text(l10n.errorDeleteMaterialKind.replaceAll('{error}', e.toString()))),
       );
     }
   }

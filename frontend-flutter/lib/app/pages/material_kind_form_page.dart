@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/app_status_widgets.dart';
@@ -59,8 +61,9 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
         setState(() {
           _isLoadingData = false;
         });
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar material kind: $e')),
+          SnackBar(content: Text(l10n.errorLoadMaterialKind.replaceAll('{error}', e.toString()))),
         );
         context.pop();
       }
@@ -100,11 +103,10 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
       ref.invalidate(materialKindsProvider);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.kindId != null
-                ? 'Material kind atualizado com sucesso'
-                : 'Material kind criado com sucesso'),
+            content: Text(l10n.successMaterialKindSaved),
           ),
         );
         // Usar go para garantir que a página seja reconstruída e reaja ao provider
@@ -112,7 +114,8 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        String errorMessage = 'Erro ao salvar material kind: $e';
+        final l10n = AppLocalizations.of(context)!;
+        String errorMessage = l10n.errorSaveMaterialKind.replaceAll('{error}', e.toString());
         
         // Tratar erro específico de nome duplicado
         if (e.toString().contains('400') || e.toString().contains('already exists')) {
@@ -134,12 +137,14 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoadingData) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.kindId != null ? 'Editar Material Kind' : 'Criar Material Kind'),
+          title: Text(widget.kindId != null ? l10n.pageTitleEditMaterialKind : l10n.pageTitleCreateMaterialKind),
         ),
-        body: const Center(
+        body: Center(
           child: CircularProgressIndicator(),
         ),
       );
@@ -147,7 +152,7 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.kindId != null ? 'Editar Material Kind' : 'Criar Material Kind'),
+        title: Text(widget.kindId != null ? l10n.pageTitleEditMaterialKind : l10n.pageTitleCreateMaterialKind),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -157,26 +162,26 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppTextField(
-                label: 'Nome *',
-                hint: 'Digite o nome do material kind',
+                label: '${l10n.labelName} *',
+                hint: l10n.hintEnterMaterialKindName,
                 controller: _nameController,
                 prefixIcon: Icons.folder,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'O nome é obrigatório';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length < 1) {
-                    return 'O nome deve ter pelo menos 1 caractere';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length > 255) {
-                    return 'O nome deve ter no máximo 255 caracteres';
+                    return l10n.validationMaxLength.replaceAll('{max}', '255');
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 32),
               AppButton(
-                text: 'Salvar',
+                text: l10n.buttonSave,
                 icon: Icons.save,
                 onPressed: _handleSave,
                 isLoading: _isLoading,

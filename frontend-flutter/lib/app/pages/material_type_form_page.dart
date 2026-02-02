@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/app_status_widgets.dart';
@@ -59,8 +60,9 @@ class _MaterialTypeFormPageState extends ConsumerState<MaterialTypeFormPage> {
         setState(() {
           _isLoadingData = false;
         });
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar material type: $e')),
+          SnackBar(content: Text(l10n.errorLoadMaterialType.replaceAll('{error}', e.toString()))),
         );
         context.pop();
       }
@@ -100,11 +102,10 @@ class _MaterialTypeFormPageState extends ConsumerState<MaterialTypeFormPage> {
       ref.invalidate(materialTypesProvider);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.typeId != null
-                ? 'Material type atualizado com sucesso'
-                : 'Material type criado com sucesso'),
+            content: Text(l10n.successMaterialTypeSaved),
           ),
         );
         // Usar go para garantir que a página seja reconstruída e reaja ao provider
@@ -112,7 +113,8 @@ class _MaterialTypeFormPageState extends ConsumerState<MaterialTypeFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        String errorMessage = 'Erro ao salvar material type: $e';
+        final l10n = AppLocalizations.of(context)!;
+        String errorMessage = l10n.errorSaveMaterialType.replaceAll('{error}', e.toString());
         
         // Tratar erro específico de nome duplicado
         if (e.toString().contains('400') || e.toString().contains('already exists')) {
@@ -134,12 +136,14 @@ class _MaterialTypeFormPageState extends ConsumerState<MaterialTypeFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoadingData) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.typeId != null ? 'Editar Material Type' : 'Criar Material Type'),
+          title: Text(widget.typeId != null ? l10n.pageTitleEditMaterialType : l10n.pageTitleCreateMaterialType),
         ),
-        body: const Center(
+        body: Center(
           child: CircularProgressIndicator(),
         ),
       );
@@ -147,7 +151,7 @@ class _MaterialTypeFormPageState extends ConsumerState<MaterialTypeFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.typeId != null ? 'Editar Material Type' : 'Criar Material Type'),
+        title: Text(widget.typeId != null ? l10n.pageTitleEditMaterialType : l10n.pageTitleCreateMaterialType),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -157,26 +161,26 @@ class _MaterialTypeFormPageState extends ConsumerState<MaterialTypeFormPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppTextField(
-                label: 'Nome *',
-                hint: 'Digite o nome do material type',
+                label: '${l10n.labelName} *',
+                hint: l10n.hintEnterMaterialTypeName,
                 controller: _nameController,
                 prefixIcon: Icons.category,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'O nome é obrigatório';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length < 1) {
-                    return 'O nome deve ter pelo menos 1 caractere';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length > 255) {
-                    return 'O nome deve ter no máximo 255 caracteres';
+                    return l10n.validationMaxLength.replaceAll('{max}', '255');
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 32),
               AppButton(
-                text: 'Salvar',
+                text: l10n.buttonSave,
                 icon: Icons.save,
                 onPressed: _handleSave,
                 isLoading: _isLoading,

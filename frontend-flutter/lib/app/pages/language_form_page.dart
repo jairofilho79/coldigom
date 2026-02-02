@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/app_status_widgets.dart';
@@ -89,19 +90,19 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
       ref.invalidate(languagesProvider);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.code != null 
-                ? 'Linguagem atualizada com sucesso' 
-                : 'Linguagem criada com sucesso'),
+            content: Text(l10n.successLanguageSaved),
           ),
         );
         context.go('/languages');
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar linguagem: $e')),
+          SnackBar(content: Text(l10n.errorSaveLanguage.replaceAll('{error}', e.toString()))),
         );
       }
     } finally {
@@ -124,23 +125,29 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
           _initializeFromLanguage(language);
           return _buildForm(context);
         },
-        loading: () => Scaffold(
-          appBar: AppBar(
-            title: const Text('Editar Linguagem'),
-          ),
-          body: const AppLoadingIndicator(message: 'Carregando linguagem...'),
-        ),
-        error: (error, stack) => Scaffold(
-          appBar: AppBar(
-            title: const Text('Editar Linguagem'),
-          ),
-          body: AppErrorWidget(
-            message: 'Erro ao carregar linguagem: $error',
-            onRetry: () {
-              ref.invalidate(languageByCodeProvider(widget.code!));
-            },
-          ),
-        ),
+        loading: () {
+          final l10n = AppLocalizations.of(context)!;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.pageTitleEditLanguage),
+            ),
+            body: AppLoadingIndicator(message: l10n.statusLoading),
+          );
+        },
+        error: (error, stack) {
+          final l10n = AppLocalizations.of(context)!;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.pageTitleEditLanguage),
+            ),
+            body: AppErrorWidget(
+              message: 'Erro ao carregar linguagem: $error',
+              onRetry: () {
+                ref.invalidate(languageByCodeProvider(widget.code!));
+              },
+            ),
+          );
+        },
       );
     }
 
@@ -148,11 +155,12 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
   }
 
   Widget _buildForm(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.code != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Editar Linguagem' : 'Criar Linguagem'),
+        title: Text(isEditing ? l10n.pageTitleEditLanguage : l10n.pageTitleCreateLanguage),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -162,17 +170,17 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppTextField(
-                label: 'Código *',
-                hint: 'Ex: pt-BR, en-US',
+                label: '${l10n.labelCode} *',
+                hint: l10n.hintEnterLanguageCode,
                 controller: _codeController,
                 prefixIcon: Icons.code,
                 enabled: !isEditing, // Desabilitar código ao editar
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'O código é obrigatório';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length < 2) {
-                    return 'O código deve ter pelo menos 2 caracteres';
+                    return l10n.validationMinLength.replaceAll('{min}', '2');
                   }
                   // Validar formato básico (ex: pt-BR, en-US)
                   final codePattern = RegExp(r'^[a-z]{2}(-[A-Z]{2})?$');
@@ -184,24 +192,24 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Nome *',
-                hint: 'Digite o nome da linguagem',
+                label: '${l10n.labelName} *',
+                hint: l10n.hintEnterLanguageName,
                 controller: _nameController,
                 prefixIcon: Icons.language,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'O nome é obrigatório';
+                    return l10n.validationRequired;
                   }
                   if (value.trim().length < 1) {
-                    return 'O nome deve ter pelo menos 1 caractere';
+                    return l10n.validationRequired;
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               SwitchListTile(
-                title: const Text('Ativa'),
-                subtitle: const Text('Linguagem disponível para uso'),
+                title: Text(l10n.labelActive),
+                subtitle: Text(l10n.messageLanguageAvailable),
                 value: _isActive,
                 onChanged: (value) {
                   setState(() {
@@ -215,7 +223,7 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
               ),
               const SizedBox(height: 32),
               AppButton(
-                text: 'Salvar',
+                text: l10n.buttonSave,
                 icon: Icons.save,
                 onPressed: _handleSave,
                 isLoading: _isLoading,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
 import '../services/api/api_service.dart';
 import '../stores/audio_player_store.dart';
 import '../widgets/app_status_widgets.dart';
@@ -75,8 +76,9 @@ class _AudioPlayerPageState extends ConsumerState<AudioPlayerPage> {
       });
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar áudio: $e')),
+          SnackBar(content: Text(l10n?.errorLoadAudio.replaceAll('{error}', e.toString()) ?? 'Erro ao carregar áudio: $e')),
         );
       }
     }
@@ -159,9 +161,14 @@ class _AudioPlayerPageState extends ConsumerState<AudioPlayerPage> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text(
-              'Carregando áudio...',
-              style: Theme.of(context).textTheme.bodyMedium,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(
+                  l10n?.statusLoading ?? 'Carregando áudio...',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                );
+              },
             ),
           ],
         ),

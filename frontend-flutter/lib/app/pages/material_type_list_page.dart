@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_scaffold.dart';
@@ -15,10 +17,11 @@ class MaterialTypeListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final materialTypesAsync = ref.watch(materialTypesProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Material Types'),
+        title: Text(l10n.pageTitleMaterialTypes),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -31,7 +34,7 @@ class MaterialTypeListPage extends ConsumerWidget {
       body: materialTypesAsync.when(
         data: (materialTypes) {
           if (materialTypes.isEmpty) {
-            return const AppEmptyWidget(
+            return AppEmptyWidget(
               message: 'Nenhum material type encontrado',
               icon: Icons.category_outlined,
             );
@@ -47,8 +50,8 @@ class MaterialTypeListPage extends ConsumerWidget {
                 child: AppCard(
                   child: ListTile(
                     leading: const Icon(Icons.category),
-                    title: Text(materialType.name),
-                    subtitle: Text('ID: ${materialType.id}'),
+                    title: Text(getMaterialTypeName(ref, materialType.id, materialType.name)),
+                    subtitle: Text(l10n.messageId.replaceAll('{id}', materialType.id)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -57,12 +60,12 @@ class MaterialTypeListPage extends ConsumerWidget {
                           onPressed: () {
                             context.push('/material-types/${materialType.id}/edit');
                           },
-                          tooltip: 'Editar',
+                          tooltip: l10n.tooltipEdit,
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _showDeleteDialog(context, ref, materialType),
-                          tooltip: 'Excluir',
+                          tooltip: l10n.tooltipDelete,
                         ),
                       ],
                     ),
@@ -72,7 +75,7 @@ class MaterialTypeListPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const AppLoadingIndicator(message: 'Carregando material types...'),
+        loading: () => AppLoadingIndicator(message: l10n.statusLoading),
         error: (error, stack) => AppErrorWidget(
           message: 'Erro ao carregar material types: $error',
           onRetry: () {
@@ -84,11 +87,12 @@ class MaterialTypeListPage extends ConsumerWidget {
   }
 
   Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref, MaterialTypeResponse materialType) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await AppDialog.showConfirm(
       context: context,
-      title: 'Confirmar Exclusão',
-      message: 'Tem certeza que deseja excluir o material type "${materialType.name}"? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
+      title: l10n.dialogTitleConfirmDelete,
+      message: l10n.dialogMessageDeleteMaterialType,
+      confirmText: l10n.buttonDelete,
     );
 
     if (confirmed == true) {
@@ -97,6 +101,7 @@ class MaterialTypeListPage extends ConsumerWidget {
   }
 
   Future<void> _deleteMaterialType(BuildContext context, WidgetRef ref, String typeId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final apiService = ref.read(apiServiceProvider);
       await apiService.deleteMaterialType(typeId);
@@ -107,13 +112,13 @@ class MaterialTypeListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Material type excluído com sucesso')),
+        SnackBar(content: Text(l10n.successMaterialTypeDeleted)),
       );
     } catch (e) {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir material type: $e')),
+        SnackBar(content: Text(l10n.errorDeleteMaterialType.replaceAll('{error}', e.toString()))),
       );
     }
   }

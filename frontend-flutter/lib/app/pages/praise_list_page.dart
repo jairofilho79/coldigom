@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_text_field.dart';
@@ -164,6 +166,7 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
           _isLoadingMore = false;
           _skip -= _limit; // Reverter skip em caso de erro
         });
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar mais: $error')),
         );
@@ -188,9 +191,11 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
     final praisesAsync = ref.watch(praisesProvider(queryParams));
     final tagsAsync = ref.watch(tagsProvider);
 
+    final l10n = AppLocalizations.of(context)!;
+    
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Praises'),
+        title: Text(l10n.pageTitlePraises),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -206,8 +211,8 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: AppTextField(
-              label: 'Buscar',
-              hint: 'Digite o nome do praise...',
+              label: l10n.labelSearch,
+              hint: l10n.hintEnterSearchPraise,
               controller: _searchController,
               prefixIcon: Icons.search,
             ),
@@ -230,7 +235,7 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
-                        label: const Text('Todas'),
+                        label: Text(l10n.actionAll),
                         selected: selectedTagId == null,
                         onSelected: (_) {
                           ref.read(selectedTagFilterProvider.notifier).state = null;
@@ -241,10 +246,11 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                     // Chips de tags
                     ...tags.map((tag) {
                       final isSelected = selectedTagId == tag.id;
+                      final tagName = getPraiseTagName(ref, tag.id, tag.name);
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: FilterChip(
-                          label: Text(tag.name),
+                          label: Text(tagName),
                           selected: isSelected,
                           onSelected: (_) {
                             ref.read(selectedTagFilterProvider.notifier).state = 
@@ -290,7 +296,7 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                 final currentPraises = _allPraises.isEmpty ? praises : _allPraises;
 
                 if (currentPraises.isEmpty) {
-                  return const AppEmptyWidget(
+                  return AppEmptyWidget(
                     message: 'Nenhum praise encontrado',
                     icon: Icons.music_note,
                   );
@@ -334,14 +340,14 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                                 ),
                                 if (praise.number != null)
                                   Chip(
-                                    label: Text('#${praise.number}'),
+                                    label: Text(l10n.badgeNumber.replaceAll('{number}', praise.number.toString())),
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 if (praise.inReview)
                                   Padding(
                                     padding: const EdgeInsets.only(left: 8),
                                     child: Chip(
-                                      label: const Text('Em Revisão'),
+                                      label: Text(l10n.badgeInReview),
                                       visualDensity: VisualDensity.compact,
                                       backgroundColor: Colors.orange.shade100,
                                     ),
@@ -353,14 +359,17 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                               Wrap(
                                 spacing: 4,
                                 children: praise.tags
-                                    .map((tag) => ActionChip(
-                                          label: Text(tag.name),
-                                          visualDensity: VisualDensity.compact,
-                                          onPressed: () {
-                                            // Navegar para lista de praises filtrada por esta tag
-                                            context.push('/praises?tagId=${tag.id}');
-                                          },
-                                        ))
+                                    .map((tag) {
+                                      final tagName = getPraiseTagName(ref, tag.id, tag.name);
+                                      return ActionChip(
+                                        label: Text(tagName),
+                                        visualDensity: VisualDensity.compact,
+                                        onPressed: () {
+                                          // Navegar para lista de praises filtrada por esta tag
+                                          context.push('/praises?tagId=${tag.id}');
+                                        },
+                                      );
+                                    })
                                     .toList(),
                               ),
                             ],
@@ -427,14 +436,17 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                                   Wrap(
                                     spacing: 4,
                                     children: praise.tags
-                                        .map((tag) => ActionChip(
-                                              label: Text(tag.name),
-                                              visualDensity: VisualDensity.compact,
-                                              onPressed: () {
-                                                // Navegar para lista de praises filtrada por esta tag
-                                                context.push('/praises?tagId=${tag.id}');
-                                              },
-                                            ))
+                                        .map((tag) {
+                                          final tagName = getPraiseTagName(ref, tag.id, tag.name);
+                                          return ActionChip(
+                                            label: Text(tagName),
+                                            visualDensity: VisualDensity.compact,
+                                            onPressed: () {
+                                              // Navegar para lista de praises filtrada por esta tag
+                                              context.push('/praises?tagId=${tag.id}');
+                                            },
+                                          );
+                                        })
                                         .toList(),
                                   ),
                                 ],

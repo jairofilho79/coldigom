@@ -1,0 +1,543 @@
+{
+  "@@locale": "en",
+  "appName": "Coldigom",
+  "appSubtitle": "Praise Management",
+  "@appSubtitle": {
+    "description": "Application subtitle"
+  },
+  
+  "buttonBack": "Back",
+  "buttonEdit": "Edit",
+  "buttonDelete": "Delete",
+  "buttonSave": "Save",
+  "buttonCancel": "Cancel",
+  "buttonCreate": "Create",
+  "buttonUpdate": "Update",
+  "buttonConfirm": "Confirm",
+  "buttonClose": "Close",
+  "buttonLogout": "Logout",
+  "buttonRemoveFilter": "Remove Filter",
+  "buttonDownload": "Download",
+  "buttonDownloading": "Downloading...",
+  "buttonDownloadByMaterialKind": "Download by Material Kind",
+  "buttonDownloadZip": "Download ZIP",
+  "buttonEnter": "Sign In",
+  "buttonRegister": "Register",
+  "buttonTryAgain": "Try Again",
+  
+  "labelTags": "Tags",
+  "labelMaterials": "Materials",
+  "labelName": "Name",
+  "labelEmail": "Email",
+  "labelPassword": "Password",
+  "labelConfirmPassword": "Confirm Password",
+  "labelUsername": "Username",
+  "labelType": "Type",
+  "labelMaterialKind": "Material Kind",
+  "labelMaterialType": "Material Type",
+  "labelPath": "Path",
+  "labelSearch": "Search",
+  "labelPraiseName": "Praise Name",
+  "labelNumber": "Number",
+  "labelNumberOptional": "Number (optional)",
+  "labelFileType": "File Type",
+  "labelCode": "Code",
+  "labelText": "Text",
+  "labelUrl": "URL",
+  "labelActive": "Active",
+  "labelMaterialKindRequired": "Material Kind *",
+  "labelMaterialTypeRequired": "Material Type *",
+  "labelSelectMaterialKind": "Select Material Kind",
+  "labelSelectFile": "Select File",
+  "labelSelectNewFile": "Select New File",
+  "labelCurrentFile": "Current File",
+  "labelMaxZipSize": "Maximum ZIP size (MB)",
+  "labelMaterialIsOld": "Old Material",
+  "labelMaterialOldDescription": "Old Material Description",
+  "labelSelectTag": "Select a tag (optional)",
+  "labelSelectMaterialKindForDownload": "Select a Material Kind",
+  
+  "hintEnterUsername": "Enter your username",
+  "hintEnterPassword": "Enter your password",
+  "hintEnterEmail": "Enter your email",
+  "hintConfirmPassword": "Confirm your password",
+  "hintEnterPraiseName": "Enter praise name",
+  "hintEnterPraiseNumber": "Enter praise number (optional)",
+  "hintEnterTagName": "Enter tag name",
+  "hintEnterMaterialKindName": "Enter material kind name",
+  "hintEnterMaterialTypeName": "Enter material type name",
+  "hintEnterLanguageCode": "Ex: pt-BR, en-US",
+  "hintEnterLanguageName": "Enter language name",
+  "hintEnterSearchPraise": "Enter praise name...",
+  "hintEnterUrl": "Paste {platform} URL",
+  "@hintEnterUrl": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "hintEnterText": "Enter material text",
+  "hintEnterOldDescription": "Describe why this material is old (optional)",
+  "hintEnterReviewDescription": "Describe the reason for review...",
+  "hintSelectFile": "Select a PDF or audio file",
+  "hintSelectNewFileToReplace": "Select a new file to replace",
+  
+  "validationRequired": "This field is required",
+  "validationMinLength": "Minimum of {min} characters",
+  "@validationMinLength": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "validationMaxLength": "Maximum of {max} characters",
+  "@validationMaxLength": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "validationEnterUsername": "Please enter your username",
+  "validationEnterPassword": "Please enter your password",
+  "validationEnterEmail": "Please enter your email",
+  "validationValidEmail": "Please enter a valid email",
+  "validationUsernameMinLength": "Username must be at least 3 characters",
+  "validationPasswordMinLength": "Password must be at least 6 characters",
+  "validationConfirmPassword": "Please confirm your password",
+  "validationPasswordMismatch": "Passwords do not match",
+  "validationUrlRequired": "URL is required",
+  "validationUrlInvalid": "Invalid URL",
+  "validationTextRequired": "Text is required",
+  "validationMaterialKindRequired": "Material Kind is required",
+  "validationSelectMaterialType": "Select material type",
+  "validationSelectMaterialKind": "Select Material Kind",
+  
+  "pageTitleDashboard": "Dashboard",
+  "pageTitlePraises": "Praises",
+  "pageTitleTags": "Tags",
+  "pageTitleMaterialKinds": "Material Kinds",
+  "pageTitleMaterialTypes": "Material Types",
+  "pageTitleLanguages": "Languages",
+  "pageTitleCreatePraise": "Create Praise",
+  "pageTitleEditPraise": "Edit Praise",
+  "pageTitlePraiseDetails": "Praise Details",
+  "pageTitleRegister": "Register",
+  "pageTitleCreateTag": "Create Tag",
+  "pageTitleEditTag": "Edit Tag",
+  "pageTitleCreateMaterialKind": "Create Material Kind",
+  "pageTitleEditMaterialKind": "Edit Material Kind",
+  "pageTitleCreateMaterialType": "Create Material Type",
+  "pageTitleEditMaterialType": "Edit Material Type",
+  "pageTitleCreateLanguage": "Create Language",
+  "pageTitleEditLanguage": "Edit Language",
+  
+  "messageWelcome": "Welcome, {username}!",
+  "@messageWelcome": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "messageNotAuthenticated": "Not authenticated",
+  "messageNoTagsAvailable": "No tags available",
+  "messageNoMaterialsAdded": "No materials added",
+  "messageNoMaterialKindsAvailable": "No Material Kinds available",
+  "messageNoTagsForFilter": "No tag (all praises)",
+  "messageNoMaterials": "No materials registered",
+  "messageCreatePraiseFirst": "You need to create the praise first",
+  "messageFileSelected": "New file selected. Current file will be replaced.",
+  "messageNewFile": "New File: {fileName}",
+  "@messageNewFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "messageVersion": "Version: {version} ({buildNumber})",
+  "@messageVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "messageBuild": "Build: {date}",
+  "@messageBuild": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "messageNoAccount": "Don't have an account? Register",
+  "messageHasAccount": "Already have an account? Sign in",
+  "messageLanguageAvailable": "Language available for use",
+  "messageMaterialOld": "Mark if this material is outdated",
+  "messageZipSaved": "ZIP saved at: {path}",
+  "@messageZipSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "messagePageOf": "Page {current} of {total}",
+  "@messagePageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "messageId": "ID: {id}",
+  "@messageId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "messageCode": "Code: {code}",
+  "@messageCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "messageMaxZipSize": "{size} MB",
+  "@messageMaxZipSize": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "sectionTags": "Tags",
+  "sectionMaterials": "Materials",
+  "sectionReviewHistory": "Review History",
+  
+  "statusInReview": "In Review",
+  "statusLoading": "Loading...",
+  "statusDownloadingZip": "Downloading ZIP...",
+  
+  "badgeInReview": "In Review",
+  "badgeOld": "Old",
+  "badgeNumber": "#{number}",
+  "@badgeNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "actionAddMaterial": "Add Material",
+  "actionEdit": "Edit",
+  "actionDelete": "Delete",
+  "actionDownload": "Download",
+  "actionPlay": "Play",
+  "actionView": "View",
+  "actionStartReview": "Start Review",
+  "actionCancelReview": "Cancel Review",
+  "actionFinishReview": "Finish Review",
+  "actionFilter": "Filter",
+  "actionAll": "All",
+  "actionViewOldMaterials": "View Old",
+  "actionHideOldMaterials": "Hide Old",
+  
+  "dialogTitleConfirmDelete": "Confirm Deletion",
+  "dialogTitleStartReview": "Start Review",
+  "dialogTitleDownloadZip": "Download Praise as ZIP",
+  "dialogMessageDeletePraise": "Are you sure you want to delete this praise? This action cannot be undone.",
+  "dialogMessageDeleteTag": "Are you sure you want to delete this tag?",
+  "dialogMessageDeleteMaterialKind": "Are you sure you want to delete this material kind?",
+  "dialogMessageDeleteMaterialType": "Are you sure you want to delete this material type?",
+  "dialogMessageDeleteLanguage": "Are you sure you want to delete this language?",
+  "dialogMessageDeleteMaterial": "Are you sure you want to delete this material?",
+  "dialogMessageNoFileMaterials": "This praise has no file materials for download",
+  "dialogLabelReviewDescription": "Description (optional)",
+  
+  "errorConnectionFailed": "Could not connect to server.\nMake sure the backend is running at http://127.0.0.1:8000",
+  "errorInvalidCredentials": "Incorrect username or password",
+  "errorLogin": "Error logging in: {error}",
+  "@errorLogin": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorRegister": "Error registering: {error}",
+  "@errorRegister": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSelectFile": "Error selecting file: {error}",
+  "@errorSelectFile": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveMaterial": "Error saving material: {error}",
+  "@errorSaveMaterial": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteMaterial": "Error deleting material: {error}",
+  "@errorDeleteMaterial": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadMaterials": "Error loading materials: {error}",
+  "@errorLoadMaterials": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDownloadZip": "Error downloading ZIP: {error}",
+  "@errorDownloadZip": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadPraise": "Error loading praise: {error}",
+  "@errorLoadPraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadMaterialKind": "Error loading material kind: {error}",
+  "@errorLoadMaterialKind": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadMaterialType": "Error loading material type: {error}",
+  "@errorLoadMaterialType": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadAudio": "Error loading audio: {error}",
+  "@errorLoadAudio": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadPdf": "Error loading PDF",
+  "errorCreatePraise": "Error creating praise: {error}",
+  "@errorCreatePraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorUpdatePraise": "Error updating praise: {error}",
+  "@errorUpdatePraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeletePraise": "Error deleting: {error}",
+  "@errorDeletePraise": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorStartReview": "Error starting review: {error}",
+  "@errorStartReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCancelReview": "Error canceling review: {error}",
+  "@errorCancelReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorFinishReview": "Error finishing review: {error}",
+  "@errorFinishReview": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveTag": "Error saving tag: {error}",
+  "@errorSaveTag": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteTag": "Error deleting tag: {error}",
+  "@errorDeleteTag": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveMaterialKind": "Error saving material kind: {error}",
+  "@errorSaveMaterialKind": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteMaterialKind": "Error deleting material kind: {error}",
+  "@errorDeleteMaterialKind": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveMaterialType": "Error saving material type: {error}",
+  "@errorSaveMaterialType": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteMaterialType": "Error deleting material type: {error}",
+  "@errorDeleteMaterialType": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveLanguage": "Error saving language: {error}",
+  "@errorSaveLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeleteLanguage": "Error deleting language: {error}",
+  "@errorDeleteLanguage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorNeedCreatePraiseFirst": "Praise must be created first",
+  "errorDownloadCanceled": "Download canceled",
+  
+  "successRegister": "Registration successful! Please login.",
+  "successPraiseCreated": "Praise created successfully. You can add materials on the edit page.",
+  "successPraiseUpdated": "Praise updated successfully",
+  "successPraiseDeleted": "Praise deleted successfully",
+  "successReviewStarted": "Review started successfully",
+  "successReviewCanceled": "Review canceled successfully",
+  "successReviewFinished": "Review finished successfully",
+  "successMaterialDeleted": "Material deleted successfully",
+  "successTagSaved": "Tag saved successfully",
+  "successTagDeleted": "Tag deleted successfully",
+  "successMaterialKindSaved": "Material kind saved successfully",
+  "successMaterialKindDeleted": "Material kind deleted successfully",
+  "successMaterialTypeSaved": "Material type saved successfully",
+  "successMaterialTypeDeleted": "Material type deleted successfully",
+  "successLanguageSaved": "Language saved successfully",
+  "successLanguageDeleted": "Language deleted successfully",
+  
+  "enumMaterialFormTypeFile": "File",
+  "enumMaterialFormTypeYoutube": "YouTube",
+  "enumMaterialFormTypeSpotify": "Spotify",
+  "enumMaterialFormTypeText": "Text",
+  
+  "enumRoomAccessTypePublic": "Public",
+  "enumRoomAccessTypePassword": "With Password",
+  "enumRoomAccessTypeApproval": "With Approval",
+  
+  "enumRoomJoinRequestStatusPending": "Pending",
+  "enumRoomJoinRequestStatusApproved": "Approved",
+  "enumRoomJoinRequestStatusRejected": "Rejected",
+  
+  "reviewActionStart": "Start",
+  "reviewActionCancel": "Cancel",
+  "reviewActionFinish": "Finish",
+  
+  "tooltipDownloadZip": "Download ZIP",
+  "tooltipEdit": "Edit",
+  "tooltipDelete": "Delete",
+  
+  "drawerUser": "User",
+  "drawerDashboard": "Dashboard",
+  "drawerPraises": "Praises",
+  "drawerTags": "Tags",
+  "drawerLanguages": "Languages",
+  "drawerLanguage": "Language",
+  "drawerMaterialKinds": "Material Kinds",
+  "drawerMaterialTypes": "Material Types",
+  "drawerLogout": "Logout",
+  
+  "languagePortuguese": "Portuguese",
+  "languageEnglish": "English",
+  "languageCurrent": "Current language: {name}",
+  "@languageCurrent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "cardPraises": "Praises",
+  "cardTags": "Tags",
+  "cardMaterialKinds": "Material Kinds",
+  "cardDownloadByMaterialKind": "Download by Material Kind",
+  "cardLists": "Lists"
+}

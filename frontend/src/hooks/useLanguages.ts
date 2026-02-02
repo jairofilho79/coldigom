@@ -15,7 +15,7 @@ export const useCreateLanguage = () => {
   return useMutation({
     mutationFn: (data: LanguageCreate) => languagesApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      queryClient.invalidateQueries({ queryKey: ['languages'], refetchType: 'active' });
       toast.success('Linguagem criada com sucesso');
     },
     onError: (error: any) => {
@@ -31,7 +31,7 @@ export const useUpdateLanguage = () => {
     mutationFn: ({ code, data }: { code: string; data: LanguageUpdate }) =>
       languagesApi.update(code, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      queryClient.invalidateQueries({ queryKey: ['languages'], refetchType: 'active' });
       toast.success('Linguagem atualizada com sucesso');
     },
     onError: (error: any) => {
@@ -46,7 +46,7 @@ export const useDeleteLanguage = () => {
   return useMutation({
     mutationFn: (code: string) => languagesApi.delete(code),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      queryClient.invalidateQueries({ queryKey: ['languages'], refetchType: 'active' });
       toast.success('Linguagem deletada com sucesso');
     },
     onError: (error: any) => {

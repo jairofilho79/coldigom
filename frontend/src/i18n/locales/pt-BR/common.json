@@ -63,6 +63,7 @@
     "seeAll": "Ver todos →",
     "errorLoadingData": "Erro ao carregar dados. Tente novamente.",
     "errorLoading": "Erro ao carregar",
+    "offlineMode": "Modo offline - usando dados em cache",
     "actionCannotBeUndone": "Esta ação não pode ser desfeita",
     "praiseNotFound": "Louvor não encontrado",
     "noPraisesFound": "Nenhum louvor encontrado",

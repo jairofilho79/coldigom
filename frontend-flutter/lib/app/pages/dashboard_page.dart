@@ -5,6 +5,7 @@ import '../widgets/app_status_widgets.dart';
 import '../widgets/material_kind_download_dialog.dart';
 import '../widgets/app_scaffold.dart';
 import '../stores/auth_store.dart';
+import '../services/offline/download_service.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -20,6 +21,8 @@ class DashboardPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              // Limpar cache de URLs antes de fazer logout
+              ref.read(offlineDownloadServiceProvider).clearUrlCache();
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) {
                 context.go('/login');
@@ -65,16 +68,12 @@ class DashboardPage extends ConsumerWidget {
                       _DashboardCard(
                         icon: Icons.label,
                         title: 'Tags',
-                        onTap: () {
-                          // Navegar para tags
-                        },
+                        onTap: () => context.push('/tags'),
                       ),
                       _DashboardCard(
                         icon: Icons.folder,
                         title: 'Material Kinds',
-                        onTap: () {
-                          // Navegar para material kinds
-                        },
+                        onTap: () => context.push('/material-kinds'),
                       ),
                       _DashboardCard(
                         icon: Icons.download,

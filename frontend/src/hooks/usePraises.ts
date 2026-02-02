@@ -24,7 +24,8 @@ export const useCreatePraise = () => {
   return useMutation({
     mutationFn: (data: PraiseCreate) => praisesApi.createPraise(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      // Força refetch imediato de todas as queries de praises ativas
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       toast.success('Praise criado com sucesso!');
     },
     onError: (error: any) => {
@@ -41,8 +42,9 @@ export const useUpdatePraise = () => {
     mutationFn: ({ id, data }: { id: string; data: PraiseUpdate }) =>
       praisesApi.updatePraise(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
-      queryClient.invalidateQueries({ queryKey: ['praise', variables.id] });
+      // Força refetch imediato de todas as queries de praises ativas
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise', variables.id], refetchType: 'active' });
       toast.success('Praise atualizado com sucesso!');
     },
     onError: (error: any) => {
@@ -58,7 +60,10 @@ export const useDeletePraise = () => {
   return useMutation({
     mutationFn: (id: string) => praisesApi.deletePraise(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      // Força refetch imediato de todas as queries de praises ativas
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
+      // Também invalida queries individuais de praise
+      queryClient.invalidateQueries({ queryKey: ['praise'], refetchType: 'active' });
       toast.success('Praise deletado com sucesso!');
     },
     onError: (error: any) => {
@@ -75,8 +80,9 @@ export const useReviewAction = () => {
     mutationFn: ({ id, data }: { id: string; data: ReviewActionRequest }) =>
       praisesApi.reviewAction(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
-      queryClient.invalidateQueries({ queryKey: ['praise', variables.id] });
+      // Força refetch imediato de todas as queries de praises ativas
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise', variables.id], refetchType: 'active' });
       toast.success('Revisão atualizada com sucesso!');
     },
     onError: (error: any) => {

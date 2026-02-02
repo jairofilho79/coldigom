@@ -24,7 +24,10 @@ export const useCreateTag = () => {
   return useMutation({
     mutationFn: (data: PraiseTagCreate) => praiseTagsApi.createTag(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      // Força refetch imediato de todas as queries de tags ativas
+      queryClient.invalidateQueries({ queryKey: ['tags'], refetchType: 'active' });
+      // Tags podem estar relacionadas a praises, então invalida também
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       toast.success('Tag criada com sucesso!');
     },
     onError: (error: any) => {
@@ -41,8 +44,11 @@ export const useUpdateTag = () => {
     mutationFn: ({ id, data }: { id: string; data: PraiseTagUpdate }) =>
       praiseTagsApi.updateTag(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] });
-      queryClient.invalidateQueries({ queryKey: ['tag', variables.id] });
+      // Força refetch imediato de todas as queries de tags ativas
+      queryClient.invalidateQueries({ queryKey: ['tags'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['tag', variables.id], refetchType: 'active' });
+      // Tags podem estar relacionadas a praises, então invalida também
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       toast.success('Tag atualizada com sucesso!');
     },
     onError: (error: any) => {
@@ -58,7 +64,12 @@ export const useDeleteTag = () => {
   return useMutation({
     mutationFn: (id: string) => praiseTagsApi.deleteTag(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      // Força refetch imediato de todas as queries de tags ativas
+      queryClient.invalidateQueries({ queryKey: ['tags'], refetchType: 'active' });
+      // Também invalida queries individuais de tag
+      queryClient.invalidateQueries({ queryKey: ['tag'], refetchType: 'active' });
+      // Tags podem estar relacionadas a praises, então invalida também
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       toast.success('Tag deletada com sucesso!');
     },
     onError: (error: any) => {

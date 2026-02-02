@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../stores/auth_store.dart';
 import '../stores/audio_player_store.dart';
+import '../services/offline/download_service.dart';
 import 'mini_audio_player.dart';
 
 /// Navigation drawer com mini player no footer quando áudio está em background
@@ -73,12 +74,38 @@ class AppDrawer extends ConsumerWidget {
                     context.go('/tags');
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: const Text('Linguagens'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/languages');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.folder),
+                  title: const Text('Material Kinds'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/material-kinds');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.category),
+                  title: const Text('Material Types'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/material-types');
+                  },
+                ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.logout),
                   title: const Text('Sair'),
                   onTap: () async {
                     Navigator.pop(context);
+                    // Limpar cache de URLs antes de fazer logout
+                    ref.read(offlineDownloadServiceProvider).clearUrlCache();
                     await ref.read(authProvider.notifier).logout();
                     if (context.mounted) {
                       context.go('/login');

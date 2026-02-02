@@ -24,7 +24,7 @@ export const useCreateMaterialKind = () => {
   return useMutation({
     mutationFn: (data: MaterialKindCreate) => materialKindsApi.createMaterialKind(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materialKinds'] });
+      queryClient.invalidateQueries({ queryKey: ['materialKinds'], refetchType: 'active' });
       toast.success('Tipo de material criado com sucesso!');
     },
     onError: (error: any) => {
@@ -41,8 +41,8 @@ export const useUpdateMaterialKind = () => {
     mutationFn: ({ id, data }: { id: string; data: MaterialKindUpdate }) =>
       materialKindsApi.updateMaterialKind(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['materialKinds'] });
-      queryClient.invalidateQueries({ queryKey: ['materialKind', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['materialKinds'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['materialKind', variables.id], refetchType: 'active' });
       toast.success('Tipo de material atualizado com sucesso!');
     },
     onError: (error: any) => {
@@ -58,7 +58,8 @@ export const useDeleteMaterialKind = () => {
   return useMutation({
     mutationFn: (id: string) => materialKindsApi.deleteMaterialKind(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materialKinds'] });
+      queryClient.invalidateQueries({ queryKey: ['materialKinds'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['materialKind'], refetchType: 'active' });
       toast.success('Tipo de material deletado com sucesso!');
     },
     onError: (error: any) => {

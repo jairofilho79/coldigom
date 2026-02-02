@@ -62,6 +62,7 @@
     "seeAll": "See all →",
     "errorLoadingData": "Error loading data. Please try again.",
     "errorLoading": "Error loading",
+    "offlineMode": "Offline mode - using cached data",
     "actionCannotBeUndone": "This action cannot be undone",
     "praiseNotFound": "Praise not found",
     "noPraisesFound": "No praises found",

@@ -9,6 +9,12 @@ import '../pages/praise_create_page.dart';
 import '../pages/praise_edit_page.dart';
 import '../pages/tag_list_page.dart';
 import '../pages/tag_form_page.dart';
+import '../pages/language_list_page.dart';
+import '../pages/language_form_page.dart';
+import '../pages/material_kind_list_page.dart';
+import '../pages/material_kind_form_page.dart';
+import '../pages/material_type_list_page.dart';
+import '../pages/material_type_form_page.dart';
 import '../pages/pdf_viewer_page.dart';
 import '../pages/audio_player_page.dart';
 import '../stores/auth_store.dart';
@@ -92,6 +98,60 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return TagFormPage(tagId: id);
+        },
+      ),
+      GoRoute(
+        path: '/languages',
+        name: 'languages',
+        builder: (context, state) => const LanguageListPage(),
+      ),
+      GoRoute(
+        path: '/languages/create',
+        name: 'language-create',
+        builder: (context, state) => const LanguageFormPage(),
+      ),
+      GoRoute(
+        path: '/languages/:code/edit',
+        name: 'language-edit',
+        builder: (context, state) {
+          final code = state.pathParameters['code']!;
+          return LanguageFormPage(code: code);
+        },
+      ),
+      GoRoute(
+        path: '/material-kinds',
+        name: 'material-kinds',
+        builder: (context, state) => const MaterialKindListPage(),
+      ),
+      GoRoute(
+        path: '/material-kinds/create',
+        name: 'material-kind-create',
+        builder: (context, state) => const MaterialKindFormPage(),
+      ),
+      GoRoute(
+        path: '/material-kinds/:kindId/edit',
+        name: 'material-kind-edit',
+        builder: (context, state) {
+          final kindId = state.pathParameters['kindId']!;
+          return MaterialKindFormPage(kindId: kindId);
+        },
+      ),
+      GoRoute(
+        path: '/material-types',
+        name: 'material-types',
+        builder: (context, state) => const MaterialTypeListPage(),
+      ),
+      GoRoute(
+        path: '/material-types/create',
+        name: 'material-type-create',
+        builder: (context, state) => const MaterialTypeFormPage(),
+      ),
+      GoRoute(
+        path: '/material-types/:typeId/edit',
+        name: 'material-type-edit',
+        builder: (context, state) {
+          final typeId = state.pathParameters['typeId']!;
+          return MaterialTypeFormPage(typeId: typeId);
         },
       ),
       GoRoute(

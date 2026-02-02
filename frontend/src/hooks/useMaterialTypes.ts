@@ -29,7 +29,7 @@ export const useCreateMaterialType = () => {
   return useMutation({
     mutationFn: (data: MaterialTypeCreate) => materialTypesApi.createMaterialType(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materialTypes'] });
+      queryClient.invalidateQueries({ queryKey: ['materialTypes'], refetchType: 'active' });
       toast.success('Tipo de arquivo criado com sucesso!');
     },
     onError: (error: any) => {
@@ -46,7 +46,7 @@ export const useUpdateMaterialType = () => {
     mutationFn: ({ id, data }: { id: string; data: MaterialTypeUpdate }) =>
       materialTypesApi.updateMaterialType(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materialTypes'] });
+      queryClient.invalidateQueries({ queryKey: ['materialTypes'], refetchType: 'active' });
       toast.success('Tipo de arquivo atualizado com sucesso!');
     },
     onError: (error: any) => {
@@ -62,7 +62,7 @@ export const useDeleteMaterialType = () => {
   return useMutation({
     mutationFn: (id: string) => materialTypesApi.deleteMaterialType(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materialTypes'] });
+      queryClient.invalidateQueries({ queryKey: ['materialTypes'], refetchType: 'active' });
       toast.success('Tipo de arquivo deletado com sucesso!');
     },
     onError: (error: any) => {

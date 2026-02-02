@@ -17,13 +17,15 @@ class PraiseMaterialRepository(BaseRepository):
             .first()
         )
 
-    def get_by_praise_id(self, praise_id: UUID) -> List[PraiseMaterial]:
-        return (
+    def get_by_praise_id(self, praise_id: UUID, is_old: Optional[bool] = None) -> List[PraiseMaterial]:
+        query = (
             self.db.query(PraiseMaterial)
             .options(joinedload(PraiseMaterial.material_kind))
             .filter(PraiseMaterial.praise_id == praise_id)
-            .all()
         )
+        if is_old is not None:
+            query = query.filter(PraiseMaterial.is_old == is_old)
+        return query.all()
 
     def get_all(self, skip: int = 0, limit: int = 100) -> List[PraiseMaterial]:
         return (

@@ -81,11 +81,31 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
   bool _isLoadingMore = false;
   bool _hasMore = true;
   PraiseQueryParams? _lastQueryParams; // Rastrear último query params usado
+  bool _hasReadUrlParams = false; // Flag para ler URL apenas uma vez
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ler tagId da URL quando a página é aberta (apenas uma vez)
+    if (!_hasReadUrlParams) {
+      _hasReadUrlParams = true;
+      final uri = GoRouterState.of(context).uri;
+      final tagIdFromUrl = uri.queryParameters['tagId'];
+      if (tagIdFromUrl != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(selectedTagFilterProvider.notifier).state = tagIdFromUrl;
+            _resetPagination();
+          }
+        });
+      }
+    }
   }
 
   @override
@@ -333,9 +353,13 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                               Wrap(
                                 spacing: 4,
                                 children: praise.tags
-                                    .map((tag) => Chip(
+                                    .map((tag) => ActionChip(
                                           label: Text(tag.name),
                                           visualDensity: VisualDensity.compact,
+                                          onPressed: () {
+                                            // Navegar para lista de praises filtrada por esta tag
+                                            context.push('/praises?tagId=${tag.id}');
+                                          },
                                         ))
                                     .toList(),
                               ),
@@ -403,9 +427,13 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                                   Wrap(
                                     spacing: 4,
                                     children: praise.tags
-                                        .map((tag) => Chip(
+                                        .map((tag) => ActionChip(
                                               label: Text(tag.name),
                                               visualDensity: VisualDensity.compact,
+                                              onPressed: () {
+                                                // Navegar para lista de praises filtrada por esta tag
+                                                context.push('/praises?tagId=${tag.id}');
+                                              },
                                             ))
                                         .toList(),
                                   ),

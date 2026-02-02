@@ -5,6 +5,7 @@ import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/material_manager_widget.dart';
 import '../services/api/api_service.dart';
 import '../services/offline/download_service.dart';
 import '../models/praise_model.dart';
@@ -135,9 +136,13 @@ class PraiseDetailPage extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: praise.tags
-                      .map((tag) => Chip(
+                      .map((tag) => ActionChip(
                             label: Text(tag.name),
                             visualDensity: VisualDensity.compact,
+                            onPressed: () {
+                              // Navegar para lista de praises filtrada por esta tag
+                              context.push('/praises?tagId=${tag.id}');
+                            },
                           ))
                       .toList(),
                 ),
@@ -145,64 +150,11 @@ class PraiseDetailPage extends ConsumerWidget {
               ],
 
               // Materiais
-              Text(
-                'Materiais (${praise.materials.length})',
-                style: Theme.of(context).textTheme.titleMedium,
+              MaterialManagerWidget(
+                praiseId: praiseId,
+                materials: praise.materials,
+                isEditMode: false,
               ),
-              const SizedBox(height: 8),
-              if (praise.materials.isEmpty)
-                const AppEmptyWidget(
-                  message: 'Nenhum material cadastrado',
-                  icon: Icons.insert_drive_file,
-                )
-              else
-                ...praise.materials.map((material) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: AppCard(
-                        onTap: () {
-                          final typeName = (material.materialType?.name ?? '').toLowerCase();
-                          final path = material.path.toLowerCase();
-                          
-                          final isPdf = typeName == 'pdf' || 
-                                        typeName.contains('file') && path.endsWith('.pdf');
-                          final isAudio = typeName == 'audio' ||
-                                         ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg']
-                                             .any((ext) => path.endsWith(ext));
-                          
-                          if (isPdf) {
-                            context.push(
-                              '/materials/${material.id}/view?praiseName=${Uri.encodeComponent(praise.name)}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
-                            );
-                          } else if (isAudio) {
-                            context.push(
-                              '/materials/${material.id}/audio?praiseName=${Uri.encodeComponent(praise.name)}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
-                            );
-                          } else {
-                            // Comportamento para outros tipos de material
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Visualizar material: ${material.path}')),
-                            );
-                          }
-                        },
-                        child: ListTile(
-                          leading: Icon(_getMaterialIcon(material)),
-                          title: Text(material.materialKind?.name ?? material.materialKindId),
-                          subtitle: Text(material.materialType?.name ?? material.materialTypeId),
-                          trailing: ((material.materialType?.name ?? '').toUpperCase().contains('FILE')) || 
-                                   material.path.endsWith('.pdf')
-                              ? IconButton(
-                                  icon: const Icon(Icons.download),
-                                  onPressed: () {
-                                    // TODO: Implementar download
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Baixar material: ${material.path}')),
-                                    );
-                                  },
-                                )
-                              : null,
-                        ),
-                      ),
-                    )),
 
               const SizedBox(height: 24),
 
@@ -279,20 +231,6 @@ class PraiseDetailPage extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  IconData _getMaterialIcon(PraiseMaterialSimple material) {
-    final typeName = (material.materialType?.name ?? '').toUpperCase();
-    if (typeName.contains('FILE') || material.path.endsWith('.pdf')) {
-      return Icons.insert_drive_file;
-    } else if (typeName.contains('YOUTUBE') || material.path.contains('youtube.com')) {
-      return Icons.play_circle;
-    } else if (typeName.contains('SPOTIFY') || material.path.contains('spotify.com')) {
-      return Icons.music_note;
-    } else if (typeName.contains('TEXT')) {
-      return Icons.text_fields;
-    }
-    return Icons.insert_drive_file;
   }
 
   IconData _getReviewIcon(String type) {

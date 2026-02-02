@@ -10,6 +10,7 @@ class AppTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int? maxLines;
   final IconData? prefixIcon;
+  final bool enabled;
 
   const AppTextField({
     super.key,
@@ -21,6 +22,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.prefixIcon,
+    this.enabled = true,
   });
 
   @override
@@ -31,6 +33,7 @@ class AppTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

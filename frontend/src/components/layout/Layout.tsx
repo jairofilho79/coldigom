@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Header } from './Header';
 import { Toaster } from 'react-hot-toast';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ export const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       <Toaster position="top-right" />
+      <OfflineIndicator />
     </div>
   );
 };

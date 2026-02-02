@@ -18,7 +18,7 @@ export const useUpdateMaterialKindOrder = () => {
   return useMutation({
     mutationFn: (data: MaterialKindOrderUpdate) => userPreferencesApi.updateMaterialKindOrder(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userMaterialKindPreferences'] });
+      queryClient.invalidateQueries({ queryKey: ['userMaterialKindPreferences'], refetchType: 'active' });
       toast.success(t('preferences.materialKind.saveSuccess'));
     },
     onError: (error: any) => {
@@ -35,7 +35,7 @@ export const useDeleteUserMaterialKindPreferences = () => {
   return useMutation({
     mutationFn: () => userPreferencesApi.deleteUserMaterialKindPreferences(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userMaterialKindPreferences'] });
+      queryClient.invalidateQueries({ queryKey: ['userMaterialKindPreferences'], refetchType: 'active' });
       toast.success(t('preferences.materialKind.saveSuccess'));
     },
     onError: (error: any) => {

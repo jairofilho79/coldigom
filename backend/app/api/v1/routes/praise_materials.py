@@ -36,13 +36,14 @@ def list_praise_materials(
     skip: int = 0,
     limit: int = 100,
     praise_id: Optional[UUID] = None,
+    is_old: Optional[bool] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Lista todos os materiais de praise"""
     service = PraiseMaterialService(db)
     if praise_id:
-        materials = service.get_by_praise_id(praise_id)
+        materials = service.get_by_praise_id(praise_id, is_old=is_old)
     else:
         materials = service.get_all(skip=skip, limit=limit)
     return materials

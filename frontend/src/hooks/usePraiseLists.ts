@@ -35,7 +35,7 @@ export const useCreatePraiseList = () => {
   return useMutation({
     mutationFn: (data: PraiseListCreate) => praiseListsApi.createPraiseList(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
       toast.success('Lista criada com sucesso!');
     },
     onError: (error: any) => {
@@ -52,8 +52,8 @@ export const useUpdatePraiseList = () => {
     mutationFn: ({ id, data }: { id: string; data: PraiseListUpdate }) =>
       praiseListsApi.updatePraiseList(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.id], refetchType: 'active' });
       toast.success('Lista atualizada com sucesso!');
     },
     onError: (error: any) => {
@@ -69,7 +69,7 @@ export const useDeletePraiseList = () => {
   return useMutation({
     mutationFn: (id: string) => praiseListsApi.deletePraiseList(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
       toast.success('Lista deletada com sucesso!');
     },
     onError: (error: any) => {
@@ -86,8 +86,8 @@ export const useAddPraiseToList = () => {
     mutationFn: ({ listId, praiseId }: { listId: string; praiseId: string }) =>
       praiseListsApi.addPraiseToList(listId, praiseId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId], refetchType: 'active' });
       toast.success('Praise adicionado à lista!');
     },
     onError: (error: any, variables) => {
@@ -95,8 +95,8 @@ export const useAddPraiseToList = () => {
       // Check if praise is already in list
       if (error.response?.status === 400 && message.includes('already')) {
         // Invalidate queries to refresh the UI and show correct state
-        queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
-        queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId] });
+        queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId], refetchType: 'active' });
         toast.error('Este praise já está nesta lista');
       } else {
         toast.error(message);
@@ -112,8 +112,8 @@ export const useRemovePraiseFromList = () => {
     mutationFn: ({ listId, praiseId }: { listId: string; praiseId: string }) =>
       praiseListsApi.removePraiseFromList(listId, praiseId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId], refetchType: 'active' });
       toast.success('Praise removido da lista!');
     },
     onError: (error: any) => {
@@ -130,7 +130,7 @@ export const useReorderPraisesInList = () => {
     mutationFn: ({ listId, data }: { listId: string; data: ReorderPraisesRequest }) =>
       praiseListsApi.reorderPraisesInList(listId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId] });
+      queryClient.invalidateQueries({ queryKey: ['praise-list', variables.listId], refetchType: 'active' });
       toast.success('Ordem atualizada!');
     },
     onError: (error: any) => {
@@ -146,8 +146,8 @@ export const useFollowList = () => {
   return useMutation({
     mutationFn: (listId: string) => praiseListsApi.followList(listId),
     onSuccess: (_, listId) => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['praise-list', listId] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise-list', listId], refetchType: 'active' });
       toast.success('Lista seguida com sucesso!');
     },
     onError: (error: any) => {
@@ -163,8 +163,8 @@ export const useUnfollowList = () => {
   return useMutation({
     mutationFn: (listId: string) => praiseListsApi.unfollowList(listId),
     onSuccess: (_, listId) => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
-      queryClient.invalidateQueries({ queryKey: ['praise-list', listId] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise-list', listId], refetchType: 'active' });
       toast.success('Deixou de seguir a lista!');
     },
     onError: (error: any) => {
@@ -180,7 +180,7 @@ export const useCopyList = () => {
   return useMutation({
     mutationFn: (listId: string) => praiseListsApi.copyList(listId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['praise-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['praise-lists'], refetchType: 'active' });
       toast.success('Lista copiada com sucesso!');
     },
     onError: (error: any) => {

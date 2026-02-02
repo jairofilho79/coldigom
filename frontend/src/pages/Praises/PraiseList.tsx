@@ -36,7 +36,7 @@ export const PraiseList = () => {
     setSkip(0);
   };
 
-  if (isLoading) {
+  if (isLoading && !praises) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <Loading size="lg" />
@@ -44,7 +44,8 @@ export const PraiseList = () => {
     );
   }
 
-  if (error) {
+  // Mostra erro apenas se não houver dados em cache (stale ou não)
+  if (error && !praises) {
     return (
       <div className="text-center text-red-600">
         {t('message.errorLoadingData')}

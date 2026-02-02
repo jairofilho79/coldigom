@@ -39,8 +39,9 @@ export const useUploadMaterial = () => {
       oldDescription?: string | null;
     }) => praiseMaterialsApi.uploadMaterial(file, materialKindId, praiseId, isOld, oldDescription),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['materials'] });
-      queryClient.invalidateQueries({ queryKey: ['praise', variables.praiseId] });
+      queryClient.invalidateQueries({ queryKey: ['materials'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise', variables.praiseId], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       toast.success('Material enviado com sucesso!');
     },
     onError: (error: any) => {
@@ -57,8 +58,9 @@ export const useCreateMaterial = () => {
     mutationFn: (data: PraiseMaterialCreate) =>
       praiseMaterialsApi.createMaterial(data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['materials'] });
-      queryClient.invalidateQueries({ queryKey: ['praise', variables.praise_id] });
+      queryClient.invalidateQueries({ queryKey: ['materials'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise', variables.praise_id], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       toast.success('Material criado com sucesso!');
     },
     onError: (error: any) => {
@@ -75,16 +77,16 @@ export const useUpdateMaterial = () => {
     mutationFn: ({ id, data }: { id: string; data: PraiseMaterialUpdate }) =>
       praiseMaterialsApi.updateMaterial(id, data),
     onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['materials'] });
-      queryClient.invalidateQueries({ queryKey: ['material', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['materials'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['material', variables.id], refetchType: 'active' });
       // Invalida todos os praises para garantir que o praise com este material seja atualizado
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       // Invalida o praise específico se tiver praise_id no response
       if (response.praise_id) {
-        queryClient.invalidateQueries({ queryKey: ['praise', response.praise_id] });
+        queryClient.invalidateQueries({ queryKey: ['praise', response.praise_id], refetchType: 'active' });
       } else {
         // Se não tiver, invalida todos os praises
-        queryClient.invalidateQueries({ queryKey: ['praise'] });
+        queryClient.invalidateQueries({ queryKey: ['praise'], refetchType: 'active' });
       }
       toast.success('Material atualizado com sucesso!');
     },
@@ -119,18 +121,18 @@ export const useUpdateMaterialWithFile = () => {
     },
     onSuccess: (response, variables) => {
       console.log('useUpdateMaterialWithFile - sucesso', { response, variables });
-      queryClient.invalidateQueries({ queryKey: ['materials'] });
-      queryClient.invalidateQueries({ queryKey: ['material', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['materials'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['material', variables.id], refetchType: 'active' });
       // Invalida todos os praises para garantir que o praise com este material seja atualizado
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
       // Invalida o praise específico se fornecido, ou tenta pegar do response
       const praiseIdToInvalidate = variables.praiseId || response.praise_id;
       console.log('useUpdateMaterialWithFile - invalidando praise', { praiseIdToInvalidate });
       if (praiseIdToInvalidate) {
-        queryClient.invalidateQueries({ queryKey: ['praise', praiseIdToInvalidate] });
+        queryClient.invalidateQueries({ queryKey: ['praise', praiseIdToInvalidate], refetchType: 'active' });
       } else {
         // Se não tiver, invalida todos os praises
-        queryClient.invalidateQueries({ queryKey: ['praise'] });
+        queryClient.invalidateQueries({ queryKey: ['praise'], refetchType: 'active' });
       }
       toast.success('Material atualizado com sucesso!');
     },
@@ -148,10 +150,10 @@ export const useDeleteMaterial = () => {
   return useMutation({
     mutationFn: (id: string) => praiseMaterialsApi.deleteMaterial(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['materials'], refetchType: 'active' });
       // Invalida todos os praises para garantir que o praise com este material seja atualizado
-      queryClient.invalidateQueries({ queryKey: ['praises'] });
-      queryClient.invalidateQueries({ queryKey: ['praise'] });
+      queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['praise'], refetchType: 'active' });
       toast.success('Material deletado com sucesso!');
     },
     onError: (error: any) => {

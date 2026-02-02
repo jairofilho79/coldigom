@@ -5,7 +5,7 @@ import '../services/api/api_service.dart';
 import '../services/offline/download_service.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_status_widgets.dart';
-import 'material_form_dialog.dart'; // Importa materialKindsProvider
+import '../providers/material_providers.dart';
 
 /// Provider para lista de tags (reutilizado)
 final tagsProvider = FutureProvider<List<PraiseTagResponse>>((ref) async {

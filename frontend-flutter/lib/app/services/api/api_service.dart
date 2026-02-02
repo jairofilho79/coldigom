@@ -5,6 +5,7 @@ import 'api_client.dart';
 import '../../models/user_model.dart';
 import '../../models/praise_model.dart';
 import '../../models/praise_tag_model.dart';
+import '../../models/language_model.dart';
 import '../../models/material_kind_model.dart';
 import '../../models/material_type_model.dart';
 import '../../models/praise_material_model.dart';
@@ -141,6 +142,50 @@ class ApiService {
     await _dio.delete('/api/v1/praise-tags/$id');
   }
 
+  // Languages
+  Future<List<LanguageResponse>> getLanguages({
+    int? skip,
+    int? limit,
+    bool? activeOnly,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/languages/',
+      queryParameters: {
+        if (skip != null) 'skip': skip,
+        if (limit != null) 'limit': limit,
+        if (activeOnly != null) 'active_only': activeOnly,
+      },
+    );
+    return (response.data as List)
+        .map((json) => LanguageResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<LanguageResponse> getLanguageByCode(String code) async {
+    final response = await _dio.get('/api/v1/languages/$code');
+    return LanguageResponse.fromJson(response.data);
+  }
+
+  Future<LanguageResponse> createLanguage(LanguageCreate language) async {
+    final response = await _dio.post(
+      '/api/v1/languages/',
+      data: language.toJson(),
+    );
+    return LanguageResponse.fromJson(response.data);
+  }
+
+  Future<LanguageResponse> updateLanguage(String code, LanguageUpdate language) async {
+    final response = await _dio.put(
+      '/api/v1/languages/$code',
+      data: language.toJson(),
+    );
+    return LanguageResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteLanguage(String code) async {
+    await _dio.delete('/api/v1/languages/$code');
+  }
+
   // Material Kinds
   Future<List<MaterialKindResponse>> getMaterialKinds({
     int? skip,
@@ -156,6 +201,31 @@ class ApiService {
     return (response.data as List)
         .map((json) => MaterialKindResponse.fromJson(json))
         .toList();
+  }
+
+  Future<MaterialKindResponse> getMaterialKind(String id) async {
+    final response = await _dio.get('/api/v1/material-kinds/$id');
+    return MaterialKindResponse.fromJson(response.data);
+  }
+
+  Future<MaterialKindResponse> createMaterialKind(MaterialKindCreate kind) async {
+    final response = await _dio.post(
+      '/api/v1/material-kinds/',
+      data: kind.toJson(),
+    );
+    return MaterialKindResponse.fromJson(response.data);
+  }
+
+  Future<MaterialKindResponse> updateMaterialKind(String id, MaterialKindUpdate kind) async {
+    final response = await _dio.put(
+      '/api/v1/material-kinds/$id',
+      data: kind.toJson(),
+    );
+    return MaterialKindResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteMaterialKind(String id) async {
+    await _dio.delete('/api/v1/material-kinds/$id');
   }
 
   // Material Types
@@ -175,11 +245,37 @@ class ApiService {
         .toList();
   }
 
+  Future<MaterialTypeResponse> getMaterialType(String id) async {
+    final response = await _dio.get('/api/v1/material-types/$id');
+    return MaterialTypeResponse.fromJson(response.data);
+  }
+
+  Future<MaterialTypeResponse> createMaterialType(MaterialTypeCreate type) async {
+    final response = await _dio.post(
+      '/api/v1/material-types/',
+      data: type.toJson(),
+    );
+    return MaterialTypeResponse.fromJson(response.data);
+  }
+
+  Future<MaterialTypeResponse> updateMaterialType(String id, MaterialTypeUpdate type) async {
+    final response = await _dio.put(
+      '/api/v1/material-types/$id',
+      data: type.toJson(),
+    );
+    return MaterialTypeResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteMaterialType(String id) async {
+    await _dio.delete('/api/v1/material-types/$id');
+  }
+
   // Materials
   Future<List<PraiseMaterialResponse>> getMaterials({
     int? skip,
     int? limit,
     String? praiseId,
+    bool? isOld,
   }) async {
     final response = await _dio.get(
       '/api/v1/praise-materials/',
@@ -187,6 +283,7 @@ class ApiService {
         if (skip != null) 'skip': skip,
         if (limit != null) 'limit': limit,
         if (praiseId != null) 'praise_id': praiseId,
+        if (isOld != null) 'is_old': isOld,
       },
     );
     return (response.data as List)
@@ -246,6 +343,31 @@ class ApiService {
         contentType: Headers.multipartFormDataContentType,
       ),
     );
+    return PraiseMaterialResponse.fromJson(response.data);
+  }
+
+  Future<PraiseMaterialResponse> replaceMaterialFile(
+    String materialId,
+    File file, {
+    String? materialKindId,
+    bool? isOld,
+    String? oldDescription,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(file.path, filename: file.path.split('/').last),
+      if (materialKindId != null) 'material_kind_id': materialKindId,
+      if (isOld != null) 'is_old': isOld.toString(),
+      if (oldDescription != null && oldDescription.isNotEmpty) 'old_description': oldDescription,
+    });
+
+    final response = await _dio.put(
+      '/api/v1/praise-materials/$materialId/upload',
+      data: formData,
+      options: Options(
+        contentType: Headers.multipartFormDataContentType,
+      ),
+    );
+    
     return PraiseMaterialResponse.fromJson(response.data);
   }
 

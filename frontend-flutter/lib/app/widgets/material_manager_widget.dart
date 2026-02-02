@@ -31,6 +31,7 @@ class MaterialManagerWidget extends ConsumerStatefulWidget {
 
 class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
   List<PraiseMaterialResponse> _materials = [];
+  bool _showOldMaterials = false;
 
   @override
   void initState() {
@@ -47,10 +48,14 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
   }
 
   Future<void> _loadMaterials() async {
-    if (widget.isEditMode && widget.praiseId.isNotEmpty) {
+    // Se tiver praiseId, sempre carregar da API (tanto em modo edição quanto visualização)
+    if (widget.praiseId.isNotEmpty) {
       try {
         final apiService = ref.read(apiServiceProvider);
-        final materials = await apiService.getMaterials(praiseId: widget.praiseId);
+        final materials = await apiService.getMaterials(
+          praiseId: widget.praiseId,
+          isOld: _showOldMaterials ? null : false,
+        );
         setState(() {
           _materials = materials;
         });
@@ -58,9 +63,21 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
       } catch (e) {
         // Se falhar, tentar converter a lista fornecida
         _convertMaterials();
+        // Filtrar localmente se não estiver em modo edição
+        if (!_showOldMaterials) {
+          setState(() {
+            _materials = _materials.where((m) => m.isOld != true).toList();
+          });
+        }
       }
     } else {
       _convertMaterials();
+      // Filtrar localmente se não estiver em modo edição
+      if (!_showOldMaterials) {
+        setState(() {
+          _materials = _materials.where((m) => m.isOld != true).toList();
+        });
+      }
     }
   }
 
@@ -209,9 +226,16 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
   }
 
   Future<void> _refreshMaterials() async {
+    if (widget.praiseId.isEmpty) {
+      _loadMaterials();
+      return;
+    }
     try {
       final apiService = ref.read(apiServiceProvider);
-      final materials = await apiService.getMaterials(praiseId: widget.praiseId);
+      final materials = await apiService.getMaterials(
+        praiseId: widget.praiseId,
+        isOld: _showOldMaterials ? null : false,
+      );
       setState(() {
         _materials = materials;
       });
@@ -223,6 +247,13 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
         );
       }
     }
+  }
+
+  void _toggleShowOldMaterials() {
+    setState(() {
+      _showOldMaterials = !_showOldMaterials;
+    });
+    _loadMaterials();
   }
 
   @override
@@ -238,6 +269,12 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
+            AppButton(
+              text: _showOldMaterials ? 'Ocultar Antigos' : 'Ver Antigos',
+              icon: Icons.history,
+              onPressed: _toggleShowOldMaterials,
+            ),
+            const SizedBox(width: 8),
             AppButton(
               text: 'Adicionar',
               icon: Icons.add,

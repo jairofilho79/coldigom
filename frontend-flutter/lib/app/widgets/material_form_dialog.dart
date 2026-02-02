@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/praise_material_model.dart';
 import '../models/material_kind_model.dart';
 import '../models/material_type_model.dart';
@@ -9,18 +10,7 @@ import '../services/api/api_service.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_status_widgets.dart';
-
-/// Provider para lista de material kinds
-final materialKindsProvider = FutureProvider<List<MaterialKindResponse>>((ref) async {
-  final apiService = ref.read(apiServiceProvider);
-  return await apiService.getMaterialKinds(limit: 1000);
-});
-
-/// Provider para lista de material types
-final materialTypesProvider = FutureProvider<List<MaterialTypeResponse>>((ref) async {
-  final apiService = ref.read(apiServiceProvider);
-  return await apiService.getMaterialTypes(limit: 1000);
-});
+import '../providers/material_providers.dart';
 
 enum MaterialFormType {
   file,
@@ -228,17 +218,37 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
       if (widget.material != null) {
         // Edição
         if (_formData.type == MaterialFormType.file && _formData.file != null) {
-          // Substituir arquivo
-          // Nota: Para substituir arquivo, precisaríamos de um endpoint PUT /upload
-          // Por enquanto, vamos apenas atualizar os campos
-          final update = PraiseMaterialUpdate(
+          // Substituir arquivo usando endpoint PUT /upload
+          final result = await apiService.replaceMaterialFile(
+            widget.material!.id,
+            _formData.file!,
             materialKindId: _formData.materialKindId,
             isOld: _formData.isOld,
             oldDescription: _formData.oldDescription?.isEmpty ?? true 
                 ? null 
                 : _formData.oldDescription,
           );
-          await apiService.updateMaterial(widget.material!.id, update);
+          
+          // Limpar cache offline do arquivo antigo
+          // O AudioPlayerService salva arquivos offline usando materialId como nome
+          try {
+            final appDir = await getApplicationDocumentsDirectory();
+            final offlineDir = Directory('${appDir.path}/offline_pdfs');
+            if (await offlineDir.exists()) {
+              final materialId = widget.material!.id;
+              // Tentar deletar possíveis extensões de áudio
+              final audioExtensions = ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg'];
+              for (final ext in audioExtensions) {
+                final cachedFile = File('${offlineDir.path}/$materialId$ext');
+                if (await cachedFile.exists()) {
+                  await cachedFile.delete();
+                }
+              }
+            }
+          } catch (e) {
+            // Log erro mas não falhar a operação
+            debugPrint('Erro ao limpar cache offline: $e');
+          }
         } else {
           // Atualizar campos
           final update = PraiseMaterialUpdate(
@@ -382,14 +392,75 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
 
                       // Campos específicos por tipo
                       if (_formData.type == MaterialFormType.file) ...[
-                        AppButton(
-                          text: _formData.file != null 
-                              ? 'Arquivo: ${_formData.file!.path.split('/').last}'
-                              : 'Selecionar Arquivo',
-                          icon: Icons.upload_file,
-                          onPressed: _pickFile,
+                        // Mostrar arquivo atual se estiver editando
+                        if (widget.material != null && _formData.file == null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey[300]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.insert_drive_file, color: Colors.grey[600]),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Arquivo Atual',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        widget.material!.path.split('/').last,
+                                        style: Theme.of(context).textTheme.bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Selecione um novo arquivo para substituir',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Builder(
+                          builder: (context) {
+                            String buttonText;
+                            if (_formData.file != null) {
+                              final fileName = _formData.file!.path.split('/').last;
+                              // Truncar nome do arquivo se muito longo (máximo 30 caracteres)
+                              final truncatedName = fileName.length > 30 
+                                  ? '${fileName.substring(0, 27)}...'
+                                  : fileName;
+                              buttonText = 'Novo Arquivo: $truncatedName';
+                            } else {
+                              buttonText = widget.material != null 
+                                  ? 'Selecionar Novo Arquivo'
+                                  : 'Selecionar Arquivo';
+                            }
+                            return AppButton(
+                              text: buttonText,
+                              icon: _formData.file != null ? Icons.file_upload : Icons.upload_file,
+                              onPressed: _pickFile,
+                            );
+                          },
                         ),
-                        if (_formData.file == null)
+                        if (_formData.file == null && widget.material == null)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
@@ -397,6 +468,22 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Colors.grey,
                               ),
+                            ),
+                          ),
+                        if (_formData.file != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Novo arquivo selecionado. O arquivo atual será substituído.',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                       ] else if (_formData.type == MaterialFormType.youtube ||

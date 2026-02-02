@@ -58,8 +58,8 @@ class PraiseMaterialService:
     def get_all(self, skip: int = 0, limit: int = 100) -> List[PraiseMaterial]:
         return self.repository.get_all(skip=skip, limit=limit)
 
-    def get_by_praise_id(self, praise_id: UUID) -> List[PraiseMaterial]:
-        return self.repository.get_by_praise_id(praise_id)
+    def get_by_praise_id(self, praise_id: UUID, is_old: Optional[bool] = None) -> List[PraiseMaterial]:
+        return self.repository.get_by_praise_id(praise_id, is_old=is_old)
 
     def create(self, material_data: PraiseMaterialCreate) -> PraiseMaterial:
         # Validate material_kind exists

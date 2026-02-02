@@ -126,7 +126,7 @@ export const PraiseDetail = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !praise) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <Loading size="lg" />
@@ -134,10 +134,21 @@ export const PraiseDetail = () => {
     );
   }
 
-  if (error || !praise) {
+  // Mostra erro apenas se não houver dados em cache (stale ou não)
+  // O React Query mantém dados stale disponíveis mesmo quando há erro de rede
+  if (error && !praise) {
     return (
       <div className="text-center text-red-600">
         {t('message.errorLoadingData')}
+      </div>
+    );
+  }
+
+  // Se não houver dados e não houver erro, ainda está carregando
+  if (!praise) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loading size="lg" />
       </div>
     );
   }

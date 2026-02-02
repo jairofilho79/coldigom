@@ -7,7 +7,14 @@ import '../widgets/app_status_widgets.dart';
 import '../services/api/api_service.dart';
 import '../models/praise_tag_model.dart';
 import 'tag_list_page.dart';
-import '../services/api/api_service.dart';
+
+/// Provider para buscar uma tag específica por ID
+final tagByIdProvider = FutureProvider.family<PraiseTagResponse, String>(
+  (ref, tagId) async {
+    final apiService = ref.read(apiServiceProvider);
+    return await apiService.getTagById(tagId);
+  },
+);
 
 class TagFormPage extends ConsumerStatefulWidget {
   final String? tagId;
@@ -66,7 +73,7 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
       }
 
       // Invalidar provider para atualizar lista
-      ref.invalidate(tagsProvider({'skip': 0, 'limit': 1000}));
+      ref.invalidate(tagsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,13 +104,7 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
   Widget build(BuildContext context) {
     // Se está editando, carregar tag
     if (widget.tagId != null) {
-      // Criar provider para tag específica
-      final tagAsync = ref.watch(
-        FutureProvider<PraiseTagResponse>((ref) async {
-          final apiService = ref.read(apiServiceProvider);
-          return await apiService.getTagById(widget.tagId!);
-        }),
-      );
+      final tagAsync = ref.watch(tagByIdProvider(widget.tagId!));
 
       return tagAsync.when(
         data: (tag) {
@@ -123,7 +124,7 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
           body: AppErrorWidget(
             message: 'Erro ao carregar tag: $error',
             onRetry: () {
-              ref.invalidate(tagsProvider({'skip': 0, 'limit': 1000}));
+              ref.invalidate(tagByIdProvider(widget.tagId!));
             },
           ),
         ),

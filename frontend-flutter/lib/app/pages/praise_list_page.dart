@@ -461,13 +461,23 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                         );
                       },
                     ),
-              error: (error, stack) => AppErrorWidget(
-                message: 'Erro ao carregar praises: $error',
-                onRetry: () {
-                  _resetPagination();
-                  ref.invalidate(praisesProvider(queryParams));
-                },
-              ),
+              error: (error, stack) {
+                // Se o erro for 401 (não autorizado), não exibir o erro
+                // O redirecionamento para login já será feito pelo GoRouter
+                if (isUnauthorizedError(error)) {
+                  // Retornar um widget vazio enquanto redireciona
+                  // O GoRouter vai redirecionar automaticamente quando detectar que não está autenticado
+                  return const SizedBox.shrink();
+                }
+                
+                return AppErrorWidget(
+                  message: 'Erro ao carregar praises: $error',
+                  onRetry: () {
+                    _resetPagination();
+                    ref.invalidate(praisesProvider(queryParams));
+                  },
+                );
+              },
             ),
           ),
         ],

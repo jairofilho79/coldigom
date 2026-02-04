@@ -1,5 +1,15 @@
 import 'package:flutter/material.dart';
 
+/// Verifica se o erro é de autenticação (401) que deve ser silenciosamente ignorado
+/// pois o redirecionamento para login já está sendo feito
+bool isUnauthorizedError(Object error) {
+  final errorString = error.toString();
+  return errorString.contains('401') || 
+      errorString.contains('Unauthorized') ||
+      errorString.contains('UnauthorizedException') ||
+      errorString.contains('Token expirado');
+}
+
 /// Indicador de loading
 class AppLoadingIndicator extends StatelessWidget {
   final String? message;

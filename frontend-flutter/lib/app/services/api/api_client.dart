@@ -5,6 +5,16 @@ import 'package:hive/hive.dart';
 import '../../../core/config/hive_config.dart';
 import '../../../core/constants/app_constants.dart';
 
+/// Exceção customizada para erros de autenticação que devem ser silenciosamente ignorados
+/// pois o redirecionamento para login já está sendo feito
+class UnauthorizedException implements Exception {
+  final String message;
+  UnauthorizedException([this.message = 'Unauthorized']);
+  
+  @override
+  String toString() => message;
+}
+
 /// Cliente HTTP base com interceptors
 class ApiClient {
   late final Dio _dio;
@@ -91,6 +101,16 @@ class ApiClient {
             // Notificar o callback para atualizar o estado de autenticação
             // Isso fará o GoRouter redirecionar para login
             onUnauthorized?.call();
+            // Lançar uma exceção customizada que pode ser identificada na UI
+            // para não exibir o erro, já que o redirecionamento já está sendo feito
+            return handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: UnauthorizedException('Token expirado. Redirecionando para login...'),
+              ),
+            );
           }
           return handler.next(error);
         },

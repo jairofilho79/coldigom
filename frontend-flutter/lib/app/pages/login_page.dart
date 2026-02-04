@@ -21,6 +21,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _usernameFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   bool _isLoading = false;
   String? _errorMessage;
   PackageInfo? _packageInfo;
@@ -29,8 +31,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   void initState() {
     super.initState();
+    // Preencher campos com valores de teste
+    _usernameController.text = 'teste';
+    _passwordController.text = 'teste1';
     _loadPackageInfo();
     _buildTime = DateTime.now(); // Data/hora do build (quando o app foi iniciado)
+    
+    // Focar no campo de usuário após o primeiro frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _usernameFocusNode.requestFocus();
+    });
   }
 
   Future<void> _loadPackageInfo() async {
@@ -44,6 +54,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _usernameFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -87,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final l10n = AppLocalizations.of(context);
       if (l10n == null) return;
       
-      String errorMsg = l10n.errorLogin.replaceAll('{error}', e.toString());
+      String errorMsg = l10n.errorLogin(e.toString());
       
       // Mensagens de erro mais amigáveis
       if (e.toString().contains('Connection failed') || 
@@ -164,6 +176,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     hint: l10n.hintEnterUsername,
                     controller: _usernameController,
                     prefixIcon: Icons.person,
+                    focusNode: _usernameFocusNode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: () {
+                      // Quando apertar Enter no campo de usuário, focar no campo de senha
+                      _passwordFocusNode.requestFocus();
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.validationEnterUsername;
@@ -178,6 +196,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     controller: _passwordController,
                     prefixIcon: Icons.lock,
                     obscureText: true,
+                    focusNode: _passwordFocusNode,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: () {
+                      // Quando apertar Enter no campo de senha, fazer login
+                      _handleLogin();
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.validationEnterPassword;
@@ -213,16 +237,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         children: [
                           if (_packageInfo != null) ...[
                             Text(
-                              l10n.messageVersion
-                                  .replaceAll('{version}', _packageInfo!.version)
-                                  .replaceAll('{buildNumber}', _packageInfo!.buildNumber),
+                              l10n.messageVersion(
+                                  _packageInfo!.version,
+                                  _packageInfo!.buildNumber),
                               style: Theme.of(context).textTheme.bodySmall,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 4),
                           ],
                           Text(
-                            l10n.messageBuild.replaceAll('{date}', DateFormat('dd/MM/yyyy HH:mm:ss').format(_buildTime!)),
+                            l10n.messageBuild(DateFormat('dd/MM/yyyy HH:mm:ss').format(_buildTime!)),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey.shade600,
                               fontSize: 11,

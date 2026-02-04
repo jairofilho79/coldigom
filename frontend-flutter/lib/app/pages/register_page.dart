@@ -67,7 +67,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     } catch (e) {
       final l10n = AppLocalizations.of(context);
       setState(() {
-        _errorMessage = l10n?.errorRegister.replaceAll('{error}', e.toString()) ?? 'Erro ao registrar: ${e.toString()}';
+        _errorMessage = l10n?.errorRegister(e.toString()) ?? 'Erro ao registrar: ${e.toString()}';
       });
     } finally {
       if (mounted) {

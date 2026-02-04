@@ -103,7 +103,7 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorUpdatePraise.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorUpdatePraise(e.toString()))),
         );
       }
     } finally {

@@ -120,6 +120,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelCode => 'Code';
 
   @override
+  String get labelLanguage => 'Language';
+
+  @override
+  String get labelOriginal => 'Original';
+
+  @override
+  String get labelTranslatedName => 'Translated Name';
+
+  @override
+  String get labelEntityType => 'Entity Type';
+
+  @override
+  String get labelFilters => 'Filters';
+
+  @override
+  String get labelAllLanguages => 'All languages';
+
+  @override
+  String get labelPraiseTag => 'Praise Tag';
+
+  @override
   String get labelText => 'Text';
 
   @override
@@ -162,6 +183,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelSelectMaterialKindForDownload => 'Select a Material Kind';
 
   @override
+  String get labelDescription => 'Description';
+
+  @override
+  String get labelPublic => 'Public';
+
+  @override
+  String get labelPrivate => 'Private';
+
+  @override
+  String get labelOwner => 'Owner';
+
+  @override
+  String get labelDateFrom => 'Date From';
+
+  @override
+  String get labelDateTo => 'Date To';
+
+  @override
   String get hintEnterUsername => 'Enter your username';
 
   @override
@@ -195,7 +234,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintEnterLanguageName => 'Enter language name';
 
   @override
+  String get hintEnterTranslatedName => 'Enter translated name';
+
+  @override
   String get hintEnterSearchPraise => 'Enter praise name...';
+
+  @override
+  String get hintEnterListName => 'Enter list name';
+
+  @override
+  String get hintEnterListDescription => 'Enter list description (optional)';
 
   @override
   String hintEnterUrl(String platform) {
@@ -220,6 +268,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get validationRequired => 'This field is required';
+
+  @override
+  String get validationTranslatedNameRequired => 'Translated name is required';
 
   @override
   String validationMinLength(int min) {
@@ -276,6 +327,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get validationSelectMaterialKind => 'Select Material Kind';
 
   @override
+  String get validationListNameRequired => 'List name is required';
+
+  @override
   String get pageTitleDashboard => 'Dashboard';
 
   @override
@@ -330,6 +384,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pageTitleEditLanguage => 'Edit Language';
 
   @override
+  String get pageTitleTranslations => 'Translations';
+
+  @override
+  String get pageTitleCreateTranslation => 'Create Translation';
+
+  @override
+  String get pageTitleEditTranslation => 'Edit Translation';
+
+  @override
+  String get pageTitlePraiseLists => 'Praise Lists';
+
+  @override
+  String get pageTitlePraiseListDetail => 'List Details';
+
+  @override
+  String get pageTitlePraiseListCreate => 'Create List';
+
+  @override
+  String get pageTitlePraiseListEdit => 'Edit List';
+
+  @override
   String messageWelcome(String username) {
     return 'Welcome, $username!';
   }
@@ -351,6 +426,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageNoMaterials => 'No materials registered';
+
+  @override
+  String get messageNoTranslationsAvailable => 'No translations available';
+
+  @override
+  String get messageNoLists => 'No lists found';
+
+  @override
+  String get messageNoListsFound => 'No lists found with applied filters';
+
+  @override
+  String get messageNoPraisesInList => 'No praises in this list';
+
+  @override
+  String get messageUnknown => 'Unknown';
 
   @override
   String get messageCreatePraiseFirst => 'You need to create the praise first';
@@ -480,6 +570,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionHideOldMaterials => 'Hide Old';
 
   @override
+  String get actionAddTranslation => 'Add Translation';
+
+  @override
+  String get actionNewList => 'New List';
+
+  @override
+  String get actionCreateFirstList => 'Create first list';
+
+  @override
+  String get actionFollow => 'Follow';
+
+  @override
+  String get actionUnfollow => 'Unfollow';
+
+  @override
+  String get actionCopy => 'Copy';
+
+  @override
+  String get actionCopyList => 'Copy List';
+
+  @override
+  String get actionAddToList => 'Add to List';
+
+  @override
+  String get actionRemoveFromList => 'Remove from List';
+
+  @override
+  String get actionMoveUp => 'Move Up';
+
+  @override
+  String get actionMoveDown => 'Move Down';
+
+  @override
+  String get actionClearFilters => 'Clear Filters';
+
+  @override
   String get dialogTitleConfirmDelete => 'Confirm Deletion';
 
   @override
@@ -509,8 +635,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this language?';
 
   @override
+  String get dialogMessageDeleteTranslation =>
+      'Are you sure you want to delete this translation?';
+
+  @override
   String get dialogMessageDeleteMaterial =>
       'Are you sure you want to delete this material?';
+
+  @override
+  String get dialogMessageDeletePraiseList =>
+      'Are you sure you want to delete this list? This action cannot be undone.';
+
+  @override
+  String get dialogMessageRemovePraiseFromList =>
+      'Are you sure you want to remove this praise from the list?';
 
   @override
   String get dialogMessageNoFileMaterials =>
@@ -655,6 +793,66 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String errorDeleteTranslation(String error) {
+    return 'Error deleting translation: $error';
+  }
+
+  @override
+  String errorSaveTranslation(String error) {
+    return 'Error saving translation: $error';
+  }
+
+  @override
+  String errorLoadTranslation(String error) {
+    return 'Error loading translation: $error';
+  }
+
+  @override
+  String errorLoadPraiseList(Object error) {
+    return 'Error loading list: $error';
+  }
+
+  @override
+  String errorCreatePraiseList(Object error) {
+    return 'Error creating list: $error';
+  }
+
+  @override
+  String errorUpdatePraiseList(Object error) {
+    return 'Error updating list: $error';
+  }
+
+  @override
+  String errorDeletePraiseList(Object error) {
+    return 'Error deleting list: $error';
+  }
+
+  @override
+  String errorAddPraiseToList(Object error) {
+    return 'Error adding praise to list: $error';
+  }
+
+  @override
+  String errorRemovePraiseFromList(Object error) {
+    return 'Error removing praise from list: $error';
+  }
+
+  @override
+  String errorFollowList(Object error) {
+    return 'Error following list: $error';
+  }
+
+  @override
+  String errorUnfollowList(Object error) {
+    return 'Error unfollowing list: $error';
+  }
+
+  @override
+  String errorCopyList(Object error) {
+    return 'Error copying list: $error';
+  }
+
+  @override
   String get errorNeedCreatePraiseFirst => 'Praise must be created first';
 
   @override
@@ -708,6 +906,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get successLanguageDeleted => 'Language deleted successfully';
+
+  @override
+  String get successTranslationSaved => 'Translation saved successfully';
+
+  @override
+  String get successTranslationDeleted => 'Translation deleted successfully';
+
+  @override
+  String get successPraiseListCreated => 'List created successfully';
+
+  @override
+  String get successPraiseListUpdated => 'List updated successfully';
+
+  @override
+  String get successPraiseListDeleted => 'List deleted successfully';
+
+  @override
+  String get successPraiseAddedToList => 'Praise added to list successfully';
+
+  @override
+  String get successPraiseRemovedFromList =>
+      'Praise removed from list successfully';
+
+  @override
+  String get successListFollowed => 'List followed successfully';
+
+  @override
+  String get successListUnfollowed => 'Unfollowed list successfully';
+
+  @override
+  String get successListCopied => 'List copied successfully';
 
   @override
   String get enumMaterialFormTypeFile => 'File';
@@ -782,6 +1011,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerMaterialTypes => 'Material Types';
 
   @override
+  String get drawerTranslations => 'Translations';
+
+  @override
+  String get drawerPraiseLists => 'Praise Lists';
+
+  @override
   String get drawerLogout => 'Logout';
 
   @override
@@ -809,4 +1044,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardLists => 'Lists';
+
+  @override
+  String labelPraisesCount(int count) {
+    return '$count praise(s)';
+  }
+
+  @override
+  String get labelBy => 'by';
 }

@@ -15,6 +15,12 @@ import '../pages/material_kind_list_page.dart';
 import '../pages/material_kind_form_page.dart';
 import '../pages/material_type_list_page.dart';
 import '../pages/material_type_form_page.dart';
+import '../pages/translation_list_page.dart';
+import '../pages/translation_form_page.dart';
+import '../pages/praise_list_list_page.dart';
+import '../pages/praise_list_detail_page.dart';
+import '../pages/praise_list_create_page.dart';
+import '../pages/praise_list_edit_page.dart';
 import '../pages/pdf_viewer_page.dart';
 import '../pages/audio_player_page.dart';
 import '../stores/auth_store.dart';
@@ -152,6 +158,89 @@ class AppRouter {
         builder: (context, state) {
           final typeId = state.pathParameters['typeId']!;
           return MaterialTypeFormPage(typeId: typeId);
+        },
+      ),
+      GoRoute(
+        path: '/translations',
+        name: 'translations',
+        builder: (context, state) => const TranslationListPage(),
+      ),
+      GoRoute(
+        path: '/translations/:entityType/create',
+        name: 'translation-create',
+        builder: (context, state) {
+          final entityTypeStr = state.pathParameters['entityType']!;
+          final entityId = state.uri.queryParameters['entityId'];
+          TranslationEntityType entityType;
+          switch (entityTypeStr) {
+            case 'material-kind':
+              entityType = TranslationEntityType.materialKind;
+              break;
+            case 'praise-tag':
+              entityType = TranslationEntityType.praiseTag;
+              break;
+            case 'material-type':
+              entityType = TranslationEntityType.materialType;
+              break;
+            default:
+              throw Exception('Invalid entity type: $entityTypeStr');
+          }
+          return TranslationFormPage(
+            entityType: entityType,
+            entityId: entityId,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/translations/:entityType/:translationId/edit',
+        name: 'translation-edit',
+        builder: (context, state) {
+          final entityTypeStr = state.pathParameters['entityType']!;
+          final translationId = state.pathParameters['translationId']!;
+          TranslationEntityType entityType;
+          switch (entityTypeStr) {
+            case 'material-kind':
+              entityType = TranslationEntityType.materialKind;
+              break;
+            case 'praise-tag':
+              entityType = TranslationEntityType.praiseTag;
+              break;
+            case 'material-type':
+              entityType = TranslationEntityType.materialType;
+              break;
+            default:
+              throw Exception('Invalid entity type: $entityTypeStr');
+          }
+          return TranslationFormPage(
+            entityType: entityType,
+            translationId: translationId,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/praise-lists',
+        name: 'praise-lists',
+        builder: (context, state) => const PraiseListListPage(),
+      ),
+      GoRoute(
+        path: '/praise-lists/create',
+        name: 'praise-list-create',
+        builder: (context, state) => const PraiseListCreatePage(),
+      ),
+      GoRoute(
+        path: '/praise-lists/:id/edit',
+        name: 'praise-list-edit',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return PraiseListEditPage(listId: id);
+        },
+      ),
+      GoRoute(
+        path: '/praise-lists/:id',
+        name: 'praise-list-detail',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return PraiseListDetailPage(listId: id);
         },
       ),
       GoRoute(

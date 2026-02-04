@@ -89,7 +89,7 @@ class _TagFormPageState extends ConsumerState<TagFormPage> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorSaveTag.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorSaveTag(e.toString()))),
         );
       }
     } finally {

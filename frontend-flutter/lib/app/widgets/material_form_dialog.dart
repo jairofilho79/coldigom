@@ -149,7 +149,7 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.errorSelectFile.replaceAll('{error}', e.toString()) ?? 'Erro ao selecionar arquivo: $e'),
+            content: Text(l10n?.errorSelectFile(e.toString()) ?? 'Erro ao selecionar arquivo: $e'),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -306,7 +306,7 @@ class _MaterialFormDialogState extends ConsumerState<MaterialFormDialog> {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n?.errorSaveMaterial.replaceAll('{error}', e.toString()) ?? 'Erro ao salvar material: $e')),
+          SnackBar(content: Text(l10n?.errorSaveMaterial(e.toString()) ?? 'Erro ao salvar material: $e')),
         );
       }
     } finally {

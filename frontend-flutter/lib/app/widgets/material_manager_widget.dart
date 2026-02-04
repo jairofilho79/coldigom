@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/i18n/generated/app_localizations.dart';
 import '../../core/i18n/entity_translation_helper.dart';
+import '../../core/i18n/entity_translation_providers.dart';
 import '../models/praise_material_model.dart';
-import '../models/praise_model.dart';
 import '../services/api/api_service.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_button.dart';
@@ -106,40 +108,125 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
     }).toList().cast<PraiseMaterialResponse>();
   }
 
-  IconData _getMaterialIcon(dynamic material) {
+  /// Retorna o ícone apropriado para o tipo de material
+  IconData _getMaterialTypeIcon(dynamic material) {
     final typeName = (material.materialType?.name ?? '').toUpperCase();
-    final path = material.path ?? '';
-    if (typeName.contains('FILE') || path.endsWith('.pdf')) {
-      return Icons.insert_drive_file;
-    } else if (typeName.contains('YOUTUBE') || path.contains('youtube.com')) {
+    final path = (material.path ?? '').toLowerCase();
+    
+    // PDF
+    if (typeName.contains('PDF') || typeName.contains('FILE') || path.endsWith('.pdf')) {
+      return Icons.picture_as_pdf;
+    }
+    // Audio
+    if (typeName.contains('AUDIO') || 
+        ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg', '.flac'].any((ext) => path.endsWith(ext))) {
+      return Icons.audiotrack;
+    }
+    // Youtube
+    if (typeName.contains('YOUTUBE') || path.contains('youtube.com') || path.contains('youtu.be')) {
       return Icons.play_circle;
-    } else if (typeName.contains('SPOTIFY') || path.contains('spotify.com')) {
-      return Icons.music_note;
-    } else if (typeName.contains('TEXT')) {
+    }
+    // Text
+    if (typeName.contains('TEXT')) {
       return Icons.text_fields;
     }
+    // Spotify
+    if (typeName.contains('SPOTIFY') || path.contains('spotify.com')) {
+      return Icons.music_note;
+    }
+    // Default
     return Icons.insert_drive_file;
   }
 
-  Color _getMaterialIconColor(dynamic material) {
+  /// Retorna a cor apropriada para o tipo de material
+  Color _getMaterialTypeColor(dynamic material) {
     final typeName = (material.materialType?.name ?? '').toUpperCase();
-    if (typeName.contains('FILE')) {
+    final path = (material.path ?? '').toLowerCase();
+    
+    // PDF - branco
+    if (typeName.contains('PDF') || typeName.contains('FILE') || path.endsWith('.pdf')) {
+      return Colors.white;
+    }
+    // Audio - laranja/amarelo
+    if (typeName.contains('AUDIO') || 
+        ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg', '.flac'].any((ext) => path.endsWith(ext))) {
+      return Colors.orange;
+    }
+    // Youtube - vermelho (mas o ícone será customizado)
+    if (typeName.contains('YOUTUBE') || path.contains('youtube.com') || path.contains('youtu.be')) {
       return Colors.red;
-    } else if (typeName.contains('YOUTUBE')) {
-      return Colors.red;
-    } else if (typeName.contains('SPOTIFY')) {
-      return Colors.green;
-    } else if (typeName.contains('TEXT')) {
+    }
+    // Text - azul
+    if (typeName.contains('TEXT')) {
       return Colors.blue;
     }
+    // Spotify - verde
+    if (typeName.contains('SPOTIFY') || path.contains('spotify.com')) {
+      return Colors.green;
+    }
+    // Default - cinza
     return Colors.grey;
+  }
+
+  /// Verifica se o material é do tipo YouTube
+  bool _isYouTube(dynamic material) {
+    final typeName = (material.materialType?.name ?? '').toUpperCase();
+    final path = (material.path ?? '').toLowerCase();
+    return typeName.contains('YOUTUBE') || path.contains('youtube.com') || path.contains('youtu.be');
+  }
+
+  /// Widget customizado para o ícone do YouTube (logo oficial baseado no SVG)
+  Widget _buildYouTubeIcon() {
+    // SVG do YouTube com fundo vermelho e play branco
+    const youtubeSvg = '''
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <rect width="16" height="16" rx="3" fill="#FF0000"/>
+  <path d="M6.4 5.209v4.818l4.157-2.408z" fill="white"/>
+</svg>
+''';
+    
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: SvgPicture.string(
+        youtubeSvg,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  /// Retorna a prioridade de ordenação do tipo de material
+  /// Menor número = maior prioridade
+  int _getMaterialTypePriority(dynamic material) {
+    final typeName = (material.materialType?.name ?? '').toUpperCase();
+    final path = (material.path ?? '').toLowerCase();
+    
+    // PDF primeiro (prioridade 1)
+    if (typeName.contains('PDF') || typeName.contains('FILE') || path.endsWith('.pdf')) {
+      return 1;
+    }
+    // Audio segundo (prioridade 2)
+    if (typeName.contains('AUDIO') || 
+        ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg', '.flac'].any((ext) => path.endsWith(ext))) {
+      return 2;
+    }
+    // Text terceiro (prioridade 3)
+    if (typeName.contains('TEXT')) {
+      return 3;
+    }
+    // Youtube quarto (prioridade 4)
+    if (typeName.contains('YOUTUBE') || path.contains('youtube.com') || path.contains('youtu.be')) {
+      return 4;
+    }
+    // Outros por último (prioridade 5)
+    return 5;
   }
 
   Future<void> _addMaterial() async {
     final l10n = AppLocalizations.of(context);
     if (widget.praiseId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n?.messageCreatePraiseFirst ?? 'É necessário criar o praise primeiro')),
+        SnackBar(content: Text(l10n.messageCreatePraiseFirst)),
       );
       return;
     }
@@ -177,7 +264,7 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
   }
 
   Future<void> _deleteMaterial(PraiseMaterialResponse material) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -222,7 +309,7 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.errorDeleteMaterial.replaceAll('{error}', e.toString()))),
+            SnackBar(content: Text(l10n.errorDeleteMaterial(e.toString()))),
           );
         }
       }
@@ -260,9 +347,62 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
     _loadMaterials();
   }
 
+  /// Ordena os materiais: PDF primeiro, depois Audio, depois Text, depois Youtube, depois outros alfabeticamente
+  /// Dentro de cada categoria, ordena por tradução do material kind
+  List<PraiseMaterialResponse> _sortMaterials() {
+    // Garantir que as traduções estejam carregadas
+    ref.watch(materialKindTranslationsProvider);
+    ref.watch(materialTypeTranslationsProvider);
+    
+    final sorted = List<PraiseMaterialResponse>.from(_materials);
+    
+    sorted.sort((a, b) {
+      // Primeiro, ordenar por prioridade do tipo
+      final priorityA = _getMaterialTypePriority(a);
+      final priorityB = _getMaterialTypePriority(b);
+      
+      if (priorityA != priorityB) {
+        return priorityA.compareTo(priorityB);
+      }
+      
+      // Se a prioridade for a mesma (categoria "outros"), ordenar por tradução do tipo
+      if (priorityA == 5) {
+        final typeNameA = a.materialType != null
+            ? getMaterialTypeName(ref, a.materialType!.id, a.materialType!.name)
+            : a.materialTypeId;
+        final typeNameB = b.materialType != null
+            ? getMaterialTypeName(ref, b.materialType!.id, b.materialType!.name)
+            : b.materialTypeId;
+        
+        final typeCompare = typeNameA.compareTo(typeNameB);
+        if (typeCompare != 0) {
+          return typeCompare;
+        }
+      }
+      
+      // Por fim, ordenar por tradução do material kind
+      final kindNameA = a.materialKind != null
+          ? getMaterialKindName(ref, a.materialKind!.id, a.materialKind!.name)
+          : a.materialKindId;
+      final kindNameB = b.materialKind != null
+          ? getMaterialKindName(ref, b.materialKind!.id, b.materialKind!.name)
+          : b.materialKindId;
+      
+      return kindNameA.compareTo(kindNameB);
+    });
+    
+    return sorted;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    // Garantir que as traduções sejam carregadas antes de ordenar
+    ref.watch(materialKindTranslationsProvider);
+    ref.watch(materialTypeTranslationsProvider);
+    
+    final sortedMaterials = _sortMaterials();
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -294,10 +434,10 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
             icon: Icons.insert_drive_file,
           )
         else
-          ..._materials.map((material) => Padding(
+          ...sortedMaterials.map((material) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: AppCard(
-                  onTap: widget.isEditMode ? null : () {
+                  onTap: widget.isEditMode ? null : () async {
                     final typeName = (material.materialType?.name ?? '').toLowerCase();
                     final path = material.path.toLowerCase();
                     
@@ -306,6 +446,7 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                     final isAudio = typeName == 'audio' ||
                                    ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg']
                                        .any((ext) => path.endsWith(ext));
+                    final isYouTube = _isYouTube(material);
                     
                     if (isPdf) {
                       context.push(
@@ -315,13 +456,29 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                       context.push(
                         '/materials/${material.id}/audio?praiseName=${Uri.encodeComponent('')}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
                       );
+                    } else if (isYouTube && material.path.isNotEmpty) {
+                      // Abrir URL do YouTube no navegador/aplicativo
+                      final uri = Uri.parse(material.path);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Não foi possível abrir a URL do YouTube'),
+                            ),
+                          );
+                        }
+                      }
                     }
                   },
                   child: ListTile(
-                    leading: Icon(
-                      _getMaterialIcon(material),
-                      color: _getMaterialIconColor(material),
-                    ),
+                    leading: _isYouTube(material)
+                        ? _buildYouTubeIcon()
+                        : Icon(
+                            _getMaterialTypeIcon(material),
+                            color: _getMaterialTypeColor(material),
+                          ),
                     title: Text(
                       material.materialKind != null
                           ? getMaterialKindName(ref, material.materialKind!.id, material.materialKind!.name)
@@ -330,11 +487,6 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          material.materialType != null
-                              ? getMaterialTypeName(ref, material.materialType!.id, material.materialType!.name)
-                              : material.materialTypeId,
-                        ),
                         if (material.isOld == true) ...[
                           const SizedBox(height: 4),
                           Row(
@@ -350,7 +502,7 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                                   builder: (context) {
                                     final l10n = AppLocalizations.of(context);
                                     return Text(
-                                      l10n?.labelMaterialIsOld ?? 'Material Antigo',
+                                      l10n.labelMaterialIsOld,
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall
@@ -394,3 +546,4 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
     );
   }
 }
+

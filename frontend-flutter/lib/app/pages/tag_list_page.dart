@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/i18n/generated/app_localizations.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_dialog.dart';
@@ -132,7 +133,7 @@ class TagListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorDeleteTag.replaceAll('{error}', e.toString()))),
+        SnackBar(content: Text(l10n.errorDeleteTag(e.toString()))),
       );
     }
   }

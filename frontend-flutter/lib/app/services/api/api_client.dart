@@ -9,8 +9,12 @@ import '../../../core/constants/app_constants.dart';
 class ApiClient {
   late final Dio _dio;
   final String baseUrl;
+  final VoidCallback? onUnauthorized;
 
-  ApiClient({required this.baseUrl}) {
+  ApiClient({
+    required this.baseUrl,
+    this.onUnauthorized,
+  }) {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       headers: {
@@ -84,7 +88,9 @@ class ApiClient {
           if (error.response?.statusCode == 401) {
             final authBox = Hive.box(HiveConfig.authBoxName);
             authBox.clear();
-            // Redirecionar para login será feito no app
+            // Notificar o callback para atualizar o estado de autenticação
+            // Isso fará o GoRouter redirecionar para login
+            onUnauthorized?.call();
           }
           return handler.next(error);
         },

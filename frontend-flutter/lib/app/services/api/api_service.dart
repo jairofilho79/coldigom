@@ -3,12 +3,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
 import '../../models/user_model.dart';
+import '../../stores/auth_store.dart';
 import '../../models/praise_model.dart';
 import '../../models/praise_tag_model.dart';
 import '../../models/language_model.dart';
 import '../../models/material_kind_model.dart';
 import '../../models/material_type_model.dart';
 import '../../models/praise_material_model.dart';
+import '../../models/praise_list_model.dart';
 import '../../models/translation_model.dart';
 import '../../../core/constants/app_constants.dart';
 
@@ -552,11 +554,109 @@ class ApiService {
   Future<void> deleteMaterialTypeTranslation(String id) async {
     await _dio.delete('/api/v1/translations/material-types/$id');
   }
+
+  // Praise Lists
+  Future<List<PraiseListResponse>> getPraiseLists({
+    String? name,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/praise-lists/',
+      queryParameters: {
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (dateFrom != null) 'date_from': dateFrom,
+        if (dateTo != null) 'date_to': dateTo,
+      },
+    );
+    return (response.data as List)
+        .map((json) => PraiseListResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<List<PraiseListResponse>> getPublicPraiseLists({
+    int? skip,
+    int? limit,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/praise-lists/public',
+      queryParameters: {
+        if (skip != null) 'skip': skip,
+        if (limit != null) 'limit': limit,
+      },
+    );
+    return (response.data as List)
+        .map((json) => PraiseListResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<PraiseListDetailResponse> getPraiseListById(String id) async {
+    final response = await _dio.get('/api/v1/praise-lists/$id');
+    return PraiseListDetailResponse.fromJson(response.data);
+  }
+
+  Future<PraiseListResponse> createPraiseList(PraiseListCreate data) async {
+    final response = await _dio.post(
+      '/api/v1/praise-lists/',
+      data: data.toJson(),
+    );
+    return PraiseListResponse.fromJson(response.data);
+  }
+
+  Future<PraiseListResponse> updatePraiseList(String id, PraiseListUpdate data) async {
+    final response = await _dio.put(
+      '/api/v1/praise-lists/$id',
+      data: data.toJson(),
+    );
+    return PraiseListResponse.fromJson(response.data);
+  }
+
+  Future<void> deletePraiseList(String id) async {
+    await _dio.delete('/api/v1/praise-lists/$id');
+  }
+
+  Future<void> addPraiseToList(String listId, String praiseId) async {
+    await _dio.post('/api/v1/praise-lists/$listId/praises/$praiseId');
+  }
+
+  Future<void> removePraiseFromList(String listId, String praiseId) async {
+    await _dio.delete('/api/v1/praise-lists/$listId/praises/$praiseId');
+  }
+
+  Future<void> reorderPraisesInList(String listId, ReorderPraisesRequest data) async {
+    await _dio.put(
+      '/api/v1/praise-lists/$listId/praises/reorder',
+      data: data.toJson(),
+    );
+  }
+
+  Future<void> followList(String listId) async {
+    await _dio.post('/api/v1/praise-lists/$listId/follow');
+  }
+
+  Future<void> unfollowList(String listId) async {
+    await _dio.delete('/api/v1/praise-lists/$listId/follow');
+  }
+
+  Future<PraiseListResponse> copyList(String listId) async {
+    final response = await _dio.post('/api/v1/praise-lists/$listId/copy');
+    return PraiseListResponse.fromJson(response.data);
+  }
 }
 
 /// Provider do serviço de API
 final apiServiceProvider = Provider<ApiService>((ref) {
-  final apiClient = ApiClient(baseUrl: AppConstants.apiBaseUrl);
+  // Callback para ser chamado quando houver erro 401
+  // Isso atualiza o estado de autenticação e faz o GoRouter redirecionar para login
+  final onUnauthorized = () {
+    final authNotifier = ref.read(authProvider.notifier);
+    authNotifier.logout();
+  };
+  
+  final apiClient = ApiClient(
+    baseUrl: AppConstants.apiBaseUrl,
+    onUnauthorized: onUnauthorized,
+  );
   return ApiService(apiClient);
 });
 

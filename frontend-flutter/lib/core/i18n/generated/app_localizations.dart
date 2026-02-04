@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In pt, this message translates to:
-  /// **'Coldigom'**
+  /// **'Coletânea Digital'**
   String get appName;
 
-  /// Subtítulo do aplicativo
+  /// com <3 pela IDM (Irmãos da Maranata)
   ///
   /// In pt, this message translates to:
-  /// **'Gerenciamento de Louvores'**
+  /// **'com <3 pela ID (Irmãos da Maranata)'**
   String get appSubtitle;
 
   /// No description provided for @buttonBack.
@@ -191,13 +191,13 @@ abstract class AppLocalizations {
   /// No description provided for @buttonDownloadByMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Baixar por Material Kind'**
+  /// **'Baixar por Categoria do Material'**
   String get buttonDownloadByMaterialKind;
 
   /// No description provided for @buttonDownloadZip.
   ///
   /// In pt, this message translates to:
-  /// **'Download ZIP'**
+  /// **'Baixar ZIP'**
   String get buttonDownloadZip;
 
   /// No description provided for @buttonEnter.
@@ -221,7 +221,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelTags.
   ///
   /// In pt, this message translates to:
-  /// **'Tags'**
+  /// **'Etiquetas'**
   String get labelTags;
 
   /// No description provided for @labelMaterials.
@@ -269,13 +269,13 @@ abstract class AppLocalizations {
   /// No description provided for @labelMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Tipo de Material'**
+  /// **'Categoria do Material'**
   String get labelMaterialKind;
 
   /// No description provided for @labelMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Tipo de Material'**
+  /// **'Tipo do Material'**
   String get labelMaterialType;
 
   /// No description provided for @labelPath.
@@ -320,6 +320,48 @@ abstract class AppLocalizations {
   /// **'Código'**
   String get labelCode;
 
+  /// No description provided for @labelLanguage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma'**
+  String get labelLanguage;
+
+  /// No description provided for @labelOriginal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Original'**
+  String get labelOriginal;
+
+  /// No description provided for @labelTranslatedName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome Traduzido'**
+  String get labelTranslatedName;
+
+  /// No description provided for @labelEntityType.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tipo de Entidade'**
+  String get labelEntityType;
+
+  /// No description provided for @labelFilters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtros'**
+  String get labelFilters;
+
+  /// No description provided for @labelAllLanguages.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos os idiomas'**
+  String get labelAllLanguages;
+
+  /// No description provided for @labelPraiseTag.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiqueta do louvor'**
+  String get labelPraiseTag;
+
   /// No description provided for @labelText.
   ///
   /// In pt, this message translates to:
@@ -341,19 +383,19 @@ abstract class AppLocalizations {
   /// No description provided for @labelMaterialKindRequired.
   ///
   /// In pt, this message translates to:
-  /// **'Material Kind *'**
+  /// **'Categoria do Material *'**
   String get labelMaterialKindRequired;
 
   /// No description provided for @labelMaterialTypeRequired.
   ///
   /// In pt, this message translates to:
-  /// **'Tipo de Material *'**
+  /// **'Tipo do Material *'**
   String get labelMaterialTypeRequired;
 
   /// No description provided for @labelSelectMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Selecione o Material Kind'**
+  /// **'Selecione a categoria do material'**
   String get labelSelectMaterialKind;
 
   /// No description provided for @labelSelectFile.
@@ -395,14 +437,50 @@ abstract class AppLocalizations {
   /// No description provided for @labelSelectTag.
   ///
   /// In pt, this message translates to:
-  /// **'Selecione uma tag (opcional)'**
+  /// **'Selecione uma etiqueta (opcional)'**
   String get labelSelectTag;
 
   /// No description provided for @labelSelectMaterialKindForDownload.
   ///
   /// In pt, this message translates to:
-  /// **'Selecione um Material Kind'**
+  /// **'Selecione uma Categoria do Material'**
   String get labelSelectMaterialKindForDownload;
+
+  /// No description provided for @labelDescription.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descrição'**
+  String get labelDescription;
+
+  /// No description provided for @labelPublic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pública'**
+  String get labelPublic;
+
+  /// No description provided for @labelPrivate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Privada'**
+  String get labelPrivate;
+
+  /// No description provided for @labelOwner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dono'**
+  String get labelOwner;
+
+  /// No description provided for @labelDateFrom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data Inicial'**
+  String get labelDateFrom;
+
+  /// No description provided for @labelDateTo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data Final'**
+  String get labelDateTo;
 
   /// No description provided for @hintEnterUsername.
   ///
@@ -431,31 +509,31 @@ abstract class AppLocalizations {
   /// No description provided for @hintEnterPraiseName.
   ///
   /// In pt, this message translates to:
-  /// **'Digite o nome do praise'**
+  /// **'Digite o nome do louvor'**
   String get hintEnterPraiseName;
 
   /// No description provided for @hintEnterPraiseNumber.
   ///
   /// In pt, this message translates to:
-  /// **'Digite o número do praise (opcional)'**
+  /// **'Digite o número do louvor (opcional)'**
   String get hintEnterPraiseNumber;
 
   /// No description provided for @hintEnterTagName.
   ///
   /// In pt, this message translates to:
-  /// **'Digite o nome da tag'**
+  /// **'Digite o nome da etiqueta'**
   String get hintEnterTagName;
 
   /// No description provided for @hintEnterMaterialKindName.
   ///
   /// In pt, this message translates to:
-  /// **'Digite o nome do material kind'**
+  /// **'Digite o nome da Categoria do Material'**
   String get hintEnterMaterialKindName;
 
   /// No description provided for @hintEnterMaterialTypeName.
   ///
   /// In pt, this message translates to:
-  /// **'Digite o nome do material type'**
+  /// **'Digite o nome do Tipo do Material'**
   String get hintEnterMaterialTypeName;
 
   /// No description provided for @hintEnterLanguageCode.
@@ -470,11 +548,29 @@ abstract class AppLocalizations {
   /// **'Digite o nome da linguagem'**
   String get hintEnterLanguageName;
 
+  /// No description provided for @hintEnterTranslatedName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite o nome traduzido'**
+  String get hintEnterTranslatedName;
+
   /// No description provided for @hintEnterSearchPraise.
   ///
   /// In pt, this message translates to:
-  /// **'Digite o nome do praise...'**
+  /// **'Digite o nome do louvor...'**
   String get hintEnterSearchPraise;
+
+  /// No description provided for @hintEnterListName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite o nome da lista'**
+  String get hintEnterListName;
+
+  /// No description provided for @hintEnterListDescription.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite a descrição da lista (opcional)'**
+  String get hintEnterListDescription;
 
   /// No description provided for @hintEnterUrl.
   ///
@@ -517,6 +613,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Este campo é obrigatório'**
   String get validationRequired;
+
+  /// No description provided for @validationTranslatedNameRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'O nome traduzido é obrigatório'**
+  String get validationTranslatedNameRequired;
 
   /// No description provided for @validationMinLength.
   ///
@@ -599,49 +701,55 @@ abstract class AppLocalizations {
   /// No description provided for @validationMaterialKindRequired.
   ///
   /// In pt, this message translates to:
-  /// **'Material Kind é obrigatório'**
+  /// **'Categoria do Material é obrigatório'**
   String get validationMaterialKindRequired;
 
   /// No description provided for @validationSelectMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Selecione o tipo de material'**
+  /// **'Selecione o Tipo do Material'**
   String get validationSelectMaterialType;
 
   /// No description provided for @validationSelectMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Selecione o Material Kind'**
+  /// **'Selecione a Categoria do Material'**
   String get validationSelectMaterialKind;
+
+  /// No description provided for @validationListNameRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome da lista é obrigatório'**
+  String get validationListNameRequired;
 
   /// No description provided for @pageTitleDashboard.
   ///
   /// In pt, this message translates to:
-  /// **'Dashboard'**
+  /// **'Início'**
   String get pageTitleDashboard;
 
   /// No description provided for @pageTitlePraises.
   ///
   /// In pt, this message translates to:
-  /// **'Praises'**
+  /// **'Louvores'**
   String get pageTitlePraises;
 
   /// No description provided for @pageTitleTags.
   ///
   /// In pt, this message translates to:
-  /// **'Tags'**
+  /// **'Etiquetas'**
   String get pageTitleTags;
 
   /// No description provided for @pageTitleMaterialKinds.
   ///
   /// In pt, this message translates to:
-  /// **'Material Kinds'**
+  /// **'Categorias do Material'**
   String get pageTitleMaterialKinds;
 
   /// No description provided for @pageTitleMaterialTypes.
   ///
   /// In pt, this message translates to:
-  /// **'Material Types'**
+  /// **'Tipos do Material'**
   String get pageTitleMaterialTypes;
 
   /// No description provided for @pageTitleLanguages.
@@ -653,19 +761,19 @@ abstract class AppLocalizations {
   /// No description provided for @pageTitleCreatePraise.
   ///
   /// In pt, this message translates to:
-  /// **'Criar Praise'**
+  /// **'Criar Louvor'**
   String get pageTitleCreatePraise;
 
   /// No description provided for @pageTitleEditPraise.
   ///
   /// In pt, this message translates to:
-  /// **'Editar Praise'**
+  /// **'Editar Louvor'**
   String get pageTitleEditPraise;
 
   /// No description provided for @pageTitlePraiseDetails.
   ///
   /// In pt, this message translates to:
-  /// **'Detalhes do Praise'**
+  /// **'Detalhes do Louvor'**
   String get pageTitlePraiseDetails;
 
   /// No description provided for @pageTitleRegister.
@@ -677,37 +785,37 @@ abstract class AppLocalizations {
   /// No description provided for @pageTitleCreateTag.
   ///
   /// In pt, this message translates to:
-  /// **'Criar Tag'**
+  /// **'Criar Etiqueta'**
   String get pageTitleCreateTag;
 
   /// No description provided for @pageTitleEditTag.
   ///
   /// In pt, this message translates to:
-  /// **'Editar Tag'**
+  /// **'Editar Etiqueta'**
   String get pageTitleEditTag;
 
   /// No description provided for @pageTitleCreateMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Criar Material Kind'**
+  /// **'Criar Categoria do Material'**
   String get pageTitleCreateMaterialKind;
 
   /// No description provided for @pageTitleEditMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Editar Material Kind'**
+  /// **'Editar Categoria do Material'**
   String get pageTitleEditMaterialKind;
 
   /// No description provided for @pageTitleCreateMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Criar Material Type'**
+  /// **'Criar Tipo do Material'**
   String get pageTitleCreateMaterialType;
 
   /// No description provided for @pageTitleEditMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Editar Material Type'**
+  /// **'Editar Tipo do Material'**
   String get pageTitleEditMaterialType;
 
   /// No description provided for @pageTitleCreateLanguage.
@@ -721,6 +829,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Editar Linguagem'**
   String get pageTitleEditLanguage;
+
+  /// No description provided for @pageTitleTranslations.
+  ///
+  /// In pt, this message translates to:
+  /// **'Traduções'**
+  String get pageTitleTranslations;
+
+  /// No description provided for @pageTitleCreateTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar Tradução'**
+  String get pageTitleCreateTranslation;
+
+  /// No description provided for @pageTitleEditTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar Tradução'**
+  String get pageTitleEditTranslation;
+
+  /// No description provided for @pageTitlePraiseLists.
+  ///
+  /// In pt, this message translates to:
+  /// **'Listas de Louvores'**
+  String get pageTitlePraiseLists;
+
+  /// No description provided for @pageTitlePraiseListDetail.
+  ///
+  /// In pt, this message translates to:
+  /// **'Detalhes da Lista'**
+  String get pageTitlePraiseListDetail;
+
+  /// No description provided for @pageTitlePraiseListCreate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar Lista'**
+  String get pageTitlePraiseListCreate;
+
+  /// No description provided for @pageTitlePraiseListEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar Lista'**
+  String get pageTitlePraiseListEdit;
 
   /// No description provided for @messageWelcome.
   ///
@@ -737,7 +887,7 @@ abstract class AppLocalizations {
   /// No description provided for @messageNoTagsAvailable.
   ///
   /// In pt, this message translates to:
-  /// **'Nenhuma tag disponível'**
+  /// **'Nenhuma etiqueta disponível'**
   String get messageNoTagsAvailable;
 
   /// No description provided for @messageNoMaterialsAdded.
@@ -749,13 +899,13 @@ abstract class AppLocalizations {
   /// No description provided for @messageNoMaterialKindsAvailable.
   ///
   /// In pt, this message translates to:
-  /// **'Nenhum Material Kind disponível'**
+  /// **'Nenhum Categoria do Material disponível'**
   String get messageNoMaterialKindsAvailable;
 
   /// No description provided for @messageNoTagsForFilter.
   ///
   /// In pt, this message translates to:
-  /// **'Nenhuma tag (todos os praises)'**
+  /// **'Nenhuma etiqueta (todos os louvores)'**
   String get messageNoTagsForFilter;
 
   /// No description provided for @messageNoMaterials.
@@ -764,10 +914,40 @@ abstract class AppLocalizations {
   /// **'Nenhum material cadastrado'**
   String get messageNoMaterials;
 
+  /// No description provided for @messageNoTranslationsAvailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma tradução disponível'**
+  String get messageNoTranslationsAvailable;
+
+  /// No description provided for @messageNoLists.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma lista encontrada'**
+  String get messageNoLists;
+
+  /// No description provided for @messageNoListsFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma lista encontrada com os filtros aplicados'**
+  String get messageNoListsFound;
+
+  /// No description provided for @messageNoPraisesInList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum louvor nesta lista'**
+  String get messageNoPraisesInList;
+
+  /// No description provided for @messageUnknown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desconhecido'**
+  String get messageUnknown;
+
   /// No description provided for @messageCreatePraiseFirst.
   ///
   /// In pt, this message translates to:
-  /// **'É necessário criar o praise primeiro'**
+  /// **'É necessário criar o louvor primeiro'**
   String get messageCreatePraiseFirst;
 
   /// No description provided for @messageFileSelected.
@@ -851,7 +1031,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionTags.
   ///
   /// In pt, this message translates to:
-  /// **'Tags'**
+  /// **'Etiquetas'**
   String get sectionTags;
 
   /// No description provided for @sectionMaterials.
@@ -980,6 +1160,78 @@ abstract class AppLocalizations {
   /// **'Ocultar Antigos'**
   String get actionHideOldMaterials;
 
+  /// No description provided for @actionAddTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar Tradução'**
+  String get actionAddTranslation;
+
+  /// No description provided for @actionNewList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova Lista'**
+  String get actionNewList;
+
+  /// No description provided for @actionCreateFirstList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar primeira lista'**
+  String get actionCreateFirstList;
+
+  /// No description provided for @actionFollow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seguir'**
+  String get actionFollow;
+
+  /// No description provided for @actionUnfollow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deixar de Seguir'**
+  String get actionUnfollow;
+
+  /// No description provided for @actionCopy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar'**
+  String get actionCopy;
+
+  /// No description provided for @actionCopyList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar Lista'**
+  String get actionCopyList;
+
+  /// No description provided for @actionAddToList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar à Lista'**
+  String get actionAddToList;
+
+  /// No description provided for @actionRemoveFromList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover da Lista'**
+  String get actionRemoveFromList;
+
+  /// No description provided for @actionMoveUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para Cima'**
+  String get actionMoveUp;
+
+  /// No description provided for @actionMoveDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para Baixo'**
+  String get actionMoveDown;
+
+  /// No description provided for @actionClearFilters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar Filtros'**
+  String get actionClearFilters;
+
   /// No description provided for @dialogTitleConfirmDelete.
   ///
   /// In pt, this message translates to:
@@ -995,31 +1247,31 @@ abstract class AppLocalizations {
   /// No description provided for @dialogTitleDownloadZip.
   ///
   /// In pt, this message translates to:
-  /// **'Baixar Praise em ZIP'**
+  /// **'Baixar Louvor em ZIP'**
   String get dialogTitleDownloadZip;
 
   /// No description provided for @dialogMessageDeletePraise.
   ///
   /// In pt, this message translates to:
-  /// **'Tem certeza que deseja excluir este praise? Esta ação não pode ser desfeita.'**
+  /// **'Tem certeza que deseja excluir este louvor? Esta ação não pode ser desfeita.'**
   String get dialogMessageDeletePraise;
 
   /// No description provided for @dialogMessageDeleteTag.
   ///
   /// In pt, this message translates to:
-  /// **'Tem certeza que deseja excluir esta tag?'**
+  /// **'Tem certeza que deseja excluir esta etiqueta?'**
   String get dialogMessageDeleteTag;
 
   /// No description provided for @dialogMessageDeleteMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Tem certeza que deseja excluir este material kind?'**
+  /// **'Tem certeza que deseja excluir esta categoria do material?'**
   String get dialogMessageDeleteMaterialKind;
 
   /// No description provided for @dialogMessageDeleteMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Tem certeza que deseja excluir este material type?'**
+  /// **'Tem certeza que deseja excluir este tipo do material?'**
   String get dialogMessageDeleteMaterialType;
 
   /// No description provided for @dialogMessageDeleteLanguage.
@@ -1028,16 +1280,34 @@ abstract class AppLocalizations {
   /// **'Tem certeza que deseja excluir esta linguagem?'**
   String get dialogMessageDeleteLanguage;
 
+  /// No description provided for @dialogMessageDeleteTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tem certeza que deseja excluir esta tradução?'**
+  String get dialogMessageDeleteTranslation;
+
   /// No description provided for @dialogMessageDeleteMaterial.
   ///
   /// In pt, this message translates to:
   /// **'Tem certeza que deseja excluir este material?'**
   String get dialogMessageDeleteMaterial;
 
+  /// No description provided for @dialogMessageDeletePraiseList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tem certeza que deseja excluir esta lista? Esta ação não pode ser desfeita.'**
+  String get dialogMessageDeletePraiseList;
+
+  /// No description provided for @dialogMessageRemovePraiseFromList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tem certeza que deseja remover este louvor da lista?'**
+  String get dialogMessageRemovePraiseFromList;
+
   /// No description provided for @dialogMessageNoFileMaterials.
   ///
   /// In pt, this message translates to:
-  /// **'Este praise não possui materiais de arquivo para download'**
+  /// **'Este louvor não possui materiais de arquivo para download'**
   String get dialogMessageNoFileMaterials;
 
   /// No description provided for @dialogLabelReviewDescription.
@@ -1049,7 +1319,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorConnectionFailed.
   ///
   /// In pt, this message translates to:
-  /// **'Não foi possível conectar ao servidor.\nVerifique se o backend está rodando em http://127.0.0.1:8000'**
+  /// **'Não foi possível conectar ao servidor.\nVerifique se o backend está rodando.'**
   String get errorConnectionFailed;
 
   /// No description provided for @errorInvalidCredentials.
@@ -1103,19 +1373,19 @@ abstract class AppLocalizations {
   /// No description provided for @errorLoadPraise.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao carregar praise: {error}'**
+  /// **'Erro ao carregar o louvor: {error}'**
   String errorLoadPraise(String error);
 
   /// No description provided for @errorLoadMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao carregar material kind: {error}'**
+  /// **'Erro ao carregar categoria do material: {error}'**
   String errorLoadMaterialKind(String error);
 
   /// No description provided for @errorLoadMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao carregar material type: {error}'**
+  /// **'Erro ao carregar tipo do material: {error}'**
   String errorLoadMaterialType(String error);
 
   /// No description provided for @errorLoadAudio.
@@ -1133,13 +1403,13 @@ abstract class AppLocalizations {
   /// No description provided for @errorCreatePraise.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao criar praise: {error}'**
+  /// **'Erro ao criar o louvor: {error}'**
   String errorCreatePraise(String error);
 
   /// No description provided for @errorUpdatePraise.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao atualizar praise: {error}'**
+  /// **'Erro ao atualizar o louvor: {error}'**
   String errorUpdatePraise(String error);
 
   /// No description provided for @errorDeletePraise.
@@ -1169,37 +1439,37 @@ abstract class AppLocalizations {
   /// No description provided for @errorSaveTag.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao salvar tag: {error}'**
+  /// **'Erro ao salvar etiqueta: {error}'**
   String errorSaveTag(String error);
 
   /// No description provided for @errorDeleteTag.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao excluir tag: {error}'**
+  /// **'Erro ao excluir etiqueta: {error}'**
   String errorDeleteTag(String error);
 
   /// No description provided for @errorSaveMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao salvar material kind: {error}'**
+  /// **'Erro ao salvar categoria do material: {error}'**
   String errorSaveMaterialKind(String error);
 
   /// No description provided for @errorDeleteMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao excluir material kind: {error}'**
+  /// **'Erro ao excluir categoria do material: {error}'**
   String errorDeleteMaterialKind(String error);
 
   /// No description provided for @errorSaveMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao salvar material type: {error}'**
+  /// **'Erro ao salvar tipo do material: {error}'**
   String errorSaveMaterialType(String error);
 
   /// No description provided for @errorDeleteMaterialType.
   ///
   /// In pt, this message translates to:
-  /// **'Erro ao excluir material type: {error}'**
+  /// **'Erro ao excluir tipo do material: {error}'**
   String errorDeleteMaterialType(String error);
 
   /// No description provided for @errorSaveLanguage.
@@ -1214,10 +1484,82 @@ abstract class AppLocalizations {
   /// **'Erro ao excluir linguagem: {error}'**
   String errorDeleteLanguage(String error);
 
+  /// No description provided for @errorDeleteTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao excluir tradução: {error}'**
+  String errorDeleteTranslation(String error);
+
+  /// No description provided for @errorSaveTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao salvar tradução: {error}'**
+  String errorSaveTranslation(String error);
+
+  /// No description provided for @errorLoadTranslation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao carregar tradução: {error}'**
+  String errorLoadTranslation(String error);
+
+  /// No description provided for @errorLoadPraiseList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao carregar lista: {error}'**
+  String errorLoadPraiseList(Object error);
+
+  /// No description provided for @errorCreatePraiseList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao criar lista: {error}'**
+  String errorCreatePraiseList(Object error);
+
+  /// No description provided for @errorUpdatePraiseList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao atualizar lista: {error}'**
+  String errorUpdatePraiseList(Object error);
+
+  /// No description provided for @errorDeletePraiseList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao excluir lista: {error}'**
+  String errorDeletePraiseList(Object error);
+
+  /// No description provided for @errorAddPraiseToList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao adicionar louvor à lista: {error}'**
+  String errorAddPraiseToList(Object error);
+
+  /// No description provided for @errorRemovePraiseFromList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao remover louvor da lista: {error}'**
+  String errorRemovePraiseFromList(Object error);
+
+  /// No description provided for @errorFollowList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao seguir lista: {error}'**
+  String errorFollowList(Object error);
+
+  /// No description provided for @errorUnfollowList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao deixar de seguir lista: {error}'**
+  String errorUnfollowList(Object error);
+
+  /// No description provided for @errorCopyList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao copiar lista: {error}'**
+  String errorCopyList(Object error);
+
   /// No description provided for @errorNeedCreatePraiseFirst.
   ///
   /// In pt, this message translates to:
-  /// **'É necessário criar o praise primeiro'**
+  /// **'É necessário criar o louvor primeiro'**
   String get errorNeedCreatePraiseFirst;
 
   /// No description provided for @errorDownloadCanceled.
@@ -1235,19 +1577,19 @@ abstract class AppLocalizations {
   /// No description provided for @successPraiseCreated.
   ///
   /// In pt, this message translates to:
-  /// **'Praise criado com sucesso. Você pode adicionar materiais na página de edição.'**
+  /// **'Louvor criado com sucesso. Você pode adicionar materiais na página de edição.'**
   String get successPraiseCreated;
 
   /// No description provided for @successPraiseUpdated.
   ///
   /// In pt, this message translates to:
-  /// **'Praise atualizado com sucesso'**
+  /// **'Louvor atualizado com sucesso'**
   String get successPraiseUpdated;
 
   /// No description provided for @successPraiseDeleted.
   ///
   /// In pt, this message translates to:
-  /// **'Praise excluído com sucesso'**
+  /// **'Louvor excluído com sucesso'**
   String get successPraiseDeleted;
 
   /// No description provided for @successReviewStarted.
@@ -1277,37 +1619,37 @@ abstract class AppLocalizations {
   /// No description provided for @successTagSaved.
   ///
   /// In pt, this message translates to:
-  /// **'Tag salva com sucesso'**
+  /// **'Etiqueta salva com sucesso'**
   String get successTagSaved;
 
   /// No description provided for @successTagDeleted.
   ///
   /// In pt, this message translates to:
-  /// **'Tag excluída com sucesso'**
+  /// **'Etiqueta excluída com sucesso'**
   String get successTagDeleted;
 
   /// No description provided for @successMaterialKindSaved.
   ///
   /// In pt, this message translates to:
-  /// **'Material kind salvo com sucesso'**
+  /// **'categoria do material salvo com sucesso'**
   String get successMaterialKindSaved;
 
   /// No description provided for @successMaterialKindDeleted.
   ///
   /// In pt, this message translates to:
-  /// **'Material kind excluído com sucesso'**
+  /// **'categoria do material excluído com sucesso'**
   String get successMaterialKindDeleted;
 
   /// No description provided for @successMaterialTypeSaved.
   ///
   /// In pt, this message translates to:
-  /// **'Material type salvo com sucesso'**
+  /// **'Tipo do Material salvo com sucesso'**
   String get successMaterialTypeSaved;
 
   /// No description provided for @successMaterialTypeDeleted.
   ///
   /// In pt, this message translates to:
-  /// **'Material type excluído com sucesso'**
+  /// **'Tipo do Material excluído com sucesso'**
   String get successMaterialTypeDeleted;
 
   /// No description provided for @successLanguageSaved.
@@ -1321,6 +1663,66 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Linguagem excluída com sucesso'**
   String get successLanguageDeleted;
+
+  /// No description provided for @successTranslationSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tradução salva com sucesso'**
+  String get successTranslationSaved;
+
+  /// No description provided for @successTranslationDeleted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tradução excluída com sucesso'**
+  String get successTranslationDeleted;
+
+  /// No description provided for @successPraiseListCreated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista criada com sucesso'**
+  String get successPraiseListCreated;
+
+  /// No description provided for @successPraiseListUpdated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista atualizada com sucesso'**
+  String get successPraiseListUpdated;
+
+  /// No description provided for @successPraiseListDeleted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista excluída com sucesso'**
+  String get successPraiseListDeleted;
+
+  /// No description provided for @successPraiseAddedToList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Louvor adicionado à lista com sucesso'**
+  String get successPraiseAddedToList;
+
+  /// No description provided for @successPraiseRemovedFromList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Louvor removido da lista com sucesso'**
+  String get successPraiseRemovedFromList;
+
+  /// No description provided for @successListFollowed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista seguida com sucesso'**
+  String get successListFollowed;
+
+  /// No description provided for @successListUnfollowed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deixou de seguir a lista com sucesso'**
+  String get successListUnfollowed;
+
+  /// No description provided for @successListCopied.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista copiada com sucesso'**
+  String get successListCopied;
 
   /// No description provided for @enumMaterialFormTypeFile.
   ///
@@ -1433,13 +1835,13 @@ abstract class AppLocalizations {
   /// No description provided for @drawerPraises.
   ///
   /// In pt, this message translates to:
-  /// **'Praises'**
+  /// **'Louvores'**
   String get drawerPraises;
 
   /// No description provided for @drawerTags.
   ///
   /// In pt, this message translates to:
-  /// **'Tags'**
+  /// **'Etiquetas'**
   String get drawerTags;
 
   /// No description provided for @drawerLanguages.
@@ -1457,14 +1859,26 @@ abstract class AppLocalizations {
   /// No description provided for @drawerMaterialKinds.
   ///
   /// In pt, this message translates to:
-  /// **'Material Kinds'**
+  /// **'Categorias do Material'**
   String get drawerMaterialKinds;
 
   /// No description provided for @drawerMaterialTypes.
   ///
   /// In pt, this message translates to:
-  /// **'Material Types'**
+  /// **'Tipos do Material'**
   String get drawerMaterialTypes;
+
+  /// No description provided for @drawerTranslations.
+  ///
+  /// In pt, this message translates to:
+  /// **'Traduções'**
+  String get drawerTranslations;
+
+  /// No description provided for @drawerPraiseLists.
+  ///
+  /// In pt, this message translates to:
+  /// **'Listas de Louvores'**
+  String get drawerPraiseLists;
 
   /// No description provided for @drawerLogout.
   ///
@@ -1493,25 +1907,25 @@ abstract class AppLocalizations {
   /// No description provided for @cardPraises.
   ///
   /// In pt, this message translates to:
-  /// **'Praises'**
+  /// **'Louvores'**
   String get cardPraises;
 
   /// No description provided for @cardTags.
   ///
   /// In pt, this message translates to:
-  /// **'Tags'**
+  /// **'Etiquetas'**
   String get cardTags;
 
   /// No description provided for @cardMaterialKinds.
   ///
   /// In pt, this message translates to:
-  /// **'Material Kinds'**
+  /// **'Categorias do Material'**
   String get cardMaterialKinds;
 
   /// No description provided for @cardDownloadByMaterialKind.
   ///
   /// In pt, this message translates to:
-  /// **'Baixar por Material Kind'**
+  /// **'Baixar por Categoria do Material'**
   String get cardDownloadByMaterialKind;
 
   /// No description provided for @cardLists.
@@ -1519,6 +1933,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Listas'**
   String get cardLists;
+
+  /// No description provided for @labelPraisesCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} louvor(es)'**
+  String labelPraisesCount(int count);
+
+  /// No description provided for @labelBy.
+  ///
+  /// In pt, this message translates to:
+  /// **'por'**
+  String get labelBy;
 }
 
 class _AppLocalizationsDelegate

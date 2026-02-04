@@ -8,6 +8,7 @@ import '../widgets/app_status_widgets.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/material_manager_widget.dart';
+import '../widgets/add_to_list_button.dart';
 import '../services/api/api_service.dart';
 import '../services/offline/download_service.dart';
 import '../models/praise_model.dart';
@@ -90,7 +91,7 @@ class PraiseDetailPage extends ConsumerWidget {
                   ),
                   if (praise.number != null)
                     Chip(
-                      label: Text(l10n.badgeNumber.replaceAll('{number}', praise.number.toString())),
+                      label: Text(l10n.badgeNumber(praise.number!)),
                       visualDensity: VisualDensity.compact,
                     ),
                 ],
@@ -154,6 +155,15 @@ class PraiseDetailPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
               ],
+
+              // Adicionar à lista
+              AddToListButton(
+                praiseId: praiseId,
+                onAdded: () {
+                  ref.invalidate(praiseProvider(praiseId));
+                },
+              ),
+              const SizedBox(height: 16),
 
               // Materiais
               MaterialManagerWidget(
@@ -357,7 +367,7 @@ class PraiseDetailPage extends ConsumerWidget {
       if (errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.errorDownloadZip.replaceAll('{error}', errorMessage!)),
+            content: Text(l10n.errorDownloadZip(errorMessage!)),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -372,7 +382,7 @@ class PraiseDetailPage extends ConsumerWidget {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.messageZipSaved.replaceAll('{path}', filePath)),
+            content: Text(l10n.messageZipSaved(filePath)),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -383,7 +393,7 @@ class PraiseDetailPage extends ConsumerWidget {
       Navigator.of(context).pop(); // Fechar dialog de progresso
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.errorDownloadZip.replaceAll('{error}', e.toString())),
+          content: Text(l10n.errorDownloadZip(e.toString())),
           duration: const Duration(seconds: 5),
         ),
       );
@@ -428,7 +438,7 @@ class PraiseDetailPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorDeletePraise.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorDeletePraise(e.toString()))),
         );
       }
     }
@@ -489,7 +499,7 @@ class PraiseDetailPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorStartReview.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorStartReview(e.toString()))),
         );
       }
     }
@@ -514,7 +524,7 @@ class PraiseDetailPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorCancelReview.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorCancelReview(e.toString()))),
         );
       }
     }
@@ -539,7 +549,7 @@ class PraiseDetailPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorFinishReview.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorFinishReview(e.toString()))),
         );
       }
     }

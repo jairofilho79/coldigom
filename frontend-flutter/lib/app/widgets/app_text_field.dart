@@ -11,6 +11,9 @@ class AppTextField extends StatelessWidget {
   final int? maxLines;
   final IconData? prefixIcon;
   final bool enabled;
+  final VoidCallback? onSubmitted;
+  final TextInputAction? textInputAction;
+  final FocusNode? focusNode;
 
   const AppTextField({
     super.key,
@@ -23,6 +26,9 @@ class AppTextField extends StatelessWidget {
     this.maxLines = 1,
     this.prefixIcon,
     this.enabled = true,
+    this.onSubmitted,
+    this.textInputAction,
+    this.focusNode,
   });
 
   @override
@@ -34,6 +40,9 @@ class AppTextField extends StatelessWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       enabled: enabled,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      onFieldSubmitted: (_) => onSubmitted?.call(),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

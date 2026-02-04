@@ -63,7 +63,7 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
         });
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorLoadMaterialKind.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorLoadMaterialKind(e.toString()))),
         );
         context.pop();
       }
@@ -115,7 +115,7 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        String errorMessage = l10n.errorSaveMaterialKind.replaceAll('{error}', e.toString());
+        String errorMessage = l10n.errorSaveMaterialKind(e.toString());
         
         // Tratar erro específico de nome duplicado
         if (e.toString().contains('400') || e.toString().contains('already exists')) {
@@ -174,7 +174,7 @@ class _MaterialKindFormPageState extends ConsumerState<MaterialKindFormPage> {
                     return l10n.validationRequired;
                   }
                   if (value.trim().length > 255) {
-                    return l10n.validationMaxLength.replaceAll('{max}', '255');
+                    return l10n.validationMaxLength(255);
                   }
                   return null;
                 },

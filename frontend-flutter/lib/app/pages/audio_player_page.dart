@@ -78,7 +78,7 @@ class _AudioPlayerPageState extends ConsumerState<AudioPlayerPage> {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n?.errorLoadAudio.replaceAll('{error}', e.toString()) ?? 'Erro ao carregar áudio: $e')),
+          SnackBar(content: Text(l10n?.errorLoadAudio(e.toString()) ?? 'Erro ao carregar áudio: $e')),
         );
       }
     }

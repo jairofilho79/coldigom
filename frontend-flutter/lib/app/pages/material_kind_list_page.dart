@@ -51,7 +51,7 @@ class MaterialKindListPage extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.folder),
                     title: Text(getMaterialKindName(ref, materialKind.id, materialKind.name)),
-                    subtitle: Text(l10n.messageId.replaceAll('{id}', materialKind.id)),
+                    subtitle: Text(l10n.messageId(materialKind.id)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -118,7 +118,7 @@ class MaterialKindListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorDeleteMaterialKind.replaceAll('{error}', e.toString()))),
+        SnackBar(content: Text(l10n.errorDeleteMaterialKind(e.toString()))),
       );
     }
   }

@@ -75,7 +75,7 @@ class _PraiseCreatePageState extends ConsumerState<PraiseCreatePage> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorCreatePraise.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorCreatePraise(e.toString()))),
         );
       }
     } finally {

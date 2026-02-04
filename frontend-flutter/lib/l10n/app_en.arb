@@ -42,6 +42,15 @@
   "labelNumberOptional": "Number (optional)",
   "labelFileType": "File Type",
   "labelCode": "Code",
+  "labelLanguage": "Language",
+  "labelOriginal": "Original",
+  "labelTranslatedName": "Translated Name",
+  "labelEntityType": "Entity Type",
+  "labelFilters": "Filters",
+  "labelAllLanguages": "All languages",
+  "labelMaterialKind": "Material Kind",
+  "labelPraiseTag": "Praise Tag",
+  "labelMaterialType": "Material Type",
   "labelText": "Text",
   "labelUrl": "URL",
   "labelActive": "Active",
@@ -56,6 +65,12 @@
   "labelMaterialOldDescription": "Old Material Description",
   "labelSelectTag": "Select a tag (optional)",
   "labelSelectMaterialKindForDownload": "Select a Material Kind",
+  "labelDescription": "Description",
+  "labelPublic": "Public",
+  "labelPrivate": "Private",
+  "labelOwner": "Owner",
+  "labelDateFrom": "Date From",
+  "labelDateTo": "Date To",
   
   "hintEnterUsername": "Enter your username",
   "hintEnterPassword": "Enter your password",
@@ -66,9 +81,12 @@
   "hintEnterTagName": "Enter tag name",
   "hintEnterMaterialKindName": "Enter material kind name",
   "hintEnterMaterialTypeName": "Enter material type name",
+  "hintEnterTranslatedName": "Enter translated name",
   "hintEnterLanguageCode": "Ex: pt-BR, en-US",
   "hintEnterLanguageName": "Enter language name",
   "hintEnterSearchPraise": "Enter praise name...",
+  "hintEnterListName": "Enter list name",
+  "hintEnterListDescription": "Enter list description (optional)",
   "hintEnterUrl": "Paste {platform} URL",
   "@hintEnterUrl": {
     "placeholders": {
@@ -84,6 +102,7 @@
   "hintSelectNewFileToReplace": "Select a new file to replace",
   
   "validationRequired": "This field is required",
+  "validationTranslatedNameRequired": "Translated name is required",
   "validationMinLength": "Minimum of {min} characters",
   "@validationMinLength": {
     "placeholders": {
@@ -114,6 +133,7 @@
   "validationMaterialKindRequired": "Material Kind is required",
   "validationSelectMaterialType": "Select material type",
   "validationSelectMaterialKind": "Select Material Kind",
+  "validationListNameRequired": "List name is required",
   
   "pageTitleDashboard": "Dashboard",
   "pageTitlePraises": "Praises",
@@ -133,6 +153,14 @@
   "pageTitleEditMaterialType": "Edit Material Type",
   "pageTitleCreateLanguage": "Create Language",
   "pageTitleEditLanguage": "Edit Language",
+  "pageTitleTranslations": "Translations",
+  "pageTitleTranslations": "Translations",
+  "pageTitleCreateTranslation": "Create Translation",
+  "pageTitleEditTranslation": "Edit Translation",
+  "pageTitlePraiseLists": "Praise Lists",
+  "pageTitlePraiseListDetail": "List Details",
+  "pageTitlePraiseListCreate": "Create List",
+  "pageTitlePraiseListEdit": "Edit List",
   
   "messageWelcome": "Welcome, {username}!",
   "@messageWelcome": {
@@ -146,8 +174,14 @@
   "messageNoTagsAvailable": "No tags available",
   "messageNoMaterialsAdded": "No materials added",
   "messageNoMaterialKindsAvailable": "No Material Kinds available",
+  "messageNoMaterialTypesAvailable": "No Material Types available",
   "messageNoTagsForFilter": "No tag (all praises)",
   "messageNoMaterials": "No materials registered",
+  "messageNoTranslationsAvailable": "No translations available",
+  "messageNoLists": "No lists found",
+  "messageNoListsFound": "No lists found with applied filters",
+  "messageNoPraisesInList": "No praises in this list",
+  "messageUnknown": "Unknown",
   "messageCreatePraiseFirst": "You need to create the praise first",
   "messageFileSelected": "New file selected. Current file will be replaced.",
   "messageNewFile": "New File: {fileName}",
@@ -257,6 +291,18 @@
   "actionAll": "All",
   "actionViewOldMaterials": "View Old",
   "actionHideOldMaterials": "Hide Old",
+  "actionAddTranslation": "Add Translation",
+  "actionNewList": "New List",
+  "actionCreateFirstList": "Create first list",
+  "actionFollow": "Follow",
+  "actionUnfollow": "Unfollow",
+  "actionCopy": "Copy",
+  "actionCopyList": "Copy List",
+  "actionAddToList": "Add to List",
+  "actionRemoveFromList": "Remove from List",
+  "actionMoveUp": "Move Up",
+  "actionMoveDown": "Move Down",
+  "actionClearFilters": "Clear Filters",
   
   "dialogTitleConfirmDelete": "Confirm Deletion",
   "dialogTitleStartReview": "Start Review",
@@ -266,7 +312,10 @@
   "dialogMessageDeleteMaterialKind": "Are you sure you want to delete this material kind?",
   "dialogMessageDeleteMaterialType": "Are you sure you want to delete this material type?",
   "dialogMessageDeleteLanguage": "Are you sure you want to delete this language?",
+  "dialogMessageDeleteTranslation": "Are you sure you want to delete this translation?",
   "dialogMessageDeleteMaterial": "Are you sure you want to delete this material?",
+  "dialogMessageDeletePraiseList": "Are you sure you want to delete this list? This action cannot be undone.",
+  "dialogMessageRemovePraiseFromList": "Are you sure you want to remove this praise from the list?",
   "dialogMessageNoFileMaterials": "This praise has no file materials for download",
   "dialogLabelReviewDescription": "Description (optional)",
   
@@ -473,6 +522,39 @@
       }
     }
   },
+  "errorDeleteTranslation": "Error deleting translation: {error}",
+  "@errorDeleteTranslation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveTranslation": "Error saving translation: {error}",
+  "@errorSaveTranslation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadTranslation": "Error loading translation: {error}",
+  "errorLoadPraiseList": "Error loading list: {error}",
+  "errorCreatePraiseList": "Error creating list: {error}",
+  "errorUpdatePraiseList": "Error updating list: {error}",
+  "errorDeletePraiseList": "Error deleting list: {error}",
+  "errorAddPraiseToList": "Error adding praise to list: {error}",
+  "errorRemovePraiseFromList": "Error removing praise from list: {error}",
+  "errorFollowList": "Error following list: {error}",
+  "errorUnfollowList": "Error unfollowing list: {error}",
+  "errorCopyList": "Error copying list: {error}",
+  "@errorLoadTranslation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "errorNeedCreatePraiseFirst": "Praise must be created first",
   "errorDownloadCanceled": "Download canceled",
   
@@ -492,6 +574,16 @@
   "successMaterialTypeDeleted": "Material type deleted successfully",
   "successLanguageSaved": "Language saved successfully",
   "successLanguageDeleted": "Language deleted successfully",
+  "successTranslationDeleted": "Translation deleted successfully",
+  "successTranslationSaved": "Translation saved successfully",
+  "successPraiseListCreated": "List created successfully",
+  "successPraiseListUpdated": "List updated successfully",
+  "successPraiseListDeleted": "List deleted successfully",
+  "successPraiseAddedToList": "Praise added to list successfully",
+  "successPraiseRemovedFromList": "Praise removed from list successfully",
+  "successListFollowed": "List followed successfully",
+  "successListUnfollowed": "Unfollowed list successfully",
+  "successListCopied": "List copied successfully",
   
   "enumMaterialFormTypeFile": "File",
   "enumMaterialFormTypeYoutube": "YouTube",
@@ -522,6 +614,8 @@
   "drawerLanguage": "Language",
   "drawerMaterialKinds": "Material Kinds",
   "drawerMaterialTypes": "Material Types",
+  "drawerTranslations": "Translations",
+  "drawerPraiseLists": "Praise Lists",
   "drawerLogout": "Logout",
   
   "languagePortuguese": "Portuguese",
@@ -539,5 +633,15 @@
   "cardTags": "Tags",
   "cardMaterialKinds": "Material Kinds",
   "cardDownloadByMaterialKind": "Download by Material Kind",
-  "cardLists": "Lists"
+  "cardLists": "Lists",
+  
+  "labelPraisesCount": "{count} praise(s)",
+  "@labelPraisesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelBy": "by"
 }

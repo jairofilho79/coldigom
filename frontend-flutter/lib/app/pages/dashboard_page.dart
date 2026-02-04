@@ -47,7 +47,7 @@ class DashboardPage extends ConsumerWidget {
                           const Icon(Icons.person, size: 48),
                           const SizedBox(height: 8),
                           Text(
-                            l10n.messageWelcome.replaceAll('{username}', authState.user?.username ?? l10n.drawerUser),
+                            l10n.messageWelcome(authState.user?.username ?? l10n.drawerUser),
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                         ],

@@ -70,6 +70,14 @@ class AppDrawer extends ConsumerWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.list),
+                  title: Text(l10n.drawerPraiseLists),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/praise-lists');
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.label),
                   title: Text(l10n.drawerTags),
                   onTap: () {
@@ -99,6 +107,14 @@ class AppDrawer extends ConsumerWidget {
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/material-types');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.translate),
+                  title: Text(l10n.drawerTranslations),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/translations');
                   },
                 ),
                 const Divider(),

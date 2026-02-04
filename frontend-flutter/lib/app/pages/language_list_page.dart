@@ -59,7 +59,7 @@ class LanguageListPage extends ConsumerWidget {
                 child: AppCard(
                   child: ListTile(
                     title: Text(language.name),
-                    subtitle: Text(l10n.messageCode.replaceAll('{code}', language.code)),
+                    subtitle: Text(l10n.messageCode(language.code)),
                     leading: Icon(
                       Icons.language,
                       color: language.isActive ? Colors.green : Colors.grey,
@@ -143,7 +143,7 @@ class LanguageListPage extends ConsumerWidget {
       if (!context.mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.errorDeleteLanguage.replaceAll('{error}', e.toString()))),
+        SnackBar(content: Text(l10n.errorDeleteLanguage(e.toString()))),
       );
     }
   }

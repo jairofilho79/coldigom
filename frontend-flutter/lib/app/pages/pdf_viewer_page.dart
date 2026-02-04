@@ -167,9 +167,9 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
                   builder: (context) {
                     final l10n = AppLocalizations.of(context);
                     return Text(
-                      l10n?.messagePageOf
-                          .replaceAll('{current}', _currentPage.toString())
-                          .replaceAll('{total}', _totalPages.toString()) ?? 
+                      l10n?.messagePageOf(
+                          _currentPage,
+                          _totalPages) ?? 
                       '$_currentPage / $_totalPages',
                       style: Theme.of(context).textTheme.bodyMedium,
                     );

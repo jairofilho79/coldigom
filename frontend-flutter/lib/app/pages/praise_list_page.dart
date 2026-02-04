@@ -340,7 +340,7 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                                 ),
                                 if (praise.number != null)
                                   Chip(
-                                    label: Text(l10n.badgeNumber.replaceAll('{number}', praise.number.toString())),
+                                    label: Text(l10n.badgeNumber(praise.number ?? 0)),
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 if (praise.inReview)

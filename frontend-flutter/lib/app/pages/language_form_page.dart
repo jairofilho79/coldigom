@@ -102,7 +102,7 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorSaveLanguage.replaceAll('{error}', e.toString()))),
+          SnackBar(content: Text(l10n.errorSaveLanguage(e.toString()))),
         );
       }
     } finally {
@@ -180,7 +180,7 @@ class _LanguageFormPageState extends ConsumerState<LanguageFormPage> {
                     return l10n.validationRequired;
                   }
                   if (value.trim().length < 2) {
-                    return l10n.validationMinLength.replaceAll('{min}', '2');
+                    return l10n.validationMinLength(2);
                   }
                   // Validar formato básico (ex: pt-BR, en-US)
                   final codePattern = RegExp(r'^[a-z]{2}(-[A-Z]{2})?$');

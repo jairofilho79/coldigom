@@ -1,9 +1,9 @@
 {
   "@@locale": "pt",
-  "appName": "Coldigom",
-  "appSubtitle": "Gerenciamento de Louvores",
+  "appName": "Coletânea Digital",
+  "appSubtitle": "com <3 pela ID (Irmãos da Maranata)",
   "@appSubtitle": {
-    "description": "Subtítulo do aplicativo"
+    "description": "com <3 pela IDM (Irmãos da Maranata)"
   },
   
   "buttonBack": "Voltar",
@@ -19,13 +19,13 @@
   "buttonRemoveFilter": "Remover Filtro",
   "buttonDownload": "Baixar",
   "buttonDownloading": "Baixando...",
-  "buttonDownloadByMaterialKind": "Baixar por Material Kind",
-  "buttonDownloadZip": "Download ZIP",
+  "buttonDownloadByMaterialKind": "Baixar por Categoria do Material",
+  "buttonDownloadZip": "Baixar ZIP",
   "buttonEnter": "Entrar",
   "buttonRegister": "Registrar",
   "buttonTryAgain": "Tentar Novamente",
   
-  "labelTags": "Tags",
+  "labelTags": "Etiquetas",
   "labelMaterials": "Materiais",
   "labelName": "Nome",
   "labelEmail": "Email",
@@ -42,33 +42,51 @@
   "labelNumberOptional": "Número (opcional)",
   "labelFileType": "Tipo de Arquivo",
   "labelCode": "Código",
+  "labelLanguage": "Idioma",
+  "labelOriginal": "Original",
+  "labelTranslatedName": "Nome Traduzido",
+  "labelEntityType": "Tipo de Entidade",
+  "labelFilters": "Filtros",
+  "labelAllLanguages": "Todos os idiomas",
+  "labelMaterialKind": "Categoria do Material",
+  "labelPraiseTag": "Etiqueta do louvor",
+  "labelMaterialType": "Tipo do Material",
   "labelText": "Texto",
   "labelUrl": "URL",
   "labelActive": "Ativa",
-  "labelMaterialKindRequired": "Material Kind *",
-  "labelMaterialTypeRequired": "Tipo de Material *",
-  "labelSelectMaterialKind": "Selecione o Material Kind",
+  "labelMaterialKindRequired": "Categoria do Material *",
+  "labelMaterialTypeRequired": "Tipo do Material *",
+  "labelSelectMaterialKind": "Selecione a categoria do material",
   "labelSelectFile": "Selecionar Arquivo",
   "labelSelectNewFile": "Selecionar Novo Arquivo",
   "labelCurrentFile": "Arquivo Atual",
   "labelMaxZipSize": "Tamanho máximo por ZIP (MB)",
   "labelMaterialIsOld": "Material Antigo",
   "labelMaterialOldDescription": "Descrição do Material Antigo",
-  "labelSelectTag": "Selecione uma tag (opcional)",
-  "labelSelectMaterialKindForDownload": "Selecione um Material Kind",
+  "labelSelectTag": "Selecione uma etiqueta (opcional)",
+  "labelSelectMaterialKindForDownload": "Selecione uma Categoria do Material",
+  "labelDescription": "Descrição",
+  "labelPublic": "Pública",
+  "labelPrivate": "Privada",
+  "labelOwner": "Dono",
+  "labelDateFrom": "Data Inicial",
+  "labelDateTo": "Data Final",
   
   "hintEnterUsername": "Digite seu usuário",
   "hintEnterPassword": "Digite sua senha",
   "hintEnterEmail": "Digite seu email",
   "hintConfirmPassword": "Confirme sua senha",
-  "hintEnterPraiseName": "Digite o nome do praise",
-  "hintEnterPraiseNumber": "Digite o número do praise (opcional)",
-  "hintEnterTagName": "Digite o nome da tag",
-  "hintEnterMaterialKindName": "Digite o nome do material kind",
-  "hintEnterMaterialTypeName": "Digite o nome do material type",
+  "hintEnterPraiseName": "Digite o nome do louvor",
+  "hintEnterPraiseNumber": "Digite o número do louvor (opcional)",
+  "hintEnterTagName": "Digite o nome da etiqueta",
+  "hintEnterMaterialKindName": "Digite o nome da Categoria do Material",
+  "hintEnterMaterialTypeName": "Digite o nome do Tipo do Material",
   "hintEnterLanguageCode": "Ex: pt-BR, en-US",
   "hintEnterLanguageName": "Digite o nome da linguagem",
-  "hintEnterSearchPraise": "Digite o nome do praise...",
+  "hintEnterTranslatedName": "Digite o nome traduzido",
+  "hintEnterSearchPraise": "Digite o nome do louvor...",
+  "hintEnterListName": "Digite o nome da lista",
+  "hintEnterListDescription": "Digite a descrição da lista (opcional)",
   "hintEnterUrl": "Cole a URL do {platform}",
   "@hintEnterUrl": {
     "placeholders": {
@@ -84,6 +102,7 @@
   "hintSelectNewFileToReplace": "Selecione um novo arquivo para substituir",
   
   "validationRequired": "Este campo é obrigatório",
+  "validationTranslatedNameRequired": "O nome traduzido é obrigatório",
   "validationMinLength": "Mínimo de {min} caracteres",
   "@validationMinLength": {
     "placeholders": {
@@ -111,28 +130,36 @@
   "validationUrlRequired": "URL é obrigatória",
   "validationUrlInvalid": "URL inválida",
   "validationTextRequired": "Texto é obrigatório",
-  "validationMaterialKindRequired": "Material Kind é obrigatório",
-  "validationSelectMaterialType": "Selecione o tipo de material",
-  "validationSelectMaterialKind": "Selecione o Material Kind",
+  "validationMaterialKindRequired": "Categoria do Material é obrigatório",
+  "validationSelectMaterialType": "Selecione o Tipo do Material",
+  "validationSelectMaterialKind": "Selecione a Categoria do Material",
+  "validationListNameRequired": "Nome da lista é obrigatório",
   
-  "pageTitleDashboard": "Dashboard",
-  "pageTitlePraises": "Praises",
-  "pageTitleTags": "Tags",
-  "pageTitleMaterialKinds": "Material Kinds",
-  "pageTitleMaterialTypes": "Material Types",
+  "pageTitleDashboard": "Início",
+  "pageTitlePraises": "Louvores",
+  "pageTitleTags": "Etiquetas",
+  "pageTitleMaterialKinds": "Categorias do Material",
+  "pageTitleMaterialTypes": "Tipos do Material",
   "pageTitleLanguages": "Linguagens",
-  "pageTitleCreatePraise": "Criar Praise",
-  "pageTitleEditPraise": "Editar Praise",
-  "pageTitlePraiseDetails": "Detalhes do Praise",
+  "pageTitleCreatePraise": "Criar Louvor",
+  "pageTitleEditPraise": "Editar Louvor",
+  "pageTitlePraiseDetails": "Detalhes do Louvor",
   "pageTitleRegister": "Registro",
-  "pageTitleCreateTag": "Criar Tag",
-  "pageTitleEditTag": "Editar Tag",
-  "pageTitleCreateMaterialKind": "Criar Material Kind",
-  "pageTitleEditMaterialKind": "Editar Material Kind",
-  "pageTitleCreateMaterialType": "Criar Material Type",
-  "pageTitleEditMaterialType": "Editar Material Type",
+  "pageTitleCreateTag": "Criar Etiqueta",
+  "pageTitleEditTag": "Editar Etiqueta",
+  "pageTitleCreateMaterialKind": "Criar Categoria do Material",
+  "pageTitleEditMaterialKind": "Editar Categoria do Material",
+  "pageTitleCreateMaterialType": "Criar Tipo do Material",
+  "pageTitleEditMaterialType": "Editar Tipo do Material",
   "pageTitleCreateLanguage": "Criar Linguagem",
   "pageTitleEditLanguage": "Editar Linguagem",
+  "pageTitleTranslations": "Traduções",
+  "pageTitleCreateTranslation": "Criar Tradução",
+  "pageTitleEditTranslation": "Editar Tradução",
+  "pageTitlePraiseLists": "Listas de Louvores",
+  "pageTitlePraiseListDetail": "Detalhes da Lista",
+  "pageTitlePraiseListCreate": "Criar Lista",
+  "pageTitlePraiseListEdit": "Editar Lista",
   
   "messageWelcome": "Bem-vindo, {username}!",
   "@messageWelcome": {
@@ -143,12 +170,17 @@
     }
   },
   "messageNotAuthenticated": "Não autenticado",
-  "messageNoTagsAvailable": "Nenhuma tag disponível",
+  "messageNoTagsAvailable": "Nenhuma etiqueta disponível",
   "messageNoMaterialsAdded": "Nenhum material adicionado",
-  "messageNoMaterialKindsAvailable": "Nenhum Material Kind disponível",
-  "messageNoTagsForFilter": "Nenhuma tag (todos os praises)",
+  "messageNoMaterialKindsAvailable": "Nenhum Categoria do Material disponível",
+  "messageNoTagsForFilter": "Nenhuma etiqueta (todos os louvores)",
   "messageNoMaterials": "Nenhum material cadastrado",
-  "messageCreatePraiseFirst": "É necessário criar o praise primeiro",
+  "messageNoTranslationsAvailable": "Nenhuma tradução disponível",
+  "messageNoLists": "Nenhuma lista encontrada",
+  "messageNoListsFound": "Nenhuma lista encontrada com os filtros aplicados",
+  "messageNoPraisesInList": "Nenhum louvor nesta lista",
+  "messageUnknown": "Desconhecido",
+  "messageCreatePraiseFirst": "É necessário criar o louvor primeiro",
   "messageFileSelected": "Novo arquivo selecionado. O arquivo atual será substituído.",
   "messageNewFile": "Novo Arquivo: {fileName}",
   "@messageNewFile": {
@@ -225,7 +257,7 @@
     }
   },
   
-  "sectionTags": "Tags",
+  "sectionTags": "Etiquetas",
   "sectionMaterials": "Materiais",
   "sectionReviewHistory": "Histórico de Revisão",
   
@@ -257,20 +289,35 @@
   "actionAll": "Todas",
   "actionViewOldMaterials": "Ver Antigos",
   "actionHideOldMaterials": "Ocultar Antigos",
+  "actionAddTranslation": "Adicionar Tradução",
+  "actionNewList": "Nova Lista",
+  "actionCreateFirstList": "Criar primeira lista",
+  "actionFollow": "Seguir",
+  "actionUnfollow": "Deixar de Seguir",
+  "actionCopy": "Copiar",
+  "actionCopyList": "Copiar Lista",
+  "actionAddToList": "Adicionar à Lista",
+  "actionRemoveFromList": "Remover da Lista",
+  "actionMoveUp": "Mover para Cima",
+  "actionMoveDown": "Mover para Baixo",
+  "actionClearFilters": "Limpar Filtros",
   
   "dialogTitleConfirmDelete": "Confirmar Exclusão",
   "dialogTitleStartReview": "Iniciar Revisão",
-  "dialogTitleDownloadZip": "Baixar Praise em ZIP",
-  "dialogMessageDeletePraise": "Tem certeza que deseja excluir este praise? Esta ação não pode ser desfeita.",
-  "dialogMessageDeleteTag": "Tem certeza que deseja excluir esta tag?",
-  "dialogMessageDeleteMaterialKind": "Tem certeza que deseja excluir este material kind?",
-  "dialogMessageDeleteMaterialType": "Tem certeza que deseja excluir este material type?",
+  "dialogTitleDownloadZip": "Baixar Louvor em ZIP",
+  "dialogMessageDeletePraise": "Tem certeza que deseja excluir este louvor? Esta ação não pode ser desfeita.",
+  "dialogMessageDeleteTag": "Tem certeza que deseja excluir esta etiqueta?",
+  "dialogMessageDeleteMaterialKind": "Tem certeza que deseja excluir esta categoria do material?",
+  "dialogMessageDeleteMaterialType": "Tem certeza que deseja excluir este tipo do material?",
   "dialogMessageDeleteLanguage": "Tem certeza que deseja excluir esta linguagem?",
+  "dialogMessageDeleteTranslation": "Tem certeza que deseja excluir esta tradução?",
   "dialogMessageDeleteMaterial": "Tem certeza que deseja excluir este material?",
-  "dialogMessageNoFileMaterials": "Este praise não possui materiais de arquivo para download",
+  "dialogMessageDeletePraiseList": "Tem certeza que deseja excluir esta lista? Esta ação não pode ser desfeita.",
+  "dialogMessageRemovePraiseFromList": "Tem certeza que deseja remover este louvor da lista?",
+  "dialogMessageNoFileMaterials": "Este louvor não possui materiais de arquivo para download",
   "dialogLabelReviewDescription": "Descrição (opcional)",
   
-  "errorConnectionFailed": "Não foi possível conectar ao servidor.\nVerifique se o backend está rodando em http://127.0.0.1:8000",
+  "errorConnectionFailed": "Não foi possível conectar ao servidor.\nVerifique se o backend está rodando.",
   "errorInvalidCredentials": "Usuário ou senha incorretos",
   "errorLogin": "Erro ao fazer login: {error}",
   "@errorLogin": {
@@ -328,7 +375,7 @@
       }
     }
   },
-  "errorLoadPraise": "Erro ao carregar praise: {error}",
+  "errorLoadPraise": "Erro ao carregar o louvor: {error}",
   "@errorLoadPraise": {
     "placeholders": {
       "error": {
@@ -336,7 +383,7 @@
       }
     }
   },
-  "errorLoadMaterialKind": "Erro ao carregar material kind: {error}",
+  "errorLoadMaterialKind": "Erro ao carregar categoria do material: {error}",
   "@errorLoadMaterialKind": {
     "placeholders": {
       "error": {
@@ -344,7 +391,7 @@
       }
     }
   },
-  "errorLoadMaterialType": "Erro ao carregar material type: {error}",
+  "errorLoadMaterialType": "Erro ao carregar tipo do material: {error}",
   "@errorLoadMaterialType": {
     "placeholders": {
       "error": {
@@ -361,7 +408,7 @@
     }
   },
   "errorLoadPdf": "Erro ao carregar PDF",
-  "errorCreatePraise": "Erro ao criar praise: {error}",
+  "errorCreatePraise": "Erro ao criar o louvor: {error}",
   "@errorCreatePraise": {
     "placeholders": {
       "error": {
@@ -369,7 +416,7 @@
       }
     }
   },
-  "errorUpdatePraise": "Erro ao atualizar praise: {error}",
+  "errorUpdatePraise": "Erro ao atualizar o louvor: {error}",
   "@errorUpdatePraise": {
     "placeholders": {
       "error": {
@@ -409,7 +456,7 @@
       }
     }
   },
-  "errorSaveTag": "Erro ao salvar tag: {error}",
+  "errorSaveTag": "Erro ao salvar etiqueta: {error}",
   "@errorSaveTag": {
     "placeholders": {
       "error": {
@@ -417,7 +464,7 @@
       }
     }
   },
-  "errorDeleteTag": "Erro ao excluir tag: {error}",
+  "errorDeleteTag": "Erro ao excluir etiqueta: {error}",
   "@errorDeleteTag": {
     "placeholders": {
       "error": {
@@ -425,7 +472,7 @@
       }
     }
   },
-  "errorSaveMaterialKind": "Erro ao salvar material kind: {error}",
+  "errorSaveMaterialKind": "Erro ao salvar categoria do material: {error}",
   "@errorSaveMaterialKind": {
     "placeholders": {
       "error": {
@@ -433,7 +480,7 @@
       }
     }
   },
-  "errorDeleteMaterialKind": "Erro ao excluir material kind: {error}",
+  "errorDeleteMaterialKind": "Erro ao excluir categoria do material: {error}",
   "@errorDeleteMaterialKind": {
     "placeholders": {
       "error": {
@@ -441,7 +488,7 @@
       }
     }
   },
-  "errorSaveMaterialType": "Erro ao salvar material type: {error}",
+  "errorSaveMaterialType": "Erro ao salvar tipo do material: {error}",
   "@errorSaveMaterialType": {
     "placeholders": {
       "error": {
@@ -449,7 +496,7 @@
       }
     }
   },
-  "errorDeleteMaterialType": "Erro ao excluir material type: {error}",
+  "errorDeleteMaterialType": "Erro ao excluir tipo do material: {error}",
   "@errorDeleteMaterialType": {
     "placeholders": {
       "error": {
@@ -473,25 +520,68 @@
       }
     }
   },
-  "errorNeedCreatePraiseFirst": "É necessário criar o praise primeiro",
+  "errorDeleteTranslation": "Erro ao excluir tradução: {error}",
+  "@errorDeleteTranslation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaveTranslation": "Erro ao salvar tradução: {error}",
+  "@errorSaveTranslation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadTranslation": "Erro ao carregar tradução: {error}",
+  "errorLoadPraiseList": "Erro ao carregar lista: {error}",
+  "errorCreatePraiseList": "Erro ao criar lista: {error}",
+  "errorUpdatePraiseList": "Erro ao atualizar lista: {error}",
+  "errorDeletePraiseList": "Erro ao excluir lista: {error}",
+  "errorAddPraiseToList": "Erro ao adicionar louvor à lista: {error}",
+  "errorRemovePraiseFromList": "Erro ao remover louvor da lista: {error}",
+  "errorFollowList": "Erro ao seguir lista: {error}",
+  "errorUnfollowList": "Erro ao deixar de seguir lista: {error}",
+  "errorCopyList": "Erro ao copiar lista: {error}",
+  "@errorLoadTranslation": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorNeedCreatePraiseFirst": "É necessário criar o louvor primeiro",
   "errorDownloadCanceled": "Download cancelado",
   
   "successRegister": "Registro realizado com sucesso! Faça login.",
-  "successPraiseCreated": "Praise criado com sucesso. Você pode adicionar materiais na página de edição.",
-  "successPraiseUpdated": "Praise atualizado com sucesso",
-  "successPraiseDeleted": "Praise excluído com sucesso",
+  "successPraiseCreated": "Louvor criado com sucesso. Você pode adicionar materiais na página de edição.",
+  "successPraiseUpdated": "Louvor atualizado com sucesso",
+  "successPraiseDeleted": "Louvor excluído com sucesso",
   "successReviewStarted": "Revisão iniciada com sucesso",
   "successReviewCanceled": "Revisão cancelada com sucesso",
   "successReviewFinished": "Revisão finalizada com sucesso",
   "successMaterialDeleted": "Material excluído com sucesso",
-  "successTagSaved": "Tag salva com sucesso",
-  "successTagDeleted": "Tag excluída com sucesso",
-  "successMaterialKindSaved": "Material kind salvo com sucesso",
-  "successMaterialKindDeleted": "Material kind excluído com sucesso",
-  "successMaterialTypeSaved": "Material type salvo com sucesso",
-  "successMaterialTypeDeleted": "Material type excluído com sucesso",
+  "successTagSaved": "Etiqueta salva com sucesso",
+  "successTagDeleted": "Etiqueta excluída com sucesso",
+  "successMaterialKindSaved": "categoria do material salvo com sucesso",
+  "successMaterialKindDeleted": "categoria do material excluído com sucesso",
+  "successMaterialTypeSaved": "Tipo do Material salvo com sucesso",
+  "successMaterialTypeDeleted": "Tipo do Material excluído com sucesso",
   "successLanguageSaved": "Linguagem salva com sucesso",
   "successLanguageDeleted": "Linguagem excluída com sucesso",
+  "successTranslationSaved": "Tradução salva com sucesso",
+  "successTranslationDeleted": "Tradução excluída com sucesso",
+  "successPraiseListCreated": "Lista criada com sucesso",
+  "successPraiseListUpdated": "Lista atualizada com sucesso",
+  "successPraiseListDeleted": "Lista excluída com sucesso",
+  "successPraiseAddedToList": "Louvor adicionado à lista com sucesso",
+  "successPraiseRemovedFromList": "Louvor removido da lista com sucesso",
+  "successListFollowed": "Lista seguida com sucesso",
+  "successListUnfollowed": "Deixou de seguir a lista com sucesso",
+  "successListCopied": "Lista copiada com sucesso",
   
   "enumMaterialFormTypeFile": "Arquivo",
   "enumMaterialFormTypeYoutube": "YouTube",
@@ -516,12 +606,14 @@
   
   "drawerUser": "Usuário",
   "drawerDashboard": "Dashboard",
-  "drawerPraises": "Praises",
-  "drawerTags": "Tags",
+  "drawerPraises": "Louvores",
+  "drawerTags": "Etiquetas",
   "drawerLanguages": "Linguagens",
   "drawerLanguage": "Idioma",
-  "drawerMaterialKinds": "Material Kinds",
-  "drawerMaterialTypes": "Material Types",
+  "drawerMaterialKinds": "Categorias do Material",
+  "drawerMaterialTypes": "Tipos do Material",
+  "drawerTranslations": "Traduções",
+  "drawerPraiseLists": "Listas de Louvores",
   "drawerLogout": "Sair",
   
   "languagePortuguese": "Português",
@@ -535,9 +627,19 @@
     }
   },
   
-  "cardPraises": "Praises",
-  "cardTags": "Tags",
-  "cardMaterialKinds": "Material Kinds",
-  "cardDownloadByMaterialKind": "Baixar por Material Kind",
-  "cardLists": "Listas"
+  "cardPraises": "Louvores",
+  "cardTags": "Etiquetas",
+  "cardMaterialKinds": "Categorias do Material",
+  "cardDownloadByMaterialKind": "Baixar por Categoria do Material",
+  "cardLists": "Listas",
+  
+  "labelPraisesCount": "{count} louvor(es)",
+  "@labelPraisesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelBy": "por"
 }

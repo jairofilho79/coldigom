@@ -9,10 +9,10 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get appName => 'Coldigom';
+  String get appName => 'Coletânea Digital';
 
   @override
-  String get appSubtitle => 'Gerenciamento de Louvores';
+  String get appSubtitle => 'com <3 pela ID (Irmãos da Maranata)';
 
   @override
   String get buttonBack => 'Voltar';
@@ -54,10 +54,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buttonDownloading => 'Baixando...';
 
   @override
-  String get buttonDownloadByMaterialKind => 'Baixar por Material Kind';
+  String get buttonDownloadByMaterialKind => 'Baixar por Categoria do Material';
 
   @override
-  String get buttonDownloadZip => 'Download ZIP';
+  String get buttonDownloadZip => 'Baixar ZIP';
 
   @override
   String get buttonEnter => 'Entrar';
@@ -69,7 +69,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buttonTryAgain => 'Tentar Novamente';
 
   @override
-  String get labelTags => 'Tags';
+  String get labelTags => 'Etiquetas';
 
   @override
   String get labelMaterials => 'Materiais';
@@ -93,10 +93,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get labelType => 'Tipo';
 
   @override
-  String get labelMaterialKind => 'Tipo de Material';
+  String get labelMaterialKind => 'Categoria do Material';
 
   @override
-  String get labelMaterialType => 'Tipo de Material';
+  String get labelMaterialType => 'Tipo do Material';
 
   @override
   String get labelPath => 'Caminho';
@@ -120,6 +120,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String get labelCode => 'Código';
 
   @override
+  String get labelLanguage => 'Idioma';
+
+  @override
+  String get labelOriginal => 'Original';
+
+  @override
+  String get labelTranslatedName => 'Nome Traduzido';
+
+  @override
+  String get labelEntityType => 'Tipo de Entidade';
+
+  @override
+  String get labelFilters => 'Filtros';
+
+  @override
+  String get labelAllLanguages => 'Todos os idiomas';
+
+  @override
+  String get labelPraiseTag => 'Etiqueta do louvor';
+
+  @override
   String get labelText => 'Texto';
 
   @override
@@ -129,13 +150,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get labelActive => 'Ativa';
 
   @override
-  String get labelMaterialKindRequired => 'Material Kind *';
+  String get labelMaterialKindRequired => 'Categoria do Material *';
 
   @override
-  String get labelMaterialTypeRequired => 'Tipo de Material *';
+  String get labelMaterialTypeRequired => 'Tipo do Material *';
 
   @override
-  String get labelSelectMaterialKind => 'Selecione o Material Kind';
+  String get labelSelectMaterialKind => 'Selecione a categoria do material';
 
   @override
   String get labelSelectFile => 'Selecionar Arquivo';
@@ -156,10 +177,29 @@ class AppLocalizationsPt extends AppLocalizations {
   String get labelMaterialOldDescription => 'Descrição do Material Antigo';
 
   @override
-  String get labelSelectTag => 'Selecione uma tag (opcional)';
+  String get labelSelectTag => 'Selecione uma etiqueta (opcional)';
 
   @override
-  String get labelSelectMaterialKindForDownload => 'Selecione um Material Kind';
+  String get labelSelectMaterialKindForDownload =>
+      'Selecione uma Categoria do Material';
+
+  @override
+  String get labelDescription => 'Descrição';
+
+  @override
+  String get labelPublic => 'Pública';
+
+  @override
+  String get labelPrivate => 'Privada';
+
+  @override
+  String get labelOwner => 'Dono';
+
+  @override
+  String get labelDateFrom => 'Data Inicial';
+
+  @override
+  String get labelDateTo => 'Data Final';
 
   @override
   String get hintEnterUsername => 'Digite seu usuário';
@@ -174,19 +214,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hintConfirmPassword => 'Confirme sua senha';
 
   @override
-  String get hintEnterPraiseName => 'Digite o nome do praise';
+  String get hintEnterPraiseName => 'Digite o nome do louvor';
 
   @override
-  String get hintEnterPraiseNumber => 'Digite o número do praise (opcional)';
+  String get hintEnterPraiseNumber => 'Digite o número do louvor (opcional)';
 
   @override
-  String get hintEnterTagName => 'Digite o nome da tag';
+  String get hintEnterTagName => 'Digite o nome da etiqueta';
 
   @override
-  String get hintEnterMaterialKindName => 'Digite o nome do material kind';
+  String get hintEnterMaterialKindName =>
+      'Digite o nome da Categoria do Material';
 
   @override
-  String get hintEnterMaterialTypeName => 'Digite o nome do material type';
+  String get hintEnterMaterialTypeName => 'Digite o nome do Tipo do Material';
 
   @override
   String get hintEnterLanguageCode => 'Ex: pt-BR, en-US';
@@ -195,7 +236,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hintEnterLanguageName => 'Digite o nome da linguagem';
 
   @override
-  String get hintEnterSearchPraise => 'Digite o nome do praise...';
+  String get hintEnterTranslatedName => 'Digite o nome traduzido';
+
+  @override
+  String get hintEnterSearchPraise => 'Digite o nome do louvor...';
+
+  @override
+  String get hintEnterListName => 'Digite o nome da lista';
+
+  @override
+  String get hintEnterListDescription =>
+      'Digite a descrição da lista (opcional)';
 
   @override
   String hintEnterUrl(String platform) {
@@ -221,6 +272,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get validationRequired => 'Este campo é obrigatório';
+
+  @override
+  String get validationTranslatedNameRequired =>
+      'O nome traduzido é obrigatório';
 
   @override
   String validationMinLength(int min) {
@@ -268,67 +323,93 @@ class AppLocalizationsPt extends AppLocalizations {
   String get validationTextRequired => 'Texto é obrigatório';
 
   @override
-  String get validationMaterialKindRequired => 'Material Kind é obrigatório';
+  String get validationMaterialKindRequired =>
+      'Categoria do Material é obrigatório';
 
   @override
-  String get validationSelectMaterialType => 'Selecione o tipo de material';
+  String get validationSelectMaterialType => 'Selecione o Tipo do Material';
 
   @override
-  String get validationSelectMaterialKind => 'Selecione o Material Kind';
+  String get validationSelectMaterialKind =>
+      'Selecione a Categoria do Material';
 
   @override
-  String get pageTitleDashboard => 'Dashboard';
+  String get validationListNameRequired => 'Nome da lista é obrigatório';
 
   @override
-  String get pageTitlePraises => 'Praises';
+  String get pageTitleDashboard => 'Início';
 
   @override
-  String get pageTitleTags => 'Tags';
+  String get pageTitlePraises => 'Louvores';
 
   @override
-  String get pageTitleMaterialKinds => 'Material Kinds';
+  String get pageTitleTags => 'Etiquetas';
 
   @override
-  String get pageTitleMaterialTypes => 'Material Types';
+  String get pageTitleMaterialKinds => 'Categorias do Material';
+
+  @override
+  String get pageTitleMaterialTypes => 'Tipos do Material';
 
   @override
   String get pageTitleLanguages => 'Linguagens';
 
   @override
-  String get pageTitleCreatePraise => 'Criar Praise';
+  String get pageTitleCreatePraise => 'Criar Louvor';
 
   @override
-  String get pageTitleEditPraise => 'Editar Praise';
+  String get pageTitleEditPraise => 'Editar Louvor';
 
   @override
-  String get pageTitlePraiseDetails => 'Detalhes do Praise';
+  String get pageTitlePraiseDetails => 'Detalhes do Louvor';
 
   @override
   String get pageTitleRegister => 'Registro';
 
   @override
-  String get pageTitleCreateTag => 'Criar Tag';
+  String get pageTitleCreateTag => 'Criar Etiqueta';
 
   @override
-  String get pageTitleEditTag => 'Editar Tag';
+  String get pageTitleEditTag => 'Editar Etiqueta';
 
   @override
-  String get pageTitleCreateMaterialKind => 'Criar Material Kind';
+  String get pageTitleCreateMaterialKind => 'Criar Categoria do Material';
 
   @override
-  String get pageTitleEditMaterialKind => 'Editar Material Kind';
+  String get pageTitleEditMaterialKind => 'Editar Categoria do Material';
 
   @override
-  String get pageTitleCreateMaterialType => 'Criar Material Type';
+  String get pageTitleCreateMaterialType => 'Criar Tipo do Material';
 
   @override
-  String get pageTitleEditMaterialType => 'Editar Material Type';
+  String get pageTitleEditMaterialType => 'Editar Tipo do Material';
 
   @override
   String get pageTitleCreateLanguage => 'Criar Linguagem';
 
   @override
   String get pageTitleEditLanguage => 'Editar Linguagem';
+
+  @override
+  String get pageTitleTranslations => 'Traduções';
+
+  @override
+  String get pageTitleCreateTranslation => 'Criar Tradução';
+
+  @override
+  String get pageTitleEditTranslation => 'Editar Tradução';
+
+  @override
+  String get pageTitlePraiseLists => 'Listas de Louvores';
+
+  @override
+  String get pageTitlePraiseListDetail => 'Detalhes da Lista';
+
+  @override
+  String get pageTitlePraiseListCreate => 'Criar Lista';
+
+  @override
+  String get pageTitlePraiseListEdit => 'Editar Lista';
 
   @override
   String messageWelcome(String username) {
@@ -339,23 +420,39 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messageNotAuthenticated => 'Não autenticado';
 
   @override
-  String get messageNoTagsAvailable => 'Nenhuma tag disponível';
+  String get messageNoTagsAvailable => 'Nenhuma etiqueta disponível';
 
   @override
   String get messageNoMaterialsAdded => 'Nenhum material adicionado';
 
   @override
   String get messageNoMaterialKindsAvailable =>
-      'Nenhum Material Kind disponível';
+      'Nenhum Categoria do Material disponível';
 
   @override
-  String get messageNoTagsForFilter => 'Nenhuma tag (todos os praises)';
+  String get messageNoTagsForFilter => 'Nenhuma etiqueta (todos os louvores)';
 
   @override
   String get messageNoMaterials => 'Nenhum material cadastrado';
 
   @override
-  String get messageCreatePraiseFirst => 'É necessário criar o praise primeiro';
+  String get messageNoTranslationsAvailable => 'Nenhuma tradução disponível';
+
+  @override
+  String get messageNoLists => 'Nenhuma lista encontrada';
+
+  @override
+  String get messageNoListsFound =>
+      'Nenhuma lista encontrada com os filtros aplicados';
+
+  @override
+  String get messageNoPraisesInList => 'Nenhum louvor nesta lista';
+
+  @override
+  String get messageUnknown => 'Desconhecido';
+
+  @override
+  String get messageCreatePraiseFirst => 'É necessário criar o louvor primeiro';
 
   @override
   String get messageFileSelected =>
@@ -414,7 +511,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get sectionTags => 'Tags';
+  String get sectionTags => 'Etiquetas';
 
   @override
   String get sectionMaterials => 'Materiais';
@@ -482,48 +579,96 @@ class AppLocalizationsPt extends AppLocalizations {
   String get actionHideOldMaterials => 'Ocultar Antigos';
 
   @override
+  String get actionAddTranslation => 'Adicionar Tradução';
+
+  @override
+  String get actionNewList => 'Nova Lista';
+
+  @override
+  String get actionCreateFirstList => 'Criar primeira lista';
+
+  @override
+  String get actionFollow => 'Seguir';
+
+  @override
+  String get actionUnfollow => 'Deixar de Seguir';
+
+  @override
+  String get actionCopy => 'Copiar';
+
+  @override
+  String get actionCopyList => 'Copiar Lista';
+
+  @override
+  String get actionAddToList => 'Adicionar à Lista';
+
+  @override
+  String get actionRemoveFromList => 'Remover da Lista';
+
+  @override
+  String get actionMoveUp => 'Mover para Cima';
+
+  @override
+  String get actionMoveDown => 'Mover para Baixo';
+
+  @override
+  String get actionClearFilters => 'Limpar Filtros';
+
+  @override
   String get dialogTitleConfirmDelete => 'Confirmar Exclusão';
 
   @override
   String get dialogTitleStartReview => 'Iniciar Revisão';
 
   @override
-  String get dialogTitleDownloadZip => 'Baixar Praise em ZIP';
+  String get dialogTitleDownloadZip => 'Baixar Louvor em ZIP';
 
   @override
   String get dialogMessageDeletePraise =>
-      'Tem certeza que deseja excluir este praise? Esta ação não pode ser desfeita.';
+      'Tem certeza que deseja excluir este louvor? Esta ação não pode ser desfeita.';
 
   @override
   String get dialogMessageDeleteTag =>
-      'Tem certeza que deseja excluir esta tag?';
+      'Tem certeza que deseja excluir esta etiqueta?';
 
   @override
   String get dialogMessageDeleteMaterialKind =>
-      'Tem certeza que deseja excluir este material kind?';
+      'Tem certeza que deseja excluir esta categoria do material?';
 
   @override
   String get dialogMessageDeleteMaterialType =>
-      'Tem certeza que deseja excluir este material type?';
+      'Tem certeza que deseja excluir este tipo do material?';
 
   @override
   String get dialogMessageDeleteLanguage =>
       'Tem certeza que deseja excluir esta linguagem?';
 
   @override
+  String get dialogMessageDeleteTranslation =>
+      'Tem certeza que deseja excluir esta tradução?';
+
+  @override
   String get dialogMessageDeleteMaterial =>
       'Tem certeza que deseja excluir este material?';
 
   @override
+  String get dialogMessageDeletePraiseList =>
+      'Tem certeza que deseja excluir esta lista? Esta ação não pode ser desfeita.';
+
+  @override
+  String get dialogMessageRemovePraiseFromList =>
+      'Tem certeza que deseja remover este louvor da lista?';
+
+  @override
   String get dialogMessageNoFileMaterials =>
-      'Este praise não possui materiais de arquivo para download';
+      'Este louvor não possui materiais de arquivo para download';
 
   @override
   String get dialogLabelReviewDescription => 'Descrição (opcional)';
 
   @override
   String get errorConnectionFailed =>
-      'Não foi possível conectar ao servidor.\nVerifique se o backend está rodando em http://127.0.0.1:8000';
+      'Não foi possível conectar ao servidor.\nVerifique se o backend está rodando.';
 
   @override
   String get errorInvalidCredentials => 'Usuário ou senha incorretos';
@@ -565,17 +710,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String errorLoadPraise(String error) {
-    return 'Erro ao carregar praise: $error';
+    return 'Erro ao carregar o louvor: $error';
   }
 
   @override
   String errorLoadMaterialKind(String error) {
-    return 'Erro ao carregar material kind: $error';
+    return 'Erro ao carregar categoria do material: $error';
   }
 
   @override
   String errorLoadMaterialType(String error) {
-    return 'Erro ao carregar material type: $error';
+    return 'Erro ao carregar tipo do material: $error';
   }
 
   @override
@@ -588,12 +733,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String errorCreatePraise(String error) {
-    return 'Erro ao criar praise: $error';
+    return 'Erro ao criar o louvor: $error';
   }
 
   @override
   String errorUpdatePraise(String error) {
-    return 'Erro ao atualizar praise: $error';
+    return 'Erro ao atualizar o louvor: $error';
   }
 
   @override
@@ -618,32 +763,32 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String errorSaveTag(String error) {
-    return 'Erro ao salvar tag: $error';
+    return 'Erro ao salvar etiqueta: $error';
   }
 
   @override
   String errorDeleteTag(String error) {
-    return 'Erro ao excluir tag: $error';
+    return 'Erro ao excluir etiqueta: $error';
   }
 
   @override
   String errorSaveMaterialKind(String error) {
-    return 'Erro ao salvar material kind: $error';
+    return 'Erro ao salvar categoria do material: $error';
   }
 
   @override
   String errorDeleteMaterialKind(String error) {
-    return 'Erro ao excluir material kind: $error';
+    return 'Erro ao excluir categoria do material: $error';
   }
 
   @override
   String errorSaveMaterialType(String error) {
-    return 'Erro ao salvar material type: $error';
+    return 'Erro ao salvar tipo do material: $error';
   }
 
   @override
   String errorDeleteMaterialType(String error) {
-    return 'Erro ao excluir material type: $error';
+    return 'Erro ao excluir tipo do material: $error';
   }
 
   @override
@@ -657,8 +802,68 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String errorDeleteTranslation(String error) {
+    return 'Erro ao excluir tradução: $error';
+  }
+
+  @override
+  String errorSaveTranslation(String error) {
+    return 'Erro ao salvar tradução: $error';
+  }
+
+  @override
+  String errorLoadTranslation(String error) {
+    return 'Erro ao carregar tradução: $error';
+  }
+
+  @override
+  String errorLoadPraiseList(Object error) {
+    return 'Erro ao carregar lista: $error';
+  }
+
+  @override
+  String errorCreatePraiseList(Object error) {
+    return 'Erro ao criar lista: $error';
+  }
+
+  @override
+  String errorUpdatePraiseList(Object error) {
+    return 'Erro ao atualizar lista: $error';
+  }
+
+  @override
+  String errorDeletePraiseList(Object error) {
+    return 'Erro ao excluir lista: $error';
+  }
+
+  @override
+  String errorAddPraiseToList(Object error) {
+    return 'Erro ao adicionar louvor à lista: $error';
+  }
+
+  @override
+  String errorRemovePraiseFromList(Object error) {
+    return 'Erro ao remover louvor da lista: $error';
+  }
+
+  @override
+  String errorFollowList(Object error) {
+    return 'Erro ao seguir lista: $error';
+  }
+
+  @override
+  String errorUnfollowList(Object error) {
+    return 'Erro ao deixar de seguir lista: $error';
+  }
+
+  @override
+  String errorCopyList(Object error) {
+    return 'Erro ao copiar lista: $error';
+  }
+
+  @override
   String get errorNeedCreatePraiseFirst =>
-      'É necessário criar o praise primeiro';
+      'É necessário criar o louvor primeiro';
 
   @override
   String get errorDownloadCanceled => 'Download cancelado';
@@ -668,13 +873,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get successPraiseCreated =>
-      'Praise criado com sucesso. Você pode adicionar materiais na página de edição.';
+      'Louvor criado com sucesso. Você pode adicionar materiais na página de edição.';
 
   @override
-  String get successPraiseUpdated => 'Praise atualizado com sucesso';
+  String get successPraiseUpdated => 'Louvor atualizado com sucesso';
 
   @override
-  String get successPraiseDeleted => 'Praise excluído com sucesso';
+  String get successPraiseDeleted => 'Louvor excluído com sucesso';
 
   @override
   String get successReviewStarted => 'Revisão iniciada com sucesso';
@@ -689,28 +894,63 @@ class AppLocalizationsPt extends AppLocalizations {
   String get successMaterialDeleted => 'Material excluído com sucesso';
 
   @override
-  String get successTagSaved => 'Tag salva com sucesso';
+  String get successTagSaved => 'Etiqueta salva com sucesso';
 
   @override
-  String get successTagDeleted => 'Tag excluída com sucesso';
+  String get successTagDeleted => 'Etiqueta excluída com sucesso';
 
   @override
-  String get successMaterialKindSaved => 'Material kind salvo com sucesso';
+  String get successMaterialKindSaved =>
+      'categoria do material salvo com sucesso';
 
   @override
-  String get successMaterialKindDeleted => 'Material kind excluído com sucesso';
+  String get successMaterialKindDeleted =>
+      'categoria do material excluído com sucesso';
 
   @override
-  String get successMaterialTypeSaved => 'Material type salvo com sucesso';
+  String get successMaterialTypeSaved => 'Tipo do Material salvo com sucesso';
 
   @override
-  String get successMaterialTypeDeleted => 'Material type excluído com sucesso';
+  String get successMaterialTypeDeleted =>
+      'Tipo do Material excluído com sucesso';
 
   @override
   String get successLanguageSaved => 'Linguagem salva com sucesso';
 
   @override
   String get successLanguageDeleted => 'Linguagem excluída com sucesso';
+
+  @override
+  String get successTranslationSaved => 'Tradução salva com sucesso';
+
+  @override
+  String get successTranslationDeleted => 'Tradução excluída com sucesso';
+
+  @override
+  String get successPraiseListCreated => 'Lista criada com sucesso';
+
+  @override
+  String get successPraiseListUpdated => 'Lista atualizada com sucesso';
+
+  @override
+  String get successPraiseListDeleted => 'Lista excluída com sucesso';
+
+  @override
+  String get successPraiseAddedToList =>
+      'Louvor adicionado à lista com sucesso';
+
+  @override
+  String get successPraiseRemovedFromList =>
+      'Louvor removido da lista com sucesso';
+
+  @override
+  String get successListFollowed => 'Lista seguida com sucesso';
+
+  @override
+  String get successListUnfollowed => 'Deixou de seguir a lista com sucesso';
+
+  @override
+  String get successListCopied => 'Lista copiada com sucesso';
 
   @override
   String get enumMaterialFormTypeFile => 'Arquivo';
@@ -767,10 +1007,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawerDashboard => 'Dashboard';
 
   @override
-  String get drawerPraises => 'Praises';
+  String get drawerPraises => 'Louvores';
 
   @override
-  String get drawerTags => 'Tags';
+  String get drawerTags => 'Etiquetas';
 
   @override
   String get drawerLanguages => 'Linguagens';
@@ -779,10 +1019,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawerLanguage => 'Idioma';
 
   @override
-  String get drawerMaterialKinds => 'Material Kinds';
+  String get drawerMaterialKinds => 'Categorias do Material';
 
   @override
-  String get drawerMaterialTypes => 'Material Types';
+  String get drawerMaterialTypes => 'Tipos do Material';
+
+  @override
+  String get drawerTranslations => 'Traduções';
+
+  @override
+  String get drawerPraiseLists => 'Listas de Louvores';
 
   @override
   String get drawerLogout => 'Sair';
@@ -799,17 +1045,25 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get cardPraises => 'Praises';
+  String get cardPraises => 'Louvores';
 
   @override
-  String get cardTags => 'Tags';
+  String get cardTags => 'Etiquetas';
 
   @override
-  String get cardMaterialKinds => 'Material Kinds';
+  String get cardMaterialKinds => 'Categorias do Material';
 
   @override
-  String get cardDownloadByMaterialKind => 'Baixar por Material Kind';
+  String get cardDownloadByMaterialKind => 'Baixar por Categoria do Material';
 
   @override
   String get cardLists => 'Listas';
+
+  @override
+  String labelPraisesCount(int count) {
+    return '$count louvor(es)';
+  }
+
+  @override
+  String get labelBy => 'por';
 }

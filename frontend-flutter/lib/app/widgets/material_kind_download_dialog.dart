@@ -171,7 +171,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
                       min: 10,
                       max: 1000,
                       divisions: 99,
-                      label: l10n.messageMaxZipSize.replaceAll('{size}', _maxZipSizeMb.toString()),
+                      label: l10n.messageMaxZipSize(_maxZipSizeMb),
                       onChanged: _isDownloading
                           ? null
                           : (value) {
@@ -275,7 +275,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
       if (errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.errorDownloadZip.replaceAll('{error}', errorMessage!)),
+            content: Text(l10n.errorDownloadZip(errorMessage!)),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -290,7 +290,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.messageZipSaved.replaceAll('{path}', filePath)),
+            content: Text(l10n.messageZipSaved(filePath)),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -300,7 +300,7 @@ class _MaterialKindDownloadDialogState extends ConsumerState<MaterialKindDownloa
       Navigator.of(context).pop(false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.errorDownloadZip.replaceAll('{error}', e.toString())),
+          content: Text(l10n.errorDownloadZip(e.toString())),
           duration: const Duration(seconds: 5),
         ),
       );

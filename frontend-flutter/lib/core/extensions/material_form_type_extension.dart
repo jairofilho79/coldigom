@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n/generated/app_localizations.dart';
+import '../../app/widgets/material_form_dialog.dart';
 
 extension MaterialFormTypeExtension on MaterialFormType {
   /// Retorna o nome localizado do tipo de material
   String localizedName(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (l10n == null) return name;
+    if (l10n == null) return toString().split('.').last;
 
     switch (this) {
       case MaterialFormType.file:

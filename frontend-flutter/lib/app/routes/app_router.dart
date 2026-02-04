@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../pages/login_page.dart';
@@ -23,6 +24,8 @@ import '../pages/praise_list_create_page.dart';
 import '../pages/praise_list_edit_page.dart';
 import '../pages/pdf_viewer_page.dart';
 import '../pages/audio_player_page.dart';
+import '../pages/room_offline_page.dart';
+import '../pages/text_viewer_page.dart';
 import '../stores/auth_store.dart';
 
 class AppRouter {
@@ -244,16 +247,65 @@ class AppRouter {
         },
       ),
       GoRoute(
+        path: '/rooms/offline',
+        name: 'room-offline',
+        builder: (context, state) => const RoomOfflinePage(),
+      ),
+      GoRoute(
+        path: '/rooms/offline/:roomId',
+        name: 'room-offline-id',
+        builder: (context, state) {
+          final roomId = state.pathParameters['roomId']!;
+          return RoomOfflinePage(roomId: roomId);
+        },
+      ),
+      GoRoute(
         path: '/materials/:materialId/view',
         name: 'pdf-viewer',
         builder: (context, state) {
           final materialId = state.pathParameters['materialId']!;
           final praiseName = state.uri.queryParameters['praiseName'] ?? '';
           final materialKindName = state.uri.queryParameters['materialKindName'] ?? '';
+          final materialKindId = state.uri.queryParameters['materialKindId'];
+          final roomId = state.uri.queryParameters['roomId'];
+          final playlistIndexStr = state.uri.queryParameters['playlistIndex'];
+          final playlistLengthStr = state.uri.queryParameters['playlistLength'];
+          final playlistIndex = playlistIndexStr != null ? int.tryParse(playlistIndexStr) : null;
+          final playlistLength = playlistLengthStr != null ? int.tryParse(playlistLengthStr) : null;
           return PdfViewerPage(
+            key: ValueKey('pdf-$materialId-${playlistIndex ?? ''}'), // Key única para forçar reconstrução
             materialId: materialId,
             praiseName: praiseName,
             materialKindName: materialKindName,
+            materialKindId: materialKindId,
+            roomId: roomId,
+            playlistIndex: playlistIndex,
+            playlistLength: playlistLength,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/materials/:materialId/text',
+        name: 'text-viewer',
+        builder: (context, state) {
+          final materialId = state.pathParameters['materialId']!;
+          final praiseName = state.uri.queryParameters['praiseName'] ?? '';
+          final materialKindName = state.uri.queryParameters['materialKindName'] ?? '';
+          final materialKindId = state.uri.queryParameters['materialKindId'];
+          final roomId = state.uri.queryParameters['roomId'];
+          final playlistIndexStr = state.uri.queryParameters['playlistIndex'];
+          final playlistLengthStr = state.uri.queryParameters['playlistLength'];
+          final playlistIndex = playlistIndexStr != null ? int.tryParse(playlistIndexStr) : null;
+          final playlistLength = playlistLengthStr != null ? int.tryParse(playlistLengthStr) : null;
+          return TextViewerPage(
+            key: ValueKey('text-$materialId-${playlistIndex ?? ''}'), // Key única para forçar reconstrução
+            materialId: materialId,
+            praiseName: praiseName,
+            materialKindName: materialKindName,
+            materialKindId: materialKindId,
+            roomId: roomId,
+            playlistIndex: playlistIndex,
+            playlistLength: playlistLength,
           );
         },
       ),

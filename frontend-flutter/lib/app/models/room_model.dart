@@ -125,6 +125,97 @@ class RoomMessageResponse {
 }
 
 @JsonSerializable()
+class RoomUpdate {
+  final String? name;
+  final String? description;
+  @JsonKey(name: 'access_type')
+  final RoomAccessType? accessType;
+  final String? password;
+  @JsonKey(name: 'is_open_for_requests')
+  final bool? isOpenForRequests;
+  @JsonKey(name: 'auto_destroy_on_empty')
+  final bool? autoDestroyOnEmpty;
+
+  RoomUpdate({
+    this.name,
+    this.description,
+    this.accessType,
+    this.password,
+    this.isOpenForRequests,
+    this.autoDestroyOnEmpty,
+  });
+
+  factory RoomUpdate.fromJson(Map<String, dynamic> json) =>
+      _$RoomUpdateFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RoomUpdateToJson(this);
+}
+
+@JsonSerializable()
+class RoomDetailResponse extends RoomResponse {
+  @JsonKey(name: 'creator_username')
+  final String? creatorUsername;
+  @JsonKey(name: 'is_creator')
+  final bool isCreator;
+  @JsonKey(name: 'is_participant')
+  final bool isParticipant;
+  final List<Map<String, dynamic>> praises;
+  final List<Map<String, dynamic>> participants;
+
+  RoomDetailResponse({
+    required super.id,
+    required super.code,
+    required super.name,
+    super.description,
+    required super.creatorId,
+    required super.accessType,
+    super.isOpenForRequests,
+    required super.autoDestroyOnEmpty,
+    required super.createdAt,
+    required super.updatedAt,
+    required super.lastActivityAt,
+    required super.participantsCount,
+    required super.praisesCount,
+    this.creatorUsername,
+    required this.isCreator,
+    required this.isParticipant,
+    required this.praises,
+    required this.participants,
+  });
+
+  factory RoomDetailResponse.fromJson(Map<String, dynamic> json) =>
+      _$RoomDetailResponseFromJson(json);
+
+  @override
+  Map<String, dynamic> toJson() => _$RoomDetailResponseToJson(this);
+}
+
+@JsonSerializable()
+class RoomJoinRequest {
+  final String? password;
+
+  RoomJoinRequest({this.password});
+
+  factory RoomJoinRequest.fromJson(Map<String, dynamic> json) =>
+      _$RoomJoinRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RoomJoinRequestToJson(this);
+}
+
+@JsonSerializable()
+class RoomPraiseReorder {
+  @JsonKey(name: 'praise_orders')
+  final List<Map<String, dynamic>> praiseOrders;
+
+  RoomPraiseReorder({required this.praiseOrders});
+
+  factory RoomPraiseReorder.fromJson(Map<String, dynamic> json) =>
+      _$RoomPraiseReorderFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RoomPraiseReorderToJson(this);
+}
+
+@JsonSerializable()
 class RoomMessageCreate {
   final String message;
 

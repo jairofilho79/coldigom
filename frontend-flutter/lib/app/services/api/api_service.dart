@@ -12,6 +12,7 @@ import '../../models/material_type_model.dart';
 import '../../models/praise_material_model.dart';
 import '../../models/praise_list_model.dart';
 import '../../models/translation_model.dart';
+import '../../models/room_model.dart';
 import '../../../core/constants/app_constants.dart';
 
 /// Serviço de API usando Dio diretamente
@@ -641,6 +642,119 @@ class ApiService {
   Future<PraiseListResponse> copyList(String listId) async {
     final response = await _dio.post('/api/v1/praise-lists/$listId/copy');
     return PraiseListResponse.fromJson(response.data);
+  }
+
+  // Rooms
+  Future<List<RoomResponse>> getRooms() async {
+    final response = await _dio.get('/api/v1/rooms/');
+    return (response.data as List)
+        .map((json) => RoomResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<List<RoomResponse>> getPublicRooms({
+    int? skip,
+    int? limit,
+  }) async {
+    final response = await _dio.get(
+      '/api/v1/rooms/public',
+      queryParameters: {
+        if (skip != null) 'skip': skip,
+        if (limit != null) 'limit': limit,
+      },
+    );
+    return (response.data as List)
+        .map((json) => RoomResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<RoomDetailResponse> getRoomById(String id) async {
+    final response = await _dio.get('/api/v1/rooms/$id');
+    return RoomDetailResponse.fromJson(response.data);
+  }
+
+  Future<RoomDetailResponse> getRoomByCode(String code) async {
+    final response = await _dio.get('/api/v1/rooms/code/$code');
+    return RoomDetailResponse.fromJson(response.data);
+  }
+
+  Future<RoomResponse> createRoom(RoomCreate room) async {
+    final response = await _dio.post(
+      '/api/v1/rooms/',
+      data: room.toJson(),
+    );
+    return RoomResponse.fromJson(response.data);
+  }
+
+  Future<RoomResponse> updateRoom(String id, RoomUpdate room) async {
+    final response = await _dio.put(
+      '/api/v1/rooms/$id',
+      data: room.toJson(),
+    );
+    return RoomResponse.fromJson(response.data);
+  }
+
+  Future<void> deleteRoom(String id) async {
+    await _dio.delete('/api/v1/rooms/$id');
+  }
+
+  Future<RoomDetailResponse> joinRoom(String roomId, {String? password}) async {
+    final response = await _dio.post(
+      '/api/v1/rooms/$roomId/join',
+      data: password != null ? RoomJoinRequest(password: password).toJson() : null,
+    );
+    return RoomDetailResponse.fromJson(response.data);
+  }
+
+  Future<RoomDetailResponse> joinRoomByCode(String code, {String? password}) async {
+    final response = await _dio.post(
+      '/api/v1/rooms/code/$code/join',
+      data: password != null ? RoomJoinRequest(password: password).toJson() : null,
+    );
+    return RoomDetailResponse.fromJson(response.data);
+  }
+
+  Future<void> leaveRoom(String roomId) async {
+    await _dio.post('/api/v1/rooms/$roomId/leave');
+  }
+
+  Future<void> addPraiseToRoom(String roomId, String praiseId) async {
+    await _dio.post('/api/v1/rooms/$roomId/praises/$praiseId');
+  }
+
+  Future<void> removePraiseFromRoom(String roomId, String praiseId) async {
+    await _dio.delete('/api/v1/rooms/$roomId/praises/$praiseId');
+  }
+
+  Future<void> reorderPraisesInRoom(String roomId, RoomPraiseReorder reorder) async {
+    await _dio.put(
+      '/api/v1/rooms/$roomId/praises/reorder',
+      data: reorder.toJson(),
+    );
+  }
+
+  Future<void> importPraiseListToRoom(String roomId, String listId) async {
+    await _dio.post('/api/v1/rooms/$roomId/import-list/$listId');
+  }
+
+  Future<List<RoomMessageResponse>> getRoomMessages(String roomId) async {
+    final response = await _dio.get('/api/v1/rooms/$roomId/messages');
+    return (response.data as List)
+        .map((json) => RoomMessageResponse.fromJson(json))
+        .toList();
+  }
+
+  Future<RoomMessageResponse> sendRoomMessage(String roomId, String message) async {
+    final response = await _dio.post(
+      '/api/v1/rooms/$roomId/messages',
+      data: RoomMessageCreate(message: message).toJson(),
+    );
+    return RoomMessageResponse.fromJson(response.data);
+  }
+
+  Future<List<Map<String, dynamic>>> getRoomParticipants(String roomId) async {
+    final response = await _dio.get('/api/v1/rooms/$roomId/participants');
+    return (response.data as List).cast<Map<String, dynamic>>();
   }
 }
 

@@ -7,17 +7,27 @@ import '../../core/i18n/generated/app_localizations.dart';
 import '../services/offline/download_service.dart';
 import '../services/api/api_service.dart';
 import '../widgets/app_status_widgets.dart';
+import '../providers/room_providers.dart';
+import '../../core/i18n/entity_translation_helper.dart';
 
 class PdfViewerPage extends ConsumerStatefulWidget {
   final String materialId;
   final String praiseName;
   final String materialKindName;
+  final String? materialKindId;
+  final String? roomId;
+  final int? playlistIndex;
+  final int? playlistLength;
 
   const PdfViewerPage({
     super.key,
     required this.materialId,
     required this.praiseName,
     required this.materialKindName,
+    this.materialKindId,
+    this.roomId,
+    this.playlistIndex,
+    this.playlistLength,
   });
 
   @override
@@ -42,16 +52,34 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
   }
 
   @override
+  void didUpdateWidget(PdfViewerPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Se o materialId mudou, recarregar o PDF
+    if (oldWidget.materialId != widget.materialId) {
+      _loadPdf();
+    }
+  }
+
+  @override
   void dispose() {
     // PdfViewerController não precisa de dispose explícito
     super.dispose();
   }
 
   Future<void> _loadPdf() async {
+    // Resetar estado ao carregar novo PDF
     setState(() {
       _isLoading = true;
+      _isDownloading = false;
       _errorMessage = null;
+      _currentPage = 1;
+      _totalPages = 0;
+      _downloadProgress = 0.0;
+      _filePath = null;
     });
+
+    // Criar novo controller se necessário
+    _pdfController = PdfViewerController();
 
     try {
       final downloadService = ref.read(offlineDownloadServiceProvider);
@@ -131,13 +159,115 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
     }
   }
 
+  Future<void> _goToFirstPage() async {
+    if (_pdfController != null && _currentPage > 1) {
+      await _pdfController!.goToPage(
+        pageNumber: 1,
+        duration: const Duration(milliseconds: 300),
+      );
+    }
+  }
+
+  void _navigateToMaterial(int index) {
+    if (!_hasPlaylistNavigation) return;
+    if (index < 0 || index >= widget.playlistLength!) return;
+
+    final roomState = ref.read(currentRoomOfflineStateProvider);
+    if (roomState == null) return;
+
+    final item = roomState.playlist[index];
+    final isPdf = item.materialTypeName.toUpperCase() == 'PDF';
+    final materialKindIdParam = item.materialKindId != null 
+        ? '&materialKindId=${Uri.encodeComponent(item.materialKindId!)}' 
+        : '';
+
+    // Atualizar índice atual
+    ref.read(currentRoomOfflineStateProvider.notifier).setCurrentMaterialIndex(index);
+
+    if (isPdf) {
+      context.go(
+        '/materials/${item.materialId}/view?praiseName=${Uri.encodeComponent(item.praiseName)}&materialKindName=${Uri.encodeComponent(item.materialKindName)}$materialKindIdParam&roomId=${widget.roomId ?? ''}&playlistIndex=$index&playlistLength=${widget.playlistLength}',
+      );
+    } else {
+      context.go(
+        '/materials/${item.materialId}/text?praiseName=${Uri.encodeComponent(item.praiseName)}&materialKindName=${Uri.encodeComponent(item.materialKindName)}$materialKindIdParam&roomId=${widget.roomId ?? ''}&playlistIndex=$index&playlistLength=${widget.playlistLength}',
+      );
+    }
+  }
+
+  void _showPlaylistDialog(BuildContext context, WidgetRef ref) {
+    final roomState = ref.read(currentRoomOfflineStateProvider);
+    if (roomState == null || !_hasPlaylistNavigation) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Playlist de Materiais'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: roomState.playlist.length,
+            itemBuilder: (context, index) {
+              final item = roomState.playlist[index];
+              final isCurrent = index == widget.playlistIndex;
+              final isPdf = item.materialTypeName.toUpperCase() == 'PDF';
+              
+              return ListTile(
+                leading: Icon(
+                  isPdf ? Icons.picture_as_pdf : Icons.text_fields,
+                  color: isPdf ? Colors.red : Colors.blue,
+                ),
+                title: Text(
+                  item.praiseName,
+                  style: TextStyle(
+                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                subtitle: Text(
+                  item.materialKindId != null
+                      ? getMaterialKindName(ref, item.materialKindId!, item.materialKindName)
+                      : item.materialKindName,
+                ),
+                trailing: isCurrent ? const Icon(Icons.check, color: Colors.green) : null,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (index != widget.playlistIndex) {
+                    _navigateToMaterial(index);
+                  }
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            // Se há roomId, voltar para a sala, senão tentar pop
+            if (widget.roomId != null) {
+              context.go('/rooms/offline/${widget.roomId}');
+            } else {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            }
+          },
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +275,9 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
           children: [
             Text(
               widget.materialKindName.isNotEmpty 
-                  ? widget.materialKindName 
+                  ? (widget.materialKindId != null
+                      ? getMaterialKindName(ref, widget.materialKindId!, widget.materialKindName)
+                      : widget.materialKindName)
                   : 'PDF',
               style: Theme.of(context).textTheme.titleMedium,
             ),
@@ -159,30 +291,94 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
           ],
         ),
         actions: [
+          // Ícone de playlist - clique vai para próximo, segurar mostra lista
+          if (_hasPlaylistNavigation)
+            GestureDetector(
+              onTap: () {
+                if (_canGoToNextMaterial) {
+                  _navigateToNextMaterial();
+                } else {
+                  // Se não pode ir para próximo, vai para o primeiro
+                  _navigateToMaterial(0);
+                }
+              },
+              onLongPress: () => _showPlaylistDialog(context, ref),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.playlist_play,
+                  color: _canGoToNextMaterial ? null : Colors.grey,
+                ),
+              ),
+            ),
+          // Contador de páginas - clique avança, segurar vai para primeira
           if (_totalPages > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Center(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context);
-                    return Text(
-                      l10n?.messagePageOf(
-                          _currentPage,
-                          _totalPages) ?? 
-                      '$_currentPage / $_totalPages',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    );
-                  },
+            GestureDetector(
+              onTap: () {
+                if (_currentPage < _totalPages) {
+                  _goToNextPage();
+                } else {
+                  // Se está na última página, vai para primeira
+                  _goToFirstPage();
+                }
+              },
+              onLongPress: () => _goToFirstPage(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: Text(
+                    '$_currentPage de $_totalPages',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
               ),
             ),
         ],
       ),
       body: _buildBody(),
-      bottomNavigationBar: _totalPages > 1 ? _buildNavigationBar() : null,
     );
   }
+
+  bool get _hasPlaylistNavigation => 
+      widget.playlistIndex != null && 
+      widget.playlistLength != null && 
+      widget.playlistLength! > 1;
+
+  bool get _canGoToNextMaterial => 
+      _hasPlaylistNavigation && 
+      widget.playlistIndex! < widget.playlistLength! - 1;
+
+  bool get _canGoToPreviousMaterial => 
+      _hasPlaylistNavigation && 
+      widget.playlistIndex! > 0;
+
+  void _navigateToNextMaterial() {
+    if (!_canGoToNextMaterial) return;
+
+    final roomState = ref.read(currentRoomOfflineStateProvider);
+    if (roomState == null) return;
+
+    final nextIndex = widget.playlistIndex! + 1;
+    final nextItem = roomState.playlist[nextIndex];
+    final isPdf = nextItem.materialTypeName.toUpperCase() == 'PDF';
+    final materialKindIdParam = nextItem.materialKindId != null 
+        ? '&materialKindId=${Uri.encodeComponent(nextItem.materialKindId!)}' 
+        : '';
+
+    // Atualizar índice atual
+    ref.read(currentRoomOfflineStateProvider.notifier).setCurrentMaterialIndex(nextIndex);
+
+    if (isPdf) {
+      context.go(
+        '/materials/${nextItem.materialId}/view?praiseName=${Uri.encodeComponent(nextItem.praiseName)}&materialKindName=${Uri.encodeComponent(nextItem.materialKindName)}$materialKindIdParam&roomId=${widget.roomId ?? ''}&playlistIndex=$nextIndex&playlistLength=${widget.playlistLength}',
+      );
+    } else {
+      context.go(
+        '/materials/${nextItem.materialId}/text?praiseName=${Uri.encodeComponent(nextItem.praiseName)}&materialKindName=${Uri.encodeComponent(nextItem.materialKindName)}$materialKindIdParam&roomId=${widget.roomId ?? ''}&playlistIndex=$nextIndex&playlistLength=${widget.playlistLength}',
+      );
+    }
+  }
+
 
   Widget _buildBody() {
     if (_isLoading || _isDownloading) {
@@ -291,42 +487,4 @@ class _PdfViewerPageState extends ConsumerState<PdfViewerPage> {
     );
   }
 
-  Widget _buildNavigationBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: _currentPage > 1 ? _goToPreviousPage : null,
-              tooltip: 'Página anterior',
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'Página $_currentPage de $_totalPages',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(width: 16),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: _currentPage < _totalPages ? _goToNextPage : null,
-              tooltip: 'Próxima página',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

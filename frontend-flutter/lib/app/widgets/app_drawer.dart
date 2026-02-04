@@ -78,6 +78,14 @@ class AppDrawer extends ConsumerWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.meeting_room),
+                  title: const Text('Salas'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/rooms/offline');
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.label),
                   title: Text(l10n.drawerTags),
                   onTap: () {

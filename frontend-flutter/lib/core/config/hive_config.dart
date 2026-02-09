@@ -6,6 +6,7 @@ class HiveConfig {
   static const String cacheBoxName = 'cache';
   static const String offlineBoxName = 'offline';
   static const String preferencesBoxName = 'preferences';
+  static const String offlineIndexBoxName = 'offline_index';
 
   /// Inicializa o Hive
   static Future<void> init() async {
@@ -16,6 +17,7 @@ class HiveConfig {
     await Hive.openBox(cacheBoxName);
     await Hive.openBox(offlineBoxName);
     await Hive.openBox(preferencesBoxName);
+    await Hive.openBox(offlineIndexBoxName);
   }
 
   /// Limpa todos os dados (útil para logout)
@@ -24,5 +26,6 @@ class HiveConfig {
     await Hive.box(cacheBoxName).clear();
     await Hive.box(offlineBoxName).clear();
     await Hive.box(preferencesBoxName).clear();
+    await Hive.box(offlineIndexBoxName).clear();
   }
 }

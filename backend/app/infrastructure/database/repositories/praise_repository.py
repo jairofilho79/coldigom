@@ -1,8 +1,11 @@
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 from app.domain.models.praise import Praise
 from app.domain.models.praise_material import PraiseMaterial
+from app.domain.models.material_type import MaterialType
+from app.domain.models.material_kind import MaterialKind
 from app.application.repositories import BaseRepository
 
 
@@ -56,6 +59,43 @@ class PraiseRepository(BaseRepository):
                 joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
             )
             .filter(Praise.name.ilike(f"%{name}%"))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+    def search_by_name_or_number_or_lyrics(
+        self, query: str, skip: int = 0, limit: int = 100
+    ) -> List[Praise]:
+        """Search praises by name, number, or lyrics content."""
+        conditions = [Praise.name.ilike(f"%{query}%")]
+
+        # Match number if query is numeric
+        if query.strip().isdigit():
+            conditions.append(Praise.number == int(query.strip()))
+
+        # Match lyrics in text materials (Material Type 'text', Material Kind 'Lyrics')
+        lyrics_subq = (
+            self.db.query(PraiseMaterial.praise_id)
+            .join(MaterialType, PraiseMaterial.material_type_id == MaterialType.id)
+            .join(MaterialKind, PraiseMaterial.material_kind_id == MaterialKind.id)
+            .filter(
+                MaterialType.name.ilike("text"),
+                MaterialKind.name.ilike("Lyrics"),
+                PraiseMaterial.path.ilike(f"%{query}%"),
+            )
+        )
+        conditions.append(Praise.id.in_(lyrics_subq))
+
+        return (
+            self.db.query(Praise)
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
+            )
+            .filter(or_(*conditions))
+            .distinct()
             .offset(skip)
             .limit(limit)
             .all()

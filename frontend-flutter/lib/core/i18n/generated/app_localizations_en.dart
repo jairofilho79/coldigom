@@ -54,9 +54,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buttonDownloading => 'Downloading...';
 
   @override
-  String get buttonDownloadByMaterialKind => 'Download by Material Kind';
-
-  @override
   String get buttonDownloadZip => 'Download ZIP';
 
   @override
@@ -1038,9 +1035,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardMaterialKinds => 'Material Kinds';
-
-  @override
-  String get cardDownloadByMaterialKind => 'Download by Material Kind';
 
   @override
   String get cardLists => 'Lists';

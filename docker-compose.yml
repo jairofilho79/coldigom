@@ -27,6 +27,7 @@ services:
       - "${API_PORT:-8000}:8000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-praise_user}:${POSTGRES_PASSWORD:-praise_password}@db:5432/${POSTGRES_DB:-praise_db}
+      - POSTGRES_USER=${POSTGRES_USER:-praise_user}
       - STORAGE_MODE=${STORAGE_MODE:-wasabi}
       - STORAGE_LOCAL_PATH=${STORAGE_LOCAL_PATH:-/storage/assets}
       - WASABI_ACCESS_KEY=${WASABI_ACCESS_KEY:-}
@@ -44,7 +45,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "sh scripts/wait-for-db.sh && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     networks:
       - praise-network
     restart: unless-stopped

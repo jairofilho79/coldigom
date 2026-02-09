@@ -27,6 +27,12 @@ class Praise(Base):
     in_review_description = Column(String(2000), nullable=True)
     review_history = Column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
 
+    # Extended metadata from metadata.yml
+    author = Column(String(255), nullable=True)
+    rhythm = Column(String(100), nullable=True)
+    tonality = Column(String(50), nullable=True)
+    category = Column(String(255), nullable=True)
+
     # Many-to-many relationship with PraiseTag
     tags = relationship(
         "PraiseTag",

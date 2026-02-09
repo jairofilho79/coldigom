@@ -17,6 +17,7 @@ import '../pages/praise_detail_page.dart';
 /// Widget para gerenciar lista de materiais
 class MaterialManagerWidget extends ConsumerStatefulWidget {
   final String praiseId;
+  final String? praiseName; // Nome do praise para navegação ao abrir materiais
   final List<dynamic> materials; // Aceita tanto PraiseMaterialSimple quanto PraiseMaterialResponse
   final bool isEditMode; // Se true, materiais já existem e podem ser editados/deletados
   final Function(List<PraiseMaterialResponse>)? onMaterialsChanged;
@@ -24,6 +25,7 @@ class MaterialManagerWidget extends ConsumerStatefulWidget {
   const MaterialManagerWidget({
     super.key,
     required this.praiseId,
+    this.praiseName,
     required this.materials,
     this.isEditMode = false,
     this.onMaterialsChanged,
@@ -446,15 +448,22 @@ class _MaterialManagerWidgetState extends ConsumerState<MaterialManagerWidget> {
                     final isAudio = typeName == 'audio' ||
                                    ['.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg']
                                        .any((ext) => path.endsWith(ext));
+                    final isText = typeName == 'text';
                     final isYouTube = _isYouTube(material);
+                    final praiseName = widget.praiseName ?? '';
+                    final materialKindName = material.materialKind?.name ?? '';
                     
                     if (isPdf) {
                       context.push(
-                        '/materials/${material.id}/view?praiseName=${Uri.encodeComponent('')}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
+                        '/materials/${material.id}/view?praiseName=${Uri.encodeComponent(praiseName)}&materialKindName=${Uri.encodeComponent(materialKindName)}',
                       );
                     } else if (isAudio) {
                       context.push(
-                        '/materials/${material.id}/audio?praiseName=${Uri.encodeComponent('')}&materialKindName=${Uri.encodeComponent(material.materialKind?.name ?? '')}',
+                        '/materials/${material.id}/audio?praiseName=${Uri.encodeComponent(praiseName)}&materialKindName=${Uri.encodeComponent(materialKindName)}',
+                      );
+                    } else if (isText) {
+                      context.push(
+                        '/materials/${material.id}/text?praiseName=${Uri.encodeComponent(praiseName)}&materialKindName=${Uri.encodeComponent(materialKindName)}',
                       );
                     } else if (isYouTube && material.path.isNotEmpty) {
                       // Abrir URL do YouTube no navegador/aplicativo

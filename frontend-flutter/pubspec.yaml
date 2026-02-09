@@ -58,6 +58,8 @@ dependencies:
   connectivity_plus: ^6.1.0
   package_info_plus: ^8.1.1
   url_launcher: ^6.3.1
+  crypto: ^3.0.0
+  archive: ^4.0.7
 
   # Icons
   cupertino_icons: ^1.0.8

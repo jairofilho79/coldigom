@@ -98,6 +98,49 @@ class PraiseDetailPage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
+              // Metadados estendidos (author, rhythm, tonality, category)
+              if (praise.author != null ||
+                  praise.rhythm != null ||
+                  praise.tonality != null ||
+                  praise.category != null) ...[
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (praise.author != null && praise.author!.isNotEmpty)
+                        _buildMetadataRow(
+                          context,
+                          Icons.person,
+                          'Autor',
+                          praise.author!,
+                        ),
+                      if (praise.rhythm != null && praise.rhythm!.isNotEmpty)
+                        _buildMetadataRow(
+                          context,
+                          Icons.music_note,
+                          'Ritmo',
+                          praise.rhythm!,
+                        ),
+                      if (praise.tonality != null && praise.tonality!.isNotEmpty)
+                        _buildMetadataRow(
+                          context,
+                          Icons.tune,
+                          'Tom',
+                          praise.tonality!,
+                        ),
+                      if (praise.category != null && praise.category!.isNotEmpty)
+                        _buildMetadataRow(
+                          context,
+                          Icons.category,
+                          'Categoria',
+                          praise.category!,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Status de revisão
               if (praise.inReview) ...[
                 AppCard(
@@ -168,6 +211,7 @@ class PraiseDetailPage extends ConsumerWidget {
               // Materiais
               MaterialManagerWidget(
                 praiseId: praiseId,
+                praiseName: praise.name,
                 materials: praise.materials,
                 isEditMode: false,
               ),
@@ -245,6 +289,41 @@ class PraiseDetailPage extends ConsumerWidget {
             ref.invalidate(praiseProvider(praiseId));
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildMetadataRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

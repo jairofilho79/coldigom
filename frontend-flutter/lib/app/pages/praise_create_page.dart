@@ -29,6 +29,10 @@ class _PraiseCreatePageState extends ConsumerState<PraiseCreatePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _numberController = TextEditingController();
+  final _authorController = TextEditingController();
+  final _rhythmController = TextEditingController();
+  final _tonalityController = TextEditingController();
+  final _categoryController = TextEditingController();
   final Set<String> _selectedTagIds = {};
   bool _isLoading = false;
 
@@ -36,6 +40,10 @@ class _PraiseCreatePageState extends ConsumerState<PraiseCreatePage> {
   void dispose() {
     _nameController.dispose();
     _numberController.dispose();
+    _authorController.dispose();
+    _rhythmController.dispose();
+    _tonalityController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -53,10 +61,22 @@ class _PraiseCreatePageState extends ConsumerState<PraiseCreatePage> {
       
       final praise = PraiseCreate(
         name: _nameController.text.trim(),
-        number: _numberController.text.isEmpty 
-            ? null 
+        number: _numberController.text.isEmpty
+            ? null
             : int.tryParse(_numberController.text.trim()),
         tagIds: _selectedTagIds.isEmpty ? null : _selectedTagIds.toList(),
+        author: _authorController.text.trim().isEmpty
+            ? null
+            : _authorController.text.trim(),
+        rhythm: _rhythmController.text.trim().isEmpty
+            ? null
+            : _rhythmController.text.trim(),
+        tonality: _tonalityController.text.trim().isEmpty
+            ? null
+            : _tonalityController.text.trim(),
+        category: _categoryController.text.trim().isEmpty
+            ? null
+            : _categoryController.text.trim(),
       );
 
       final createdPraise = await apiService.createPraise(praise);
@@ -141,6 +161,34 @@ class _PraiseCreatePageState extends ConsumerState<PraiseCreatePage> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Autor',
+                hint: 'Nome do autor',
+                controller: _authorController,
+                prefixIcon: Icons.person,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Ritmo',
+                hint: 'Ex: Básico, Moderado',
+                controller: _rhythmController,
+                prefixIcon: Icons.music_note,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Tom',
+                hint: 'Ex: C, G, Dm',
+                controller: _tonalityController,
+                prefixIcon: Icons.tune,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Categoria',
+                hint: 'Ex: Santificação e Derramamento',
+                controller: _categoryController,
+                prefixIcon: Icons.category,
               ),
               const SizedBox(height: 24),
               Text(

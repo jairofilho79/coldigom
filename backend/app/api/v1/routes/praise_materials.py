@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
@@ -47,6 +48,261 @@ def list_praise_materials(
     else:
         materials = service.get_all(skip=skip, limit=limit)
     return materials
+
+
+@router.get("/batch", response_model=List[PraiseMaterialResponse])
+def batch_search_materials(
+    tag_ids: Optional[str] = None,  # Comma-separated UUIDs
+    material_kind_ids: Optional[str] = None,  # Comma-separated UUIDs
+    operation: str = "union",  # "union" ou "intersection"
+    is_old: Optional[bool] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Busca materiais por critérios múltiplos (tags e material kinds)
+    
+    Args:
+        tag_ids: IDs de tags separados por vírgula
+        material_kind_ids: IDs de material kinds separados por vírgula
+        operation: "union" (OU) ou "intersection" (E)
+        is_old: Filtrar por materiais antigos
+    """
+    service = PraiseMaterialService(db)
+    
+    # Parse tag_ids
+    parsed_tag_ids = None
+    if tag_ids:
+        try:
+            parsed_tag_ids = [UUID(tid.strip()) for tid in tag_ids.split(',')]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid tag_ids format. Expected comma-separated UUIDs."
+            )
+    
+    # Parse material_kind_ids
+    parsed_material_kind_ids = None
+    if material_kind_ids:
+        try:
+            parsed_material_kind_ids = [UUID(mkid.strip()) for mkid in material_kind_ids.split(',')]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid material_kind_ids format. Expected comma-separated UUIDs."
+            )
+    
+    if operation not in ["union", "intersection"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="operation must be 'union' or 'intersection'"
+        )
+    
+    materials = service.get_by_criteria(
+        tag_ids=parsed_tag_ids,
+        material_kind_ids=parsed_material_kind_ids,
+        operation=operation,
+        is_old=is_old,
+    )
+    
+    return materials
+
+
+@router.get("/batch-download")
+def batch_download_materials(
+    tag_ids: Optional[str] = Query(None, description="IDs de tags separados por vírgula"),
+    material_kind_ids: Optional[str] = Query(None, description="IDs de material kinds separados por vírgula"),
+    operation: str = Query("union", description="union ou intersection"),
+    max_zip_size_mb: int = Query(100, ge=10, le=10000, description="Tamanho máximo por ZIP em MB (10000 = ZIP único)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    storage: StorageClient = Depends(get_storage),
+):
+    """Baixa materiais por critérios (tags, material kinds) em formato ZIP.
+    
+    Divide em múltiplos ZIPs quando exceder max_zip_size_mb. Use 10000 para ZIP único.
+    Exige pelo menos tag_ids ou material_kind_ids.
+    """
+    import io
+    import zipfile
+    import os
+
+    parsed_tag_ids = None
+    if tag_ids:
+        try:
+            parsed_tag_ids = [UUID(tid.strip()) for tid in tag_ids.split(',')]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid tag_ids format. Expected comma-separated UUIDs."
+            )
+
+    parsed_material_kind_ids = None
+    if material_kind_ids:
+        try:
+            parsed_material_kind_ids = [UUID(mkid.strip()) for mkid in material_kind_ids.split(',')]
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid material_kind_ids format. Expected comma-separated UUIDs."
+            )
+
+    if not parsed_tag_ids and not parsed_material_kind_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide at least tag_ids or material_kind_ids"
+        )
+
+    if operation not in ["union", "intersection"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="operation must be 'union' or 'intersection'"
+        )
+
+    service = PraiseMaterialService(db)
+    materials = service.get_by_criteria(
+        tag_ids=parsed_tag_ids,
+        material_kind_ids=parsed_material_kind_ids,
+        operation=operation,
+    )
+
+    material_type_repo = MaterialTypeRepository(db)
+    materials_to_download = []
+    for material in materials:
+        material_type = material_type_repo.get_by_id(material.material_type_id)
+        if not material_type:
+            continue
+        if material_type.name.lower() in ['pdf', 'audio']:
+            materials_to_download.append({
+                'material': material,
+                'praise': material.praise,
+                'material_type': material_type,
+                'material_kind': material.material_kind,
+            })
+
+    if not materials_to_download:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No file materials found for the given criteria"
+        )
+
+    max_zip_size_bytes = max_zip_size_mb * 1024 * 1024
+    master_zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(master_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as master_zip:
+        current_zip_buffer = io.BytesIO()
+        current_zip_size = 0
+        current_part = 1
+        current_zip_file = None
+        file_count = 0
+        skipped_materials = []
+        zip_parts_info = []
+
+        for item in materials_to_download:
+            material = item['material']
+            praise = item['praise']
+            material_type = item['material_type']
+            material_kind = item['material_kind']
+
+            try:
+                if not storage.file_exists(material.path):
+                    logger.warning(f"File does not exist: {material.path}")
+                    skipped_materials.append({
+                        'material_id': str(material.id),
+                        'praise_name': praise.name,
+                        'path': material.path,
+                        'reason': "File does not exist in storage"
+                    })
+                    continue
+
+                file_content = storage.download_file(material.path)
+                if len(file_content) == 0:
+                    logger.warning(f"Downloaded file is empty: {material.path}")
+                    skipped_materials.append({
+                        'material_id': str(material.id),
+                        'praise_name': praise.name,
+                        'path': material.path,
+                        'reason': "Downloaded file is empty"
+                    })
+                    continue
+
+                if current_zip_file is None or (current_zip_size + len(file_content) > max_zip_size_bytes and current_zip_size > 0):
+                    if current_zip_file is not None:
+                        current_zip_file.close()
+                        current_zip_buffer.seek(0)
+                        part_filename = f"part_{current_part:03d}.zip"
+                        master_zip.writestr(part_filename, current_zip_buffer.read())
+                        zip_parts_info.append({
+                            'filename': part_filename,
+                            'size': current_zip_size,
+                            'file_count': file_count
+                        })
+                        logger.info(f"Created ZIP part {current_part} with {file_count} files ({current_zip_size / 1024 / 1024:.2f} MB)")
+
+                    current_zip_buffer = io.BytesIO()
+                    current_zip_file = zipfile.ZipFile(current_zip_buffer, 'w', zipfile.ZIP_DEFLATED)
+                    current_zip_size = 0
+                    current_part += 1
+                    file_count = 0
+
+                file_ext = os.path.splitext(material.path)[1] or ('.pdf' if material_type.name.lower() == 'pdf' else '.mp3')
+                praise_name_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in praise.name)
+                material_kind_name = material_kind.name if material_kind else "material"
+                material_kind_name_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in material_kind_name)
+                zip_filename = f"{praise_name_safe}/{material_kind_name_safe}/{material.id}{file_ext}"
+
+                current_zip_file.writestr(zip_filename, file_content)
+                current_zip_size += len(file_content)
+                file_count += 1
+
+            except Exception as e:
+                logger.error(f"Error processing material {material.id}: {str(e)}", exc_info=True)
+                skipped_materials.append({
+                    'material_id': str(material.id),
+                    'praise_name': praise.name,
+                    'path': material.path,
+                    'reason': f"Error: {str(e)}"
+                })
+                continue
+
+        if current_zip_file is not None:
+            current_zip_file.close()
+            current_zip_buffer.seek(0)
+            part_filename = f"part_{current_part:03d}.zip"
+            master_zip.writestr(part_filename, current_zip_buffer.read())
+            zip_parts_info.append({
+                'filename': part_filename,
+                'size': current_zip_size,
+                'file_count': file_count
+            })
+            logger.info(f"Created ZIP part {current_part} with {file_count} files ({current_zip_size / 1024 / 1024:.2f} MB)")
+
+        readme_content = "Download de Materiais em Lote\n"
+        readme_content += "===========================\n\n"
+        readme_content += f"Total de arquivos: {sum(info['file_count'] for info in zip_parts_info)}\n"
+        readme_content += f"Total de ZIPs criados: {len(zip_parts_info)}\n"
+        readme_content += f"Tamanho máximo por ZIP: {max_zip_size_mb} MB\n\n"
+        if zip_parts_info:
+            readme_content += "ZIPs incluídos:\n"
+            for info in zip_parts_info:
+                readme_content += f"- {info['filename']}: {info['file_count']} arquivos ({info['size'] / 1024 / 1024:.2f} MB)\n"
+        if skipped_materials:
+            readme_content += f"\nMateriais não incluídos ({len(skipped_materials)}):\n"
+            for mat in skipped_materials:
+                readme_content += f"- {mat['praise_name']} - Material ID {mat['material_id']}: {mat.get('reason', 'Unknown')}\n"
+
+        master_zip.writestr("README.txt", readme_content.encode('utf-8'))
+
+    master_zip_buffer.seek(0)
+    zip_filename = "materials_batch.zip"
+
+    return StreamingResponse(
+        io.BytesIO(master_zip_buffer.read()),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_filename}"',
+            "Content-Type": "application/zip"
+        }
+    )
 
 
 # IMPORTANTE: Rotas mais específicas DEVEM vir antes das rotas genéricas

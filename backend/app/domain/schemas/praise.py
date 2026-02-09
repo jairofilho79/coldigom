@@ -12,6 +12,10 @@ class ReviewHistoryEvent(BaseModel):
 class PraiseBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     number: Optional[int] = None
+    author: Optional[str] = Field(None, max_length=255)
+    rhythm: Optional[str] = Field(None, max_length=100)
+    tonality: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=255)
 
 
 class PraiseCreate(PraiseBase):
@@ -26,6 +30,10 @@ class PraiseUpdate(BaseModel):
     number: Optional[int] = None
     tag_ids: Optional[List[UUID]] = None
     in_review_description: Optional[str] = None
+    author: Optional[str] = Field(None, max_length=255)
+    rhythm: Optional[str] = Field(None, max_length=100)
+    tonality: Optional[str] = Field(None, max_length=50)
+    category: Optional[str] = Field(None, max_length=255)
 
 
 class PraiseTagSimple(BaseModel):

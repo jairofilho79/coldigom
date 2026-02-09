@@ -13,7 +13,7 @@ import os
 import yaml
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
 import mimetypes
 
 # Add parent directory to path
@@ -183,6 +183,11 @@ def process_praise_folder(
     
     praise_name = metadata.get('praise_name', '')
     praise_number = metadata.get('praise_number', '')
+    praise_author = metadata.get('praise_author')
+    praise_rhythm = metadata.get('praise_rhythm')
+    praise_tonality = metadata.get('praise_tonality')
+    praise_category = metadata.get('praise_category')
+    praise_lyrics = metadata.get('praise_lyrics')
     
     print(f"\n📁 Processando: {praise_name} ({praise_id})")
     
@@ -199,7 +204,11 @@ def process_praise_folder(
             praise_service = PraiseService(db)
             praise_update = PraiseUpdate(
                 name=praise_name,
-                number=int(praise_number) if praise_number and praise_number.isdigit() else None
+                number=int(praise_number) if praise_number and praise_number.isdigit() else None,
+                author=praise_author or None,
+                rhythm=praise_rhythm or None,
+                tonality=praise_tonality or None,
+                category=praise_category or None,
             )
             praise = praise_service.update(praise_id, praise_update)
             print(f"  ✅ Praise atualizado: {praise_name}")
@@ -209,13 +218,21 @@ def process_praise_folder(
             praise_service = PraiseService(db)
             praise_data = PraiseCreate(
                 name=praise_name,
-                number=int(praise_number) if praise_number and praise_number.isdigit() else None
+                number=int(praise_number) if praise_number and praise_number.isdigit() else None,
+                author=praise_author or None,
+                rhythm=praise_rhythm or None,
+                tonality=praise_tonality or None,
+                category=praise_category or None,
             )
             # Usar repositório diretamente para definir ID customizado
             praise = Praise(
                 id=praise_id,
                 name=praise_name,
-                number=int(praise_number) if praise_number and praise_number.isdigit() else None
+                number=int(praise_number) if praise_number and praise_number.isdigit() else None,
+                author=praise_author or None,
+                rhythm=praise_rhythm or None,
+                tonality=praise_tonality or None,
+                category=praise_category or None,
             )
             praise = praise_repo.create(praise)
             print(f"  ✅ Praise criado: {praise_name}")
@@ -369,6 +386,38 @@ def process_praise_folder(
                     )
                     material = material_repo.create(material)
                     print(f"    ✅ Material criado: {material_id}")
+    
+    # Processar praise_lyrics como material Lyrics (tipo text)
+    if praise_lyrics and isinstance(praise_lyrics, str) and praise_lyrics.strip():
+        if dry_run:
+            print(f"  [DRY RUN] Criaria/atualizaria material Lyrics")
+        else:
+            material_type_repo = MaterialTypeRepository(db)
+            material_type_text = material_type_repo.get_by_name('text')
+            material_kind_lyrics = get_or_create_material_kind(db, 'Lyrics')
+            if not material_type_text:
+                print(f"    ⚠️  MaterialType 'text' não encontrado. Execute o seed.")
+            elif material_kind_lyrics:
+                lyrics_material_id = uuid5(NAMESPACE_DNS, f"lyrics-{praise_id}")
+                material_repo = PraiseMaterialRepository(db)
+                existing_lyrics = material_repo.get_by_id(lyrics_material_id)
+                lyrics_text = praise_lyrics.strip()
+                if existing_lyrics:
+                    existing_lyrics.path = lyrics_text
+                    existing_lyrics.material_kind_id = material_kind_lyrics.id
+                    existing_lyrics.material_type_id = material_type_text.id
+                    material_repo.update(existing_lyrics)
+                    print(f"  ✅ Material Lyrics atualizado")
+                else:
+                    lyrics_material = PraiseMaterial(
+                        id=lyrics_material_id,
+                        material_kind_id=material_kind_lyrics.id,
+                        material_type_id=material_type_text.id,
+                        path=lyrics_text,
+                        praise_id=praise_id,
+                    )
+                    material_repo.create(lyrics_material)
+                    print(f"  ✅ Material Lyrics criado")
     
     return True, "Processado com sucesso"
 

@@ -37,6 +37,10 @@ class PraiseResponse {
   final String? inReviewDescription;
   @JsonKey(name: 'review_history')
   final List<ReviewHistoryEvent> reviewHistory;
+  final String? author;
+  final String? rhythm;
+  final String? tonality;
+  final String? category;
 
   PraiseResponse({
     required this.id,
@@ -49,6 +53,10 @@ class PraiseResponse {
     required this.inReview,
     this.inReviewDescription,
     required this.reviewHistory,
+    this.author,
+    this.rhythm,
+    this.tonality,
+    this.category,
   });
 
   factory PraiseResponse.fromJson(Map<String, dynamic> json) =>
@@ -68,6 +76,10 @@ class PraiseCreate {
   final bool? inReview;
   @JsonKey(name: 'in_review_description')
   final String? inReviewDescription;
+  final String? author;
+  final String? rhythm;
+  final String? tonality;
+  final String? category;
 
   PraiseCreate({
     required this.name,
@@ -76,6 +88,10 @@ class PraiseCreate {
     this.materials,
     this.inReview,
     this.inReviewDescription,
+    this.author,
+    this.rhythm,
+    this.tonality,
+    this.category,
   });
 
   factory PraiseCreate.fromJson(Map<String, dynamic> json) =>
@@ -92,12 +108,20 @@ class PraiseUpdate {
   final List<String>? tagIds;
   @JsonKey(name: 'in_review_description')
   final String? inReviewDescription;
+  final String? author;
+  final String? rhythm;
+  final String? tonality;
+  final String? category;
 
   PraiseUpdate({
     this.name,
     this.number,
     this.tagIds,
     this.inReviewDescription,
+    this.author,
+    this.rhythm,
+    this.tonality,
+    this.category,
   });
 
   factory PraiseUpdate.fromJson(Map<String, dynamic> json) =>

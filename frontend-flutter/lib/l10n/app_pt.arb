@@ -19,7 +19,6 @@
   "buttonRemoveFilter": "Remover Filtro",
   "buttonDownload": "Baixar",
   "buttonDownloading": "Baixando...",
-  "buttonDownloadByMaterialKind": "Baixar por Categoria do Material",
   "buttonDownloadZip": "Baixar ZIP",
   "buttonEnter": "Entrar",
   "buttonRegister": "Registrar",
@@ -630,7 +629,6 @@
   "cardPraises": "Louvores",
   "cardTags": "Etiquetas",
   "cardMaterialKinds": "Categorias do Material",
-  "cardDownloadByMaterialKind": "Baixar por Categoria do Material",
   "cardLists": "Listas",
   
   "labelPraisesCount": "{count} louvor(es)",

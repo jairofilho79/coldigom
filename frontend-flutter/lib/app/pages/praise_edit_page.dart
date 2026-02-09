@@ -35,6 +35,10 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _numberController;
+  late final TextEditingController _authorController;
+  late final TextEditingController _rhythmController;
+  late final TextEditingController _tonalityController;
+  late final TextEditingController _categoryController;
   final Set<String> _selectedTagIds = {};
   bool _isLoading = false;
   bool _isInitialized = false;
@@ -44,12 +48,20 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
     super.initState();
     _nameController = TextEditingController();
     _numberController = TextEditingController();
+    _authorController = TextEditingController();
+    _rhythmController = TextEditingController();
+    _tonalityController = TextEditingController();
+    _categoryController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _numberController.dispose();
+    _authorController.dispose();
+    _rhythmController.dispose();
+    _tonalityController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -59,6 +71,10 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
       if (praise.number != null) {
         _numberController.text = praise.number.toString();
       }
+      _authorController.text = praise.author ?? '';
+      _rhythmController.text = praise.rhythm ?? '';
+      _tonalityController.text = praise.tonality ?? '';
+      _categoryController.text = praise.category ?? '';
       _selectedTagIds.addAll(praise.tags.map((tag) => tag.id));
       setState(() {
         _isInitialized = true;
@@ -80,10 +96,22 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
       
       final praise = PraiseUpdate(
         name: _nameController.text.trim(),
-        number: _numberController.text.isEmpty 
-            ? null 
+        number: _numberController.text.isEmpty
+            ? null
             : int.tryParse(_numberController.text.trim()),
         tagIds: _selectedTagIds.isEmpty ? null : _selectedTagIds.toList(),
+        author: _authorController.text.trim().isEmpty
+            ? null
+            : _authorController.text.trim(),
+        rhythm: _rhythmController.text.trim().isEmpty
+            ? null
+            : _rhythmController.text.trim(),
+        tonality: _tonalityController.text.trim().isEmpty
+            ? null
+            : _tonalityController.text.trim(),
+        category: _categoryController.text.trim().isEmpty
+            ? null
+            : _categoryController.text.trim(),
       );
 
       await apiService.updatePraise(widget.praiseId, praise);
@@ -175,6 +203,34 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    label: 'Autor',
+                    hint: 'Nome do autor',
+                    controller: _authorController,
+                    prefixIcon: Icons.person,
+                  ),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    label: 'Ritmo',
+                    hint: 'Ex: Básico, Moderado',
+                    controller: _rhythmController,
+                    prefixIcon: Icons.music_note,
+                  ),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    label: 'Tom',
+                    hint: 'Ex: C, G, Dm',
+                    controller: _tonalityController,
+                    prefixIcon: Icons.tune,
+                  ),
+                  const SizedBox(height: 16),
+                  AppTextField(
+                    label: 'Categoria',
+                    hint: 'Ex: Santificação e Derramamento',
+                    controller: _categoryController,
+                    prefixIcon: Icons.category,
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     l10n.sectionTags,
@@ -215,6 +271,7 @@ class _PraiseEditPageState extends ConsumerState<PraiseEditPage> {
                   const SizedBox(height: 24),
                   MaterialManagerWidget(
                     praiseId: widget.praiseId,
+                    praiseName: praise.name,
                     materials: praise.materials,
                     isEditMode: true,
                   ),

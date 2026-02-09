@@ -86,6 +86,14 @@ class AppDrawer extends ConsumerWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.download),
+                  title: const Text('Materiais Offline'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/offline-materials');
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.label),
                   title: Text(l10n.drawerTags),
                   onTap: () {

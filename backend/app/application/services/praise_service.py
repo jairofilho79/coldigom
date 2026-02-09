@@ -29,9 +29,19 @@ class PraiseService:
 
     def get_all(self, skip: int = 0, limit: int = 100, name: Optional[str] = None, tag_id: Optional[UUID] = None) -> List[Praise]:
         if tag_id:
+            if name and name.strip():
+                all_matching = self.repository.search_by_name_or_number_or_lyrics(
+                    name.strip(), skip=0, limit=2000
+                )
+                tag_praises = self.repository.get_by_tag_id(tag_id, skip=0, limit=2000)
+                tag_ids_set = {p.id for p in tag_praises}
+                filtered = [p for p in all_matching if p.id in tag_ids_set]
+                return filtered[skip:skip + limit]
             return self.repository.get_by_tag_id(tag_id, skip=skip, limit=limit)
-        if name:
-            return self.repository.search_by_name(name, skip=skip, limit=limit)
+        if name and name.strip():
+            return self.repository.search_by_name_or_number_or_lyrics(
+                name.strip(), skip=skip, limit=limit
+            )
         return self.repository.get_all(skip=skip, limit=limit)
 
     def create(self, praise_data: PraiseCreate) -> Praise:
@@ -56,6 +66,10 @@ class PraiseService:
             in_review=in_review,
             in_review_description=praise_data.in_review_description or None,
             review_history=review_history,
+            author=praise_data.author or None,
+            rhythm=praise_data.rhythm or None,
+            tonality=praise_data.tonality or None,
+            category=praise_data.category or None,
         )
 
         # Add tags if provided
@@ -121,6 +135,15 @@ class PraiseService:
 
         if praise_data.in_review_description is not None:
             praise.in_review_description = praise_data.in_review_description
+
+        if praise_data.author is not None:
+            praise.author = praise_data.author
+        if praise_data.rhythm is not None:
+            praise.rhythm = praise_data.rhythm
+        if praise_data.tonality is not None:
+            praise.tonality = praise_data.tonality
+        if praise_data.category is not None:
+            praise.category = praise_data.category
 
         return self.repository.update(praise)
 

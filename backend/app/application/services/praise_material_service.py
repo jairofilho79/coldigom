@@ -61,6 +61,21 @@ class PraiseMaterialService:
     def get_by_praise_id(self, praise_id: UUID, is_old: Optional[bool] = None) -> List[PraiseMaterial]:
         return self.repository.get_by_praise_id(praise_id, is_old=is_old)
 
+    def get_by_criteria(
+        self,
+        tag_ids: Optional[List[UUID]] = None,
+        material_kind_ids: Optional[List[UUID]] = None,
+        operation: str = "union",
+        is_old: Optional[bool] = None,
+    ) -> List[PraiseMaterial]:
+        """Busca materiais por critérios múltiplos"""
+        return self.repository.get_by_criteria(
+            tag_ids=tag_ids,
+            material_kind_ids=material_kind_ids,
+            operation=operation,
+            is_old=is_old,
+        )
+
     def create(self, material_data: PraiseMaterialCreate) -> PraiseMaterial:
         # Validate material_kind exists
         material_kind = self.material_kind_repo.get_by_id(material_data.material_kind_id)

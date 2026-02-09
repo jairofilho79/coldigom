@@ -188,12 +188,6 @@ abstract class AppLocalizations {
   /// **'Baixando...'**
   String get buttonDownloading;
 
-  /// No description provided for @buttonDownloadByMaterialKind.
-  ///
-  /// In pt, this message translates to:
-  /// **'Baixar por Categoria do Material'**
-  String get buttonDownloadByMaterialKind;
-
   /// No description provided for @buttonDownloadZip.
   ///
   /// In pt, this message translates to:
@@ -1921,12 +1915,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Categorias do Material'**
   String get cardMaterialKinds;
-
-  /// No description provided for @cardDownloadByMaterialKind.
-  ///
-  /// In pt, this message translates to:
-  /// **'Baixar por Categoria do Material'**
-  String get cardDownloadByMaterialKind;
 
   /// No description provided for @cardLists.
   ///

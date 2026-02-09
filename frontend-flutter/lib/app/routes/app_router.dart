@@ -26,6 +26,7 @@ import '../pages/pdf_viewer_page.dart';
 import '../pages/audio_player_page.dart';
 import '../pages/room_offline_page.dart';
 import '../pages/text_viewer_page.dart';
+import '../pages/offline_materials_page.dart';
 import '../stores/auth_store.dart';
 
 class AppRouter {
@@ -258,6 +259,11 @@ class AppRouter {
           final roomId = state.pathParameters['roomId']!;
           return RoomOfflinePage(roomId: roomId);
         },
+      ),
+      GoRoute(
+        path: '/offline-materials',
+        name: 'offline-materials',
+        builder: (context, state) => const OfflineMaterialsPage(),
       ),
       GoRoute(
         path: '/materials/:materialId/view',

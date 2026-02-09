@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_status_widgets.dart';
-import '../widgets/material_kind_download_dialog.dart';
+import '../widgets/batch_download_dialog.dart';
 import '../widgets/app_scaffold.dart';
 import '../stores/auth_store.dart';
 import '../services/offline/download_service.dart';
@@ -78,12 +78,12 @@ class DashboardPage extends ConsumerWidget {
                         onTap: () => context.push('/material-kinds'),
                       ),
                       _DashboardCard(
-                        icon: Icons.download,
-                        title: l10n.cardDownloadByMaterialKind,
+                        icon: Icons.download_for_offline,
+                        title: 'Download em Lote',
                         onTap: () {
                           showDialog(
                             context: context,
-                            builder: (context) => const MaterialKindDownloadDialog(),
+                            builder: (context) => const BatchDownloadDialog(),
                           );
                         },
                       ),

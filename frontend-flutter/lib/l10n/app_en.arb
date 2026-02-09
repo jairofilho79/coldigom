@@ -19,7 +19,6 @@
   "buttonRemoveFilter": "Remove Filter",
   "buttonDownload": "Download",
   "buttonDownloading": "Downloading...",
-  "buttonDownloadByMaterialKind": "Download by Material Kind",
   "buttonDownloadZip": "Download ZIP",
   "buttonEnter": "Sign In",
   "buttonRegister": "Register",
@@ -632,7 +631,6 @@
   "cardPraises": "Praises",
   "cardTags": "Tags",
   "cardMaterialKinds": "Material Kinds",
-  "cardDownloadByMaterialKind": "Download by Material Kind",
   "cardLists": "Lists",
   
   "labelPraisesCount": "{count} praise(s)",

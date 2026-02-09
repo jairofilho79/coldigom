@@ -325,6 +325,39 @@ class ApiService {
     await _dio.delete('/api/v1/praise-materials/$id');
   }
 
+  /// Busca materiais por critérios múltiplos (batch search)
+  Future<List<PraiseMaterialResponse>> batchSearchMaterials({
+    List<String>? tagIds,
+    List<String>? materialKindIds,
+    String operation = 'union', // 'union' ou 'intersection'
+    bool? isOld,
+  }) async {
+    final queryParams = <String, dynamic>{};
+    
+    if (tagIds != null && tagIds.isNotEmpty) {
+      queryParams['tag_ids'] = tagIds.join(',');
+    }
+    
+    if (materialKindIds != null && materialKindIds.isNotEmpty) {
+      queryParams['material_kind_ids'] = materialKindIds.join(',');
+    }
+    
+    queryParams['operation'] = operation;
+    
+    if (isOld != null) {
+      queryParams['is_old'] = isOld;
+    }
+    
+    final response = await _dio.get(
+      '/api/v1/praise-materials/batch',
+      queryParameters: queryParams,
+    );
+    
+    return (response.data as List)
+        .map((json) => PraiseMaterialResponse.fromJson(json))
+        .toList();
+  }
+
   Future<PraiseMaterialResponse> uploadMaterial(
     String praiseId,
     File file,
@@ -395,16 +428,19 @@ class ApiService {
     );
   }
 
-  Future<Response> downloadByMaterialKind(
-    String materialKindId, {
-    String? tagId,
+  Future<Response> downloadBatchZip({
+    List<String>? tagIds,
+    List<String>? materialKindIds,
+    required String operation,
     int? maxZipSizeMb,
   }) async {
     return await _dio.get(
-      '/api/v1/praises/download-by-material-kind',
+      '/api/v1/praise-materials/batch-download',
       queryParameters: {
-        'material_kind_id': materialKindId,
-        if (tagId != null) 'tag_id': tagId,
+        if (tagIds != null && tagIds.isNotEmpty) 'tag_ids': tagIds.join(','),
+        if (materialKindIds != null && materialKindIds.isNotEmpty)
+          'material_kind_ids': materialKindIds.join(','),
+        'operation': operation,
         if (maxZipSizeMb != null) 'max_zip_size_mb': maxZipSizeMb,
       },
       options: Options(

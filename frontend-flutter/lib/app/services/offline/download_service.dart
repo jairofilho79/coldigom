@@ -7,12 +7,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../models/praise_material_model.dart';
+import '../../models/offline_material_metadata.dart';
 import '../api/api_service.dart';
+import 'offline_metadata_service.dart';
+import 'version_service.dart';
 
 /// Provider do serviço de download offline
 final offlineDownloadServiceProvider = Provider<OfflineDownloadService>((ref) {
   final apiService = ref.read(apiServiceProvider);
-  return OfflineDownloadService(apiService);
+  final downloadService = OfflineDownloadService(apiService);
+  
+  // Inicializar serviços de metadados e versionamento
+  final metadataService = ref.read(offlineMetadataServiceProvider);
+  final versionService = ref.read(versionServiceProvider);
+  downloadService.initializeServices(metadataService, versionService);
+  
+  return downloadService;
 });
 
 /// Cache entry para URLs temporárias
@@ -28,6 +38,8 @@ class _UrlCacheEntry {
 /// Serviço para gerenciar downloads offline de PDFs
 class OfflineDownloadService {
   final ApiService _apiService;
+  OfflineMetadataService? _metadataService;
+  VersionService? _versionService;
   
   // Cache de URLs temporárias em memória
   final Map<String, _UrlCacheEntry> _urlCache = {};
@@ -38,6 +50,12 @@ class OfflineDownloadService {
   final List<Completer<void>> _downloadQueue = [];
 
   OfflineDownloadService(this._apiService);
+
+  /// Inicializa serviços de metadados e versionamento (opcional)
+  void initializeServices(OfflineMetadataService metadataService, VersionService versionService) {
+    _metadataService = metadataService;
+    _versionService = versionService;
+  }
   
   /// Limpa o cache de URLs (chamado ao fazer logout)
   void clearUrlCache() {
@@ -210,6 +228,11 @@ class OfflineDownloadService {
         // Salvar arquivo
         final file = File(filePath);
         await file.writeAsBytes(bytes);
+        
+        // Salvar metadados se serviço estiver disponível
+        // Nota: Precisamos do material completo para salvar metadados
+        // Por enquanto, vamos salvar apenas o básico
+        
         onProgress?.call(1.0);
         return filePath;
       } finally {
@@ -323,6 +346,9 @@ class OfflineDownloadService {
           // Salvar
           final file = File(filePath);
           await file.writeAsBytes(bytes);
+          
+          // Metadados serão salvos quando necessário (via keepMaterialOffline ou downloadMaterial)
+          
           results[materialId] = filePath;
           onProgress?.call(materialId, 1.0);
         } finally {
@@ -395,6 +421,10 @@ class OfflineDownloadService {
             // Salvar arquivo
             final file = File(filePath);
             await file.writeAsBytes(response.data!);
+            
+            // Salvar metadados se serviço estiver disponível
+            await _saveMetadataAfterDownload(material, filePath, file);
+            
             onProgress?.call(1.0);
             return filePath;
           } else {
@@ -409,6 +439,175 @@ class OfflineDownloadService {
     } catch (e) {
       onError?.call(e.toString());
       throw Exception('Erro ao baixar material: $e');
+    }
+  }
+
+  /// Salva metadados após download (helper interno)
+  Future<void> _saveMetadataAfterDownload(
+    PraiseMaterialResponse material,
+    String filePath,
+    File file,
+  ) async {
+    if (_metadataService == null || _versionService == null) return;
+
+    try {
+      final fileSize = await file.length();
+      final fileName = filePath.split('/').last;
+      
+      // Calcular hash do arquivo
+      final hash = await _versionService!.calculateFileHash(file);
+      
+      // Criar metadados
+      final metadata = OfflineMaterialMetadata(
+        materialId: material.id,
+        praiseId: material.praiseId,
+        materialKindId: material.materialKindId,
+        materialTypeId: material.materialTypeId,
+        fileName: fileName,
+        filePath: filePath,
+        fileSize: fileSize,
+        downloadedAt: DateTime.now(),
+        isKeptOffline: false, // Será atualizado se necessário
+        versionHash: hash,
+        versionTimestamp: DateTime.now(),
+        isOld: material.isOld ?? false,
+        oldDescription: material.oldDescription,
+      );
+
+      await _metadataService!.saveMetadata(metadata);
+    } catch (e) {
+      // Não falhar o download se salvar metadados falhar
+      print('Erro ao salvar metadados: $e');
+    }
+  }
+
+  /// Mantém material offline (UC-124)
+  /// Marca material como mantido offline e faz download se necessário
+  Future<void> keepMaterialOffline(
+    PraiseMaterialResponse material, {
+    Function(double progress)? onProgress,
+    Function(String? error)? onError,
+  }) async {
+    if (_metadataService == null) {
+      throw Exception('Serviço de metadados não inicializado');
+    }
+
+    try {
+      // Verificar se já está offline
+      final existingMetadata = _metadataService!.getMetadata(material.id);
+      final isOffline = await isMaterialOffline(material.id);
+
+      if (isOffline && existingMetadata != null) {
+        // Já está offline, apenas marcar como kept
+        await _metadataService!.markAsKeptOffline(material.id, true);
+        onProgress?.call(1.0);
+        return;
+      }
+
+      // Não está offline, fazer download
+      onProgress?.call(0.1);
+
+      // Fazer download
+      final filePath = await downloadMaterial(
+        material,
+        (progress) {
+          // Progresso de 0.1 a 0.9
+          onProgress?.call(0.1 + (progress * 0.8));
+        },
+        onError,
+      );
+
+      onProgress?.call(0.9);
+
+      // Marcar como kept offline
+      await _metadataService!.markAsKeptOffline(material.id, true);
+
+      // Atualizar metadados se necessário
+      final metadata = _metadataService!.getMetadata(material.id);
+      if (metadata != null) {
+        final file = File(filePath);
+        if (await file.exists()) {
+          final fileSize = await file.length();
+          if (_versionService != null) {
+            final hash = await _versionService!.calculateFileHash(file);
+            await _metadataService!.updateVersion(
+              material.id,
+              hash,
+              DateTime.now(),
+            );
+          }
+        }
+      }
+
+      onProgress?.call(1.0);
+    } catch (e) {
+      onError?.call(e.toString());
+      throw Exception('Erro ao manter material offline: $e');
+    }
+  }
+
+  /// Atualiza material offline quando há nova versão (UC-139)
+  /// Download de nova versão e substituição de arquivo antigo após confirmação
+  Future<void> updateMaterialOffline(
+    PraiseMaterialResponse material, {
+    Function(double progress)? onProgress,
+    Function(String? error)? onError,
+  }) async {
+    if (_metadataService == null || _versionService == null) {
+      throw Exception('Serviços de metadados/versionamento não inicializados');
+    }
+
+    try {
+      final existingMetadata = _metadataService!.getMetadata(material.id);
+      if (existingMetadata == null) {
+        throw Exception('Material não encontrado no cache offline');
+      }
+
+      onProgress?.call(0.1);
+
+      // Fazer download da nova versão
+      final newFilePath = await downloadMaterial(
+        material,
+        (progress) {
+          // Progresso de 0.1 a 0.8
+          onProgress?.call(0.1 + (progress * 0.7));
+        },
+        onError,
+      );
+
+      onProgress?.call(0.8);
+
+      // Verificar se download foi bem-sucedido
+      final newFile = File(newFilePath);
+      if (!await newFile.exists()) {
+        throw Exception('Arquivo novo não foi baixado corretamente');
+      }
+
+      // Calcular hash do novo arquivo
+      final newHash = await _versionService!.calculateFileHash(newFile);
+      final fileSize = await newFile.length();
+
+      // Atualizar metadados
+      await _metadataService!.updateVersion(
+        material.id,
+        newHash,
+        DateTime.now(),
+      );
+
+      // Atualizar informações de material antigo se necessário
+      if (material.isOld != existingMetadata.isOld ||
+          material.oldDescription != existingMetadata.oldDescription) {
+        await _metadataService!.markAsOld(
+          material.id,
+          material.isOld ?? false,
+          material.oldDescription,
+        );
+      }
+
+      onProgress?.call(1.0);
+    } catch (e) {
+      onError?.call(e.toString());
+      throw Exception('Erro ao atualizar material offline: $e');
     }
   }
 
@@ -441,12 +640,59 @@ class OfflineDownloadService {
   Future<void> removeOfflineMaterial(String materialId) async {
     try {
       final directory = await _getOfflinePdfsDirectory();
-      final file = File('${directory.path}/$materialId.pdf');
-      if (await file.exists()) {
-        await file.delete();
+      
+      // Tentar remover com diferentes extensões
+      final extensions = ['.pdf', '.mp3', '.wav', '.m4a', '.wma', '.aac', '.ogg'];
+      for (final ext in extensions) {
+        final file = File('${directory.path}/$materialId$ext');
+        if (await file.exists()) {
+          await file.delete();
+        }
       }
     } catch (e) {
       throw Exception('Erro ao remover material offline: $e');
+    }
+  }
+
+  /// Remove todos os materiais de um praise do cache offline (UC-133)
+  Future<void> removePraiseOffline(String praiseId) async {
+    if (_metadataService == null) {
+      throw Exception('Serviço de metadados não inicializado');
+    }
+
+    try {
+      final metadataList = _metadataService!.getMetadataByPraiseId(praiseId);
+      
+      for (final metadata in metadataList) {
+        // Remover arquivo
+        await removeOfflineMaterial(metadata.materialId);
+        
+        // Remover metadados
+        await _metadataService!.deleteMetadata(metadata.materialId);
+      }
+    } catch (e) {
+      throw Exception('Erro ao remover praise offline: $e');
+    }
+  }
+
+  /// Limpa todo o cache offline (UC-134)
+  Future<void> clearAllOfflineCache() async {
+    if (_metadataService == null) {
+      throw Exception('Serviço de metadados não inicializado');
+    }
+
+    try {
+      final allMetadata = _metadataService!.getAllMetadata();
+      
+      // Remover todos os arquivos
+      for (final metadata in allMetadata) {
+        await removeOfflineMaterial(metadata.materialId);
+      }
+      
+      // Limpar todos os metadados
+      await _metadataService!.clearAllMetadata();
+    } catch (e) {
+      throw Exception('Erro ao limpar cache offline: $e');
     }
   }
 
@@ -548,25 +794,25 @@ class OfflineDownloadService {
     }
   }
 
-  /// Baixa materiais por Material Kind em ZIP
+  /// Baixa materiais em lote por critérios (tags, material kinds) em formato ZIP
   /// Permite ao usuário escolher onde salvar usando file picker
-  Future<String?> downloadByMaterialKind(
-    String materialKindId,
-    String materialKindName, {
-    String? tagId,
+  Future<String?> downloadBatchZip({
+    List<String>? tagIds,
+    List<String>? materialKindIds,
+    required String operation,
     int? maxZipSizeMb,
     Function(double progress)? onProgress,
     Function(String? error)? onError,
   }) async {
     try {
-      // Primeiro, baixar os dados do ZIP
       onProgress?.call(0.1);
-      final response = await _apiService.downloadByMaterialKind(
-        materialKindId,
-        tagId: tagId,
+      final response = await _apiService.downloadBatchZip(
+        tagIds: tagIds,
+        materialKindIds: materialKindIds,
+        operation: operation,
         maxZipSizeMb: maxZipSizeMb,
       );
-      
+
       if (response.statusCode != 200) {
         throw Exception('Erro ao baixar ZIP: ${response.statusCode}');
       }
@@ -577,11 +823,8 @@ class OfflineDownloadService {
 
       onProgress?.call(0.5);
 
-      // Preparar nome do arquivo sugerido
-      final safeName = materialKindName.replaceAll(RegExp(r'[^\w\s-]'), '_');
-      final suggestedFileName = 'materials_${safeName}_${materialKindId.substring(0, 8)}.zip';
+      final suggestedFileName = 'materials_batch.zip';
 
-      // Permitir ao usuário escolher onde salvar
       final String? savePath = await FilePicker.platform.saveFile(
         dialogTitle: 'Salvar ZIP de Materiais',
         fileName: suggestedFileName,
@@ -590,21 +833,160 @@ class OfflineDownloadService {
       );
 
       if (savePath == null) {
-        // Usuário cancelou
         return null;
       }
 
       onProgress?.call(0.8);
 
-      // Salvar bytes no arquivo escolhido pelo usuário
       final file = File(savePath);
       await file.writeAsBytes(response.data as Uint8List);
+
+      onProgress?.call(1.0);
+      return file.path;
+    } catch (e) {
+      onError?.call(e.toString());
+      throw Exception('Erro ao baixar ZIP em lote: $e');
+    }
+  }
+
+  /// Baixa arquivo de material para fora da aplicação (UC-123)
+  /// Permite ao usuário escolher onde salvar usando file picker
+  /// Suporta PDF, Audio (.mp3, .wav, .m4a, etc.) e outros tipos
+  Future<String?> downloadMaterialToExternalPath(
+    PraiseMaterialResponse material, {
+    Function(double progress)? onProgress,
+    Function(String? error)? onError,
+  }) async {
+    try {
+      onProgress?.call(0.1);
+
+      // Determinar extensão do arquivo baseado no tipo de material
+      String extension = '.pdf'; // padrão
+      String? contentType;
+
+      // Verificar tipo de material via material_type
+      if (material.materialType != null) {
+        final typeName = material.materialType!.name.toLowerCase();
+        if (typeName == 'audio') {
+          // Tentar detectar extensão do path
+          final pathLower = material.path.toLowerCase();
+          if (pathLower.endsWith('.mp3')) {
+            extension = '.mp3';
+            contentType = 'audio/mpeg';
+          } else if (pathLower.endsWith('.wav')) {
+            extension = '.wav';
+            contentType = 'audio/wav';
+          } else if (pathLower.endsWith('.m4a')) {
+            extension = '.m4a';
+            contentType = 'audio/mp4';
+          } else if (pathLower.endsWith('.wma')) {
+            extension = '.wma';
+            contentType = 'audio/x-ms-wma';
+          } else if (pathLower.endsWith('.aac')) {
+            extension = '.aac';
+            contentType = 'audio/aac';
+          } else if (pathLower.endsWith('.ogg')) {
+            extension = '.ogg';
+            contentType = 'audio/ogg';
+          } else {
+            extension = '.mp3'; // padrão para áudio
+            contentType = 'audio/mpeg';
+          }
+        } else if (typeName == 'pdf') {
+          extension = '.pdf';
+          contentType = 'application/pdf';
+        } else {
+          // Tentar detectar extensão do path
+          final pathLower = material.path.toLowerCase();
+          if (pathLower.contains('.')) {
+            extension = pathLower.substring(pathLower.lastIndexOf('.'));
+          }
+        }
+      } else {
+        // Tentar detectar extensão do path
+        final pathLower = material.path.toLowerCase();
+        if (pathLower.contains('.')) {
+          extension = pathLower.substring(pathLower.lastIndexOf('.'));
+        }
+      }
+
+      // Obter URL temporária ou usar endpoint de download
+      String? downloadUrl;
+      try {
+        final urlResponse = await _apiService.getDownloadUrl(material.id);
+        downloadUrl = urlResponse.downloadUrl;
+      } catch (e) {
+        // Se falhar, usar endpoint direto
+        downloadUrl = null;
+      }
+
+      onProgress?.call(0.2);
+
+      // Baixar arquivo
+      Uint8List fileBytes;
+      if (downloadUrl != null && _isWasabiUrl(downloadUrl)) {
+        // Download direto da URL assinada
+        fileBytes = await _downloadFromUrl(
+          downloadUrl,
+          (progress) {
+            onProgress?.call(0.2 + (progress * 0.6));
+          },
+        );
+      } else {
+        // Usar endpoint /download
+        final response = await _apiService.dio.get<List<int>>(
+          "/api/v1/praise-materials/${material.id}/download",
+          options: Options(
+            responseType: ResponseType.bytes,
+            followRedirects: true,
+            validateStatus: (status) => status != null && status < 500,
+          ),
+          onReceiveProgress: (received, total) {
+            if (total > 0) {
+              final progress = 0.2 + (received / total) * 0.6;
+              onProgress?.call(progress);
+            }
+          },
+        );
+
+        if (response.statusCode != 200 || response.data == null) {
+          throw Exception('Download falhou com status: ${response.statusCode}');
+        }
+
+        fileBytes = Uint8List.fromList(response.data!);
+      }
+
+      onProgress?.call(0.8);
+
+      // Preparar nome do arquivo sugerido
+      final materialKindName = material.materialKind?.name ?? 'material';
+      final safeName = materialKindName.replaceAll(RegExp(r'[^\w\s-]'), '_');
+      final suggestedFileName = '${safeName}_${material.id.substring(0, 8)}$extension';
+
+      // Permitir ao usuário escolher onde salvar
+      final String? savePath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Salvar Arquivo',
+        fileName: suggestedFileName,
+        type: FileType.custom,
+        allowedExtensions: [extension.substring(1)], // remover o ponto
+      );
+
+      if (savePath == null) {
+        // Usuário cancelou
+        return null;
+      }
+
+      onProgress?.call(0.9);
+
+      // Salvar bytes no arquivo escolhido pelo usuário
+      final file = File(savePath);
+      await file.writeAsBytes(fileBytes);
       
       onProgress?.call(1.0);
       return file.path;
     } catch (e) {
       onError?.call(e.toString());
-      throw Exception('Erro ao baixar ZIP por Material Kind: $e');
+      throw Exception('Erro ao baixar material: $e');
     }
   }
 }

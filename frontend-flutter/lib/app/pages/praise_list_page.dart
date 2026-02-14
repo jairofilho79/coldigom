@@ -9,9 +9,41 @@ import '../widgets/app_status_widgets.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/app_scaffold.dart';
 import '../services/api/api_service.dart';
+import '../services/connectivity_service.dart';
+import '../services/offline/praise_cache_service.dart';
 import '../models/praise_model.dart';
 import '../models/praise_tag_model.dart';
 import '../widgets/app_button.dart';
+
+/// Enum para tipo de ordenação
+enum SortField {
+  name,
+  number,
+}
+
+/// Enum para direção de ordenação
+enum SortDirection {
+  ascending,
+  descending,
+}
+
+/// Enum para comportamento de praises sem número (quando ordena por número)
+enum NoNumberBehavior {
+  first,   // Por primeiro
+  last,    // Por último
+  hide,    // Ocultar
+}
+
+/// Converte enums de ordenação para strings da API
+String _sortFieldToApi(SortField? f) => f == SortField.number ? 'number' : 'name';
+String _sortDirectionToApi(SortDirection? d) => d == SortDirection.descending ? 'desc' : 'asc';
+String _noNumberToApi(NoNumberBehavior b) {
+  switch (b) {
+    case NoNumberBehavior.first: return 'first';
+    case NoNumberBehavior.last: return 'last';
+    case NoNumberBehavior.hide: return 'hide';
+  }
+}
 
 /// Classe wrapper para parâmetros de busca de praises
 /// Implementa == e hashCode para evitar requisições duplicadas
@@ -20,12 +52,18 @@ class PraiseQueryParams {
   final int limit;
   final String? name;
   final String? tagId;
+  final String sortBy;
+  final String sortDirection;
+  final String noNumber;
 
   PraiseQueryParams({
     required this.skip,
     required this.limit,
     this.name,
     this.tagId,
+    this.sortBy = 'name',
+    this.sortDirection = 'asc',
+    this.noNumber = 'last',
   });
 
   @override
@@ -36,29 +74,90 @@ class PraiseQueryParams {
           skip == other.skip &&
           limit == other.limit &&
           name == other.name &&
-          tagId == other.tagId;
+          tagId == other.tagId &&
+          sortBy == other.sortBy &&
+          sortDirection == other.sortDirection &&
+          noNumber == other.noNumber;
 
   @override
-  int get hashCode => skip.hashCode ^ limit.hashCode ^ (name?.hashCode ?? 0) ^ (tagId?.hashCode ?? 0);
+  int get hashCode =>
+      skip.hashCode ^
+      limit.hashCode ^
+      (name?.hashCode ?? 0) ^
+      (tagId?.hashCode ?? 0) ^
+      sortBy.hashCode ^
+      sortDirection.hashCode ^
+      noNumber.hashCode;
 }
 
-/// Provider para lista de praises
+/// Provider para lista de praises (híbrido: API quando online, cache quando offline)
 final praisesProvider = FutureProvider.family<List<PraiseResponse>, PraiseQueryParams>(
   (ref, params) async {
     final apiService = ref.read(apiServiceProvider);
-    return await apiService.getPraises(
-      skip: params.skip,
-      limit: params.limit,
+    final connectivityService = ref.read(connectivityServiceProvider);
+    final cacheService = ref.read(praiseCacheServiceProvider);
+
+    final isOnline = await connectivityService.isOnline();
+    if (isOnline) {
+      final praises = await apiService.getPraises(
+        skip: params.skip,
+        limit: params.limit,
+        name: params.name,
+        tagId: params.tagId,
+        sortBy: params.sortBy,
+        sortDirection: params.sortDirection,
+        noNumber: params.noNumber,
+      );
+      // Sincronizar cache em background (não aguardar)
+      _syncPraisesCacheInBackground(apiService, cacheService);
+      return praises;
+    }
+
+    // Offline: usar cache com filtro/ordenação/paginação
+    final cached = cacheService.getCachedPraises();
+    if (cached.isEmpty) return [];
+    return cacheService.filterAndSort(
+      cached,
       name: params.name,
       tagId: params.tagId,
+      sortBy: params.sortBy,
+      sortDirection: params.sortDirection,
+      noNumber: params.noNumber,
+      skip: params.skip,
+      limit: params.limit,
     );
   },
 );
 
-/// Provider para lista de tags (para filtros)
+/// Sincroniza cache de praises e tags em background quando online
+Future<void> _syncPraisesCacheInBackground(
+  ApiService apiService,
+  PraiseCacheService cacheService,
+) async {
+  try {
+    final allPraises = await apiService.getAllPraises();
+    final tags = await apiService.getTags(limit: 1000);
+    await cacheService.saveAllPraises(allPraises);
+    await cacheService.saveAllTags(tags);
+  } catch (_) {
+    // Ignorar erros de sync em background
+  }
+}
+
+/// Provider para lista de tags (híbrido: API quando online, cache quando offline)
 final tagsProvider = FutureProvider<List<PraiseTagResponse>>((ref) async {
   final apiService = ref.read(apiServiceProvider);
-  return await apiService.getTags(limit: 1000);
+  final connectivityService = ref.read(connectivityServiceProvider);
+  final cacheService = ref.read(praiseCacheServiceProvider);
+
+  final isOnline = await connectivityService.isOnline();
+  if (isOnline) {
+    final tags = await apiService.getTags(limit: 1000);
+    await cacheService.saveAllTags(tags);
+    return tags;
+  }
+
+  return cacheService.getCachedTags();
 });
 
 /// StateProvider para busca
@@ -66,6 +165,18 @@ final searchQueryProvider = StateProvider<String>((ref) => '');
 
 /// StateProvider para tag selecionada no filtro
 final selectedTagFilterProvider = StateProvider<String?>((ref) => null);
+
+/// StateProvider para campo de ordenação
+/// Padrão: Nome
+final sortFieldProvider = StateProvider<SortField?>((ref) => SortField.name);
+
+/// StateProvider para direção de ordenação
+/// Padrão: Crescente
+final sortDirectionProvider = StateProvider<SortDirection?>((ref) => SortDirection.ascending);
+
+/// StateProvider para comportamento de praises sem número (visível apenas quando ordena por número)
+/// Padrão: Por último
+final noNumberBehaviorProvider = StateProvider<NoNumberBehavior>((ref) => NoNumberBehavior.last);
 
 class PraiseListPage extends ConsumerStatefulWidget {
   const PraiseListPage({super.key});
@@ -143,12 +254,15 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
       _skip += _limit;
     });
 
-    // Criar novos query params com skip atualizado
+    // Criar novos query params com skip atualizado (mantém sort/filtros)
     final queryParams = PraiseQueryParams(
       skip: _skip,
       limit: _limit,
       name: baseQueryParams.name,
       tagId: baseQueryParams.tagId,
+      sortBy: baseQueryParams.sortBy,
+      sortDirection: baseQueryParams.sortDirection,
+      noNumber: baseQueryParams.noNumber,
     );
 
     // Buscar mais dados
@@ -174,18 +288,248 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
     });
   }
 
+  void _showFiltersDialog(BuildContext context, WidgetRef ref, AsyncValue<List<PraiseTagResponse>> tagsAsync) {
+    final selectedTagId = ref.read(selectedTagFilterProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.labelFilters),
+        content: tagsAsync.when(
+          data: (tags) {
+            if (tags.isEmpty) {
+              return const Text('Nenhuma tag disponível');
+            }
+
+            return SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Botão "Todas"
+                    ListTile(
+                      leading: selectedTagId == null
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : const SizedBox(width: 24),
+                      title: Text(l10n.actionAll),
+                      onTap: () {
+                        ref.read(selectedTagFilterProvider.notifier).state = null;
+                        _resetPagination();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const Divider(),
+                    // Lista de tags
+                    ...tags.map((tag) {
+                      final isSelected = selectedTagId == tag.id;
+                      final tagName = getPraiseTagName(ref, tag.id, tag.name);
+                      return ListTile(
+                        leading: isSelected
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : const SizedBox(width: 24),
+                        title: Text(tagName),
+                        onTap: () {
+                          ref.read(selectedTagFilterProvider.notifier).state = 
+                              isSelected ? null : tag.id;
+                          _resetPagination();
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Text('Erro ao carregar tags: $error'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.buttonClose),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSortDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          // Ler valores atuais dos providers dentro do StatefulBuilder
+          final sortField = ref.read(sortFieldProvider);
+          final sortDirection = ref.read(sortDirectionProvider);
+          final noNumberBehavior = ref.read(noNumberBehaviorProvider);
+
+          return AlertDialog(
+            title: Text(l10n.labelSort),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Campo de ordenação
+                    Text(
+                      l10n.labelSortBy,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      leading: sortField == SortField.name
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : const SizedBox(width: 24),
+                      title: Text(l10n.labelName),
+                      onTap: () {
+                        setDialogState(() {
+                          ref.read(sortFieldProvider.notifier).state = SortField.name;
+                          if (ref.read(sortDirectionProvider) == null) {
+                            ref.read(sortDirectionProvider.notifier).state = SortDirection.ascending;
+                          }
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: sortField == SortField.number
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : const SizedBox(width: 24),
+                      title: Text(l10n.labelNumber),
+                      onTap: () {
+                        setDialogState(() {
+                          ref.read(sortFieldProvider.notifier).state = SortField.number;
+                          if (ref.read(sortDirectionProvider) == null) {
+                            ref.read(sortDirectionProvider.notifier).state = SortDirection.ascending;
+                          }
+                        });
+                      },
+                    ),
+                    const Divider(),
+                    // Direção de ordenação
+                    Text(
+                      l10n.labelDirection,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      leading: sortDirection == SortDirection.ascending
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : const SizedBox(width: 24),
+                      title: Text(l10n.labelAscending),
+                      onTap: () {
+                        setDialogState(() {
+                          ref.read(sortDirectionProvider.notifier).state = SortDirection.ascending;
+                          if (ref.read(sortFieldProvider) == null) {
+                            ref.read(sortFieldProvider.notifier).state = SortField.name;
+                          }
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: sortDirection == SortDirection.descending
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : const SizedBox(width: 24),
+                      title: Text(l10n.labelDescending),
+                      onTap: () {
+                        setDialogState(() {
+                          ref.read(sortDirectionProvider.notifier).state = SortDirection.descending;
+                          if (ref.read(sortFieldProvider) == null) {
+                            ref.read(sortFieldProvider.notifier).state = SortField.name;
+                          }
+                        });
+                      },
+                    ),
+                    if (sortField == SortField.number) ...[
+                      const Divider(),
+                      Text(
+                        l10n.labelWithoutNumber,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      ListTile(
+                        leading: noNumberBehavior == NoNumberBehavior.first
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : const SizedBox(width: 24),
+                        title: Text(l10n.labelWithoutNumberFirst),
+                        onTap: () {
+                          setDialogState(() {
+                            ref.read(noNumberBehaviorProvider.notifier).state = NoNumberBehavior.first;
+                          });
+                        },
+                      ),
+                      ListTile(
+                        leading: noNumberBehavior == NoNumberBehavior.last
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : const SizedBox(width: 24),
+                        title: Text(l10n.labelWithoutNumberLast),
+                        onTap: () {
+                          setDialogState(() {
+                            ref.read(noNumberBehaviorProvider.notifier).state = NoNumberBehavior.last;
+                          });
+                        },
+                      ),
+                      ListTile(
+                        leading: noNumberBehavior == NoNumberBehavior.hide
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : const SizedBox(width: 24),
+                        title: Text(l10n.labelWithoutNumberHide),
+                        onTap: () {
+                          setDialogState(() {
+                            ref.read(noNumberBehaviorProvider.notifier).state = NoNumberBehavior.hide;
+                          });
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  ref.read(sortFieldProvider.notifier).state = SortField.name;
+                  ref.read(sortDirectionProvider.notifier).state = SortDirection.ascending;
+                  ref.read(noNumberBehaviorProvider.notifier).state = NoNumberBehavior.last;
+                  _resetPagination();
+                  Navigator.of(context).pop();
+                },
+                child: Text(l10n.actionClearFilters),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.buttonClose),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchQuery = ref.watch(searchQueryProvider);
     final selectedTagId = ref.watch(selectedTagFilterProvider);
+    final sortField = ref.watch(sortFieldProvider);
+    final sortDirection = ref.watch(sortDirectionProvider);
+    final noNumberBehavior = ref.watch(noNumberBehaviorProvider);
     
-    // Criar queryParams usando classe wrapper que implementa == e hashCode
-    // Isso evita requisições duplicadas porque o Riverpod pode comparar corretamente
+    // Criar queryParams com filtros e ordenação (aplicados no backend)
     final queryParams = PraiseQueryParams(
-      skip: 0, // Sempre começar do início, paginação será feita via estado local
+      skip: 0,
       limit: _limit,
       name: searchQuery.isEmpty ? null : searchQuery,
       tagId: selectedTagId,
+      sortBy: _sortFieldToApi(sortField),
+      sortDirection: _sortDirectionToApi(sortDirection),
+      noNumber: _noNumberToApi(noNumberBehavior),
     );
 
     final praisesAsync = ref.watch(praisesProvider(queryParams));
@@ -197,10 +541,15 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
       appBar: AppBar(
         title: Text(l10n.pageTitlePraises),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/praises/create');
+          Builder(
+            builder: (context) {
+              final isOnlineAsync = ref.watch(connectivityStateProvider);
+              final isOnline = isOnlineAsync.value ?? false;
+              return IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: isOnline ? null : 'Criar praise requer conexão',
+                onPressed: isOnline ? () => context.push('/praises/create') : null,
+              );
             },
           ),
         ],
@@ -218,54 +567,28 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
             ),
           ),
 
-          // Filtros de tags
-          tagsAsync.when(
-            data: (tags) {
-              if (tags.isEmpty) {
-                return const SizedBox.shrink();
-              }
-
-              return Container(
-                height: 50,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    // Botão "Todas"
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(l10n.actionAll),
-                        selected: selectedTagId == null,
-                        onSelected: (_) {
-                          ref.read(selectedTagFilterProvider.notifier).state = null;
-                          _resetPagination();
-                        },
-                      ),
-                    ),
-                    // Chips de tags
-                    ...tags.map((tag) {
-                      final isSelected = selectedTagId == tag.id;
-                      final tagName = getPraiseTagName(ref, tag.id, tag.name);
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(tagName),
-                          selected: isSelected,
-                          onSelected: (_) {
-                            ref.read(selectedTagFilterProvider.notifier).state = 
-                                isSelected ? null : tag.id;
-                            _resetPagination();
-                          },
-                        ),
-                      );
-                    }),
-                  ],
+          // Botões de Filtros e Ordem
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showFiltersDialog(context, ref, tagsAsync),
+                    icon: const Icon(Icons.filter_list),
+                    label: Text(l10n.labelFilters),
+                  ),
                 ),
-              );
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showSortDialog(context, ref),
+                    icon: const Icon(Icons.sort),
+                    label: Text(l10n.labelSort),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           // Lista de praises
@@ -292,7 +615,7 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                   });
                 }
 
-                // Usar lista atual enquanto processa
+                // Usar lista atual enquanto processa (backend já retorna ordenado)
                 final currentPraises = _allPraises.isEmpty ? praises : _allPraises;
 
                 if (currentPraises.isEmpty) {
@@ -385,9 +708,12 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                   },
                 );
               },
-              loading: () => _allPraises.isEmpty 
-                  ? const AppLoadingIndicator(message: 'Carregando praises...')
-                  : ListView.builder(
+              loading: () {
+                if (_allPraises.isEmpty) {
+                  return const AppLoadingIndicator(message: 'Carregando praises...');
+                }
+                
+                return ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: _allPraises.length + 1,
                       itemBuilder: (context, index) {
@@ -460,7 +786,8 @@ class _PraiseListPageState extends ConsumerState<PraiseListPage> {
                           ),
                         );
                       },
-                    ),
+                    );
+              },
               error: (error, stack) {
                 // Se o erro for 401 (não autorizado), não exibir o erro
                 // O redirecionamento para login já será feito pelo GoRouter

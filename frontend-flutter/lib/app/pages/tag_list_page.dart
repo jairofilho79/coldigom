@@ -7,19 +7,10 @@ import '../widgets/app_card.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_scaffold.dart';
-import '../services/api/api_service.dart';
 import '../models/praise_tag_model.dart';
-
-/// Provider para lista de tags
-final tagsProvider = FutureProvider<List<PraiseTagResponse>>(
-  (ref) async {
-    final apiService = ref.read(apiServiceProvider);
-    return await apiService.getTags(
-      skip: 0,
-      limit: 1000,
-    );
-  },
-);
+import '../services/api/api_service.dart';
+import '../services/connectivity_service.dart';
+import 'praise_list_page.dart'; // tagsProvider híbrido (online/offline)
 
 class TagListPage extends ConsumerWidget {
   const TagListPage({super.key});
@@ -33,10 +24,15 @@ class TagListPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.pageTitleTags),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/tags/create');
+          Builder(
+            builder: (context) {
+              final connectivityAsync = ref.watch(connectivityStateProvider);
+              final isOnline = connectivityAsync.value ?? false;
+              return IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: isOnline ? null : 'Criar tag requer conexão',
+                onPressed: isOnline ? () => context.push('/tags/create') : null,
+              );
             },
           ),
         ],
@@ -49,6 +45,9 @@ class TagListPage extends ConsumerWidget {
               icon: Icons.label,
             );
           }
+
+          final connectivityAsync = ref.watch(connectivityStateProvider);
+          final isOnline = connectivityAsync.value ?? false;
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -74,13 +73,13 @@ class TagListPage extends ConsumerWidget {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            context.push('/tags/${tag.id}/edit');
-                          },
+                          tooltip: isOnline ? null : 'Editar tag requer conexão',
+                          onPressed: isOnline ? () => context.push('/tags/${tag.id}/edit') : null,
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _showDeleteDialog(context, ref, tag),
+                          tooltip: isOnline ? null : 'Deletar tag requer conexão',
+                          onPressed: isOnline ? () => _showDeleteDialog(context, ref, tag) : null,
                         ),
                       ],
                     ),

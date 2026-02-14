@@ -570,6 +570,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get actionAll => 'Todas';
 
   @override
+  String get labelSort => 'Ordem';
+
+  @override
+  String get labelSortBy => 'Ordenar por:';
+
+  @override
+  String get labelDirection => 'Direção:';
+
+  @override
+  String get labelAscending => 'Crescente';
+
+  @override
+  String get labelDescending => 'Decrescente';
+
+  @override
+  String get labelWithoutNumber => 'Sem número:';
+
+  @override
+  String get labelWithoutNumberFirst => 'Por primeiro';
+
+  @override
+  String get labelWithoutNumberLast => 'Por último';
+
+  @override
+  String get labelWithoutNumberHide => 'Ocultar';
+
+  @override
   String get actionViewOldMaterials => 'Ver Antigos';
 
   @override

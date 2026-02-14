@@ -176,10 +176,20 @@ def process_praise_folder(
     if not praise_id_str:
         return False, f"praise_id não encontrado em {metadata_path}"
     
+    # Tentar corrigir UUID duplicado (ex: "uuid1uuid2" -> "uuid1")
+    original_praise_id_str = praise_id_str
+    if len(praise_id_str) > 36:  # UUID válido tem 36 caracteres (com hífens)
+        # Tentar extrair o primeiro UUID válido
+        import re
+        uuid_match = re.search(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', praise_id_str, re.IGNORECASE)
+        if uuid_match:
+            praise_id_str = uuid_match.group(1)
+            print(f"  ⚠️  UUID corrigido: {original_praise_id_str} -> {praise_id_str}")
+    
     try:
         praise_id = UUID(praise_id_str)
     except ValueError:
-        return False, f"praise_id inválido: {praise_id_str}"
+        return False, f"praise_id inválido: {original_praise_id_str} (tentativa de correção: {praise_id_str})"
     
     praise_name = metadata.get('praise_name', '')
     praise_number = metadata.get('praise_number', '')
@@ -201,6 +211,7 @@ def process_praise_folder(
         if praise:
             # Atualizar praise existente
             from app.domain.schemas.praise import PraiseUpdate
+            from fastapi import HTTPException
             praise_service = PraiseService(db)
             praise_update = PraiseUpdate(
                 name=praise_name,
@@ -210,8 +221,13 @@ def process_praise_folder(
                 tonality=praise_tonality or None,
                 category=praise_category or None,
             )
-            praise = praise_service.update(praise_id, praise_update)
-            print(f"  ✅ Praise atualizado: {praise_name}")
+            try:
+                praise = praise_service.update(praise_id, praise_update)
+                print(f"  ✅ Praise atualizado: {praise_name}")
+            except HTTPException as e:
+                return False, f"Erro ao atualizar praise: {e.detail}"
+            except Exception as e:
+                return False, f"Erro inesperado ao atualizar praise: {str(e)}"
         else:
             # Criar novo praise
             from app.domain.schemas.praise import PraiseCreate
@@ -254,10 +270,16 @@ def process_praise_folder(
             # Atualizar praise com todas as tags
             if processed_tag_ids:
                 from app.domain.schemas.praise import PraiseUpdate
+                from fastapi import HTTPException
                 praise_service = PraiseService(db)
                 praise_update = PraiseUpdate(tag_ids=processed_tag_ids)
-                praise = praise_service.update(praise_id, praise_update)
-                print(f"    ✅ {len(processed_tag_ids)} tags associadas")
+                try:
+                    praise = praise_service.update(praise_id, praise_update)
+                    print(f"    ✅ {len(processed_tag_ids)} tags associadas")
+                except HTTPException as e:
+                    print(f"    ⚠️  Erro ao associar tags: {e.detail}")
+                except Exception as e:
+                    print(f"    ⚠️  Erro inesperado ao associar tags: {str(e)}")
     
     # Processar materiais
     materials = metadata.get('praise_materiais', [])
@@ -474,6 +496,7 @@ def main():
         
         success_count = 0
         error_count = 0
+        errors_list = []  # Lista para guardar erros detalhados
         
         for i, folder in enumerate(praise_folders, 1):
             print(f"\n[{i}/{len(praise_folders)}] {folder.name}")
@@ -483,6 +506,12 @@ def main():
                 success_count += 1
             else:
                 error_count += 1
+                error_info = {
+                    'folder': folder.name,
+                    'index': i,
+                    'message': message
+                }
+                errors_list.append(error_info)
                 print(f"  ❌ Erro: {message}")
             
             # Commit periódico
@@ -499,6 +528,16 @@ def main():
         print(f"✅ Sucesso: {success_count}")
         print(f"❌ Erros: {error_count}")
         print(f"📊 Total: {len(praise_folders)}")
+        
+        # Mostrar detalhes dos erros se houver
+        if errors_list:
+            print(f"\n{'='*60}")
+            print(f"📋 DETALHES DOS ERROS ({len(errors_list)}):")
+            print(f"{'='*60}")
+            for error in errors_list:
+                print(f"\n❌ Erro #{error['index']}: {error['folder']}")
+                print(f"   Mensagem: {error['message']}")
+            print(f"\n{'='*60}")
         
     except Exception as e:
         print(f"\n❌ Erro fatal: {e}")

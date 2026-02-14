@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_client.dart';
+import '../connectivity_service.dart';
 import '../../models/user_model.dart';
 import '../../stores/auth_store.dart';
 import '../../models/praise_model.dart';
@@ -14,6 +15,7 @@ import '../../models/praise_list_model.dart';
 import '../../models/translation_model.dart';
 import '../../models/room_model.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../routes/app_router.dart';
 
 /// Serviço de API usando Dio diretamente
 class ApiService {
@@ -56,6 +58,9 @@ class ApiService {
     int? limit,
     String? name,
     String? tagId,
+    String? sortBy,
+    String? sortDirection,
+    String? noNumber,
   }) async {
     final response = await _dio.get(
       '/api/v1/praises/',
@@ -64,11 +69,38 @@ class ApiService {
         if (limit != null) 'limit': limit,
         if (name != null) 'name': name,
         if (tagId != null) 'tag_id': tagId,
+        if (sortBy != null) 'sort_by': sortBy,
+        if (sortDirection != null) 'sort_direction': sortDirection,
+        if (noNumber != null) 'no_number': noNumber,
       },
     );
     return (response.data as List)
         .map((json) => PraiseResponse.fromJson(json))
         .toList();
+  }
+
+  /// Busca todos os praises com paginação (para cache offline)
+  Future<List<PraiseResponse>> getAllPraises({
+    String sortBy = 'name',
+    String sortDirection = 'asc',
+    String noNumber = 'last',
+  }) async {
+    const pageSize = 1000;
+    int skip = 0;
+    final all = <PraiseResponse>[];
+    List<PraiseResponse> page;
+    do {
+      page = await getPraises(
+        skip: skip,
+        limit: pageSize,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+        noNumber: noNumber,
+      );
+      all.addAll(page);
+      skip += pageSize;
+    } while (page.length == pageSize);
+    return all;
   }
 
   Future<PraiseResponse> getPraiseById(String id) async {
@@ -796,16 +828,18 @@ class ApiService {
 
 /// Provider do serviço de API
 final apiServiceProvider = Provider<ApiService>((ref) {
-  // Callback para ser chamado quando houver erro 401
-  // Isso atualiza o estado de autenticação e faz o GoRouter redirecionar para login
+  // Callback para ser chamado quando houver erro 401 (apenas quando online)
   final onUnauthorized = () {
     final authNotifier = ref.read(authProvider.notifier);
     authNotifier.logout();
+    AppRouter.refreshAuth();
   };
   
+  final connectivityService = ref.read(connectivityServiceProvider);
   final apiClient = ApiClient(
     baseUrl: AppConstants.apiBaseUrl,
     onUnauthorized: onUnauthorized,
+    connectivityService: connectivityService,
   );
   return ApiService(apiClient);
 });

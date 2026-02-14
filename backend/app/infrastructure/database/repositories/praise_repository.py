@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, case, func
 from app.domain.models.praise import Praise
 from app.domain.models.praise_material import PraiseMaterial
 from app.domain.models.material_type import MaterialType
@@ -116,6 +116,80 @@ class PraiseRepository(BaseRepository):
             .limit(limit)
             .all()
         )
+
+    def get_all_filtered_sorted(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        name: Optional[str] = None,
+        tag_id: Optional[UUID] = None,
+        sort_by: str = "name",
+        sort_direction: str = "asc",
+        no_number: str = "last",
+    ) -> List[Praise]:
+        """Query unificada com filtros e ordenação no banco."""
+        from app.domain.models.praise import praise_tag_association
+
+        query = (
+            self.db.query(Praise)
+            .options(
+                joinedload(Praise.tags),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
+                joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
+            )
+        )
+
+        # Filtro por tag
+        if tag_id:
+            query = query.join(praise_tag_association).filter(
+                praise_tag_association.c.tag_id == tag_id
+            )
+
+        # Filtro por nome/número/lyrics
+        if name and name.strip():
+            conditions = [Praise.name.ilike(f"%{name.strip()}%")]
+            if name.strip().isdigit():
+                conditions.append(Praise.number == int(name.strip()))
+            lyrics_subq = (
+                self.db.query(PraiseMaterial.praise_id)
+                .join(MaterialType, PraiseMaterial.material_type_id == MaterialType.id)
+                .join(MaterialKind, PraiseMaterial.material_kind_id == MaterialKind.id)
+                .filter(
+                    MaterialType.name.ilike("text"),
+                    MaterialKind.name.ilike("Lyrics"),
+                    PraiseMaterial.path.ilike(f"%{name.strip()}%"),
+                )
+            )
+            conditions.append(Praise.id.in_(lyrics_subq))
+            query = query.filter(or_(*conditions)).distinct()
+
+        # Filtro por number IS NOT NULL quando no_number=hide e sort_by=number
+        if sort_by == "number" and no_number == "hide":
+            query = query.filter(Praise.number.isnot(None))
+
+        # Ordenação
+        asc = sort_direction.lower() != "desc"
+        if sort_by == "number":
+            if no_number == "first":
+                # NULLs primeiro: 0 para NULL, 1 para não-NULL
+                null_order = case((Praise.number.is_(None), 0), else_=1).asc()
+                num_order = Praise.number.asc() if asc else Praise.number.desc()
+                query = query.order_by(null_order, num_order, func.lower(Praise.name))
+            elif no_number == "last":
+                # NULLs por último: 0 para não-NULL, 1 para NULL
+                null_order = case((Praise.number.is_(None), 1), else_=0).asc()
+                num_order = Praise.number.asc() if asc else Praise.number.desc()
+                query = query.order_by(null_order, num_order, func.lower(Praise.name))
+            else:
+                # hide: já filtrado, só ordenar por number
+                num_order = Praise.number.asc() if asc else Praise.number.desc()
+                query = query.order_by(num_order, func.lower(Praise.name))
+        else:
+            # ordenar por nome (case-insensitive)
+            name_order = func.lower(Praise.name).asc() if asc else func.lower(Praise.name).desc()
+            query = query.order_by(name_order)
+
+        return query.offset(skip).limit(limit).all()
 
     def create(self, praise: Praise) -> Praise:
         self.db.add(praise)

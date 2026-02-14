@@ -29,9 +29,26 @@ import '../pages/text_viewer_page.dart';
 import '../pages/offline_materials_page.dart';
 import '../stores/auth_store.dart';
 
+/// Notifier usado para forçar o GoRouter a reavaliar os redirects
+/// quando o estado de autenticação muda (ex: token expirado → 401).
+class _AuthRefreshNotifier extends ChangeNotifier {
+  void notify() {
+    notifyListeners();
+  }
+}
+
 class AppRouter {
+  static final _refreshNotifier = _AuthRefreshNotifier();
+
+  /// Força o GoRouter a reavaliar os redirects.
+  /// Chamado quando o estado de autenticação muda (ex: logout por 401).
+  static void refreshAuth() {
+    _refreshNotifier.notify();
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/login',
+    refreshListenable: _refreshNotifier,
     redirect: (context, state) {
       final authState = ProviderScope.containerOf(context).read(authProvider);
       final isLoggedIn = authState.isAuthenticated;

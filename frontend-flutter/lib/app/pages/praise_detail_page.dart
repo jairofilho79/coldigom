@@ -10,17 +10,38 @@ import '../widgets/app_scaffold.dart';
 import '../widgets/material_manager_widget.dart';
 import '../widgets/add_to_list_button.dart';
 import '../services/api/api_service.dart';
+import '../services/connectivity_service.dart';
 import '../services/offline/download_service.dart';
+import '../services/offline/praise_cache_service.dart';
 import '../models/praise_model.dart';
-import '../models/praise_material_model.dart';
 
-/// Provider para um praise específico
+/// Provider para um praise específico (híbrido: API quando online, cache quando offline)
 final praiseProvider = FutureProvider.family<PraiseResponse, String>(
   (ref, id) async {
     final apiService = ref.read(apiServiceProvider);
-    return await apiService.getPraiseById(id);
+    final connectivityService = ref.read(connectivityServiceProvider);
+    final cacheService = ref.read(praiseCacheServiceProvider);
+
+    final isOnline = await connectivityService.isOnline();
+    if (isOnline) {
+      return await apiService.getPraiseById(id);
+    }
+
+    // Offline: buscar do cache
+    final cached = cacheService.getCachedPraises();
+    try {
+      return cached.firstWhere((p) => p.id == id);
+    } catch (_) {
+      throw Exception('Praise não encontrado no cache offline');
+    }
   },
 );
+
+/// Provider para verificar se está online (usado para desabilitar ações online-only)
+final isOnlineForDetailProvider = FutureProvider<bool>((ref) async {
+  final connectivityService = ref.read(connectivityServiceProvider);
+  return await connectivityService.isOnline();
+});
 
 /// Provider para ação de revisão
 final praiseReviewActionProvider = FutureProvider.family<PraiseResponse, ReviewActionParams>(
@@ -51,7 +72,9 @@ class PraiseDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final praiseAsync = ref.watch(praiseProvider(praiseId));
+    final isOnlineAsync = ref.watch(isOnlineForDetailProvider);
     final l10n = AppLocalizations.of(context)!;
+    final isOnline = isOnlineAsync.value ?? false;
 
     return AppScaffold(
       appBar: AppBar(
@@ -59,18 +82,18 @@ class PraiseDetailPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
-            tooltip: l10n.tooltipDownloadZip,
-            onPressed: () => _downloadPraiseZip(context, ref, praiseId),
+            tooltip: isOnline ? l10n.tooltipDownloadZip : 'Funcionalidade disponível com conexão',
+            onPressed: isOnline ? () => _downloadPraiseZip(context, ref, praiseId) : null,
           ),
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () {
-              context.push('/praises/$praiseId/edit');
-            },
+            tooltip: isOnline ? null : 'Funcionalidade disponível com conexão',
+            onPressed: isOnline ? () => context.push('/praises/$praiseId/edit') : null,
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context, ref),
+            tooltip: isOnline ? null : 'Funcionalidade disponível com conexão',
+            onPressed: isOnline ? () => _showDeleteDialog(context, ref) : null,
           ),
         ],
       ),

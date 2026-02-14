@@ -27,33 +27,28 @@ class PraiseService:
             )
         return praise
 
-    def get_all(self, skip: int = 0, limit: int = 100, name: Optional[str] = None, tag_id: Optional[UUID] = None) -> List[Praise]:
-        if tag_id:
-            if name and name.strip():
-                all_matching = self.repository.search_by_name_or_number_or_lyrics(
-                    name.strip(), skip=0, limit=2000
-                )
-                tag_praises = self.repository.get_by_tag_id(tag_id, skip=0, limit=2000)
-                tag_ids_set = {p.id for p in tag_praises}
-                filtered = [p for p in all_matching if p.id in tag_ids_set]
-                return filtered[skip:skip + limit]
-            return self.repository.get_by_tag_id(tag_id, skip=skip, limit=limit)
-        if name and name.strip():
-            return self.repository.search_by_name_or_number_or_lyrics(
-                name.strip(), skip=skip, limit=limit
-            )
-        return self.repository.get_all(skip=skip, limit=limit)
+    def get_all(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        name: Optional[str] = None,
+        tag_id: Optional[UUID] = None,
+        sort_by: str = "name",
+        sort_direction: str = "asc",
+        no_number: str = "last",
+    ) -> List[Praise]:
+        """Lista praises com filtros e ordenação aplicados no banco."""
+        return self.repository.get_all_filtered_sorted(
+            skip=skip,
+            limit=limit,
+            name=name,
+            tag_id=tag_id,
+            sort_by=sort_by,
+            sort_direction=sort_direction,
+            no_number=no_number,
+        )
 
     def create(self, praise_data: PraiseCreate) -> Praise:
-        # Check if praise with same number already exists (if number is provided)
-        if praise_data.number is not None:
-            existing_praise = self.repository.get_by_number(praise_data.number)
-            if existing_praise:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Praise with number {praise_data.number} already exists"
-                )
-        
         in_review = praise_data.in_review or False
         if in_review:
             review_history = [{"type": "in_review", "date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}]
@@ -111,13 +106,6 @@ class PraiseService:
             praise.name = praise_data.name
         
         if praise_data.number is not None:
-            # Check if another praise with same number exists
-            existing_praise = self.repository.get_by_number(praise_data.number)
-            if existing_praise and existing_praise.id != praise_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Praise with number {praise_data.number} already exists"
-                )
             praise.number = praise_data.number
         
         # Update tags if provided

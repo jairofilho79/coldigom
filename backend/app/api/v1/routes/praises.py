@@ -23,12 +23,23 @@ def list_praises(
     limit: int = Query(100, ge=1, le=1000),
     name: Optional[str] = Query(None),
     tag_id: Optional[UUID] = Query(None),
+    sort_by: str = Query("name", description="Ordenar por: name ou number"),
+    sort_direction: str = Query("asc", description="Direção: asc ou desc"),
+    no_number: str = Query("last", description="Praises sem número: first, last ou hide (apenas quando sort_by=number)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Lista todos os praises com paginação e busca opcional por nome ou tag"""
+    """Lista todos os praises com paginação, busca por nome/tag e ordenação no banco"""
     service = PraiseService(db)
-    praises = service.get_all(skip=skip, limit=limit, name=name, tag_id=tag_id)
+    praises = service.get_all(
+        skip=skip,
+        limit=limit,
+        name=name,
+        tag_id=tag_id,
+        sort_by=sort_by,
+        sort_direction=sort_direction,
+        no_number=no_number,
+    )
     return praises
 
 

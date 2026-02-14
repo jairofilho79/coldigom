@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
 import '../../../core/config/hive_config.dart';
-import '../../../core/constants/app_constants.dart';
+import '../connectivity_service.dart';
 
 /// Exceção customizada para erros de autenticação que devem ser silenciosamente ignorados
 /// pois o redirecionamento para login já está sendo feito
@@ -20,11 +20,17 @@ class ApiClient {
   late final Dio _dio;
   final String baseUrl;
   final VoidCallback? onUnauthorized;
+  final ConnectivityService? _connectivityService;
+  
+  /// Guarda para evitar que múltiplos 401 simultâneos
+  /// disparem logout/redirect repetidamente.
+  bool _isHandling401 = false;
 
   ApiClient({
     required this.baseUrl,
     this.onUnauthorized,
-  }) {
+    ConnectivityService? connectivityService,
+  }) : _connectivityService = connectivityService {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       headers: {
@@ -79,7 +85,7 @@ class ApiClient {
           }
           return handler.next(response);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
           if (kDebugMode) {
             debugPrint('❌ API Error: ${error.type} - ${error.message}');
             debugPrint('   URL: ${error.requestOptions.uri}');
@@ -96,13 +102,26 @@ class ApiClient {
 
           // Tratar erro 401 (não autorizado)
           if (error.response?.statusCode == 401) {
-            final authBox = Hive.box(HiveConfig.authBoxName);
-            authBox.clear();
-            // Notificar o callback para atualizar o estado de autenticação
-            // Isso fará o GoRouter redirecionar para login
-            onUnauthorized?.call();
-            // Lançar uma exceção customizada que pode ser identificada na UI
-            // para não exibir o erro, já que o redirecionamento já está sendo feito
+            // Se offline: não invalidar sessão - permitir uso do app em modo offline
+            final isOffline = _connectivityService != null &&
+                !await _connectivityService!.isOnline(timeout: const Duration(seconds: 2));
+            if (isOffline) {
+              if (kDebugMode) {
+                debugPrint('   📴 Modo offline: mantendo sessão local em 401');
+              }
+              return handler.next(error);
+            }
+
+            // Online com 401: token expirado - fazer logout
+            if (!_isHandling401) {
+              _isHandling401 = true;
+              final authBox = Hive.box(HiveConfig.authBoxName);
+              authBox.clear();
+              onUnauthorized?.call();
+              Future.delayed(const Duration(seconds: 2), () {
+                _isHandling401 = false;
+              });
+            }
             return handler.reject(
               DioException(
                 requestOptions: error.requestOptions,

@@ -1,0 +1,28 @@
+[X] Deixar apenas o Material Kind no item da lista de materiais no detalhes do material
+[X] No modo de editar um material, o arquivo deve ter a opção de upload de arquivo e assim trocar o com que está no backend. Na verdade, deve-se usar o mesmo modal de criar, com as mesmas lógicas e campos.
+[X] Verificar porque os materiais não estão com seus material kinds corretos.
+[X] Criar enum para material type
+[X] Criar sistema de internacionalização para várias linguagens, de forma escalável (novas linguagens podem ser inseridas com o tempo)
+[X] Criar aba de linguagens para serem adicionadas com a lista de textos a serem traduzidos (e usar uma linguagem de comparação da escolha do usuário)
+[X] Criar lista de internacionalização ao criar/editar material kind, praise tags, material type e textos da aplicação
+[X] Os praises e os materiais devem ser intercionalizados (indicar qual a sua linguagem)
+[X] Permitir adicionar uma tag ao praise ao editar o praise
+[X] Permitir remover uma tag ao editar o praise
+[X] Permitir listar todos os louvores de uma determinada tag
+[X] Permitir baixar um praise zipado, com todos os materiais
+[X] Permitir baixar vários praises (get all ou filtro por tag) de um mesmo material kind (sugerir melhor divisão de zips por tamanho em MB)
+[X] Criar flag isOld para um material (com opção de observação OldDescription)
+[X] No frontend deve-se esconder os materiais com a flag is_old ativa, e ao clicar no botão "Ver Materiais Antigos" deve-se ver todos os materiais antigos. 
+[X] Criar flag de emRevisão (coloque em inglês) para o praise
+[X] Criar array com histórico de revisão do PES (array de datas) (coloque em inglês) no praise
+[] Adicionar níveis de permissão (user, admin, superadmin) User pode ler e solicitar material e enviar material solicitado para aprovação; Admin pode adicionar qualquer coisa e aprovar materiais solicitados, pode solicitar para apagar ou alterar; superadmin pode alterar e apagar qualquer coisa.
+    O atual sistema de registro será apenas para user. Um user pode ser promovido a admin ou superadmin por um superadmin.
+    O primeiro superadmin será cadastrado na plataforma pelo próprio banco de dados.
+[X] Permitir criar preferências do usuário (ordem de preferência de material kind)
+[] Permitir que usuários usem autenticação de 2 fatores (obrigatório para admins)
+[] Criar o usecase de solicitar material, permitir que alguém se associe à solicitação, qual status (disponível (sem alguém fazendo), fazendo, em revisão (um admin deve aprovar), finalizada)
+[X] Permitir listas de praises
+[X] Permitir salas (como se fossem listas de praises, com adição, reordenação ou remoção dos louvores que sejam sincronizadas ao vivo com todos os usuários), também que todos os usuários participem de um chat e identificados por seu nome e seu material kind de preferência (o primeiro da lista). As salas devem ser criáveis, compartilháveis e pesquisáveis por um código (ou acessíveis por uma url diretamente)
+[] Adicionar os louvores no Wasabi
+[] Criar casos de uso da aplicação
+[] Recriar front em flutter

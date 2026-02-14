@@ -11,15 +11,19 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "praise_db"
     POSTGRES_PORT: int = 5432
 
-    # Storage Configuration
-    STORAGE_MODE: str = "wasabi"  # wasabi or local
+    # Deployment Configuration
+    DEPLOYMENT_ENV: str = "local"  # local ou vps
+    DEPLOYMENT_HOST: str = ""  # IP local ou URI do VPS
+
+    # Storage Configuration (modo local para produção beta)
+    STORAGE_MODE: str = "local"  # local (wasabi desabilitado temporariamente)
     
-    # Wasabi Storage (usado quando STORAGE_MODE=wasabi)
-    WASABI_ACCESS_KEY: str = ""
-    WASABI_SECRET_KEY: str = ""
-    WASABI_ENDPOINT: str = "https://s3.wasabisys.com"
-    WASABI_BUCKET: str = ""
-    WASABI_REGION: str = "us-east-1"
+    # Wasabi Storage (desabilitado temporariamente - será usado após fase beta)
+    # WASABI_ACCESS_KEY: str = ""
+    # WASABI_SECRET_KEY: str = ""
+    # WASABI_ENDPOINT: str = "https://s3.wasabisys.com"
+    # WASABI_BUCKET: str = ""
+    # WASABI_REGION: str = "us-east-1"
     
     # Local Storage (usado quando STORAGE_MODE=local)
     STORAGE_LOCAL_PATH: str = "/storage/assets"

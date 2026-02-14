@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/i18n/generated/app_localizations.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/app_status_widgets.dart';
 import '../widgets/app_button.dart';
 import '../widgets/room_material_selector_dialog.dart';
 import '../providers/room_providers.dart';
 import '../providers/praise_list_providers.dart';
-import '../models/praise_model.dart';
 import '../models/room_offline_model.dart';
-import '../services/api/api_service.dart';
 import '../services/room_sync_service.dart';
 import '../models/room_model.dart';
 import 'praise_detail_page.dart'; // Para importar praiseProvider
+import 'praise_list_page.dart'; // Para importar praisesProvider e PraiseQueryParams (híbrido online/offline)
 import '../../core/i18n/entity_translation_helper.dart';
 
 class RoomOfflinePage extends ConsumerStatefulWidget {
@@ -900,47 +898,6 @@ class _AddPraiseDialogState extends ConsumerState<_AddPraiseDialog> {
     }
   }
 }
-
-// Importar PraiseQueryParams e praisesProvider de praise_list_page
-// Como são definidos lá, vamos criar uma versão local ou importar
-class PraiseQueryParams {
-  final int skip;
-  final int limit;
-  final String? name;
-  final String? tagId;
-
-  PraiseQueryParams({
-    required this.skip,
-    required this.limit,
-    this.name,
-    this.tagId,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PraiseQueryParams &&
-          runtimeType == other.runtimeType &&
-          skip == other.skip &&
-          limit == other.limit &&
-          name == other.name &&
-          tagId == other.tagId;
-
-  @override
-  int get hashCode => skip.hashCode ^ limit.hashCode ^ (name?.hashCode ?? 0) ^ (tagId?.hashCode ?? 0);
-}
-
-final praisesProvider = FutureProvider.family<List<PraiseResponse>, PraiseQueryParams>(
-  (ref, params) async {
-    final apiService = ref.read(apiServiceProvider);
-    return await apiService.getPraises(
-      skip: params.skip,
-      limit: params.limit,
-      name: params.name,
-      tagId: params.tagId,
-    );
-  },
-);
 
 class _ImportListDialog extends ConsumerStatefulWidget {
   final Function(String) onListSelected;

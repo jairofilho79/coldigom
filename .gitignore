@@ -85,3 +85,8 @@ build/
 *.tmp
 *.temp
 .cache/
+
+# Backups
+backups/
+*.sql.gz
+*.tar.gz

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../stores/audio_player_store.dart';
+import '../services/connectivity_service.dart';
 import 'mini_audio_player.dart';
 import 'app_drawer.dart';
 
@@ -28,14 +29,37 @@ class AppScaffold extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playerState = ref.watch(audioPlayerStateProvider);
-    
+    final connectivityAsync = ref.watch(connectivityStateProvider);
+    final isOnline = connectivityAsync.value ?? true;
+
     // Se há material carregado e mini player deve estar visível, mostrar no footer
-    final showMiniPlayer = playerState.currentMaterial != null && 
+    final showMiniPlayer = playerState.currentMaterial != null &&
                           playerState.isMiniPlayerVisible;
 
     return Scaffold(
       appBar: appBar,
-      body: body,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isOnline)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              color: Colors.orange.shade700,
+              child: Row(
+                children: [
+                  Icon(Icons.cloud_off, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Modo offline - alguns recursos indisponíveis',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(child: body),
+        ],
+      ),
       drawer: drawer ?? const AppDrawer(),
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,

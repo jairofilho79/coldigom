@@ -1142,6 +1142,60 @@ abstract class AppLocalizations {
   /// **'Todas'**
   String get actionAll;
 
+  /// No description provided for @labelSort.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordem'**
+  String get labelSort;
+
+  /// No description provided for @labelSortBy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordenar por:'**
+  String get labelSortBy;
+
+  /// No description provided for @labelDirection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Direção:'**
+  String get labelDirection;
+
+  /// No description provided for @labelAscending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crescente'**
+  String get labelAscending;
+
+  /// No description provided for @labelDescending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Decrescente'**
+  String get labelDescending;
+
+  /// No description provided for @labelWithoutNumber.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem número:'**
+  String get labelWithoutNumber;
+
+  /// No description provided for @labelWithoutNumberFirst.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por primeiro'**
+  String get labelWithoutNumberFirst;
+
+  /// No description provided for @labelWithoutNumberLast.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por último'**
+  String get labelWithoutNumberLast;
+
+  /// No description provided for @labelWithoutNumberHide.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocultar'**
+  String get labelWithoutNumberHide;
+
   /// No description provided for @actionViewOldMaterials.
   ///
   /// In pt, this message translates to:

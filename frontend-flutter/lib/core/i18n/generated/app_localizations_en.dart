@@ -561,6 +561,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionAll => 'All';
 
   @override
+  String get labelSort => 'Sort';
+
+  @override
+  String get labelSortBy => 'Sort by:';
+
+  @override
+  String get labelDirection => 'Direction:';
+
+  @override
+  String get labelAscending => 'Ascending';
+
+  @override
+  String get labelDescending => 'Descending';
+
+  @override
+  String get labelWithoutNumber => 'Without number:';
+
+  @override
+  String get labelWithoutNumberFirst => 'First';
+
+  @override
+  String get labelWithoutNumberLast => 'Last';
+
+  @override
+  String get labelWithoutNumberHide => 'Hide';
+
+  @override
   String get actionViewOldMaterials => 'View Old';
 
   @override

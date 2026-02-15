@@ -5,16 +5,21 @@ import { PraiseForm } from '@/components/praises/PraiseForm';
 import { Button } from '@/components/ui/Button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { PraiseCreateFormData } from '@/utils/validation';
+import type {
+  PraiseCreateFormData,
+  PraiseUpdateFormData,
+} from '@/utils/validation';
 
 export const PraiseCreate = () => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const createPraise = useCreatePraise();
 
-  const handleSubmit = async (data: PraiseCreateFormData) => {
+  const handleSubmit = async (
+    data: PraiseCreateFormData | PraiseUpdateFormData
+  ) => {
     try {
-      const result = await createPraise.mutateAsync(data);
+      const result = await createPraise.mutateAsync(data as PraiseCreateFormData);
       navigate(`/praises/${result.id}`);
     } catch (error) {
       // Erro já tratado no hook

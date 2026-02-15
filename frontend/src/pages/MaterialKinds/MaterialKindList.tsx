@@ -23,9 +23,11 @@ export const MaterialKindList = () => {
   const updateKind = useUpdateMaterialKind();
   const deleteKind = useDeleteMaterialKind();
 
-  const handleCreate = async (data: MaterialKindCreateFormData) => {
+  const handleCreate = async (
+    data: MaterialKindCreateFormData | MaterialKindUpdateFormData
+  ) => {
     try {
-      await createKind.mutateAsync(data);
+      await createKind.mutateAsync(data as MaterialKindCreateFormData);
       setIsCreateModalOpen(false);
     } catch (error) {
       // Erro já tratado

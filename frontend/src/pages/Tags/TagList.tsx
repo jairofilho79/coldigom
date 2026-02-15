@@ -24,9 +24,9 @@ export const TagList = () => {
   const updateTag = useUpdateTag();
   const deleteTag = useDeleteTag();
 
-  const handleCreate = async (data: TagCreateFormData) => {
+  const handleCreate = async (data: TagCreateFormData | TagUpdateFormData) => {
     try {
-      await createTag.mutateAsync(data);
+      await createTag.mutateAsync(data as TagCreateFormData);
       setIsCreateModalOpen(false);
     } catch (error) {
       // Erro já tratado

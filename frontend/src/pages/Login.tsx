@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -8,16 +9,35 @@ import { Button } from '@/components/ui/Button';
 import { loginSchema, type LoginFormData } from '@/utils/validation';
 import { Music } from 'lucide-react';
 
+const TEST_USERNAME = 'teste';
+const TEST_PASSWORD = 'teste1';
+
 export const Login = () => {
   const { t } = useTranslation('common');
   const { login, isLoading } = useAuth();
+  const formRef = useRef<HTMLFormElement>(null);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { username: TEST_USERNAME, password: TEST_PASSWORD },
   });
+
+  // Auto-clique no login quando a tela estiver estabilizada no DOM (facilita testes)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const form = formRef.current;
+      if (!form) return;
+      const usernameInput = form.querySelector<HTMLInputElement>('input[name="username"]');
+      const passwordInput = form.querySelector<HTMLInputElement>('input[name="password"]');
+      const hasTestValues =
+        usernameInput?.value === TEST_USERNAME && passwordInput?.value === TEST_PASSWORD;
+      if (hasTestValues) form.requestSubmit();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -47,7 +67,7 @@ export const Login = () => {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form ref={formRef} className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <Input
               label={t('label.username')}

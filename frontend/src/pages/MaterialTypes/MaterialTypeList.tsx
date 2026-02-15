@@ -23,9 +23,11 @@ export const MaterialTypeList = () => {
   const deleteType = useDeleteMaterialType();
   const { getMaterialTypeName } = useEntityTranslations();
 
-  const handleCreate = async (data: MaterialTypeCreateFormData) => {
+  const handleCreate = async (
+    data: MaterialTypeCreateFormData | MaterialTypeUpdateFormData
+  ) => {
     try {
-      await createType.mutateAsync(data);
+      await createType.mutateAsync(data as MaterialTypeCreateFormData);
       setIsCreateModalOpen(false);
     } catch (error) {
       // Erro já tratado

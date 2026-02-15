@@ -1,11 +1,21 @@
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { languagesApi, type LanguageResponse, type LanguageCreate, type LanguageUpdate } from '@/api/languages';
+import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
 export const useLanguages = () => {
+  const { token } = useAuthStore();
+  const [canFetch, setCanFetch] = useState(false);
+
+  useEffect(() => {
+    if (token) setCanFetch(true);
+  }, [token]);
+
   return useQuery<LanguageResponse[]>({
     queryKey: ['languages'],
     queryFn: () => languagesApi.getAll(true),
+    enabled: !!token && canFetch,
   });
 };
 

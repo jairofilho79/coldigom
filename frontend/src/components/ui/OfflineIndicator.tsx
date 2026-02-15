@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { WifiOff, Wifi } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 
 export const OfflineIndicator = () => {
   const { t } = useTranslation('common');

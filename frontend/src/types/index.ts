@@ -33,14 +33,15 @@ export interface MaterialTypeUpdate {
   name?: string;
 }
 
-// Legacy enum deprecated - kept for backward compatibility during migration
+// Legacy const - kept for backward compatibility during migration
 // @deprecated Use MaterialTypeResponse from API instead
-export enum MaterialType {
-  FILE = 'file',
-  YOUTUBE = 'youtube',
-  SPOTIFY = 'spotify',
-  TEXT = 'text',
-}
+export const MaterialType = {
+  FILE: 'file',
+  YOUTUBE: 'youtube',
+  SPOTIFY: 'spotify',
+  TEXT: 'text',
+} as const;
+export type MaterialType = (typeof MaterialType)[keyof typeof MaterialType];
 
 // Praise Tag Types
 export interface PraiseTagResponse {

@@ -46,7 +46,11 @@
     "materialOldDescription": "Observação (material antigo)",
     "badgeOld": "Antigo",
     "viewOldMaterials": "Ver Materiais Antigos",
-    "hideOldMaterials": "Ocultar Materiais Antigos"
+    "hideOldMaterials": "Ocultar Materiais Antigos",
+    "textContent": "Conteúdo de texto",
+    "lyricsEditor": "Letra",
+    "editor": "Editar",
+    "preview": "Ver"
   },
   "message": {
     "noTags": "Nenhuma tag associada",
@@ -62,6 +66,7 @@
     "autoDetectedFromFile": "Tipo detectado automaticamente do arquivo",
     "seeAll": "Ver todos →",
     "errorLoadingData": "Erro ao carregar dados. Tente novamente.",
+    "unsavedChanges": "Há alterações não salvas. Deseja sair?",
     "errorLoading": "Erro ao carregar",
     "offlineMode": "Modo offline - usando dados em cache",
     "actionCannotBeUndone": "Esta ação não pode ser desfeita",

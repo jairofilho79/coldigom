@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/store/authStore';
 
 // In Docker, use relative paths (nginx will proxy /api to backend)
 // In development, use the env variable or localhost
@@ -25,7 +26,7 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Adicionar Accept-Language header baseado na linguagem atual
     const currentLanguage = localStorage.getItem('i18n_language') || 'pt-BR';
     config.headers['Accept-Language'] = currentLanguage;
@@ -42,6 +43,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const { lastLoginAt } = useAuthStore.getState();
+      const GRACE_MS = 3000;
+      const inGracePeriod = lastLoginAt != null && (Date.now() - lastLoginAt) < GRACE_MS;
+      if (inGracePeriod) {
+        return Promise.reject(error);
+      }
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

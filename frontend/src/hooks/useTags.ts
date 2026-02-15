@@ -1,12 +1,22 @@
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { praiseTagsApi } from '@/api/praiseTags';
+import { useAuthStore } from '@/store/authStore';
 import type { PraiseTagCreate, PraiseTagUpdate } from '@/types';
 import { toast } from 'react-hot-toast';
 
 export const useTags = (params: { skip?: number; limit?: number } = {}) => {
+  const { token } = useAuthStore();
+  const [canFetch, setCanFetch] = useState(false);
+
+  useEffect(() => {
+    if (token) setCanFetch(true);
+  }, [token]);
+
   return useQuery({
     queryKey: ['tags', params],
     queryFn: () => praiseTagsApi.getTags(params),
+    enabled: !!token && canFetch,
   });
 };
 

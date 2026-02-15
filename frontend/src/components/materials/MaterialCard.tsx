@@ -19,9 +19,12 @@ export const MaterialCard = ({
 }: MaterialCardProps) => {
   const { t } = useTranslation('common');
   const { getMaterialTypeName, getMaterialKindName } = useEntityTranslations();
+  const typeName = material.material_type?.name?.toLowerCase() ?? '';
   const getIcon = () => {
-    switch (material.type) {
+    switch (typeName) {
       case 'file':
+      case 'pdf':
+      case 'audio':
         return <File className="w-5 h-5 text-blue-600" />;
       case 'youtube':
         return <Youtube className="w-5 h-5 text-red-600" />;
@@ -66,7 +69,7 @@ export const MaterialCard = ({
         </div>
         {showActions && (
           <div className="flex space-x-2">
-            {material.type === 'file' && onDownload && (
+            {(typeName === 'pdf' || typeName === 'audio') && onDownload && (
               <Button
                 variant="outline"
                 size="sm"

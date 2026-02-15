@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Header } from './Header';
 import { Toaster } from 'react-hot-toast';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';

@@ -153,6 +153,10 @@ export const PraiseDetail = () => {
     );
   }
 
+  const tags = praise.tags ?? [];
+  const materials = praise.materials ?? [];
+  const reviewHistory = praise.review_history ?? [];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
@@ -174,9 +178,9 @@ export const PraiseDetail = () => {
             <Tag className="w-5 h-5 mr-2" />
             {t('label.tags')}
           </h2>
-          {praise.tags.length > 0 ? (
+          {tags.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {praise.tags.map((tag) => (
+              {tags.map((tag) => (
                 <Link
                   key={tag.id}
                   to={`/praises?tag_id=${tag.id}`}
@@ -235,7 +239,7 @@ export const PraiseDetail = () => {
               </Button>
             </div>
           )}
-          {praise.review_history && praise.review_history.length > 0 && (
+          {reviewHistory.length > 0 && (
             <div className="mt-4">
               <button
                 type="button"
@@ -247,13 +251,13 @@ export const PraiseDetail = () => {
                 ) : (
                   <ChevronRight className="w-4 h-4" />
                 )}
-                {t('review.history')} ({praise.review_history.length})
+                {t('review.history')} ({reviewHistory.length})
               </button>
               {historyExpanded && (
                 <div className="mt-2 max-h-48 overflow-y-auto border-l-2 border-gray-200 pl-3">
                   <ul className="space-y-2 text-sm text-gray-600">
                     {(() => {
-                      const reversed = [...praise.review_history].reverse();
+                      const reversed = [...reviewHistory].reverse();
                       const firstInReviewIndex = reversed.findIndex((e) => e.type === 'in_review');
                       return reversed.map((evt, i) => (
                         <li key={i} className="flex items-start gap-2">
@@ -281,7 +285,7 @@ export const PraiseDetail = () => {
         </div>
 
         <div>
-          <PraiseMaterialsList materials={praise.materials} praiseId={id || ''} />
+          <PraiseMaterialsList materials={materials} praiseId={id || ''} />
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">

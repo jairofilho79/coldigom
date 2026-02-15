@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import { useLanguageStore } from '@/store/languageStore';
 import { languagesApi, type LanguageResponse } from '@/api/languages';
 import { useQuery } from '@tanstack/react-query';
 import { Globe } from 'lucide-react';
 
 export const LanguageSelector = () => {
+  const { token } = useAuthStore();
   const { currentLanguage, setLanguage, initializeLanguage } = useLanguageStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [canFetch, setCanFetch] = useState(false);
 
-  // Buscar linguagens disponíveis
+  useEffect(() => {
+    if (token) setCanFetch(true);
+  }, [token]);
+
+  // Buscar linguagens disponíveis (apenas após token estar pronto)
   const { data: languages = [] } = useQuery<LanguageResponse[]>({
     queryKey: ['languages'],
     queryFn: () => languagesApi.getAll(true), // Apenas linguagens ativas
+    enabled: !!token && canFetch,
   });
 
   useEffect(() => {

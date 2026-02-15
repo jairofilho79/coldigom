@@ -14,11 +14,13 @@ import {
   ExternalLink,
   Plus
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDeleteMaterial, useUpdateMaterial, useUpdateMaterialWithFile, useCreateMaterial, useUploadMaterial } from '@/hooks/useMaterials';
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { MaterialForm } from '@/components/materials/MaterialForm';
+import { LyricsEditor } from '@/components/praises/LyricsEditor';
 import { Button } from '@/components/ui/Button';
 import type { MaterialUpdateFormData, MaterialCreateFormData } from '@/utils/validation';
 
@@ -31,6 +33,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
   const { t } = useTranslation('common');
   const { getMaterialKindName } = useEntityTranslations();
   const [editingMaterial, setEditingMaterial] = useState<PraiseMaterialSimple | null>(null);
+  const [lyricsEditorMaterial, setLyricsEditorMaterial] = useState<PraiseMaterialSimple | null>(null);
   const [creatingMaterial, setCreatingMaterial] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showOldMaterials, setShowOldMaterials] = useState<boolean>(false);
@@ -53,19 +56,22 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
 
   const deleteMaterial = useDeleteMaterial();
   const updateMaterial = useUpdateMaterial();
+  const queryClient = useQueryClient();
   const updateMaterialWithFile = useUpdateMaterialWithFile();
   const createMaterial = useCreateMaterial();
   const uploadMaterial = useUploadMaterial();
 
+  const materialTypeName = (m: PraiseMaterialSimple) => m.material_type?.name?.toLowerCase() ?? '';
+
   // Função para obter a URL do material
   const getMaterialUrl = (material: PraiseMaterialSimple): string => {
     // Se for texto, não retorna URL clicável
-    if (material.type === 'text') {
+    if (materialTypeName(material) === 'text') {
       return '#';
     }
 
     // Se for YouTube ou Spotify, retorna a URL externa diretamente
-    if (material.type === 'youtube' || material.type === 'spotify') {
+    if (materialTypeName(material) === 'youtube' || materialTypeName(material) === 'spotify') {
       return material.path;
     }
 
@@ -83,7 +89,10 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     // Token é passado como query parameter porque <a> não envia headers
     // Adiciona hash do path para cache-busting (muda quando o path muda)
     // O path pode mudar quando o arquivo é substituído (mesmo material_id, mas pode ter extensão diferente)
-    const pathHash = material.path ? `&v=${btoa(material.path).slice(-16).replace(/[^a-zA-Z0-9]/g, '')}` : '';
+    // Usa hash numérico em vez de btoa para suportar paths com caracteres Unicode (btoa só aceita Latin1)
+    const pathHash = material.path
+      ? `&v=${material.path.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0).toString(36).slice(-12)}`
+      : '';
     const tokenParam = token ? `?token=${encodeURIComponent(token)}${pathHash}` : pathHash ? `?${pathHash.substring(1)}` : '';
     return `${baseUrl}/api/v1/praise-materials/${material.id}/download${tokenParam}`;
   };
@@ -94,7 +103,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     e.preventDefault();
   };
 
-  const getIcon = (type: string, path: string) => {
+  const getIcon = (typeName: string, path: string) => {
     // Detecta PDF pela extensão
     if (path.toLowerCase().endsWith('.pdf')) {
       return <PdfIcon className="w-5 h-5 text-red-600" />;
@@ -106,8 +115,10 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
       return <Headphones className="w-5 h-5 text-blue-600" />;
     }
 
-    switch (type) {
+    switch (typeName) {
       case 'file':
+      case 'pdf':
+      case 'audio':
         return <File className="w-5 h-5 text-gray-600" />;
       case 'youtube':
         return <Youtube className="w-5 h-5 text-red-600" />;
@@ -230,14 +241,14 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
       ) : (
         <div className="space-y-3">
         {displayedMaterials.map((material) => {
+          const typeName = materialTypeName(material);
           const materialUrl = getMaterialUrl(material);
-          const isFile = material.type === 'file';
-          const isText = material.type === 'text';
-          const isClickable = !isText;
+          const isFile = typeName === 'pdf' || typeName === 'audio';
+          const isText = typeName === 'text';
           
           const content = (
             <>
-              {getIcon(material.type, material.path)}
+              {getIcon(typeName, material.path)}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 flex-wrap gap-1">
                   {material.material_kind ? (
@@ -257,7 +268,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
                       {t('label.badgeOld')}
                     </span>
                   )}
-                  {isClickable && (
+                  {!isText && (
                     <ExternalLink className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
@@ -268,11 +279,26 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
           return (
             <div
               key={material.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
+              role={isText ? 'button' : undefined}
+              tabIndex={isText ? 0 : undefined}
+              onClick={isText ? () => setLyricsEditorMaterial(material) : undefined}
+              onKeyDown={
+                isText
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setLyricsEditorMaterial(material);
+                      }
+                    }
+                  : undefined
+              }
+              className={`flex items-center justify-between p-3 bg-gray-50 rounded-md transition-colors group ${
+                isText ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-100'
+              }`}
             >
               {isText ? (
-                // Para textos, não é clicável
-                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                // Para textos (Letras), todo o card é clicável (onClick no div pai)
+                <div className="flex items-center space-x-3 flex-1 min-w-0 text-left">
                   {content}
                 </div>
               ) : isFile ? (
@@ -356,6 +382,20 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
             isLoading={updateMaterial.isPending || updateMaterialWithFile.isPending}
           />
         </Modal>
+      )}
+
+      {/* Modal Editor de Letras */}
+      {lyricsEditorMaterial && (
+        <LyricsEditor
+          material={lyricsEditorMaterial}
+          isOpen={!!lyricsEditorMaterial}
+          onClose={() => setLyricsEditorMaterial(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['praise', praiseId], refetchType: 'active' });
+            queryClient.invalidateQueries({ queryKey: ['praises'], refetchType: 'active' });
+            queryClient.invalidateQueries({ queryKey: ['materials'], refetchType: 'active' });
+          }}
+        />
       )}
 
       {/* Dialog de Confirmação de Remoção */}

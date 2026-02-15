@@ -1,12 +1,22 @@
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { praisesApi, type GetPraisesParams } from '@/api/praises';
+import { useAuthStore } from '@/store/authStore';
 import type { PraiseCreate, PraiseUpdate, ReviewActionRequest } from '@/types';
 import { toast } from 'react-hot-toast';
 
 export const usePraises = (params: GetPraisesParams = {}) => {
+  const { token } = useAuthStore();
+  const [canFetch, setCanFetch] = useState(false);
+
+  useEffect(() => {
+    if (token) setCanFetch(true);
+  }, [token]);
+
   return useQuery({
     queryKey: ['praises', params],
     queryFn: () => praisesApi.getPraises(params),
+    enabled: !!token && canFetch,
   });
 };
 

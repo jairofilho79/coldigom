@@ -5,7 +5,8 @@ interface MaterialViewerProps {
 }
 
 export const MaterialViewer = ({ material }: MaterialViewerProps) => {
-  if (material.type === 'youtube') {
+  const typeName = material.material_type?.name?.toLowerCase() ?? '';
+  if (typeName === 'youtube') {
     // Extrair ID do YouTube da URL
     const youtubeId = material.path.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/
@@ -38,7 +39,7 @@ export const MaterialViewer = ({ material }: MaterialViewerProps) => {
     );
   }
 
-  if (material.type === 'spotify') {
+  if (typeName === 'spotify') {
     // Extrair ID do Spotify da URL
     const spotifyId = material.path.match(/spotify\.com\/track\/([^?]+)/)?.[1];
 
@@ -66,7 +67,7 @@ export const MaterialViewer = ({ material }: MaterialViewerProps) => {
     );
   }
 
-  if (material.type === 'text') {
+  if (typeName === 'text') {
     return (
       <div className="bg-gray-50 p-4 rounded-md">
         <pre className="whitespace-pre-wrap text-sm">{material.path}</pre>

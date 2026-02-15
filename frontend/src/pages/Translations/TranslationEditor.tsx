@@ -4,11 +4,16 @@ import { useMaterialKinds } from '@/hooks/useMaterialKinds';
 import { useTags } from '@/hooks/useTags';
 import { useMaterialTypes } from '@/hooks/useMaterialTypes';
 import { useLanguages } from '@/hooks/useLanguages';
-import { translationsApi } from '@/api/translations';
+import {
+  translationsApi,
+  type MaterialKindTranslationResponse,
+  type PraiseTagTranslationResponse,
+  type MaterialTypeTranslationResponse,
+} from '@/api/translations';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLanguageStore } from '@/store/languageStore';
 import toast from 'react-hot-toast';
-import { Save, X } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -64,13 +69,18 @@ export const TranslationEditor = () => {
           : 'getMaterialTypeTranslations'
       ](undefined, targetLanguage);
 
-      // Create translation entries
+      type TranslationItem =
+        | MaterialKindTranslationResponse
+        | PraiseTagTranslationResponse
+        | MaterialTypeTranslationResponse;
+      const getEntityId = (t: TranslationItem): string => {
+        if ('material_kind_id' in t) return t.material_kind_id;
+        if ('praise_tag_id' in t) return t.praise_tag_id;
+        return t.material_type_id;
+      };
       const entries: TranslationEntry[] = entities.map((entity) => {
-        const translation = targetTranslations.find(
-          (t) =>
-            (entityType === 'material_kind' && t.material_kind_id === entity.id) ||
-            (entityType === 'praise_tag' && t.praise_tag_id === entity.id) ||
-            (entityType === 'material_type' && t.material_type_id === entity.id)
+        const translation = (targetTranslations as TranslationItem[]).find(
+          (t) => getEntityId(t) === entity.id
         );
 
         // For comparison text, try to get translation in comparison language, otherwise use name
@@ -306,7 +316,7 @@ export const TranslationEditor = () => {
                 {languages.find((l) => l.code === comparisonLanguage)?.name || comparisonLanguage}
               </h3>
               <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {filteredTranslations.map((entry, index) => (
+                {filteredTranslations.map((entry) => (
                   <div key={entry.entityId} className="p-3 bg-white rounded border">
                     <div className="text-sm font-medium text-gray-900 mb-1">
                       {entry.entityName}
@@ -337,7 +347,7 @@ export const TranslationEditor = () => {
                 </Button>
               </div>
               <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {filteredTranslations.map((entry, index) => {
+                {filteredTranslations.map((entry) => {
                   const originalIndex = translations.indexOf(entry);
                   return (
                     <div key={entry.entityId} className="space-y-2">

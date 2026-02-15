@@ -15,9 +15,8 @@ def list_languages(
     limit: int = 100,
     active_only: bool = False,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
 ):
-    """Lista todas as linguagens disponíveis"""
+    """Lista todas as linguagens disponíveis (público - dados não sensíveis)"""
     service = LanguageService(db)
     languages = service.get_all(skip=skip, limit=limit, active_only=active_only)
     return languages
@@ -27,9 +26,8 @@ def list_languages(
 def get_language(
     code: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
 ):
-    """Obtém uma linguagem por código"""
+    """Obtém uma linguagem por código (público - dados não sensíveis)"""
     service = LanguageService(db)
     language = service.get_by_code(code)
     return language

@@ -32,25 +32,25 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     payload = decode_access_token(token)
     if payload is None:
         raise credentials_exception
-    
+
     user_id_str: str = payload.get("sub")
     if user_id_str is None:
         raise credentials_exception
-    
+
     try:
         user_id = UUID(user_id_str)
     except ValueError:
         raise credentials_exception
-    
+
     user_repo = UserRepository(db)
     user = user_repo.get_by_id(user_id)
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 

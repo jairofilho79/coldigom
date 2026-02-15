@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app.core.dependencies import get_db
+from app.core.dependencies import get_db, get_current_user
+from app.domain.models.user import User
 from app.domain.schemas.user import UserCreate, UserResponse, Token
 from app.application.services.user_service import UserService
 
@@ -28,4 +29,10 @@ def login(
     service = UserService(db)
     token_data = service.authenticate(login_data)
     return token_data
+
+
+@router.get("/me", response_model=UserResponse)
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Retorna o usuário atual autenticado"""
+    return UserResponse.model_validate(current_user)
 

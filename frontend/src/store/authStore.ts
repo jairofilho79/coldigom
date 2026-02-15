@@ -5,12 +5,13 @@ interface AuthState {
   token: string | null;
   user: UserResponse | null;
   isAuthenticated: boolean;
+  lastLoginAt: number | null;
   setAuth: (token: string, user: UserResponse) => void;
   logout: () => void;
   checkAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => {
+export const useAuthStore = create<AuthState>((set) => {
   // Inicializa verificando o localStorage imediatamente
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
@@ -31,19 +32,20 @@ export const useAuthStore = create<AuthState>((set, get) => {
     token: initialAuth ? token : null,
     user: initialUser,
     isAuthenticated: initialAuth,
+    lastLoginAt: null,
     setAuth: (token: string, user: UserResponse) => {
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
       }
-      set({ token, user, isAuthenticated: true });
+      set({ token, user, isAuthenticated: true, lastLoginAt: Date.now() });
     },
     logout: () => {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
-      set({ token: null, user: null, isAuthenticated: false });
+      set({ token: null, user: null, isAuthenticated: false, lastLoginAt: null });
     },
     checkAuth: () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;

@@ -1,6 +1,5 @@
 # Docker Compose para desenvolvimento
-# Usa volumes para hot-reload e não faz build de produção
-# Focado em Flutter macOS - frontend React antigo removido
+# Sobe apenas db e backend. Frontend React roda localmente: cd frontend && npm run dev
 
 services:
   db:
@@ -57,27 +56,6 @@ services:
     command: sh -c "sh scripts/wait-for-db.sh && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     networks:
       - praise-network
-    restart: unless-stopped
-
-  frontend-flutter-dev:
-    build:
-      context: ./frontend-flutter
-      dockerfile: Dockerfile.dev
-    container_name: praise_frontend_flutter_dev
-    working_dir: /app
-    volumes:
-      - ./frontend-flutter:/app
-      - /app/.dart_tool
-      - /app/build
-    environment:
-      - FLUTTER_API_BASE_URL=http://backend:8000
-    depends_on:
-      - backend
-    networks:
-      - praise-network
-    # Prepara o ambiente Flutter (pub get, etc)
-    # O build macOS precisa ser feito localmente (requer Xcode)
-    command: sh -c "flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs && tail -f /dev/null"
     restart: unless-stopped
 
 volumes:

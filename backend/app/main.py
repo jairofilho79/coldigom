@@ -7,7 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from typing import Tuple
 from pathlib import Path
 from app.core.config import settings
-from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises, languages, translations, user_preferences, praise_lists, rooms, snapshots
+from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises, languages, translations, snapshots
 from app.infrastructure.database.database import engine, Base
 
 app = FastAPI(
@@ -48,9 +48,6 @@ app.include_router(praise_materials.router, prefix="/api/v1/praise-materials", t
 app.include_router(praises.router, prefix="/api/v1/praises", tags=["Praises"])
 app.include_router(languages.router, prefix="/api/v1/languages", tags=["Languages"])
 app.include_router(translations.router, prefix="/api/v1/translations", tags=["Translations"])
-app.include_router(user_preferences.router, prefix="/api/v1/user-preferences", tags=["User Preferences"])
-app.include_router(praise_lists.router, prefix="/api/v1/praise-lists", tags=["Praise Lists"])
-app.include_router(rooms.router, prefix="/api/v1/rooms", tags=["Rooms"])
 # Snapshot endpoint (UC-143) - ainda não implementado completamente
 app.include_router(snapshots.router, prefix="/api/v1/snapshots", tags=["Snapshots"])
 

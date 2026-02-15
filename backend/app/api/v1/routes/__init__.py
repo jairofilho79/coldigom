@@ -7,9 +7,6 @@ from . import praise_materials
 from . import praises
 from . import languages
 from . import translations
-from . import user_preferences
-from . import praise_lists
-from . import rooms
 from . import snapshots
 
 __all__ = [
@@ -21,8 +18,5 @@ __all__ = [
     "praises",
     "languages",
     "translations",
-    "user_preferences",
-    "praise_lists",
-    "rooms",
     "snapshots",
 ]

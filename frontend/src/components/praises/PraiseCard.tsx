@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { PraiseResponse } from '@/types';
 import { Music, Tag, File } from 'lucide-react';
-import { AddToListButton } from '@/components/praiseLists/AddToListButton';
 
 interface PraiseCardProps {
   praise: PraiseResponse;
@@ -10,7 +9,7 @@ interface PraiseCardProps {
 
 export const PraiseCard = ({ praise }: PraiseCardProps) => {
   const { t } = useTranslation('common');
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 flex flex-col">
       <Link
@@ -43,9 +42,6 @@ export const PraiseCard = ({ praise }: PraiseCardProps) => {
           )}
         </div>
       </Link>
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <AddToListButton praiseId={praise.id} />
-      </div>
     </div>
   );
 };

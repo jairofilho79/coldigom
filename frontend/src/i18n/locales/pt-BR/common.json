@@ -123,8 +123,7 @@
     "translations": "Traduções",
     "appName": "Praise Manager",
     "createPraise": "Criar Novo Louvor",
-    "editPraise": "Editar Louvor",
-    "userPreferences": "Preferências do Usuário"
+    "editPraise": "Editar Louvor"
   },
   "action": {
     "newPraise": "Novo Louvor",

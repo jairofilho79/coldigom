@@ -43,13 +43,6 @@ class Praise(Base):
     # One-to-many relationship with PraiseMaterial
     materials = relationship("PraiseMaterial", back_populates="praise", cascade="all, delete-orphan")
 
-    # Many-to-many relationship with PraiseList
-    praise_lists = relationship(
-        "PraiseList",
-        secondary="praise_list_praise",
-        back_populates="praises"
-    )
-
     def __repr__(self):
         return f"<Praise(id={self.id}, name='{self.name}', number={self.number})>"
 

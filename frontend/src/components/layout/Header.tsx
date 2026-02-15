@@ -56,26 +56,9 @@ export const Header = () => {
             >
               {t('page.translations')}
             </Link>
-            <Link
-              to="/praise-lists"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              {t('page.praiseLists') || 'Listas'}
-            </Link>
-            <Link
-              to="/rooms"
-              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              {t('page.rooms') || 'Salas'}
-            </Link>
             <div className="flex items-center space-x-3">
               <LanguageSelector />
-              <Link
-                to="/user-preferences"
-                className="text-sm text-gray-600 hover:text-blue-600 cursor-pointer transition-colors"
-              >
-                {user?.username}
-              </Link>
+              <span className="text-sm text-gray-600">{user?.username}</span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-1" />
                 {t('button.logout')}

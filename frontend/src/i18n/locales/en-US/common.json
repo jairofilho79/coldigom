@@ -119,8 +119,7 @@
     "translations": "Translations",
     "appName": "Praise Manager",
     "createPraise": "Create New Praise",
-    "editPraise": "Edit Praise",
-    "userPreferences": "User Preferences"
+    "editPraise": "Edit Praise"
   },
   "action": {
     "newPraise": "New Praise",

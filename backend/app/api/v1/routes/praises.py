@@ -37,7 +37,7 @@ def list_praises(
     Usuários autenticados têm acesso ilimitado.
     """
     # Aplicar rate limiting (usuários autenticados podem ter limites maiores depois)
-    apply_rate_limit(request, "100/hour")
+    apply_rate_limit(request, "20/minute")
     
     service = PraiseService(db)
     praises = service.get_all(
@@ -70,7 +70,7 @@ def download_praises_by_material_kind(
     """
     # Rate limiting usando limiter do app.state
     limiter = request.app.state.limiter
-    limiter.limit("10/hour")(request)
+    limiter.limit("40/minute")(request)
     
     import logging
     from app.core.config import settings
@@ -286,7 +286,7 @@ def download_praise_zip(
     """Baixa um praise completo em formato ZIP com todos os materiais de arquivo"""
     # Rate limiting usando limiter do app.state
     limiter = request.app.state.limiter
-    limiter.limit("20/hour")(request)
+    limiter.limit("40/minute")(request)
     
     import logging
     from app.core.config import settings
@@ -498,7 +498,7 @@ def get_praise(
     Usuários autenticados têm acesso ilimitado.
     """
     # Aplicar rate limiting
-    apply_rate_limit(request, "200/hour")
+    apply_rate_limit(request, "40/minute")
     
     service = PraiseService(db)
     praise = service.get_by_id(praise_id)

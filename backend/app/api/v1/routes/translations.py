@@ -46,7 +46,7 @@ def get_material_kind_translation(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "200/hour")
+        apply_rate_limit(request, "40/minute")
     
     service = TranslationService(db)
     return service.get_material_kind_translation(translation_id)
@@ -66,7 +66,7 @@ def list_material_kind_translations(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "100/hour")
+        apply_rate_limit(request, "20/minute")
     
     service = TranslationService(db)
     if material_kind_id:
@@ -129,7 +129,7 @@ def get_praise_tag_translation(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "200/hour")
+        apply_rate_limit(request, "40/minute")
     
     service = TranslationService(db)
     return service.get_praise_tag_translation(translation_id)
@@ -149,7 +149,7 @@ def list_praise_tag_translations(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "100/hour")
+        apply_rate_limit(request, "20/minute")
     
     service = TranslationService(db)
     if praise_tag_id:
@@ -212,7 +212,7 @@ def get_material_type_translation(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "200/hour")
+        apply_rate_limit(request, "40/minute")
     
     service = TranslationService(db)
     return service.get_material_type_translation(translation_id)
@@ -232,7 +232,7 @@ def list_material_type_translations(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "100/hour")
+        apply_rate_limit(request, "20/minute")
     
     service = TranslationService(db)
     if material_type_id:

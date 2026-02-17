@@ -26,7 +26,7 @@ def list_praise_tags(
     """
     # Aplicar rate limiting apenas se não estiver autenticado
     if current_user is None:
-        apply_rate_limit(request, "100/hour")
+        apply_rate_limit(request, "20/minute")
     
     service = PraiseTagService(db)
     tags = service.get_all(skip=skip, limit=limit)
@@ -47,7 +47,7 @@ def get_praise_tag(
     """
     # Aplicar rate limiting apenas se não estiver autenticado
     if current_user is None:
-        apply_rate_limit(request, "200/hour")
+        apply_rate_limit(request, "40/minute")
     
     service = PraiseTagService(db)
     tag = service.get_by_id(tag_id)

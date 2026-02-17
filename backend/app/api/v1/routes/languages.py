@@ -25,7 +25,7 @@ def list_languages(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "100/hour")
+        apply_rate_limit(request, "20/minute")
     
     service = LanguageService(db)
     languages = service.get_all(skip=skip, limit=limit, active_only=active_only)
@@ -45,7 +45,7 @@ def get_language(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "200/hour")
+        apply_rate_limit(request, "40/minute")
     
     service = LanguageService(db)
     language = service.get_by_code(code)

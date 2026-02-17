@@ -113,7 +113,7 @@ from slowapi.util import get_remote_address
 from fastapi import Request
 
 @router.get("/", response_model=List[PraiseResponse])
-@limiter.limit("100/hour")
+@limiter.limit("20/minute")
 def list_praises(
     request: Request,  # Adicionar Request para rate limiting
     skip: int = Query(0, ge=0),
@@ -163,9 +163,9 @@ def list_praises(
 
 ```python
 # Rate Limiting Configuration
-PUBLIC_ROUTES_RATE_LIMIT: str = "100/hour"  # Para listagens
-PUBLIC_ROUTES_DETAIL_RATE_LIMIT: str = "200/hour"  # Para detalhes
-PUBLIC_ROUTES_DOWNLOAD_URL_RATE_LIMIT: str = "50/hour"  # Para URLs de download
+PUBLIC_ROUTES_RATE_LIMIT: str = "20/minute"  # Para listagens
+PUBLIC_ROUTES_DETAIL_RATE_LIMIT: str = "40/minute"  # Para detalhes
+PUBLIC_ROUTES_DOWNLOAD_URL_RATE_LIMIT: str = "40/minute"  # Para URLs de download
 ```
 
 ### 6. Testes

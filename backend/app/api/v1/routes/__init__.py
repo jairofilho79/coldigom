@@ -8,6 +8,8 @@ from . import praises
 from . import languages
 from . import translations
 from . import snapshots
+from . import audit
+from . import data_protection
 
 __all__ = [
     "auth",
@@ -19,4 +21,6 @@ __all__ = [
     "languages",
     "translations",
     "snapshots",
+    "audit",
+    "data_protection",
 ]

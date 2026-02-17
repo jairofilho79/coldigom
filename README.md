@@ -26,6 +26,19 @@ app/
 
 ## 🚀 Iniciando o Projeto
 
+### Ambientes
+
+O projeto suporta dois ambientes:
+
+- **dev** (Desenvolvimento): Para desenvolvimento local
+- **prod** (Produção): Para produção
+
+Scripts disponíveis:
+- `./scripts/dev.sh` - Inicia ambiente de desenvolvimento
+- `./scripts/prod.sh` - Inicia ambiente de produção
+
+Consulte os arquivos `.env.dev` e `.env.prod` para configurações específicas de cada ambiente.
+
 ### Pré-requisitos
 
 - Python 3.9+
@@ -36,15 +49,40 @@ app/
 
 ### Configuração Inicial
 
-1. **Configurar Backend:**
+1. **Configurar Ambientes:**
+
+O projeto suporta dois ambientes: **dev** (desenvolvimento) e **prod** (produção).
 
 ```bash
-cd app/backend
-cp env.example .env
-# Editar .env com suas credenciais (Wasabi, PostgreSQL, JWT)
+# Desenvolvimento
+cp .env.example .env.dev
+# Editar .env.dev com suas configurações locais
+
+# Produção
+cp .env.example .env.prod
+# Editar .env.prod com suas configurações de produção
 ```
 
-2. **Instalar Dependências:**
+**IMPORTANTE**: Em produção, configure:
+- `CORS_ORIGINS` com domínios específicos (não use `*`)
+- `JWT_SECRET_KEY` com um secret forte e único
+- Senhas de banco de dados fortes
+
+2. **Iniciar Ambiente:**
+
+```bash
+# Desenvolvimento
+./scripts/dev.sh
+
+# Produção
+./scripts/prod.sh
+
+# Ou manualmente com Docker Compose:
+export COMPOSE_PROFILE=dev  # ou 'prod'
+docker-compose --profile $COMPOSE_PROFILE up -d
+```
+
+3. **Instalar Dependências (desenvolvimento local):**
 
 ```bash
 cd app/backend

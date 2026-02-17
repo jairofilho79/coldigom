@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ class PraiseService:
         if not praise:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Praise with id {praise_id} not found"
+                detail="Resource not found"
             )
         return praise
 
@@ -51,7 +51,7 @@ class PraiseService:
     def create(self, praise_data: PraiseCreate) -> Praise:
         in_review = praise_data.in_review or False
         if in_review:
-            review_history = [{"type": "in_review", "date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}]
+            review_history = [{"type": "in_review", "date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}]
         else:
             review_history = []
 
@@ -75,7 +75,7 @@ class PraiseService:
                 if not tag:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"PraiseTag with id {tag_id} not found"
+                        detail="Resource not found"
                     )
                 tags.append(tag)
             praise.tags = tags
@@ -102,6 +102,23 @@ class PraiseService:
     def update(self, praise_id: UUID, praise_data: PraiseUpdate) -> Praise:
         praise = self.get_by_id(praise_id)
         
+        # Lista explícita de campos permitidos para atualização
+        ALLOWED_UPDATE_FIELDS = {
+            'name', 'number', 'tag_ids', 'in_review_description',
+            'author', 'rhythm', 'tonality', 'category'
+        }
+        
+        # Obter apenas campos que foram definidos (não None)
+        update_data = praise_data.model_dump(exclude_unset=True, exclude_none=True)
+        
+        # Validar que apenas campos permitidos estão presentes
+        for field in update_data.keys():
+            if field not in ALLOWED_UPDATE_FIELDS:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Field '{field}' is not allowed to be updated"
+                )
+        
         if praise_data.name is not None:
             praise.name = praise_data.name
         
@@ -116,7 +133,7 @@ class PraiseService:
                 if not tag:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"PraiseTag with id {tag_id} not found"
+                        detail="Resource not found"
                     )
                 tags.append(tag)
             praise.tags = tags
@@ -143,7 +160,7 @@ class PraiseService:
         praise = self.get_by_id(praise_id)
         history = list(praise.review_history or [])
         last = history[-1] if history else None
-        now_str = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         if data.action == "start":
             if last and last.get("type") == "in_review":

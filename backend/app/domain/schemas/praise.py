@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, List, Literal
 from uuid import UUID
 from datetime import datetime
@@ -7,6 +7,8 @@ from datetime import datetime
 class ReviewHistoryEvent(BaseModel):
     type: Literal["in_review", "review_cancelled", "review_finished"]
     date: str  # ISO 8601 datetime string
+    
+    model_config = ConfigDict(extra='forbid')
 
 
 class PraiseBase(BaseModel):
@@ -16,6 +18,8 @@ class PraiseBase(BaseModel):
     rhythm: Optional[str] = Field(None, max_length=100)
     tonality: Optional[str] = Field(None, max_length=50)
     category: Optional[str] = Field(None, max_length=255)
+    
+    model_config = ConfigDict(extra='forbid')
 
 
 class PraiseCreate(PraiseBase):
@@ -23,6 +27,8 @@ class PraiseCreate(PraiseBase):
     materials: Optional[List["PraiseMaterialCreate"]] = []
     in_review: Optional[bool] = False
     in_review_description: Optional[str] = None
+    
+    model_config = ConfigDict(extra='forbid')
 
 
 class PraiseUpdate(BaseModel):
@@ -34,6 +40,8 @@ class PraiseUpdate(BaseModel):
     rhythm: Optional[str] = Field(None, max_length=100)
     tonality: Optional[str] = Field(None, max_length=50)
     category: Optional[str] = Field(None, max_length=255)
+    
+    model_config = ConfigDict(extra='forbid')
 
 
 class PraiseTagSimple(BaseModel):
@@ -42,6 +50,7 @@ class PraiseTagSimple(BaseModel):
 
     class Config:
         from_attributes = True
+        extra = 'forbid'
 
 
 class PraiseMaterialSimple(BaseModel):
@@ -56,6 +65,7 @@ class PraiseMaterialSimple(BaseModel):
 
     class Config:
         from_attributes = True
+        extra = 'forbid'
 
 
 class PraiseResponse(PraiseBase):
@@ -75,11 +85,14 @@ class PraiseResponse(PraiseBase):
 
     class Config:
         from_attributes = True
+        extra = 'forbid'
 
 
 class ReviewActionRequest(BaseModel):
     action: Literal["start", "cancel", "finish"]
     in_review_description: Optional[str] = None  # used only for "start"
+    
+    model_config = ConfigDict(extra='forbid')
 
 
 # Forward reference resolution

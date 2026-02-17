@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -6,7 +6,8 @@ from uuid import UUID
 import zipfile
 import io
 import os
-from app.core.dependencies import get_db, get_current_user, get_storage
+from app.core.dependencies import get_db, get_current_user, get_current_user_optional, get_storage
+from app.core.rate_limit_helpers import apply_rate_limit
 from app.domain.models.user import User
 from app.domain.schemas.praise import PraiseCreate, PraiseUpdate, PraiseResponse, ReviewActionRequest
 from app.application.services.praise_service import PraiseService
@@ -19,17 +20,25 @@ router = APIRouter()
 
 @router.get("/", response_model=List[PraiseResponse])
 def list_praises(
+    request: Request,
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=100),
     name: Optional[str] = Query(None),
     tag_id: Optional[UUID] = Query(None),
     sort_by: str = Query("name", description="Ordenar por: name ou number"),
     sort_direction: str = Query("asc", description="Direção: asc ou desc"),
     no_number: str = Query("last", description="Praises sem número: first, last ou hide (apenas quando sort_by=number)"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista todos os praises com paginação, busca por nome/tag e ordenação no banco"""
+    """Lista todos os praises com paginação, busca por nome/tag e ordenação no banco.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    # Aplicar rate limiting (usuários autenticados podem ter limites maiores depois)
+    apply_rate_limit(request, "100/hour")
+    
     service = PraiseService(db)
     praises = service.get_all(
         skip=skip,
@@ -45,6 +54,7 @@ def list_praises(
 
 @router.get("/download-by-material-kind")
 def download_praises_by_material_kind(
+    request: Request,
     material_kind_id: UUID = Query(..., description="ID do material kind para filtrar materiais"),
     tag_id: Optional[UUID] = Query(None, description="ID da tag para filtrar praises (opcional)"),
     max_zip_size_mb: int = Query(100, ge=10, le=1000, description="Tamanho máximo de cada ZIP em MB (padrão: 100)"),
@@ -58,6 +68,10 @@ def download_praises_by_material_kind(
     Divide em múltiplos ZIPs quando exceder o tamanho máximo especificado.
     Retorna um ZIP mestre contendo os ZIPs menores.
     """
+    # Rate limiting usando limiter do app.state
+    limiter = request.app.state.limiter
+    limiter.limit("10/hour")(request)
+    
     import logging
     from app.core.config import settings
     
@@ -74,8 +88,8 @@ def download_praises_by_material_kind(
     
     # Buscar praises (filtrados por tag se fornecido)
     service = PraiseService(db)
-    # Usar limite alto para buscar todos os praises relevantes
-    praises = service.get_all(skip=0, limit=10000, tag_id=tag_id)
+    # Usar limite reduzido para evitar sobrecarga
+    praises = service.get_all(skip=0, limit=1000, tag_id=tag_id)
     
     logger.info(f"Found {len(praises)} praises (tag_id={tag_id}) for material_kind {material_kind_id}")
     
@@ -263,12 +277,17 @@ def download_praises_by_material_kind(
 
 @router.get("/{praise_id}/download-zip")
 def download_praise_zip(
+    request: Request,
     praise_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     storage: StorageClient = Depends(get_storage)
 ):
     """Baixa um praise completo em formato ZIP com todos os materiais de arquivo"""
+    # Rate limiting usando limiter do app.state
+    limiter = request.app.state.limiter
+    limiter.limit("20/hour")(request)
+    
     import logging
     from app.core.config import settings
     
@@ -280,12 +299,6 @@ def download_praise_zip(
     # Buscar praise e materiais
     service = PraiseService(db)
     praise = service.get_by_id(praise_id)
-    
-    if not praise:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Praise with id {praise_id} not found"
-        )
     
     # Garantir que os materiais estão carregados (refresh se necessário)
     # O repository já carrega com joinedload, mas vamos garantir
@@ -474,11 +487,19 @@ def download_praise_zip(
 
 @router.get("/{praise_id}", response_model=PraiseResponse)
 def get_praise(
+    request: Request,
     praise_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém um praise por ID"""
+    """Obtém um praise por ID.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    # Aplicar rate limiting
+    apply_rate_limit(request, "200/hour")
+    
     service = PraiseService(db)
     praise = service.get_by_id(praise_id)
     return praise

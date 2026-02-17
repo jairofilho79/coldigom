@@ -5,7 +5,8 @@ from typing import List, Optional
 from uuid import UUID
 import os
 import logging
-from app.core.dependencies import get_db, get_current_user, get_storage
+from app.core.dependencies import get_db, get_current_user, get_current_user_optional, get_storage
+from app.core.rate_limit_helpers import apply_rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +35,22 @@ router = APIRouter()
 
 @router.get("/", response_model=List[PraiseMaterialResponse])
 def list_praise_materials(
+    request: Request,
     skip: int = 0,
     limit: int = 100,
     praise_id: Optional[UUID] = None,
     is_old: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista todos os materiais de praise"""
+    """Lista todos os materiais de praise.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = PraiseMaterialService(db)
     if praise_id:
         materials = service.get_by_praise_id(praise_id, is_old=is_old)
@@ -52,14 +61,18 @@ def list_praise_materials(
 
 @router.get("/batch", response_model=List[PraiseMaterialResponse])
 def batch_search_materials(
+    request: Request,
     tag_ids: Optional[str] = None,  # Comma-separated UUIDs
     material_kind_ids: Optional[str] = None,  # Comma-separated UUIDs
     operation: str = "union",  # "union" ou "intersection"
     is_old: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Busca materiais por critérios múltiplos (tags e material kinds)
+    """Busca materiais por critérios múltiplos (tags e material kinds).
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
     
     Args:
         tag_ids: IDs de tags separados por vírgula
@@ -67,6 +80,9 @@ def batch_search_materials(
         operation: "union" (OU) ou "intersection" (E)
         is_old: Filtrar por materiais antigos
     """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = PraiseMaterialService(db)
     
     # Parse tag_ids
@@ -310,13 +326,21 @@ def batch_download_materials(
 
 @router.get("/{material_id}/download-url")
 def get_download_url(
+    request: Request,
     material_id: UUID,
     expiration: int = 3600,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     storage: StorageClient = Depends(get_storage)
 ):
-    """Gera uma URL para download do material (apenas para arquivos)"""
+    """Gera uma URL para download do material (apenas para arquivos).
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting rigoroso.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "50/hour")
+    
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
     
@@ -337,51 +361,28 @@ def get_download_url(
 def download_material(
     material_id: UUID,
     request: Request,
-    token: Optional[str] = None,
     db: Session = Depends(get_db),
-    storage: StorageClient = Depends(get_storage)
+    storage: StorageClient = Depends(get_storage),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Serve o arquivo do material diretamente (apenas para arquivos)
+    """Serve o arquivo do material diretamente (apenas para arquivos).
     
-    Aceita token via query parameter (para uso com <a>) ou via Authorization header.
-    Retorna o arquivo diretamente usando FileResponse para storage local,
-    ou redireciona para URL assinada se for Wasabi.
+    Suporta HTTP Range requests para seek em áudio/vídeo no navegador.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
     """
-    from fastapi.responses import RedirectResponse, FileResponse
+    from fastapi.responses import RedirectResponse, Response
     from pathlib import Path
-    from app.core.security import decode_access_token
     from app.core.config import settings
     import mimetypes
     
-    # Tenta validar token via query parameter primeiro
-    if token:
-        payload = decode_access_token(token)
-        if payload is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token"
-            )
-    else:
-        # Se não tiver token na query, tenta obter do header
-        authorization: Optional[str] = request.headers.get("Authorization")
-        if authorization and authorization.startswith("Bearer "):
-            token_from_header = authorization.split(" ")[1]
-            payload = decode_access_token(token_from_header)
-            if payload is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid or expired token"
-                )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required"
-            )
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
     
-    # Verifica se é tipo de arquivo (PDF ou AUDIO)
     material_type_repo = MaterialTypeRepository(db)
     material_type = material_type_repo.get_by_id(material.material_type_id)
     if not material_type or material_type.name.lower() not in ['pdf', 'audio']:
@@ -390,14 +391,8 @@ def download_material(
             detail="Download only available for file materials (PDF or AUDIO)"
         )
     
-    # Se for storage local, serve o arquivo diretamente
     if settings.STORAGE_MODE == "local":
-        # No Docker, o volume está montado em /storage/assets
-        # Mas a variável STORAGE_LOCAL_PATH pode apontar para o caminho do host
-        # Vamos tentar ambos os caminhos
         storage_path = Path(settings.STORAGE_LOCAL_PATH)
-        
-        # Se o caminho configurado não existir, tenta o caminho padrão do container
         if not storage_path.exists():
             container_path = Path("/storage/assets")
             if container_path.exists():
@@ -406,7 +401,6 @@ def download_material(
         file_path = storage_path / material.path
         
         if not file_path.exists():
-            # Tenta também o caminho absoluto direto do container
             direct_path = Path("/storage/assets") / material.path
             if direct_path.exists():
                 file_path = direct_path
@@ -416,35 +410,81 @@ def download_material(
                     detail=f"File not found at {file_path} or {direct_path}"
                 )
         
-        # Detecta o tipo MIME do arquivo
         content_type, _ = mimetypes.guess_type(str(file_path))
         if not content_type:
             content_type = "application/octet-stream"
         
-        return FileResponse(
-            path=str(file_path),
+        file_size = file_path.stat().st_size
+        range_header = request.headers.get("range")
+        
+        base_headers = {
+            "Accept-Ranges": "bytes",
+            "Content-Disposition": f'inline; filename="{file_path.name}"',
+            "Cache-Control": "public, max-age=3600",
+        }
+        
+        if range_header:
+            range_spec = range_header.strip().lower()
+            if range_spec.startswith("bytes="):
+                range_spec = range_spec[6:]
+                parts = range_spec.split("-", 1)
+                start = int(parts[0]) if parts[0] else 0
+                end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
+                
+                if start >= file_size:
+                    return Response(
+                        status_code=416,
+                        headers={"Content-Range": f"bytes */{file_size}"},
+                    )
+                
+                end = min(end, file_size - 1)
+                content_length = end - start + 1
+                
+                with open(file_path, "rb") as f:
+                    f.seek(start)
+                    data = f.read(content_length)
+                
+                base_headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
+                base_headers["Content-Length"] = str(content_length)
+                
+                return Response(
+                    content=data,
+                    status_code=206,
+                    media_type=content_type,
+                    headers=base_headers,
+                )
+        
+        with open(file_path, "rb") as f:
+            data = f.read()
+        
+        base_headers["Content-Length"] = str(file_size)
+        
+        return Response(
+            content=data,
+            status_code=200,
             media_type=content_type,
-            filename=file_path.name,
-            headers={
-                "Content-Disposition": f'inline; filename="{file_path.name}"',
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0"
-            }
+            headers=base_headers,
         )
     else:
-        # Se for Wasabi, gera URL assinada e redireciona
         url = storage.generate_url(material.path, expiration=3600)
         return RedirectResponse(url=url, status_code=302)
 
 
 @router.get("/{material_id}", response_model=PraiseMaterialResponse)
 def get_praise_material(
+    request: Request,
     material_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém um material de praise por ID"""
+    """Obtém um material de praise por ID.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "200/hour")
+    
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
     return material

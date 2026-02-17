@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from typing import List, Union
+import warnings
+import os
 
 
 class Settings(BaseSettings):
@@ -12,7 +14,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 
     # Deployment Configuration
-    DEPLOYMENT_ENV: str = "local"  # local ou vps
+    DEPLOYMENT_ENV: str = "dev"  # dev ou prod
     DEPLOYMENT_HOST: str = ""  # IP local ou URI do VPS
 
     # Storage Configuration (modo local para produção beta)
@@ -40,14 +42,31 @@ class Settings(BaseSettings):
     # Nginx (para configuração do docker-compose, não usado pela aplicação Python)
     NGINX_PORT: int = 8080
 
-    @field_validator('CORS_ORIGINS', mode='before')
+    @field_validator('CORS_ORIGINS', mode='after')
     @classmethod
-    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+    def validate_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        """Valida CORS_ORIGINS e alerta sobre wildcard em produção"""
         if isinstance(v, str):
             if v == "*" or v == "":
-                return ["*"]
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v if isinstance(v, list) else ["*"]
+                parsed = ["*"]
+            else:
+                parsed = [origin.strip() for origin in v.split(",") if origin.strip()]
+        else:
+            parsed = v if isinstance(v, list) else ["*"]
+
+
+        # Verificar se está em produção e usando wildcard
+        deployment_env = os.getenv("DEPLOYMENT_ENV", "dev")
+        if deployment_env == "prod" and "*" in parsed:
+            warnings.warn(
+                "⚠️  SECURITY WARNING: CORS_ORIGINS is set to '*' in production environment. "
+                "This is a security risk. Please set specific origins in your .env.prod file:\n"
+                "CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com",
+                UserWarning,
+                stacklevel=2
+            )
+
+        return parsed
 
     model_config = SettingsConfigDict(
         env_file=".env",

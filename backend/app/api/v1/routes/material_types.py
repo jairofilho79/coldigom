@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
-from app.core.dependencies import get_db, get_current_user
+from app.core.dependencies import get_db, get_current_user, get_current_user_optional
+from app.core.rate_limit_helpers import apply_rate_limit
 from app.domain.models.user import User
 from app.domain.schemas.material_type import MaterialTypeCreate, MaterialTypeUpdate, MaterialTypeResponse
 from app.application.services.material_type_service import MaterialTypeService
@@ -12,12 +13,20 @@ router = APIRouter()
 
 @router.get("/", response_model=List[MaterialTypeResponse])
 def list_material_types(
+    request: Request,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista todos os tipos de material"""
+    """Lista todos os tipos de material.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = MaterialTypeService(db)
     types = service.get_all(skip=skip, limit=limit)
     return types
@@ -25,11 +34,19 @@ def list_material_types(
 
 @router.get("/{type_id}", response_model=MaterialTypeResponse)
 def get_material_type(
+    request: Request,
     type_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém um tipo de material por ID"""
+    """Obtém um tipo de material por ID.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "200/hour")
+    
     service = MaterialTypeService(db)
     material_type = service.get_by_id(type_id)
     return material_type

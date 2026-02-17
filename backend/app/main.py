@@ -6,9 +6,17 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from typing import Tuple
 from pathlib import Path
+import warnings
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
-from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises, languages, translations, snapshots
+from app.core.middleware.audit_middleware import AuditMiddleware
+from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises, languages, translations, snapshots, audit, data_protection
 from app.infrastructure.database.database import engine, Base
+
+# Configurar Rate Limiter
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Praise Manager API",
@@ -18,15 +26,50 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Validar CORS antes de aplicar middleware
+if settings.DEPLOYMENT_ENV == "prod" and "*" in settings.CORS_ORIGINS:
+    warnings.warn(
+        "⚠️  SECURITY WARNING: CORS_ORIGINS is set to '*' with allow_credentials=True in production. "
+        "This is a security risk. Please set specific origins in your .env.prod file.",
+        UserWarning,
+        stacklevel=1
+    )
+
 # CORS - IMPORTANTE: deve ser o primeiro middleware para garantir headers em todos os casos
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+# Em desenvolvimento, se CORS_ORIGINS contém "*", precisamos tratar especialmente
+# porque navegadores não permitem "*" com allow_credentials=True
+cors_origins_list = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]
+use_wildcard = "*" in cors_origins_list or (isinstance(settings.CORS_ORIGINS, str) and settings.CORS_ORIGINS.strip() == "*")
+
+if use_wildcard and settings.DEPLOYMENT_ENV == "dev":
+    # Em desenvolvimento com wildcard, usar allow_origins=["*"] mas sem credentials
+    # Isso permite acesso de qualquer origem em desenvolvimento
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,  # Desabilitado para permitir wildcard
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "Range", "Access-Control-Request-Method", "Access-Control-Request-Headers"],
+        expose_headers=["Content-Disposition", "Content-Range", "Accept-Ranges", "Content-Length"],
+        max_age=600,
+    )
+else:
+    # Produção ou desenvolvimento com origens específicas - usar credentials normalmente
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "Range", "Access-Control-Request-Method", "Access-Control-Request-Headers"],
+        expose_headers=["Content-Disposition", "Content-Range", "Accept-Ranges", "Content-Length"],
+        max_age=600,
+    )
+
+# Audit Middleware - Registrar ações automaticamente
+app.add_middleware(AuditMiddleware)
 
 # Servir arquivos estáticos de /assets/
 # IMPORTANTE: StaticFiles deve ser montado ANTES dos routers para evitar conflitos
@@ -50,9 +93,11 @@ app.include_router(languages.router, prefix="/api/v1/languages", tags=["Language
 app.include_router(translations.router, prefix="/api/v1/translations", tags=["Translations"])
 # Snapshot endpoint (UC-143) - ainda não implementado completamente
 app.include_router(snapshots.router, prefix="/api/v1/snapshots", tags=["Snapshots"])
+app.include_router(audit.router, prefix="/api/v1/audit-logs", tags=["Audit"])
+app.include_router(data_protection.router, prefix="/api/v1/data-protection", tags=["Data Protection"])
 
 
-# Helper function para verificar origem permitida
+# Helper function para verificar origem permitida (usada nos exception handlers)
 def is_origin_allowed(origin: str) -> Tuple[bool, str]:
     """Verifica se a origem é permitida e retorna o header apropriado"""
     if not origin:
@@ -116,12 +161,16 @@ async def general_exception_handler(request: Request, exc: Exception):
         headers["Access-Control-Allow-Credentials"] = "true"
     
     import traceback
-    print(f"Internal Server Error: {exc}")
-    traceback.print_exc()
+    import logging
     
+    # Logar erro detalhado internamente
+    logger = logging.getLogger(__name__)
+    logger.error(f"Internal Server Error: {exc}", exc_info=True)
+    
+    # Retornar mensagem genérica ao cliente
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error"},
+        content={"detail": "An error occurred processing your request"},
         headers=headers
     )
 

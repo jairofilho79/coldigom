@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.core.dependencies import get_db, get_current_user
+from app.core.dependencies import get_db, get_current_user, get_current_user_optional
+from app.core.rate_limit_helpers import apply_rate_limit
 from app.domain.models.user import User
 from app.domain.schemas.language import LanguageCreate, LanguageUpdate, LanguageResponse
 from app.application.services.language_service import LanguageService
@@ -11,12 +12,21 @@ router = APIRouter()
 
 @router.get("/", response_model=List[LanguageResponse])
 def list_languages(
+    request: Request,
     skip: int = 0,
     limit: int = 100,
     active_only: bool = False,
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista todas as linguagens disponíveis (público - dados não sensíveis)"""
+    """Lista todas as linguagens disponíveis (público - dados não sensíveis).
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = LanguageService(db)
     languages = service.get_all(skip=skip, limit=limit, active_only=active_only)
     return languages
@@ -24,10 +34,19 @@ def list_languages(
 
 @router.get("/{code}", response_model=LanguageResponse)
 def get_language(
+    request: Request,
     code: str,
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém uma linguagem por código (público - dados não sensíveis)"""
+    """Obtém uma linguagem por código (público - dados não sensíveis).
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "200/hour")
+    
     service = LanguageService(db)
     language = service.get_by_code(code)
     return language

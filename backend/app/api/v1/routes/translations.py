@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
-from app.core.dependencies import get_db, get_current_user
+from app.core.dependencies import get_db, get_current_user, get_current_user_optional
+from app.core.rate_limit_helpers import apply_rate_limit
 from app.domain.models.user import User
 from app.domain.schemas.translation import (
     MaterialKindTranslationCreate,
@@ -34,23 +35,39 @@ def create_material_kind_translation(
 
 @router.get("/material-kinds/{translation_id}", response_model=MaterialKindTranslationResponse)
 def get_material_kind_translation(
+    request: Request,
     translation_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém uma tradução de MaterialKind por ID"""
+    """Obtém uma tradução de MaterialKind por ID.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "200/hour")
+    
     service = TranslationService(db)
     return service.get_material_kind_translation(translation_id)
 
 
 @router.get("/material-kinds", response_model=List[MaterialKindTranslationResponse])
 def list_material_kind_translations(
+    request: Request,
     material_kind_id: Optional[UUID] = Query(None, description="Filter by material_kind_id"),
     language_code: Optional[str] = Query(None, description="Filter by language_code"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista traduções de MaterialKind com filtros opcionais"""
+    """Lista traduções de MaterialKind com filtros opcionais.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = TranslationService(db)
     if material_kind_id:
         return service.get_material_kind_translations_by_entity(material_kind_id)
@@ -101,23 +118,39 @@ def create_praise_tag_translation(
 
 @router.get("/praise-tags/{translation_id}", response_model=PraiseTagTranslationResponse)
 def get_praise_tag_translation(
+    request: Request,
     translation_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém uma tradução de PraiseTag por ID"""
+    """Obtém uma tradução de PraiseTag por ID.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "200/hour")
+    
     service = TranslationService(db)
     return service.get_praise_tag_translation(translation_id)
 
 
 @router.get("/praise-tags", response_model=List[PraiseTagTranslationResponse])
 def list_praise_tag_translations(
+    request: Request,
     praise_tag_id: Optional[UUID] = Query(None, description="Filter by praise_tag_id"),
     language_code: Optional[str] = Query(None, description="Filter by language_code"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista traduções de PraiseTag com filtros opcionais"""
+    """Lista traduções de PraiseTag com filtros opcionais.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = TranslationService(db)
     if praise_tag_id:
         return service.get_praise_tag_translations_by_entity(praise_tag_id)
@@ -168,23 +201,39 @@ def create_material_type_translation(
 
 @router.get("/material-types/{translation_id}", response_model=MaterialTypeTranslationResponse)
 def get_material_type_translation(
+    request: Request,
     translation_id: UUID,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Obtém uma tradução de MaterialType por ID"""
+    """Obtém uma tradução de MaterialType por ID.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "200/hour")
+    
     service = TranslationService(db)
     return service.get_material_type_translation(translation_id)
 
 
 @router.get("/material-types", response_model=List[MaterialTypeTranslationResponse])
 def list_material_type_translations(
+    request: Request,
     material_type_id: Optional[UUID] = Query(None, description="Filter by material_type_id"),
     language_code: Optional[str] = Query(None, description="Filter by language_code"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lista traduções de MaterialType com filtros opcionais"""
+    """Lista traduções de MaterialType com filtros opcionais.
+    
+    Rota pública: pode ser acessada sem autenticação, mas com rate limiting.
+    Usuários autenticados têm acesso ilimitado.
+    """
+    if current_user is None:
+        apply_rate_limit(request, "100/hour")
+    
     service = TranslationService(db)
     if material_type_id:
         return service.get_material_type_translations_by_entity(material_type_id)

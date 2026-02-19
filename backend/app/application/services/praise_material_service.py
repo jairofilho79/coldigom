@@ -1,5 +1,5 @@
 from typing import List, Optional, BinaryIO
-from uuid import UUID
+from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 import os
@@ -10,6 +10,7 @@ from app.infrastructure.database.repositories.material_kind_repository import Ma
 from app.infrastructure.database.repositories.material_type_repository import MaterialTypeRepository
 from app.infrastructure.database.repositories.praise_repository import PraiseRepository
 from app.infrastructure.storage.storage_client import StorageClient
+from app.application.services.metadata_sync_service import sync_praise_to_metadata
 
 
 class PraiseMaterialService:
@@ -109,7 +110,59 @@ class PraiseMaterialService:
             is_old=material_data.is_old or False,
             old_description=material_data.old_description or None
         )
-        return self.repository.create(material)
+        material = self.repository.create(material)
+        praise = self.praise_repo.get_by_id(material_data.praise_id)
+        sync_praise_to_metadata(praise)
+        return material
+
+    def create_with_upload(
+        self,
+        file_obj: BinaryIO,
+        file_name: str,
+        material_kind_id: UUID,
+        praise_id: UUID,
+        storage: StorageClient,
+        is_old: bool = False,
+        old_description: Optional[str] = None,
+    ) -> PraiseMaterial:
+        """Cria um material via upload de arquivo."""
+        material_kind = self.material_kind_repo.get_by_id(material_kind_id)
+        if not material_kind:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"MaterialKind with id {material_kind_id} not found"
+            )
+        praise = self.praise_repo.get_by_id(praise_id)
+        if not praise:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Praise with id {praise_id} not found"
+            )
+        material_id = uuid4()
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(file_name)
+        file_path = storage.upload_file(
+            file_obj,
+            file_name,
+            content_type=content_type,
+            folder=f"praises/{praise_id}",
+            material_id=material_id,
+        )
+        file_ext = os.path.splitext(file_name or "")[1]
+        material_type_id = self._detect_material_type_from_extension(file_ext)
+        material = PraiseMaterial(
+            id=material_id,
+            material_kind_id=material_kind_id,
+            material_type_id=material_type_id,
+            path=file_path,
+            praise_id=praise_id,
+            is_old=is_old,
+            old_description=old_description,
+        )
+        material = self.repository.create(material)
+        praise_full = self.praise_repo.get_by_id(praise_id)
+        sync_praise_to_metadata(praise_full)
+        return material
 
     def update(self, material_id: UUID, material_data: PraiseMaterialUpdate) -> PraiseMaterial:
         material = self.get_by_id(material_id)
@@ -140,7 +193,10 @@ class PraiseMaterialService:
         if material_data.old_description is not None:
             material.old_description = material_data.old_description or None
         
-        return self.repository.update(material)
+        material = self.repository.update(material)
+        praise = self.praise_repo.get_by_id(material.praise_id)
+        sync_praise_to_metadata(praise)
+        return material
 
     def update_with_file(
         self,
@@ -220,11 +276,19 @@ class PraiseMaterialService:
         if old_description is not None:
             material.old_description = old_description or None
         
-        return self.repository.update(material)
+        material = self.repository.update(material)
+        praise = self.praise_repo.get_by_id(material.praise_id)
+        sync_praise_to_metadata(praise)
+        return material
 
     def delete(self, material_id: UUID) -> bool:
         material = self.get_by_id(material_id)
-        return self.repository.delete(material_id)
+        praise_id = material.praise_id
+        result = self.repository.delete(material_id)
+        if result:
+            praise = self.praise_repo.get_by_id(praise_id)
+            sync_praise_to_metadata(praise)
+        return result
 
 
 

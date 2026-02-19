@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from slowapi.util import get_remote_address
 from uuid import UUID
 from datetime import timedelta
 from app.core.dependencies import get_db, get_current_user
@@ -10,6 +9,7 @@ from app.domain.schemas.user import UserCreate, UserResponse, Token, RefreshToke
 from app.application.services.user_service import UserService
 from app.core.security import decode_access_token, create_access_token
 from app.core.config import settings
+from app.core.rate_limit_helpers import apply_rate_limit
 from app.infrastructure.database.repositories.user_repository import UserRepository
 
 router = APIRouter()
@@ -31,11 +31,9 @@ def login(
 ):
     """Autentica um usuário e retorna token JWT"""
     from app.domain.schemas.user import UserLogin
-    
-    # Rate limiting usando limiter do app.state
-    limiter = request.app.state.limiter
-    limiter.limit("5/minute")(request)
-    
+
+    apply_rate_limit(request, "600/minute")
+
     login_data = UserLogin(username=form_data.username, password=form_data.password)
     service = UserService(db)
     token_data = service.authenticate(login_data)
@@ -49,9 +47,7 @@ def refresh_token(
     db: Session = Depends(get_db)
 ):
     """Renova access token usando refresh token"""
-    # Rate limiting usando limiter do app.state
-    limiter = request.app.state.limiter
-    limiter.limit("10/minute")(request)
+    apply_rate_limit(request, "600/minute")
     payload = decode_access_token(refresh_token_data.refresh_token)
     
     if not payload or payload.get("type") != "refresh":

@@ -2,6 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Build argument for environment (dev/prod)
+ARG ENVIRONMENT=prod
+ENV ENVIRONMENT=${ENVIRONMENT}
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
@@ -19,7 +23,9 @@ COPY . .
 EXPOSE 8000
 
 # Run migrations and start server
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+# Dev: with --reload for hot-reload
+# Prod: without --reload for production
+CMD ["sh", "-c", "alembic upgrade head && if [ \"$ENVIRONMENT\" = \"dev\" ]; then uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload; else uvicorn app.main:app --host 0.0.0.0 --port 8000; fi"]
 
 
 

@@ -1,22 +1,44 @@
-from fastapi import FastAPI, Request, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from typing import Tuple
 from pathlib import Path
 import warnings
+from typing import Tuple
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.api.v1.routes import (
+    audit,
+    auth,
+    data_protection,
+    languages,
+    material_kinds,
+    material_types,
+    praise_materials,
+    praises,
+    praise_tags,
+    snapshots,
+    translations,
+)
 from app.core.config import settings
 from app.core.middleware.audit_middleware import AuditMiddleware
-from app.api.v1.routes import auth, praise_tags, material_kinds, material_types, praise_materials, praises, languages, translations, snapshots, audit, data_protection
-from app.infrastructure.database.database import engine, Base
+from app.infrastructure.database.database import Base, engine
 
-# Configurar Rate Limiter
-limiter = Limiter(key_func=get_remote_address)
+def _rate_limit_key(request: Request) -> str:
+    """Chave do rate limit: IP + path. Cada rota tem seu próprio contador (600/min por rota)."""
+    ip = get_remote_address(request)
+    path = getattr(request, "url", None) and request.url.path or request.scope.get("path", "")
+    return f"{ip}:{path}"
+
+
+# Configurar Rate Limiter: key = IP + path (cada rota tem seu próprio contador)
+# Sem strategy customizada para evitar bloqueios; janela fixa do slowapi reseta a cada minuto.
+limiter = Limiter(key_func=_rate_limit_key)
 
 app = FastAPI(
     title="Praise Manager API",

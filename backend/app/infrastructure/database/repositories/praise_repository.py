@@ -2,6 +2,7 @@ from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, case, func
+from app.core.search_normalizer import normalize_search_query
 from app.domain.models.praise import Praise
 from app.domain.models.praise_material import PraiseMaterial
 from app.domain.models.material_type import MaterialType
@@ -51,6 +52,9 @@ class PraiseRepository(BaseRepository):
         )
 
     def search_by_name(self, name: str, skip: int = 0, limit: int = 100) -> List[Praise]:
+        term = normalize_search_query(name) if name else None
+        if not term:
+            return self.get_all(skip=skip, limit=limit)
         return (
             self.db.query(Praise)
             .options(
@@ -58,7 +62,7 @@ class PraiseRepository(BaseRepository):
                 joinedload(Praise.materials).joinedload(PraiseMaterial.material_kind),
                 joinedload(Praise.materials).joinedload(PraiseMaterial.material_type)
             )
-            .filter(Praise.name.ilike(f"%{name}%"))
+            .filter(func.unaccent(Praise.name).ilike(f"%{term}%"))
             .offset(skip)
             .limit(limit)
             .all()
@@ -68,11 +72,17 @@ class PraiseRepository(BaseRepository):
         self, query: str, skip: int = 0, limit: int = 100
     ) -> List[Praise]:
         """Search praises by name, number, or lyrics content."""
-        conditions = [Praise.name.ilike(f"%{query}%")]
+        raw = (query or "").strip()
+        term = normalize_search_query(query) if query else None
+        if not term and not raw.isdigit():
+            return self.get_all(skip=skip, limit=limit)
+        search_term = term or raw
+
+        conditions = [func.unaccent(Praise.name).ilike(f"%{search_term}%")]
 
         # Match number if query is numeric
-        if query.strip().isdigit():
-            conditions.append(Praise.number == int(query.strip()))
+        if raw.isdigit():
+            conditions.append(Praise.number == int(raw))
 
         # Match lyrics in text materials (Material Type 'text', Material Kind 'Lyrics')
         lyrics_subq = (
@@ -82,7 +92,7 @@ class PraiseRepository(BaseRepository):
             .filter(
                 MaterialType.name.ilike("text"),
                 MaterialKind.name.ilike("Lyrics"),
-                PraiseMaterial.path.ilike(f"%{query}%"),
+                func.unaccent(PraiseMaterial.path).ilike(f"%{search_term}%"),
             )
         )
         conditions.append(Praise.id.in_(lyrics_subq))
@@ -123,6 +133,11 @@ class PraiseRepository(BaseRepository):
         limit: int = 100,
         name: Optional[str] = None,
         tag_id: Optional[UUID] = None,
+        tonality: Optional[str] = None,
+        rhythm: Optional[str] = None,
+        category: Optional[str] = None,
+        youtube_video_id: Optional[str] = None,
+        search_in_lyrics: bool = False,
         sort_by: str = "name",
         sort_direction: str = "asc",
         no_number: str = "last",
@@ -145,23 +160,55 @@ class PraiseRepository(BaseRepository):
                 praise_tag_association.c.tag_id == tag_id
             )
 
-        # Filtro por nome/número/lyrics
+        # Filtro por nome/número (e opcionalmente lyrics quando search_in_lyrics)
         if name and name.strip():
-            conditions = [Praise.name.ilike(f"%{name.strip()}%")]
-            if name.strip().isdigit():
-                conditions.append(Praise.number == int(name.strip()))
-            lyrics_subq = (
+            term = name.strip()
+            # Comparação sem acentos via extensão unaccent (case insensitive com ilike)
+            name_cond = func.unaccent(Praise.name).ilike(f"%{term}%")
+            conditions = [name_cond]
+            if term.isdigit():
+                conditions.append(Praise.number == int(term))
+            if search_in_lyrics:
+                lyrics_subq = (
+                    self.db.query(PraiseMaterial.praise_id)
+                    .join(MaterialType, PraiseMaterial.material_type_id == MaterialType.id)
+                    .join(MaterialKind, PraiseMaterial.material_kind_id == MaterialKind.id)
+                    .filter(
+                        MaterialType.name.ilike("text"),
+                        MaterialKind.name.ilike("Lyrics"),
+                        func.unaccent(PraiseMaterial.path).ilike(f"%{term}%"),
+                    )
+                )
+                conditions.append(Praise.id.in_(lyrics_subq))
+            query = query.filter(or_(*conditions)).distinct()
+
+        # Filtro por tom (tonality); vazio = todos
+        if tonality and tonality.strip():
+            term = tonality.strip()
+            query = query.filter(func.coalesce(func.unaccent(Praise.tonality), "").ilike(f"%{term}%"))
+
+        # Filtro por ritmo (rhythm); vazio = todos
+        if rhythm and rhythm.strip():
+            term = rhythm.strip()
+            query = query.filter(func.coalesce(func.unaccent(Praise.rhythm), "").ilike(f"%{term}%"))
+
+        # Filtro por categoria (category); vazio = todos
+        if category and category.strip():
+            term = category.strip()
+            query = query.filter(func.coalesce(func.unaccent(Praise.category), "").ilike(f"%{term}%"))
+
+        # Filtro por link/ID do YouTube: praises que tenham material tipo youtube com path contendo o ID
+        if youtube_video_id and youtube_video_id.strip():
+            vid = youtube_video_id.strip()
+            youtube_subq = (
                 self.db.query(PraiseMaterial.praise_id)
                 .join(MaterialType, PraiseMaterial.material_type_id == MaterialType.id)
-                .join(MaterialKind, PraiseMaterial.material_kind_id == MaterialKind.id)
                 .filter(
-                    MaterialType.name.ilike("text"),
-                    MaterialKind.name.ilike("Lyrics"),
-                    PraiseMaterial.path.ilike(f"%{name.strip()}%"),
+                    MaterialType.name.ilike("youtube"),
+                    func.coalesce(PraiseMaterial.path, "").ilike(f"%{vid}%"),
                 )
             )
-            conditions.append(Praise.id.in_(lyrics_subq))
-            query = query.filter(or_(*conditions)).distinct()
+            query = query.filter(Praise.id.in_(youtube_subq)).distinct()
 
         # Filtro por number IS NOT NULL quando no_number=hide e sort_by=number
         if sort_by == "number" and no_number == "hide":

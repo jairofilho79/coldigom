@@ -39,6 +39,7 @@
     "changeFile": "Change File",
     "textContent": "Text Content",
     "lyricsEditor": "Lyrics",
+    "searchInLyrics": "Lyrics",
     "editor": "Edit",
     "preview": "View",
     "file": "File",
@@ -48,7 +49,12 @@
     "materialOldDescription": "Note (old material)",
     "badgeOld": "Old",
     "viewOldMaterials": "View Old Materials",
-    "hideOldMaterials": "Hide Old Materials"
+    "hideOldMaterials": "Hide Old Materials",
+    "sortBy": "Sort by"
+  },
+  "option": {
+    "sortByName": "Name",
+    "sortByNumber": "Number (no number last)"
   },
   "message": {
     "noTags": "No tags associated",

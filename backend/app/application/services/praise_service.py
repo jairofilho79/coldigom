@@ -6,10 +6,13 @@ from fastapi import HTTPException, status
 from app.domain.models.praise import Praise
 from app.domain.models.praise_tag import PraiseTag
 from app.domain.schemas.praise import PraiseCreate, PraiseUpdate, ReviewActionRequest
+from app.core.search_normalizer import normalize_search_query
+from app.core.youtube_utils import extract_youtube_video_id
 from app.infrastructure.database.repositories.praise_repository import PraiseRepository
 from app.infrastructure.database.repositories.praise_tag_repository import PraiseTagRepository
 from app.infrastructure.database.repositories.praise_material_repository import PraiseMaterialRepository
 from app.domain.models.praise_material import PraiseMaterial
+from app.application.services.metadata_sync_service import sync_praise_to_metadata, delete_metadata
 
 
 class PraiseService:
@@ -33,16 +36,28 @@ class PraiseService:
         limit: int = 100,
         name: Optional[str] = None,
         tag_id: Optional[UUID] = None,
+        tonality: Optional[str] = None,
+        rhythm: Optional[str] = None,
+        category: Optional[str] = None,
+        youtube_url: Optional[str] = None,
+        search_in_lyrics: bool = False,
         sort_by: str = "name",
         sort_direction: str = "asc",
         no_number: str = "last",
     ) -> List[Praise]:
         """Lista praises com filtros e ordenação aplicados no banco."""
+        normalized_name = normalize_search_query(name) if name else None
+        youtube_video_id = extract_youtube_video_id(youtube_url) if youtube_url else None
         return self.repository.get_all_filtered_sorted(
             skip=skip,
             limit=limit,
-            name=name,
+            name=normalized_name,
             tag_id=tag_id,
+            tonality=tonality,
+            rhythm=rhythm,
+            category=category,
+            youtube_video_id=youtube_video_id,
+            search_in_lyrics=search_in_lyrics,
             sort_by=sort_by,
             sort_direction=sort_direction,
             no_number=no_number,
@@ -97,7 +112,9 @@ class PraiseService:
                 self.material_repo.create(material)
         
         # Refresh to get all relationships
-        return self.repository.get_by_id(praise.id)
+        result = self.repository.get_by_id(praise.id)
+        sync_praise_to_metadata(result)
+        return result
 
     def update(self, praise_id: UUID, praise_data: PraiseUpdate) -> Praise:
         praise = self.get_by_id(praise_id)
@@ -150,10 +167,14 @@ class PraiseService:
         if praise_data.category is not None:
             praise.category = praise_data.category
 
-        return self.repository.update(praise)
+        self.repository.update(praise)
+        praise_with_relations = self.repository.get_by_id(praise_id)
+        sync_praise_to_metadata(praise_with_relations)
+        return praise_with_relations
 
     def delete(self, praise_id: UUID) -> bool:
         praise = self.get_by_id(praise_id)
+        delete_metadata(praise_id)
         return self.repository.delete(praise_id)
 
     def review_action(self, praise_id: UUID, data: ReviewActionRequest) -> Praise:

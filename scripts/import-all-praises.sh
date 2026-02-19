@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Script para importar todos os arquivos de storage/praises para o banco de dados e volume Docker
-# Uso: ./scripts/import-all-praises.sh [--dry-run] [--source-path CAMINHO]
+# Script para importar todos os arquivos de storage/praises para o banco de dados
+# Suporta três ambientes: Local (Docker dev na máquina), Dev (Docker dev na VPS), Prod (Docker prod na VPS)
+# Uso: ./scripts/import-all-praises.sh [--env prod|dev|local] [--dry-run] [--source-path CAMINHO] [--limit N]
 
 set -e
 
@@ -10,18 +11,52 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Caminho padrão do storage local
 DEFAULT_SOURCE_PATH="/Volumes/SSD 2TB SD/storage/assets/praises"
 
-# Parse argumentos
+# Variáveis de ambiente
+ENV=""  # prod, dev, ou local (será detectado automaticamente se não especificado)
 DRY_RUN=false
 SOURCE_PATH=""
 LIMIT=""
+SKIP_PREREQUISITES=false
 
+# Função para mostrar uso
+show_usage() {
+    echo "Uso: $0 [OPÇÕES]"
+    echo ""
+    echo "Opções:"
+    echo "  --env ENV              Força ambiente específico (prod|dev|local)"
+    echo "                         local = Docker dev na máquina local"
+    echo "                         dev = Docker dev na VPS"
+    echo "                         prod = Docker prod na VPS"
+    echo "  --dry-run              Modo de simulação (não faz alterações)"
+    echo "  --source-path CAMINHO  Caminho para pasta de praises (padrão: $DEFAULT_SOURCE_PATH)"
+    echo "  --limit N              Limitar número de praises a processar"
+    echo "  --skip-prerequisites   Pular verificação de pré-requisitos"
+    echo "  --help                 Mostrar esta mensagem de ajuda"
+    echo ""
+    echo "Exemplos:"
+    echo "  $0 --env prod --source-path \"/Volumes/SSD 2TB SD/storage/assets/praises\""
+    echo "  $0 --env dev"
+    echo "  $0 --env local"
+}
+
+# Parse argumentos
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --env)
+            ENV="$2"
+            if [[ ! "$ENV" =~ ^(prod|dev|local)$ ]]; then
+                echo -e "${RED}❌ Ambiente inválido: $ENV${NC}"
+                echo "   Use: prod, dev ou local"
+                exit 1
+            fi
+            shift 2
+            ;;
         --dry-run)
             DRY_RUN=true
             shift
@@ -34,9 +69,18 @@ while [[ $# -gt 0 ]]; do
             LIMIT="$2"
             shift 2
             ;;
+        --skip-prerequisites)
+            SKIP_PREREQUISITES=true
+            shift
+            ;;
+        --help)
+            show_usage
+            exit 0
+            ;;
         *)
             echo -e "${RED}❌ Argumento desconhecido: $1${NC}"
-            echo "Uso: $0 [--dry-run] [--source-path CAMINHO] [--limit N]"
+            echo ""
+            show_usage
             exit 1
             ;;
     esac
@@ -69,33 +113,122 @@ if [ "$PRAISE_COUNT" -eq 0 ]; then
     exit 1
 fi
 
-# Verificar se o Docker está rodando
-if ! docker ps > /dev/null 2>&1; then
-    echo -e "${RED}❌ Erro: Docker não está rodando${NC}"
+# Verificar se Docker está disponível
+if ! command -v docker > /dev/null 2>&1 || ! docker ps > /dev/null 2>&1; then
+    echo -e "${RED}❌ Erro: Docker não está disponível ou não está rodando${NC}"
+    echo "   Este script requer Docker para executar"
     exit 1
 fi
 
-# Detectar qual docker-compose está sendo usado (dev ou produção)
-COMPOSE_FILE="docker-compose.yml"
-COMPOSE_CMD="docker-compose"
-
-# Verificar se docker-compose.dev.yml existe e está sendo usado
-if [ -f "docker-compose.dev.yml" ]; then
-    # Verificar qual está ativo pelos containers
-    if docker ps | grep -q "praise_api_dev"; then
+# Detectar ambiente se não foi especificado
+if [ -z "$ENV" ]; then
+    echo -e "${CYAN}🔍 Detectando ambiente...${NC}"
+    
+    # Detectar prod primeiro (prioridade)
+    if docker ps | grep -q "praise_api_prod"; then
+        ENV="prod"
+        BACKEND_CONTAINER="praise_api_prod"
+        COMPOSE_FILE="docker-compose.prod.yml"
+        COMPOSE_CMD="docker-compose -f docker-compose.prod.yml"
+        echo -e "${GREEN}✅ Ambiente detectado: PRODUÇÃO (Docker na VPS)${NC}"
+    # Detectar dev
+    elif docker ps | grep -q "praise_api_dev"; then
+        ENV="dev"
+        BACKEND_CONTAINER="praise_api_dev"
         COMPOSE_FILE="docker-compose.dev.yml"
         COMPOSE_CMD="docker-compose -f docker-compose.dev.yml"
-        BACKEND_CONTAINER="praise_api_dev"
-        echo -e "${BLUE}📋 Detectado: docker-compose.dev.yml (modo desenvolvimento)${NC}"
-    elif docker ps | grep -q "praise_api"; then
-        BACKEND_CONTAINER="praise_api"
-        echo -e "${BLUE}📋 Detectado: docker-compose.yml (modo produção)${NC}"
+        echo -e "${GREEN}✅ Ambiente detectado: DESENVOLVIMENTO (Docker)${NC}"
+        echo -e "${CYAN}   Nota: Se estiver na sua máquina local, use --env local${NC}"
     else
-        BACKEND_CONTAINER="praise_api"
+        # Nenhum container encontrado, assumir local (máquina do desenvolvedor)
+        ENV="local"
+        BACKEND_CONTAINER="praise_api_dev"
+        COMPOSE_FILE="docker-compose.dev.yml"
+        COMPOSE_CMD="docker-compose -f docker-compose.dev.yml"
+        echo -e "${YELLOW}⚠️  Nenhum container encontrado, assumindo LOCAL (Docker dev na máquina)${NC}"
     fi
 else
-    BACKEND_CONTAINER="praise_api"
+    echo -e "${CYAN}📋 Ambiente forçado: ${ENV^^}${NC}"
+    
+    # Configurar variáveis baseadas no ambiente forçado
+    case "$ENV" in
+        prod)
+            BACKEND_CONTAINER="praise_api_prod"
+            COMPOSE_FILE="docker-compose.prod.yml"
+            COMPOSE_CMD="docker-compose -f docker-compose.prod.yml"
+            ;;
+        dev|local)
+            # Ambos dev e local usam docker-compose.dev.yml
+            BACKEND_CONTAINER="praise_api_dev"
+            COMPOSE_FILE="docker-compose.dev.yml"
+            COMPOSE_CMD="docker-compose -f docker-compose.dev.yml"
+            if [ "$ENV" = "local" ]; then
+                echo -e "${CYAN}   Usando docker-compose.dev.yml (ambiente local simula dev)${NC}"
+            fi
+            ;;
+    esac
 fi
+
+# Função para verificar pré-requisitos no banco de dados
+check_prerequisites() {
+    if [ "$SKIP_PREREQUISITES" = true ]; then
+        echo -e "${YELLOW}⏭️  Verificação de pré-requisitos pulada${NC}"
+        return 0
+    fi
+    
+    echo -e "${BLUE}🔍 Verificando pré-requisitos...${NC}"
+    
+    # Modo Docker - executar dentro do container
+    CHECK_CMD="python -c \"
+from app.infrastructure.database.database import SessionLocal
+from app.infrastructure.database.repositories.material_type_repository import MaterialTypeRepository
+db = SessionLocal()
+repo = MaterialTypeRepository(db)
+types = ['pdf', 'audio', 'text']
+missing = [t for t in types if not repo.get_by_name(t)]
+db.close()
+if missing:
+    print('MISSING:' + ','.join(missing))
+    exit(1)
+else:
+    print('OK')
+\""
+    
+    # Verificar se container está rodando
+    if ! docker ps | grep -q "$BACKEND_CONTAINER"; then
+        echo -e "${YELLOW}⚠️  Container '$BACKEND_CONTAINER' não está rodando${NC}"
+        echo "   Iniciando serviços..."
+        $COMPOSE_CMD up -d db backend
+        echo "   Aguardando serviços iniciarem..."
+        sleep 5
+    fi
+    
+    CHECK_RESULT=$(docker exec "$BACKEND_CONTAINER" sh -c "cd /app && $CHECK_CMD" 2>&1 || echo "ERROR")
+    
+    if echo "$CHECK_RESULT" | grep -q "MISSING"; then
+        MISSING_TYPES=$(echo "$CHECK_RESULT" | grep "MISSING:" | cut -d: -f2)
+        echo -e "${YELLOW}⚠️  MaterialTypes não encontrados no banco: ${MISSING_TYPES}${NC}"
+        echo -e "   Execute primeiro: docker exec $BACKEND_CONTAINER python scripts/seed_material_types.py"
+        echo -e "   Ou use: ./scripts/setup-db.sh --env $ENV"
+        read -p "   Deseja executar agora? (sim/não): " RUN_SEED
+        
+        if [[ "$RUN_SEED" =~ ^(sim|s|yes|y)$ ]]; then
+            echo -e "${BLUE}🌱 Executando seed de MaterialTypes...${NC}"
+            docker exec "$BACKEND_CONTAINER" python scripts/seed_material_types.py
+        else
+            echo -e "${YELLOW}⚠️  Continuando sem executar seed (pode causar erros)${NC}"
+        fi
+    elif echo "$CHECK_RESULT" | grep -q "OK"; then
+        echo -e "${GREEN}✅ Pré-requisitos verificados${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Não foi possível verificar pré-requisitos: $CHECK_RESULT${NC}"
+        echo -e "   Continuando... (pode causar erros se MaterialTypes não existirem)"
+    fi
+}
+
+# Processar ambiente Docker (todos os ambientes usam Docker)
+echo -e "${GREEN}✅ Container: ${BACKEND_CONTAINER}${NC}"
+echo -e "${CYAN}   Compose file: ${COMPOSE_FILE}${NC}"
 
 # Verificar se o container do backend está rodando
 if ! docker ps | grep -q "$BACKEND_CONTAINER"; then
@@ -105,8 +238,6 @@ if ! docker ps | grep -q "$BACKEND_CONTAINER"; then
     echo "   Aguardando serviços iniciarem..."
     sleep 5
 fi
-
-echo -e "${GREEN}✅ Container: ${BACKEND_CONTAINER}${NC}"
 
 # Verificar se está usando volume nomeado ou bind mount
 PROJECT_NAME=$(basename "$(pwd)")
@@ -124,7 +255,7 @@ elif docker volume ls --format "{{.Name}}" | grep -q "storage_assets$"; then
     echo -e "${GREEN}✅ Volume Docker nomeado: ${VOLUME_NAME}${NC}"
 else
     # Verificar bind mount no container
-    echo -e "${YELLOW}⚠️  Volume nomeado não encontrado, verificando bind mount...${NC}"
+    echo -e "${CYAN}🔍 Verificando bind mount...${NC}"
     STORAGE_MOUNT_PATH=$(docker inspect "$BACKEND_CONTAINER" --format '{{range .Mounts}}{{if eq .Destination "/storage/assets"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || echo "")
     
     if [ -n "$STORAGE_MOUNT_PATH" ]; then
@@ -139,12 +270,16 @@ fi
 
 echo ""
 
+# Verificar pré-requisitos
+check_prerequisites
+echo ""
+
 # Perguntar confirmação se não for dry-run
 if [ "$DRY_RUN" = false ]; then
     echo -e "${YELLOW}⚠️  ATENÇÃO: Esta operação irá importar ${PRAISE_COUNT} praises para o banco de dados${NC}"
     read -p "   Deseja continuar? (sim/não): " CONFIRM
     
-    if [ "$CONFIRM" != "sim" ] && [ "$CONFIRM" != "s" ] && [ "$CONFIRM" != "yes" ] && [ "$CONFIRM" != "y" ]; then
+    if [[ ! "$CONFIRM" =~ ^(sim|s|yes|y)$ ]]; then
         echo -e "${YELLOW}Operação cancelada${NC}"
         exit 0
     fi
@@ -241,7 +376,7 @@ fi
 
 echo ""
 
-# Executar script de importação Python
+# Executar script de importação Python dentro do container
 echo -e "${BLUE}🔄 Executando importação no banco de dados...${NC}"
 
 # Construir comando Python

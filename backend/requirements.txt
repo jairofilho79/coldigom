@@ -14,4 +14,5 @@ python-dotenv==1.0.0
 email-validator==2.1.0
 PyYAML==6.0.1
 slowapi==0.1.9
+limits>=3.7.0
 

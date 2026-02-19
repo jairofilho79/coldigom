@@ -15,8 +15,10 @@ export const PraiseList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getPraiseTagName } = useEntityTranslations();
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchInLyrics, setSearchInLyrics] = useState(false);
   const [skip, setSkip] = useState(0);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'number'>('name');
   const limit = 20;
   const tagId = searchParams.get('tag_id') || undefined;
 
@@ -25,6 +27,10 @@ export const PraiseList = () => {
     limit,
     name: searchTerm || undefined,
     tag_id: tagId,
+    search_in_lyrics: searchInLyrics || undefined,
+    sort_by: sortBy,
+    sort_direction: 'asc',
+    no_number: sortBy === 'number' ? 'last' : undefined,
   });
 
   const { data: tag } = useTag(tagId || '');
@@ -94,18 +100,51 @@ export const PraiseList = () => {
         </div>
       )}
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder={t('message.searchPlaceholder')}
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setSkip(0);
-          }}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
+      <div className="space-y-2">
+        <div className="relative flex items-center gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder={t('message.searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setSkip(0);
+              }}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <label className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={searchInLyrics}
+              onChange={(e) => {
+                setSearchInLyrics(e.target.checked);
+                setSkip(0);
+              }}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            {t('label.searchInLyrics') || 'Letra'}
+          </label>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort-praises" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              {t('label.sortBy') || 'Ordenar por'}
+            </label>
+            <select
+              id="sort-praises"
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value as 'name' | 'number');
+                setSkip(0);
+              }}
+              className="rounded-md border border-gray-300 py-2 pl-3 pr-8 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="name">{t('option.sortByName') || 'Nome'}</option>
+              <option value="number">{t('option.sortByNumber') || 'Número (sem número por último)'}</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {praises && praises.length > 0 ? (

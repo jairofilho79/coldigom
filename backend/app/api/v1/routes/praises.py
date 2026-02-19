@@ -25,6 +25,11 @@ def list_praises(
     limit: int = Query(100, ge=1, le=100),
     name: Optional[str] = Query(None),
     tag_id: Optional[UUID] = Query(None),
+    tonality: Optional[str] = Query(None, description="Filtrar por tom (ex.: C, Dm); vazio = todos"),
+    rhythm: Optional[str] = Query(None, description="Filtrar por ritmo; vazio = todos"),
+    category: Optional[str] = Query(None, description="Filtrar por categoria (ex.: Coletânea); vazio = todos"),
+    youtube_url: Optional[str] = Query(None, description="URL ou ID do vídeo YouTube para filtrar o louvor"),
+    search_in_lyrics: bool = Query(False, description="Incluir busca no conteúdo da letra"),
     sort_by: str = Query("name", description="Ordenar por: name ou number"),
     sort_direction: str = Query("asc", description="Direção: asc ou desc"),
     no_number: str = Query("last", description="Praises sem número: first, last ou hide (apenas quando sort_by=number)"),
@@ -37,7 +42,7 @@ def list_praises(
     Usuários autenticados têm acesso ilimitado.
     """
     # Aplicar rate limiting (usuários autenticados podem ter limites maiores depois)
-    apply_rate_limit(request, "20/minute")
+    apply_rate_limit(request, "600/minute")
     
     service = PraiseService(db)
     praises = service.get_all(
@@ -45,6 +50,11 @@ def list_praises(
         limit=limit,
         name=name,
         tag_id=tag_id,
+        tonality=tonality,
+        rhythm=rhythm,
+        category=category,
+        youtube_url=youtube_url,
+        search_in_lyrics=search_in_lyrics,
         sort_by=sort_by,
         sort_direction=sort_direction,
         no_number=no_number,
@@ -68,10 +78,8 @@ def download_praises_by_material_kind(
     Divide em múltiplos ZIPs quando exceder o tamanho máximo especificado.
     Retorna um ZIP mestre contendo os ZIPs menores.
     """
-    # Rate limiting usando limiter do app.state
-    limiter = request.app.state.limiter
-    limiter.limit("40/minute")(request)
-    
+    apply_rate_limit(request, "600/minute")
+
     import logging
     from app.core.config import settings
     
@@ -284,10 +292,8 @@ def download_praise_zip(
     storage: StorageClient = Depends(get_storage)
 ):
     """Baixa um praise completo em formato ZIP com todos os materiais de arquivo"""
-    # Rate limiting usando limiter do app.state
-    limiter = request.app.state.limiter
-    limiter.limit("40/minute")(request)
-    
+    apply_rate_limit(request, "600/minute")
+
     import logging
     from app.core.config import settings
     
@@ -498,7 +504,7 @@ def get_praise(
     Usuários autenticados têm acesso ilimitado.
     """
     # Aplicar rate limiting
-    apply_rate_limit(request, "40/minute")
+    apply_rate_limit(request, "600/minute")
     
     service = PraiseService(db)
     praise = service.get_by_id(praise_id)

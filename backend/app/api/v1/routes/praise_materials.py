@@ -49,7 +49,7 @@ def list_praise_materials(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "20/minute")
+        apply_rate_limit(request, "600/minute")
     
     service = PraiseMaterialService(db)
     if praise_id:
@@ -81,7 +81,7 @@ def batch_search_materials(
         is_old: Filtrar por materiais antigos
     """
     if current_user is None:
-        apply_rate_limit(request, "20/minute")
+        apply_rate_limit(request, "600/minute")
     
     service = PraiseMaterialService(db)
     
@@ -502,81 +502,20 @@ async def upload_praise_material(
     storage: StorageClient = Depends(get_storage)
 ):
     """Faz upload de um arquivo e cria um material de praise"""
+    await file.seek(0)
     is_old_bool = _parse_form_bool(is_old, default=False)
     old_desc_clean = (old_description or '').strip() or None
     logger.info("upload_praise_material form params: is_old=%s->%s, old_description=%s->%s", is_old, is_old_bool, repr(old_description), repr(old_desc_clean))
-    # Generate material ID first
-    from uuid import uuid4
-    material_id = uuid4()
-    
-    # Upload file to storage (Wasabi or Local)
-    content_type, _ = mimetypes.guess_type(file.filename)
-    file_path = storage.upload_file(
-        file.file,
-        file.filename,
-        content_type=content_type,
-        folder=f"praises/{praise_id}",
-        material_id=material_id
-    )
-    
-    # Create material record with the generated ID
-    # Use repository directly to set custom ID
-    from app.domain.models.praise_material import PraiseMaterial
-    from app.infrastructure.database.repositories.praise_material_repository import PraiseMaterialRepository
-    from app.infrastructure.database.repositories.material_kind_repository import MaterialKindRepository
-    from app.infrastructure.database.repositories.praise_repository import PraiseRepository
-    
-    # Validate material_kind exists
-    material_kind_repo = MaterialKindRepository(db)
-    material_kind = material_kind_repo.get_by_id(material_kind_id)
-    if not material_kind:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"MaterialKind with id {material_kind_id} not found"
-        )
-    
-    # Validate praise exists
-    praise_repo = PraiseRepository(db)
-    praise = praise_repo.get_by_id(praise_id)
-    if not praise:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Praise with id {praise_id} not found"
-        )
-    
-    # Detect material type from file extension
-    material_type_repo = MaterialTypeRepository(db)
-    file_ext = os.path.splitext(file.filename or "")[1]
-    
-    # Detect type based on extension
-    audio_extensions = {'.mp3', '.wav', '.m4a', '.wma', '.ogg', '.flac'}
-    if file_ext.lower() == '.pdf':
-        material_type = material_type_repo.get_by_name('pdf')
-    elif file_ext.lower() in audio_extensions:
-        material_type = material_type_repo.get_by_name('audio')
-    else:
-        # Default to PDF if extension not recognized
-        material_type = material_type_repo.get_by_name('pdf')
-    
-    if not material_type:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="MaterialType not found in database. Please run seed script."
-        )
-    
-    # Create material with specific ID
-    material = PraiseMaterial(
-        id=material_id,
+    service = PraiseMaterialService(db)
+    material = service.create_with_upload(
+        file_obj=file.file,
+        file_name=file.filename or "file",
         material_kind_id=material_kind_id,
-        material_type_id=material_type.id,
-        path=file_path,
         praise_id=praise_id,
+        storage=storage,
         is_old=is_old_bool,
-        old_description=old_desc_clean
+        old_description=old_desc_clean,
     )
-    repo = PraiseMaterialRepository(db)
-    material = repo.create(material)
-    db.commit()
     db.refresh(material)
     logger.info("upload_praise_material created: id=%s is_old=%s old_description=%s", material.id, material.is_old, repr(material.old_description))
     return material

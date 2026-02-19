@@ -444,6 +444,26 @@ def process_praise_folder(
     return True, "Processado com sucesso"
 
 
+def check_prerequisites(db: Session) -> bool:
+    """Verifica se os pré-requisitos estão configurados no banco"""
+    from app.infrastructure.database.repositories.material_type_repository import MaterialTypeRepository
+    
+    material_type_repo = MaterialTypeRepository(db)
+    required_types = ['pdf', 'audio', 'text']
+    missing_types = []
+    
+    for type_name in required_types:
+        if not material_type_repo.get_by_name(type_name):
+            missing_types.append(type_name)
+    
+    if missing_types:
+        print(f"❌ Erro: MaterialTypes não encontrados no banco: {', '.join(missing_types)}")
+        print("   Execute primeiro: python scripts/seed_material_types.py")
+        return False
+    
+    return True
+
+
 def main():
     """Função principal"""
     import argparse
@@ -452,6 +472,7 @@ def main():
     parser.add_argument('--colDigOS-path', type=str, required=True, help='Caminho para a pasta ColDigOS')
     parser.add_argument('--dry-run', action='store_true', help='Modo de simulação (não faz alterações)')
     parser.add_argument('--limit', type=int, help='Limitar número de praises a processar (útil para testes)')
+    parser.add_argument('--skip-prerequisites', action='store_true', help='Pular verificação de pré-requisitos')
     
     args = parser.parse_args()
     
@@ -482,6 +503,14 @@ def main():
     # Inicializar serviços
     db: Session = SessionLocal()
     storage_client = get_storage_client()
+    
+    # Verificar pré-requisitos
+    if not args.skip_prerequisites:
+        if not check_prerequisites(db):
+            db.close()
+            return 1
+        print("✅ Pré-requisitos verificados")
+        print()
     
     try:
         # Encontrar todas as pastas de praise

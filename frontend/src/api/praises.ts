@@ -11,12 +11,28 @@ export interface GetPraisesParams {
   limit?: number;
   name?: string;
   tag_id?: string;
+  search_in_lyrics?: boolean;
+  sort_by?: 'name' | 'number';
+  sort_direction?: 'asc' | 'desc';
+  no_number?: 'first' | 'last' | 'hide';
 }
 
 export const praisesApi = {
   getPraises: async (params: GetPraisesParams = {}): Promise<PraiseResponse[]> => {
+    const requestParams: Record<string, string | number | boolean | undefined> = {
+      skip: params.skip,
+      limit: params.limit,
+      name: params.name,
+      tag_id: params.tag_id,
+      sort_by: params.sort_by ?? 'name',
+      sort_direction: params.sort_direction ?? 'asc',
+      no_number: params.no_number ?? 'last',
+    };
+    if (params.search_in_lyrics === true) {
+      requestParams.search_in_lyrics = true;
+    }
     const response = await apiClient.get<PraiseResponse[]>('/api/v1/praises/', {
-      params,
+      params: requestParams,
     });
     return response.data;
   },

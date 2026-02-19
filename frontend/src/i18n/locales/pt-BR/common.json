@@ -49,8 +49,14 @@
     "hideOldMaterials": "Ocultar Materiais Antigos",
     "textContent": "Conteúdo de texto",
     "lyricsEditor": "Letra",
+    "searchInLyrics": "Letra",
     "editor": "Editar",
-    "preview": "Ver"
+    "preview": "Ver",
+    "sortBy": "Ordenar por"
+  },
+  "option": {
+    "sortByName": "Nome",
+    "sortByNumber": "Número (sem número por último)"
   },
   "message": {
     "noTags": "Nenhuma tag associada",

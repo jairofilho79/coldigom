@@ -10,6 +10,7 @@ from . import translations
 from . import snapshots
 from . import audit
 from . import data_protection
+from . import rooms
 
 __all__ = [
     "auth",
@@ -23,4 +24,5 @@ __all__ = [
     "snapshots",
     "audit",
     "data_protection",
+    "rooms",
 ]

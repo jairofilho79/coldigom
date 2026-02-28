@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -530,12 +530,13 @@ def review_action(
 @router.post("/", response_model=PraiseResponse, status_code=status.HTTP_201_CREATED)
 def create_praise(
     praise_data: PraiseCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Cria um novo praise"""
     service = PraiseService(db)
-    praise = service.create(praise_data)
+    praise = service.create(praise_data, background_tasks=background_tasks)
     return praise
 
 
@@ -543,24 +544,26 @@ def create_praise(
 def update_praise(
     praise_id: UUID,
     praise_data: PraiseUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Atualiza um praise"""
     service = PraiseService(db)
-    praise = service.update(praise_id, praise_data)
+    praise = service.update(praise_id, praise_data, background_tasks=background_tasks)
     return praise
 
 
 @router.delete("/{praise_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_praise(
     praise_id: UUID,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Deleta um praise"""
     service = PraiseService(db)
-    service.delete(praise_id)
+    service.delete(praise_id, background_tasks=background_tasks)
     return None
 
 

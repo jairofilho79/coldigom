@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from app.domain.models.praise import Praise
 from app.domain.models.praise_tag import PraiseTag
 from app.domain.schemas.praise import PraiseCreate, PraiseUpdate, ReviewActionRequest
@@ -63,7 +63,7 @@ class PraiseService:
             no_number=no_number,
         )
 
-    def create(self, praise_data: PraiseCreate) -> Praise:
+    def create(self, praise_data: PraiseCreate, background_tasks: BackgroundTasks = None) -> Praise:
         in_review = praise_data.in_review or False
         if in_review:
             review_history = [{"type": "in_review", "date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}]
@@ -113,10 +113,13 @@ class PraiseService:
         
         # Refresh to get all relationships
         result = self.repository.get_by_id(praise.id)
-        sync_praise_to_metadata(result)
+        if background_tasks:
+            background_tasks.add_task(sync_praise_to_metadata, result)
+        else:
+            sync_praise_to_metadata(result)
         return result
 
-    def update(self, praise_id: UUID, praise_data: PraiseUpdate) -> Praise:
+    def update(self, praise_id: UUID, praise_data: PraiseUpdate, background_tasks: BackgroundTasks = None) -> Praise:
         praise = self.get_by_id(praise_id)
         
         # Lista explícita de campos permitidos para atualização
@@ -169,12 +172,18 @@ class PraiseService:
 
         self.repository.update(praise)
         praise_with_relations = self.repository.get_by_id(praise_id)
-        sync_praise_to_metadata(praise_with_relations)
+        if background_tasks:
+            background_tasks.add_task(sync_praise_to_metadata, praise_with_relations)
+        else:
+            sync_praise_to_metadata(praise_with_relations)
         return praise_with_relations
 
-    def delete(self, praise_id: UUID) -> bool:
+    def delete(self, praise_id: UUID, background_tasks: BackgroundTasks = None) -> bool:
         praise = self.get_by_id(praise_id)
-        delete_metadata(praise_id)
+        if background_tasks:
+            background_tasks.add_task(delete_metadata, praise_id)
+        else:
+            delete_metadata(praise_id)
         return self.repository.delete(praise_id)
 
     def review_action(self, praise_id: UUID, data: ReviewActionRequest) -> Praise:

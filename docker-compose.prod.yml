@@ -16,7 +16,7 @@ services:
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-praise_user}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-praise_user}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -64,7 +64,7 @@ services:
       - coldigom-coletanea-prod-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8000/health || exit 1"]
+      test: [ "CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -88,7 +88,7 @@ services:
       - coldigom-coletanea-prod-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/health || exit 1"]
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -96,6 +96,7 @@ services:
 
 volumes:
   postgres_data_prod:
+
 
 networks:
   coldigom-coletanea-prod-network:

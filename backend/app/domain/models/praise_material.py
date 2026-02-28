@@ -5,14 +5,7 @@ import uuid
 from app.infrastructure.database.database import Base
 
 
-# Enum MaterialType mantido temporariamente para compatibilidade durante migração
-# Será removido após a migração completa
-class MaterialType(str):
-    """Enum temporário para compatibilidade - será removido após migração"""
-    FILE = "file"
-    YOUTUBE = "youtube"
-    SPOTIFY = "spotify"
-    TEXT = "text"
+
 
 
 class PraiseMaterial(Base):
@@ -22,7 +15,7 @@ class PraiseMaterial(Base):
     material_kind_id = Column(UUID(as_uuid=True), ForeignKey("material_kinds.id"), nullable=False)
     material_type_id = Column(UUID(as_uuid=True), ForeignKey("material_types.id"), nullable=False)
     path = Column(String, nullable=False)  # Path no Wasabi ou URL para links externos
-    # type = Column(Enum(MaterialType), nullable=False, default=MaterialType.FILE)  # Removido - usar material_type_id
+
     praise_id = Column(UUID(as_uuid=True), ForeignKey("praises.id"), nullable=False)
     is_old = Column(Boolean, nullable=False, default=False, server_default='false')
     old_description = Column(String(2000), nullable=True)

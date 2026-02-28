@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { PraiseMaterialSimple } from '@/types';
-import { 
-  File, 
-  Youtube, 
-  Music, 
-  FileText, 
+import {
+  File,
+  Youtube,
+  Music,
+  FileText,
   Link as LinkIcon,
-  Edit, 
+  Edit,
   Trash2,
   FileText as PdfIcon,
   Headphones,
@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useDeleteMaterial, useUpdateMaterial, useUpdateMaterialWithFile, useCreateMaterial, useUploadMaterial } from '@/hooks/useMaterials';
 import { useEntityTranslations } from '@/hooks/useEntityTranslations';
-import { useUserMaterialKindPreferences } from '@/hooks/useUserPreferences';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { MaterialForm } from '@/components/materials/MaterialForm';
@@ -31,7 +30,8 @@ interface PraiseMaterialsListProps {
 export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsListProps) => {
   const { t } = useTranslation('common');
   const { getMaterialKindName } = useEntityTranslations();
-  const { data: preferences } = useUserMaterialKindPreferences();
+  // Preferences system removed in previous clean-up 
+  const preferences: any[] = [];
   const [editingMaterial, setEditingMaterial] = useState<PraiseMaterialSimple | null>(null);
   const [creatingMaterial, setCreatingMaterial] = useState<boolean>(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -43,11 +43,6 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
   // Criar mapa de preferências: material_kind_id -> order
   const preferenceMap = useMemo(() => {
     const map = new Map<string, number>();
-    if (preferences) {
-      preferences.forEach((pref) => {
-        map.set(pref.material_kind_id, pref.order);
-      });
-    }
     return map;
   }, [preferences]);
 
@@ -56,7 +51,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     const sorted = [...filteredMaterials].sort((a, b) => {
       const aKindId = a.material_kind?.id;
       const bKindId = b.material_kind?.id;
-      
+
       const aOrder = aKindId ? preferenceMap.get(aKindId) : undefined;
       const bOrder = bKindId ? preferenceMap.get(bKindId) : undefined;
 
@@ -64,27 +59,27 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
       if (aOrder !== undefined && bOrder !== undefined) {
         return aOrder - bOrder;
       }
-      
+
       // Se apenas A tem preferência, A vem primeiro
       if (aOrder !== undefined) {
         return -1;
       }
-      
+
       // Se apenas B tem preferência, B vem primeiro
       if (bOrder !== undefined) {
         return 1;
       }
-      
+
       // Se nenhum tem preferência, ordena alfabeticamente pelo nome traduzido
-      const aName = a.material_kind 
+      const aName = a.material_kind
         ? getMaterialKindName(a.material_kind.id, a.material_kind.name).toLowerCase()
         : '';
-      const bName = b.material_kind 
+      const bName = b.material_kind
         ? getMaterialKindName(b.material_kind.id, b.material_kind.name).toLowerCase()
         : '';
       return aName.localeCompare(bName);
     });
-    
+
     return sorted;
   }, [filteredMaterials, preferenceMap, getMaterialKindName]);
 
@@ -115,7 +110,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     // O token será passado via query parameter para permitir autenticação via <a>
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const token = localStorage.getItem('token');
-    
+
     // URL do endpoint que serve o arquivo diretamente (redireciona para URL assinada)
     // Token é passado como query parameter porque <a> não envia headers
     // Adiciona hash do path para cache-busting (muda quando o path muda)
@@ -136,7 +131,7 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
     if (path.toLowerCase().endsWith('.pdf')) {
       return <PdfIcon className="w-5 h-5 text-red-600" />;
     }
-    
+
     // Detecta áudio pelas extensões comuns
     const audioExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
     if (audioExtensions.some(ext => path.toLowerCase().endsWith(ext))) {
@@ -168,9 +163,9 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
 
   const handleUpdate = async (data: MaterialUpdateFormData | { file: File; material_kind_id?: string; is_old?: boolean; old_description?: string | null }) => {
     if (!editingMaterial) return;
-    
+
     console.log('handleUpdate - dados recebidos', { data, editingMaterial });
-    
+
     try {
       // Se o data contém file, usa updateMaterialWithFile
       if ('file' in data && data.file) {
@@ -266,99 +261,99 @@ export const PraiseMaterialsList = ({ materials, praiseId }: PraiseMaterialsList
         <div className="text-sm text-gray-500 mb-4">{t('message.noMaterialsAdded')}</div>
       ) : (
         <div className="space-y-3">
-        {displayedMaterials.map((material) => {
-          const materialUrl = getMaterialUrl(material);
-          const isFile = material.type === 'file';
-          const isText = material.type === 'text';
-          const isClickable = !isText;
-          
-          const content = (
-            <>
-              {getIcon(material.type, material.path)}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 flex-wrap gap-1">
-                  {material.material_kind ? (
-                    <span className="text-sm font-medium text-gray-900 truncate">
-                      {getMaterialKindName(material.material_kind.id, material.material_kind.name)}
-                    </span>
-                  ) : (
-                    <span className="text-sm font-medium text-gray-900 truncate">
-                      {t('entity.material')}
-                    </span>
-                  )}
-                  {material.is_old && (
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800"
-                      title={material.old_description || undefined}
-                    >
-                      {t('label.badgeOld')}
-                    </span>
-                  )}
-                  {isClickable && (
-                    <ExternalLink className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  )}
+          {displayedMaterials.map((material) => {
+            const materialUrl = getMaterialUrl(material);
+            const isFile = material.type === 'file';
+            const isText = material.type === 'text';
+            const isClickable = !isText;
+
+            const content = (
+              <>
+                {getIcon(material.type, material.path)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 flex-wrap gap-1">
+                    {material.material_kind ? (
+                      <span className="text-sm font-medium text-gray-900 truncate">
+                        {getMaterialKindName(material.material_kind.id, material.material_kind.name)}
+                      </span>
+                    ) : (
+                      <span className="text-sm font-medium text-gray-900 truncate">
+                        {t('entity.material')}
+                      </span>
+                    )}
+                    {material.is_old && (
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800"
+                        title={material.old_description || undefined}
+                      >
+                        {t('label.badgeOld')}
+                      </span>
+                    )}
+                    {isClickable && (
+                      <ExternalLink className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+
+            return (
+              <div
+                key={material.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
+              >
+                {isText ? (
+                  // Para textos, não é clicável
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    {content}
+                  </div>
+                ) : isFile ? (
+                  // Para arquivos, usa <a> que aponta para o endpoint de download do backend
+                  // O backend redireciona para a URL assinada do storage
+                  <a
+                    href={materialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-3 flex-1 min-w-0 no-underline text-inherit"
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  // Para links externos (YouTube, Spotify, URLs http/https)
+                  <a
+                    href={materialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-3 flex-1 min-w-0 no-underline text-inherit"
+                  >
+                    {content}
+                  </a>
+                )}
+                <div className="flex items-center space-x-2 ml-3">
+                  <button
+                    onClick={(e) => {
+                      handleActionClick(e);
+                      handleEdit(material);
+                    }}
+                    className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    title={t('button.edit')}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      handleActionClick(e);
+                      setDeleteId(material.id);
+                    }}
+                    className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title={t('button.delete')}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-            </>
-          );
-          
-          return (
-            <div
-              key={material.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors group"
-            >
-              {isText ? (
-                // Para textos, não é clicável
-                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                  {content}
-                </div>
-              ) : isFile ? (
-                // Para arquivos, usa <a> que aponta para o endpoint de download do backend
-                // O backend redireciona para a URL assinada do storage
-                <a
-                  href={materialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-3 flex-1 min-w-0 no-underline text-inherit"
-                >
-                  {content}
-                </a>
-              ) : (
-                // Para links externos (YouTube, Spotify, URLs http/https)
-                <a
-                  href={materialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-3 flex-1 min-w-0 no-underline text-inherit"
-                >
-                  {content}
-                </a>
-              )}
-              <div className="flex items-center space-x-2 ml-3">
-                <button
-                  onClick={(e) => {
-                    handleActionClick(e);
-                    handleEdit(material);
-                  }}
-                  className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                  title={t('button.edit')}
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    handleActionClick(e);
-                    setDeleteId(material.id);
-                  }}
-                  className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  title={t('button.delete')}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       )}
 

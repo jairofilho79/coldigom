@@ -24,6 +24,7 @@ from app.api.v1.routes import (
     praise_tags,
     snapshots,
     translations,
+    rooms,
 )
 from app.core.config import settings
 from app.core.middleware.audit_middleware import AuditMiddleware
@@ -139,6 +140,11 @@ app.include_router(translations.router, prefix="/api/v1/translations", tags=["Tr
 app.include_router(snapshots.router, prefix="/api/v1/snapshots", tags=["Snapshots"])
 app.include_router(audit.router, prefix="/api/v1/audit-logs", tags=["Audit"])
 app.include_router(data_protection.router, prefix="/api/v1/data-protection", tags=["Data Protection"])
+app.include_router(rooms.router, prefix="/api/v1/rooms", tags=["Rooms (SSE)"])
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    return {"status": "healthy"}
 
 
 # Helper function para verificar origem permitida (usada nos exception handlers)

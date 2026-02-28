@@ -136,10 +136,15 @@ def download_praises_by_material_kind(
     # Calcular tamanho máximo em bytes
     max_zip_size_bytes = max_zip_size_mb * 1024 * 1024
     
-    # Criar ZIP mestre em memória
-    master_zip_buffer = io.BytesIO()
+    # Criar ZIP mestre em disco
+    import tempfile
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
     
-    with zipfile.ZipFile(master_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as master_zip:
+    master_temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
+    master_zip_path = master_temp_zip.name
+    
+    with zipfile.ZipFile(master_temp_zip, 'w', zipfile.ZIP_DEFLATED) as master_zip:
         # Lista para armazenar informações dos ZIPs criados
         zip_parts_info = []
         
@@ -266,20 +271,17 @@ def download_praises_by_material_kind(
         
         master_zip.writestr("README.txt", readme_content.encode('utf-8'))
     
-    # Preparar resposta
-    master_zip_buffer.seek(0)
+    master_temp_zip.close()
     
     # Criar nome do arquivo ZIP mestre
     material_kind_name_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in material_kind.name)
     zip_filename = f"materials_{material_kind_name_safe}.zip"
     
-    return StreamingResponse(
-        io.BytesIO(master_zip_buffer.read()),
+    return FileResponse(
+        master_zip_path,
         media_type="application/zip",
-        headers={
-            "Content-Disposition": f'attachment; filename="{zip_filename}"',
-            "Content-Type": "application/zip"
-        }
+        filename=zip_filename,
+        background=BackgroundTask(os.remove, master_zip_path)
     )
 
 
@@ -320,10 +322,15 @@ def download_praise_zip(
     for idx, material in enumerate(praise.materials):
         logger.info(f"Material {idx+1}/{len(praise.materials)}: ID={material.id}, path={material.path}, type_id={material.material_type_id}, kind_id={material.material_kind_id}")
     
-    # Criar ZIP em memória
-    zip_buffer = io.BytesIO()
+    # Criar ZIP em disco
+    import tempfile
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
     
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
+    temp_zip_path = temp_zip.name
+    
+    with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         file_count = 0
         non_file_materials = []
         skipped_materials = []
@@ -471,8 +478,7 @@ def download_praise_zip(
     if file_count == 0:
         logger.warning(f"No file materials found for praise {praise_id}")
     
-    # Preparar resposta
-    zip_buffer.seek(0)
+    temp_zip.close()
     
     # Criar nome do arquivo ZIP
     praise_name_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in praise.name)
@@ -481,13 +487,11 @@ def download_praise_zip(
     else:
         zip_filename = f"{praise_name_safe}.zip"
     
-    return StreamingResponse(
-        io.BytesIO(zip_buffer.read()),
+    return FileResponse(
+        temp_zip_path,
         media_type="application/zip",
-        headers={
-            "Content-Disposition": f'attachment; filename="{zip_filename}"',
-            "Content-Type": "application/zip"
-        }
+        filename=zip_filename,
+        background=BackgroundTask(os.remove, temp_zip_path)
     )
 
 

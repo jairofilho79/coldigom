@@ -202,9 +202,15 @@ def batch_download_materials(
         )
 
     max_zip_size_bytes = max_zip_size_mb * 1024 * 1024
-    master_zip_buffer = io.BytesIO()
+    
+    import tempfile
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
+    
+    master_temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
+    master_zip_path = master_temp_zip.name
 
-    with zipfile.ZipFile(master_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as master_zip:
+    with zipfile.ZipFile(master_temp_zip, 'w', zipfile.ZIP_DEFLATED) as master_zip:
         current_zip_buffer = io.BytesIO()
         current_zip_size = 0
         current_part = 1
@@ -308,16 +314,14 @@ def batch_download_materials(
 
         master_zip.writestr("README.txt", readme_content.encode('utf-8'))
 
-    master_zip_buffer.seek(0)
+    master_temp_zip.close()
     zip_filename = "materials_batch.zip"
 
-    return StreamingResponse(
-        io.BytesIO(master_zip_buffer.read()),
+    return FileResponse(
+        master_zip_path,
         media_type="application/zip",
-        headers={
-            "Content-Disposition": f'attachment; filename="{zip_filename}"',
-            "Content-Type": "application/zip"
-        }
+        filename=zip_filename,
+        background=BackgroundTask(os.remove, master_zip_path)
     )
 
 

@@ -339,7 +339,7 @@ def get_download_url(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "40/minute")
+        apply_rate_limit(request, "600/minute")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
@@ -378,7 +378,7 @@ def download_material(
     import mimetypes
     
     if current_user is None:
-        apply_rate_limit(request, "40/minute")
+        apply_rate_limit(request, "600/minute")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
@@ -483,7 +483,7 @@ def get_praise_material(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "40/minute")
+        apply_rate_limit(request, "600/minute")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)

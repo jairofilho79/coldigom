@@ -25,7 +25,7 @@ def list_material_kinds(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "20/minute")
+        apply_rate_limit(request, "200/minute")
     
     service = MaterialKindService(db)
     kinds = service.get_all(skip=skip, limit=limit)
@@ -45,7 +45,7 @@ def get_material_kind(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "40/minute")
+        apply_rate_limit(request, "200/minute")
     
     service = MaterialKindService(db)
     kind = service.get_by_id(kind_id)

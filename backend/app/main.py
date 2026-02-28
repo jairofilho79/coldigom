@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -39,6 +39,28 @@ def _rate_limit_key(request: Request) -> str:
 # Configurar Rate Limiter: key = IP + path (cada rota tem seu próprio contador)
 # Sem strategy customizada para evitar bloqueios; janela fixa do slowapi reseta a cada minuto.
 limiter = Limiter(key_func=_rate_limit_key)
+
+
+def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Resposta 429 com limite excedido no corpo e header Retry-After para o app fazer backoff."""
+    limit_str = "unknown"
+    if getattr(exc, "limit", None) is not None and getattr(exc.limit, "limit", None) is not None:
+        limit_str = str(exc.limit.limit)
+    if "/minute" in limit_str.lower():
+        retry_after = 60
+    elif "/hour" in limit_str.lower():
+        retry_after = 3600
+    else:
+        retry_after = 60
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={
+            "detail": exc.detail,
+            "limit_exceeded": limit_str,
+        },
+        headers={"Retry-After": str(retry_after)},
+    )
+
 
 app = FastAPI(
     title="Praise Manager API",

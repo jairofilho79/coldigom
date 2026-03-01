@@ -17,6 +17,7 @@ class MaterialKindUpdate(BaseModel):
 
 class MaterialKindResponse(MaterialKindBase):
     id: UUID
+    version: str = ""
 
     class Config:
         from_attributes = True

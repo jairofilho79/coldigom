@@ -13,10 +13,12 @@ from app.infrastructure.database.repositories.praise_tag_repository import Prais
 from app.infrastructure.database.repositories.praise_material_repository import PraiseMaterialRepository
 from app.domain.models.praise_material import PraiseMaterial
 from app.application.services.metadata_sync_service import sync_praise_to_metadata, delete_metadata
+from app.application.services.changelog_helper import record_changelog
 
 
 class PraiseService:
     def __init__(self, db: Session):
+        self.db = db
         self.repository = PraiseRepository(db)
         self.tag_repo = PraiseTagRepository(db)
         self.material_repo = PraiseMaterialRepository(db)
@@ -97,7 +99,8 @@ class PraiseService:
         
         # Create praise first
         praise = self.repository.create(praise)
-        
+        record_changelog(self.db, "praise", praise.id, "created")
+
         # Add materials if provided
         if praise_data.materials:
             for material_data in praise_data.materials:
@@ -109,8 +112,9 @@ class PraiseService:
                     is_old=material_data.is_old or False,
                     old_description=material_data.old_description or None
                 )
-                self.material_repo.create(material)
-        
+                material = self.material_repo.create(material)
+                record_changelog(self.db, "praise_material", material.id, "created")
+
         # Refresh to get all relationships
         result = self.repository.get_by_id(praise.id)
         if background_tasks:
@@ -171,6 +175,7 @@ class PraiseService:
             praise.category = praise_data.category
 
         self.repository.update(praise)
+        record_changelog(self.db, "praise", praise_id, "updated")
         praise_with_relations = self.repository.get_by_id(praise_id)
         if background_tasks:
             background_tasks.add_task(sync_praise_to_metadata, praise_with_relations)
@@ -184,7 +189,9 @@ class PraiseService:
             background_tasks.add_task(delete_metadata, praise_id)
         else:
             delete_metadata(praise_id)
-        return self.repository.delete(praise_id)
+        result = self.repository.delete(praise_id)
+        record_changelog(self.db, "praise", praise_id, "deleted")
+        return result
 
     def review_action(self, praise_id: UUID, data: ReviewActionRequest) -> Praise:
         praise = self.get_by_id(praise_id)
@@ -224,7 +231,9 @@ class PraiseService:
             praise.review_history = history
             praise.in_review = False
 
-        return self.repository.update(praise)
+        praise = self.repository.update(praise)
+        record_changelog(self.db, "praise", praise_id, "updated")
+        return praise
 
 
 

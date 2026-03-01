@@ -16,6 +16,7 @@ from app.domain.schemas.translation import (
 from app.infrastructure.database.repositories.material_kind_translation_repository import MaterialKindTranslationRepository
 from app.infrastructure.database.repositories.praise_tag_translation_repository import PraiseTagTranslationRepository
 from app.infrastructure.database.repositories.material_type_translation_repository import MaterialTypeTranslationRepository
+from app.application.services.changelog_helper import record_changelog
 
 
 class TranslationService:
@@ -43,7 +44,9 @@ class TranslationService:
             language_code=translation_data.language_code,
             translated_name=translation_data.translated_name
         )
-        return self.material_kind_repo.create(translation)
+        translation = self.material_kind_repo.create(translation)
+        record_changelog(self.db, "material_kind_translation", translation.id, "created")
+        return translation
 
     def update_material_kind_translation(self, translation_id: UUID, translation_data: MaterialKindTranslationUpdate) -> MaterialKindTranslation:
         translation = self.material_kind_repo.get_by_id(translation_id)
@@ -55,8 +58,10 @@ class TranslationService:
         
         if translation_data.translated_name is not None:
             translation.translated_name = translation_data.translated_name
-        
-        return self.material_kind_repo.update(translation)
+
+        translation = self.material_kind_repo.update(translation)
+        record_changelog(self.db, "material_kind_translation", translation.id, "updated")
+        return translation
 
     def get_material_kind_translation(self, translation_id: UUID) -> MaterialKindTranslation:
         translation = self.material_kind_repo.get_by_id(translation_id)
@@ -75,7 +80,9 @@ class TranslationService:
 
     def delete_material_kind_translation(self, translation_id: UUID) -> bool:
         translation = self.get_material_kind_translation(translation_id)
-        return self.material_kind_repo.delete(translation_id)
+        result = self.material_kind_repo.delete(translation_id)
+        record_changelog(self.db, "material_kind_translation", translation_id, "deleted")
+        return result
 
     # PraiseTag Translation Methods
     def create_praise_tag_translation(self, translation_data: PraiseTagTranslationCreate) -> PraiseTagTranslation:
@@ -94,7 +101,9 @@ class TranslationService:
             language_code=translation_data.language_code,
             translated_name=translation_data.translated_name
         )
-        return self.praise_tag_repo.create(translation)
+        translation = self.praise_tag_repo.create(translation)
+        record_changelog(self.db, "praise_tag_translation", translation.id, "created")
+        return translation
 
     def update_praise_tag_translation(self, translation_id: UUID, translation_data: PraiseTagTranslationUpdate) -> PraiseTagTranslation:
         translation = self.praise_tag_repo.get_by_id(translation_id)
@@ -106,8 +115,10 @@ class TranslationService:
         
         if translation_data.translated_name is not None:
             translation.translated_name = translation_data.translated_name
-        
-        return self.praise_tag_repo.update(translation)
+
+        translation = self.praise_tag_repo.update(translation)
+        record_changelog(self.db, "praise_tag_translation", translation.id, "updated")
+        return translation
 
     def get_praise_tag_translation(self, translation_id: UUID) -> PraiseTagTranslation:
         translation = self.praise_tag_repo.get_by_id(translation_id)
@@ -126,7 +137,9 @@ class TranslationService:
 
     def delete_praise_tag_translation(self, translation_id: UUID) -> bool:
         translation = self.get_praise_tag_translation(translation_id)
-        return self.praise_tag_repo.delete(translation_id)
+        result = self.praise_tag_repo.delete(translation_id)
+        record_changelog(self.db, "praise_tag_translation", translation_id, "deleted")
+        return result
 
     # MaterialType Translation Methods
     def create_material_type_translation(self, translation_data: MaterialTypeTranslationCreate) -> MaterialTypeTranslation:
@@ -145,7 +158,9 @@ class TranslationService:
             language_code=translation_data.language_code,
             translated_name=translation_data.translated_name
         )
-        return self.material_type_repo.create(translation)
+        translation = self.material_type_repo.create(translation)
+        record_changelog(self.db, "material_type_translation", translation.id, "created")
+        return translation
 
     def update_material_type_translation(self, translation_id: UUID, translation_data: MaterialTypeTranslationUpdate) -> MaterialTypeTranslation:
         translation = self.material_type_repo.get_by_id(translation_id)
@@ -157,8 +172,10 @@ class TranslationService:
         
         if translation_data.translated_name is not None:
             translation.translated_name = translation_data.translated_name
-        
-        return self.material_type_repo.update(translation)
+
+        translation = self.material_type_repo.update(translation)
+        record_changelog(self.db, "material_type_translation", translation.id, "updated")
+        return translation
 
     def get_material_type_translation(self, translation_id: UUID) -> MaterialTypeTranslation:
         translation = self.material_type_repo.get_by_id(translation_id)
@@ -177,4 +194,6 @@ class TranslationService:
 
     def delete_material_type_translation(self, translation_id: UUID) -> bool:
         translation = self.get_material_type_translation(translation_id)
-        return self.material_type_repo.delete(translation_id)
+        result = self.material_type_repo.delete(translation_id)
+        record_changelog(self.db, "material_type_translation", translation_id, "deleted")
+        return result

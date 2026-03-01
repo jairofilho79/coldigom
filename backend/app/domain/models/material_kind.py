@@ -1,7 +1,10 @@
+import hashlib
+import uuid
+
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-import uuid
+
 from app.infrastructure.database.database import Base
 
 
@@ -16,6 +19,12 @@ class MaterialKind(Base):
     
     # One-to-many relationship with translations
     translations = relationship("MaterialKindTranslation", back_populates="material_kind", cascade="all, delete-orphan")
+
+    @property
+    def version(self) -> str:
+        """Version for cache revalidation (hash of id+name)."""
+        raw = f"{self.id}:{self.name}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def __repr__(self):
         return f"<MaterialKind(id={self.id}, name='{self.name}')>"

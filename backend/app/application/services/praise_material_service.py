@@ -11,10 +11,12 @@ from app.infrastructure.database.repositories.material_type_repository import Ma
 from app.infrastructure.database.repositories.praise_repository import PraiseRepository
 from app.infrastructure.storage.storage_client import StorageClient
 from app.application.services.metadata_sync_service import sync_praise_to_metadata
+from app.application.services.changelog_helper import record_changelog
 
 
 class PraiseMaterialService:
     def __init__(self, db: Session):
+        self.db = db
         self.repository = PraiseMaterialRepository(db)
         self.material_kind_repo = MaterialKindRepository(db)
         self.material_type_repo = MaterialTypeRepository(db)
@@ -111,6 +113,7 @@ class PraiseMaterialService:
             old_description=material_data.old_description or None
         )
         material = self.repository.create(material)
+        record_changelog(self.db, "praise_material", material.id, "created")
         praise = self.praise_repo.get_by_id(material_data.praise_id)
         sync_praise_to_metadata(praise)
         return material
@@ -160,6 +163,7 @@ class PraiseMaterialService:
             old_description=old_description,
         )
         material = self.repository.create(material)
+        record_changelog(self.db, "praise_material", material.id, "created")
         praise_full = self.praise_repo.get_by_id(praise_id)
         sync_praise_to_metadata(praise_full)
         return material
@@ -194,6 +198,7 @@ class PraiseMaterialService:
             material.old_description = material_data.old_description or None
         
         material = self.repository.update(material)
+        record_changelog(self.db, "praise_material", material.id, "updated")
         praise = self.praise_repo.get_by_id(material.praise_id)
         sync_praise_to_metadata(praise)
         return material
@@ -277,6 +282,7 @@ class PraiseMaterialService:
             material.old_description = old_description or None
         
         material = self.repository.update(material)
+        record_changelog(self.db, "praise_material", material.id, "updated")
         praise = self.praise_repo.get_by_id(material.praise_id)
         sync_praise_to_metadata(praise)
         return material
@@ -286,6 +292,7 @@ class PraiseMaterialService:
         praise_id = material.praise_id
         result = self.repository.delete(material_id)
         if result:
+            record_changelog(self.db, "praise_material", material_id, "deleted")
             praise = self.praise_repo.get_by_id(praise_id)
             sync_praise_to_metadata(praise)
         return result

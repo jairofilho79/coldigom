@@ -17,6 +17,7 @@ class PraiseTagUpdate(BaseModel):
 
 class PraiseTagResponse(PraiseTagBase):
     id: UUID
+    version: str = ""
 
     class Config:
         from_attributes = True

@@ -15,10 +15,12 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.v1.routes import (
     audit,
     auth,
+    changelog,
     data_protection,
     languages,
     material_kinds,
     material_types,
+    metadata,
     praise_materials,
     praises,
     praise_tags,
@@ -141,6 +143,8 @@ app.include_router(snapshots.router, prefix="/api/v1/snapshots", tags=["Snapshot
 app.include_router(audit.router, prefix="/api/v1/audit-logs", tags=["Audit"])
 app.include_router(data_protection.router, prefix="/api/v1/data-protection", tags=["Data Protection"])
 app.include_router(rooms.router, prefix="/api/v1/rooms", tags=["Rooms (SSE)"])
+app.include_router(metadata.router, prefix="/api/v1/metadata", tags=["Metadata"])
+app.include_router(changelog.router, prefix="/api/v1/changelog", tags=["Changelog"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():

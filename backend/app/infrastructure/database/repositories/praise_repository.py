@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from uuid import UUID
+from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, case, func
 from app.core.search_normalizer import normalize_search_query
@@ -50,6 +51,11 @@ class PraiseRepository(BaseRepository):
             .limit(limit)
             .all()
         )
+
+    def get_all_ids_and_updated_at(self) -> List[Tuple[UUID, datetime]]:
+        """Lightweight query for metadata manifest: id and updated_at only."""
+        rows = self.db.query(Praise.id, Praise.updated_at).all()
+        return [(r[0], r[1]) for r in rows]
 
     def search_by_name(self, name: str, skip: int = 0, limit: int = 100) -> List[Praise]:
         term = normalize_search_query(name) if name else None

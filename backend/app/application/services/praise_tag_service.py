@@ -5,10 +5,12 @@ from fastapi import HTTPException, status
 from app.domain.models.praise_tag import PraiseTag
 from app.domain.schemas.praise_tag import PraiseTagCreate, PraiseTagUpdate
 from app.infrastructure.database.repositories.praise_tag_repository import PraiseTagRepository
+from app.application.services.changelog_helper import record_changelog
 
 
 class PraiseTagService:
     def __init__(self, db: Session):
+        self.db = db
         self.repository = PraiseTagRepository(db)
 
     def get_by_id(self, tag_id: UUID) -> PraiseTag:
@@ -33,7 +35,9 @@ class PraiseTagService:
             )
         
         tag = PraiseTag(name=tag_data.name)
-        return self.repository.create(tag)
+        tag = self.repository.create(tag)
+        record_changelog(self.db, "praise_tag", tag.id, "created")
+        return tag
 
     def update(self, tag_id: UUID, tag_data: PraiseTagUpdate) -> PraiseTag:
         tag = self.get_by_id(tag_id)
@@ -47,12 +51,16 @@ class PraiseTagService:
                     detail=f"PraiseTag with name '{tag_data.name}' already exists"
                 )
             tag.name = tag_data.name
-        
-        return self.repository.update(tag)
+
+        tag = self.repository.update(tag)
+        record_changelog(self.db, "praise_tag", tag.id, "updated")
+        return tag
 
     def delete(self, tag_id: UUID) -> bool:
         tag = self.get_by_id(tag_id)
-        return self.repository.delete(tag_id)
+        result = self.repository.delete(tag_id)
+        record_changelog(self.db, "praise_tag", tag_id, "deleted")
+        return result
 
 
 

@@ -11,6 +11,8 @@ from . import snapshots
 from . import audit
 from . import data_protection
 from . import rooms
+from . import metadata
+from . import changelog
 
 __all__ = [
     "auth",
@@ -25,4 +27,6 @@ __all__ = [
     "audit",
     "data_protection",
     "rooms",
+    "metadata",
+    "changelog",
 ]

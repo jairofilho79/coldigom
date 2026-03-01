@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 from app.domain.models.language import Language
 from app.domain.schemas.language import LanguageCreate, LanguageUpdate
 from app.infrastructure.database.repositories.language_repository import LanguageRepository
+from app.application.services.changelog_helper import record_changelog
 
 
 class LanguageService:
     def __init__(self, db: Session):
+        self.db = db
         self.repository = LanguageRepository(db)
 
     def get_by_code(self, code: str) -> Language:
@@ -35,7 +37,9 @@ class LanguageService:
             name=language_data.name,
             is_active=language_data.is_active
         )
-        return self.repository.create(language)
+        language = self.repository.create(language)
+        record_changelog(self.db, "language", language.code, "created")
+        return language
 
     def update(self, code: str, language_data: LanguageUpdate) -> Language:
         language = self.get_by_code(code)
@@ -45,9 +49,13 @@ class LanguageService:
         
         if language_data.is_active is not None:
             language.is_active = language_data.is_active
-        
-        return self.repository.update(language)
+
+        language = self.repository.update(language)
+        record_changelog(self.db, "language", language.code, "updated")
+        return language
 
     def delete(self, code: str) -> bool:
         language = self.get_by_code(code)
-        return self.repository.delete(code)
+        result = self.repository.delete(code)
+        record_changelog(self.db, "language", code, "deleted")
+        return result

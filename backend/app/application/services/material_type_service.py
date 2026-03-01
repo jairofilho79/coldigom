@@ -5,10 +5,12 @@ from fastapi import HTTPException, status
 from app.domain.models.material_type import MaterialType
 from app.domain.schemas.material_type import MaterialTypeCreate, MaterialTypeUpdate
 from app.infrastructure.database.repositories.material_type_repository import MaterialTypeRepository
+from app.application.services.changelog_helper import record_changelog
 
 
 class MaterialTypeService:
     def __init__(self, db: Session):
+        self.db = db
         self.repository = MaterialTypeRepository(db)
 
     def get_by_id(self, type_id: UUID) -> MaterialType:
@@ -33,7 +35,9 @@ class MaterialTypeService:
             )
         
         material_type = MaterialType(name=type_data.name)
-        return self.repository.create(material_type)
+        material_type = self.repository.create(material_type)
+        record_changelog(self.db, "material_type", material_type.id, "created")
+        return material_type
 
     def update(self, type_id: UUID, type_data: MaterialTypeUpdate) -> MaterialType:
         material_type = self.get_by_id(type_id)
@@ -47,9 +51,13 @@ class MaterialTypeService:
                     detail=f"MaterialType with name '{type_data.name}' already exists"
                 )
             material_type.name = type_data.name
-        
-        return self.repository.update(material_type)
+
+        material_type = self.repository.update(material_type)
+        record_changelog(self.db, "material_type", material_type.id, "updated")
+        return material_type
 
     def delete(self, type_id: UUID) -> bool:
         material_type = self.get_by_id(type_id)
-        return self.repository.delete(type_id)
+        result = self.repository.delete(type_id)
+        record_changelog(self.db, "material_type", type_id, "deleted")
+        return result

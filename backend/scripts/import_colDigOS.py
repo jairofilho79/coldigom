@@ -120,23 +120,33 @@ def get_or_create_material_kind(db: Session, name: str) -> MaterialKind:
     return repo.create(material_kind)
 
 
-def get_or_create_praise_tag(db: Session, tag_id: UUID, tag_name: Optional[str] = None) -> PraiseTag:
-    """Obtém ou cria uma PraiseTag"""
+def get_or_create_praise_tag(db: Session, tag_id: UUID, tag_name: Optional[str] = None) -> Optional[PraiseTag]:
+    """Obtém ou cria uma PraiseTag.
+
+    Se a tag não existir no banco e nenhum tag_name for fornecido,
+    retorna None ao invés de criar com nome genérico (UUID).
+    """
     repo = PraiseTagRepository(db)
-    
+
     # Tenta buscar por ID primeiro (usando repositório)
     tag = repo.get_by_id(tag_id)
     if tag:
         return tag
-    
+
     # Se não encontrou por ID e tem nome, busca por nome
     if tag_name:
         tag = repo.get_by_name(tag_name)
         if tag:
             return tag
-    
+
+    # Sem nome fornecido, não criar tag com UUID como nome
+    if not tag_name:
+        print(f"    ⚠️  Tag {tag_id} não encontrada no banco e nenhum nome fornecido. "
+              f"Execute import_seed_data.py primeiro para importar as tags.")
+        return None
+
     # Cria novo se não existir (usa ID fornecido)
-    tag = PraiseTag(id=tag_id, name=tag_name if tag_name else f"Tag {tag_id}")
+    tag = PraiseTag(id=tag_id, name=tag_name)
     return repo.create(tag)
 
 
@@ -263,7 +273,8 @@ def process_praise_folder(
                 try:
                     tag_id = UUID(tag_id_str)
                     tag = get_or_create_praise_tag(db, tag_id)
-                    processed_tag_ids.append(tag.id)
+                    if tag:
+                        processed_tag_ids.append(tag.id)
                 except Exception as e:
                     print(f"    ⚠️  Erro ao processar tag {tag_id_str}: {e}")
             

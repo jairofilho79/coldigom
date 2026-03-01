@@ -185,25 +185,24 @@ def main(praise_tags_csv: str = None, material_kinds_csv: str = None, dry_run: b
     
     try:
         # Default paths se não fornecidos
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        app_root = os.path.dirname(script_dir)  # /app no container Docker
+
         if not praise_tags_csv:
-            # Tenta caminho relativo e absoluto
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            praise_tags_csv = os.path.join(script_dir, '../../../assets2/praise_tags_unique.csv')
-            praise_tags_csv = os.path.normpath(praise_tags_csv)
-            
-            # Se não existir, tenta caminho absoluto fornecido
-            if not os.path.exists(praise_tags_csv):
-                praise_tags_csv = '/Volumes/SSD 2TB SD/assets2/praise_tags_unique.csv'
-        
+            candidates = [
+                os.path.normpath(os.path.join(script_dir, '../../../assets2/praise_tags_unique.csv')),
+                os.path.join(app_root, 'praise_tags_unique.csv'),   # /app/praise_tags_unique.csv
+                '/Volumes/SSD 2TB SD/assets2/praise_tags_unique.csv',
+            ]
+            praise_tags_csv = next((p for p in candidates if os.path.exists(p)), candidates[0])
+
         if not material_kinds_csv:
-            # Tenta caminho relativo e absoluto
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            material_kinds_csv = os.path.join(script_dir, '../../../assets2/material_kinds_unique.csv')
-            material_kinds_csv = os.path.normpath(material_kinds_csv)
-            
-            # Se não existir, tenta caminho absoluto fornecido
-            if not os.path.exists(material_kinds_csv):
-                material_kinds_csv = '/Volumes/SSD 2TB SD/assets2/material_kinds_unique.csv'
+            candidates = [
+                os.path.normpath(os.path.join(script_dir, '../../../assets2/material_kinds_unique.csv')),
+                os.path.join(app_root, 'material_kinds_unique.csv'),  # /app/material_kinds_unique.csv
+                '/Volumes/SSD 2TB SD/assets2/material_kinds_unique.csv',
+            ]
+            material_kinds_csv = next((p for p in candidates if os.path.exists(p)), candidates[0])
         
         print("="*60)
         print("🌱 Importação de Dados Iniciais")

@@ -49,7 +49,7 @@ def list_praise_materials(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "600/minute")
+        apply_rate_limit(request, "3000/minute")
     
     service = PraiseMaterialService(db)
     if praise_id:
@@ -81,7 +81,7 @@ def batch_search_materials(
         is_old: Filtrar por materiais antigos
     """
     if current_user is None:
-        apply_rate_limit(request, "600/minute")
+        apply_rate_limit(request, "3000/minute")
     
     service = PraiseMaterialService(db)
     
@@ -343,7 +343,7 @@ def get_download_url(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "600/minute")
+        apply_rate_limit(request, "3000/minute")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
@@ -382,7 +382,7 @@ def download_material(
     import mimetypes
     
     if current_user is None:
-        apply_rate_limit(request, "600/minute")
+        apply_rate_limit(request, "3000/minute")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)
@@ -487,7 +487,7 @@ def get_praise_material(
     Usuários autenticados têm acesso ilimitado.
     """
     if current_user is None:
-        apply_rate_limit(request, "600/minute")
+        apply_rate_limit(request, "3000/minute")
     
     service = PraiseMaterialService(db)
     material = service.get_by_id(material_id)

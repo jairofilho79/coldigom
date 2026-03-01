@@ -36,7 +36,7 @@ def get_current_version(
 ):
     """Retorna apenas a versão atual do changelog (leve, para polling)."""
     if current_user is None:
-        apply_rate_limit(request, "600/minute")
+        apply_rate_limit(request, "3000/minute")
 
     service = ChangelogService(db)
     return {"current_version": service.get_current_version()}

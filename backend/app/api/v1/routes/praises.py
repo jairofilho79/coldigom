@@ -42,7 +42,7 @@ def list_praises(
     Usuários autenticados têm acesso ilimitado.
     """
     # Aplicar rate limiting (usuários autenticados podem ter limites maiores depois)
-    apply_rate_limit(request, "600/minute")
+    apply_rate_limit(request, "3000/minute")
     
     service = PraiseService(db)
     praises = service.get_all(
@@ -78,7 +78,7 @@ def download_praises_by_material_kind(
     Divide em múltiplos ZIPs quando exceder o tamanho máximo especificado.
     Retorna um ZIP mestre contendo os ZIPs menores.
     """
-    apply_rate_limit(request, "600/minute")
+    apply_rate_limit(request, "3000/minute")
 
     import logging
     from app.core.config import settings
@@ -294,7 +294,7 @@ def download_praise_zip(
     storage: StorageClient = Depends(get_storage)
 ):
     """Baixa um praise completo em formato ZIP com todos os materiais de arquivo"""
-    apply_rate_limit(request, "600/minute")
+    apply_rate_limit(request, "3000/minute")
 
     import logging
     from app.core.config import settings
@@ -508,7 +508,7 @@ def get_praise(
     Usuários autenticados têm acesso ilimitado.
     """
     # Aplicar rate limiting
-    apply_rate_limit(request, "600/minute")
+    apply_rate_limit(request, "3000/minute")
     
     service = PraiseService(db)
     praise = service.get_by_id(praise_id)

@@ -32,7 +32,7 @@ def login(
     """Autentica um usuário e retorna token JWT"""
     from app.domain.schemas.user import UserLogin
 
-    apply_rate_limit(request, "600/minute")
+    apply_rate_limit(request, "3000/minute")
 
     login_data = UserLogin(username=form_data.username, password=form_data.password)
     service = UserService(db)
@@ -47,7 +47,7 @@ def refresh_token(
     db: Session = Depends(get_db)
 ):
     """Renova access token usando refresh token"""
-    apply_rate_limit(request, "600/minute")
+    apply_rate_limit(request, "3000/minute")
     payload = decode_access_token(refresh_token_data.refresh_token)
     
     if not payload or payload.get("type") != "refresh":

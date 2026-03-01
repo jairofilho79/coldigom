@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePraises } from '@/hooks/usePraises';
@@ -15,6 +15,7 @@ export const PraiseList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { getPraiseTagName } = useEntityTranslations();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [searchInLyrics, setSearchInLyrics] = useState(false);
   const [skip, setSkip] = useState(0);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
@@ -22,10 +23,17 @@ export const PraiseList = () => {
   const limit = 20;
   const tagId = searchParams.get('tag_id') || undefined;
 
-  const { data: praises, isLoading, error } = usePraises({
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data: praises, isLoading, isFetching, error } = usePraises({
     skip,
     limit,
-    name: searchTerm || undefined,
+    name: debouncedSearchTerm || undefined,
     tag_id: tagId,
     search_in_lyrics: searchInLyrics || undefined,
     sort_by: sortBy,
@@ -41,23 +49,6 @@ export const PraiseList = () => {
     setSearchParams(newSearchParams);
     setSkip(0);
   };
-
-  if (isLoading && !praises) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loading size="lg" />
-      </div>
-    );
-  }
-
-  // Mostra erro apenas se não houver dados em cache (stale ou não)
-  if (error && !praises) {
-    return (
-      <div className="text-center text-red-600">
-        {t('message.errorLoadingData')}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -147,8 +138,16 @@ export const PraiseList = () => {
         </div>
       </div>
 
-      {praises && praises.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading && !praises ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loading size="lg" />
+        </div>
+      ) : error && !praises ? (
+        <div className="text-center text-red-600">
+          {t('message.errorLoadingData')}
+        </div>
+      ) : praises && praises.length > 0 ? (
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${isFetching ? 'opacity-60' : ''}`}>
           {praises.map((praise) => (
             <PraiseCard key={praise.id} praise={praise} />
           ))}

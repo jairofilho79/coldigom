@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { praisesApi, type GetPraisesParams } from '@/api/praises';
 import { useAuthStore } from '@/store/authStore';
 import type { PraiseCreate, PraiseUpdate, ReviewActionRequest } from '@/types';
@@ -17,6 +17,7 @@ export const usePraises = (params: GetPraisesParams = {}) => {
     queryKey: ['praises', params],
     queryFn: () => praisesApi.getPraises(params),
     enabled: !!token && canFetch,
+    placeholderData: keepPreviousData,
   });
 };
 

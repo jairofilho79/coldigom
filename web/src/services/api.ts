@@ -1,0 +1,59 @@
+import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo } from '../types';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function searchPraises(
+  query: string = '',
+  page: number = 1,
+  limit: number = 20
+): Promise<{ data: Praise[]; pagination: PaginationInfo }> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  if (query) params.set('q', query);
+
+  const response = await fetchJson<ApiResponse<Praise[]>>(
+    `${API_BASE_URL}/api/praises?${params}`
+  );
+  return {
+    data: response.data,
+    pagination: response.pagination!,
+  };
+}
+
+export async function getPraise(id: string): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${id}`
+  );
+  return response.data;
+}
+
+export async function getMaterialKinds(): Promise<MaterialKind[]> {
+  const response = await fetchJson<ApiResponse<MaterialKind[]>>(
+    `${API_BASE_URL}/api/materials/kinds`
+  );
+  return response.data;
+}
+
+export async function getTags(): Promise<Tag[]> {
+  const response = await fetchJson<ApiResponse<Tag[]>>(
+    `${API_BASE_URL}/api/tags`
+  );
+  return response.data;
+}
+
+export function getAssetUrl(r2Key: string): string {
+  // For Cloudflare R2, you would typically use a custom domain or Workers function
+  // This returns the R2 public URL pattern
+  return `${API_BASE_URL}/assets/${r2Key}`;
+}

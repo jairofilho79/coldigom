@@ -1,4 +1,5 @@
 name = "coldigom-api"
+account_id = "ae6f9337c75828a1c114e9ec10119d0f"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 node_compat = true
@@ -7,7 +8,7 @@ node_compat = true
 [[d1_databases]]
 binding = "DB"              # Variable name in code (c.env.DB)
 database_name = "coldigom" # Name in Cloudflare dashboard
-database_id = "YOUR_D1_DATABASE_ID"  # Get from: wrangler d1 create coldigom
+database_id = "975818ec-73e0-40ca-b110-be9204e13d91"  # Created D1 database
 
 # R2 Bucket binding
 [[r2_buckets]]

@@ -32,5 +32,8 @@ storage/
 .wrangler/
 .dev.vars
 
+# Cloudflare wrangler config (contains credentials - use wrangler.toml.example)
+api/wrangler.toml
+
 # Vite
 web/dist/

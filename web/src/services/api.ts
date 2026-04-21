@@ -53,7 +53,7 @@ export async function getTags(): Promise<Tag[]> {
 }
 
 export function getAssetUrl(r2Key: string): string {
-  // For Cloudflare R2, you would typically use a custom domain or Workers function
-  // This returns the R2 public URL pattern
-  return `${API_BASE_URL}/assets/${r2Key}`;
+  // r2Key already contains the full path starting with assets/
+  // Example: assets/praises/228bf66e-3723-41f1-98ae-9d3a49d3d615/fd1ccc3a-03e3-450e-9d0c-4706bfe56f4c.pdf
+  return `${API_BASE_URL}/${r2Key}`;
 }

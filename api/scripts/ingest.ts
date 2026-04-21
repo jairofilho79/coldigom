@@ -32,9 +32,11 @@ const R2_CONFIG = {
 interface PraiseMaterial {
   praise_material_id: string;
   material_kind: string;
-  type: string;
+  type?: string;
+  material_type?: string;
   file_path_legacy: string;
   source_material_id?: string;
+  url?: string;
 }
 
 interface Metadata {
@@ -47,7 +49,8 @@ interface Metadata {
   praise_category: string;
   praise_lyrics: string;
   praise_tags: string[];
-  praise_materiais: PraiseMaterial[];
+  praise_materiais?: PraiseMaterial[];
+  praise_materials?: PraiseMaterial[];
 }
 
 // SQL statements to generate
@@ -70,7 +73,22 @@ function escapeSql(value: unknown): string {
 function parseMetadata(filePath: string): Metadata | null {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    return yaml.load(content) as Metadata;
+    if (!content.trim()) {
+      // Empty metadata.yml — skip silently
+      return null;
+    }
+    const data = yaml.load(content) as Metadata;
+    if (!data) return null;
+
+    // Normalize material_type → type for each material
+    const materials = data.praise_materiais || data.praise_materials || [];
+    for (const mat of materials) {
+      if (mat.material_type && !mat.type) {
+        mat.type = mat.material_type;
+      }
+    }
+
+    return data;
   } catch (error) {
     console.error(`Error parsing ${filePath}:`, error);
     return null;
@@ -98,18 +116,19 @@ function generatePraiseInsert(metadata: Metadata): string {
 /**
  * Generate SQL INSERT for a material
  */
-function generateMaterialInsert(praiseId: string, material: PraiseMaterial, r2Key: string): string {
+function generateMaterialInsert(praiseId: string, material: PraiseMaterial, r2Key: string | null): string {
   const values = [
     escapeSql(material.praise_material_id),
     escapeSql(praiseId),
     escapeSql(material.material_kind),
-    escapeSql(material.type),
+    escapeSql(material.type || 'unknown'),
     escapeSql(r2Key),
     escapeSql(material.file_path_legacy),
     escapeSql(material.source_material_id || null),
+    escapeSql(material.url || null),
   ];
   
-  return `INSERT INTO materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id) VALUES (${values.join(', ')});`;
+  return `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url) VALUES (${values.join(', ')});`;
 }
 
 /**
@@ -151,10 +170,12 @@ function processPraiseDirectory(praiseDir: string): void {
     sqlStatements.push(...generatePraiseTagInserts(metadata.praise_id, metadata.praise_tags));
   }
   
-  // Generate material inserts
-  if (metadata.praise_materiais && metadata.praise_materiais.length > 0) {
-    for (const material of metadata.praise_materiais) {
-      const r2Key = generateR2Key(metadata.praise_id, material);
+  // Generate material inserts (handle both legacy and correct spellings)
+  const materials = metadata.praise_materiais || metadata.praise_materials || [];
+  if (materials.length > 0) {
+    for (const material of materials) {
+      // When url is present, r2_key is NULL (no local file to upload)
+      const r2Key = material.url ? null : generateR2Key(metadata.praise_id, material);
       sqlStatements.push(generateMaterialInsert(metadata.praise_id, material, r2Key));
     }
   }

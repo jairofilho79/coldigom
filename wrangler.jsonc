@@ -5,10 +5,11 @@
   "observability": {
     "enabled": true
   },
-  "assets": {
-    "directory": "web"
+  "vars": {
+    "VITE_API_URL": "https://coldigom-api.coletaneadigitalicm.workers.dev"
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "pages_build_output_dir": "web/dist"
 }

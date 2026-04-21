@@ -134,7 +134,7 @@ function generateSQL(): string {
       const matId = generateUUID();
       const kind = selectedKinds[i];
       const type = materialTypes[i % materialTypes.length];
-      statements.push(`INSERT INTO materials (id, praise_id, material_kind, type, r2_key) VALUES ('${matId}', '${id}', '${kind.id}', '${escapeSQLValue(type)}', 'praises/${escapeSQLValue(praise.number)}_${escapeSQLValue(praise.name.toLowerCase().replace(/ /g, '_'))}/${escapeSQLValue(type)}');`);
+      statements.push(`INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key) VALUES ('${matId}', '${id}', '${kind.id}', '${escapeSQLValue(type)}', 'praises/${escapeSQLValue(praise.number)}_${escapeSQLValue(praise.name.toLowerCase().replace(/ /g, '_'))}/${escapeSQLValue(type)}');`);
     }
   }
 

@@ -16,16 +16,17 @@ CREATE TABLE IF NOT EXISTS praises (
     updated_at TEXT DEFAULT (datetime('now'))
 );
 
--- Table: materials (Arquivos)
+-- Table: praise_materials (Arquivos)
 -- Stores file references for each praise
-CREATE TABLE IF NOT EXISTS materials (
+CREATE TABLE IF NOT EXISTS praise_materials (
     id TEXT PRIMARY KEY,           -- UUID, PK
     praise_id TEXT NOT NULL,       -- FK to praises.id
-    material_kind TEXT NOT NULL,   -- UUID ref to material_kinds
-    type TEXT NOT NULL,            -- mp3, pdf, chord
-    r2_key TEXT NOT NULL,          -- Path in R2 bucket
+    material_kind TEXT NOT NULL,   -- UUID ref to material_kinds.id
+    type TEXT NOT NULL,            -- pdf, mp3, chord, gestures
+    r2_key TEXT,                   -- Path in R2 bucket (NULL when url is present)
     file_path_legacy TEXT,         -- Legacy file path
-    source_material_id TEXT,       -- For derivative materials
+    source_material_id TEXT,       -- For derivative materials (auto-relationship, no FK constraint)
+    url TEXT,                      -- External link (YouTube, Google Drive, Spotify, etc.)
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
 );
@@ -55,8 +56,9 @@ CREATE TABLE IF NOT EXISTS material_kinds (
 );
 
 -- Indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_materials_praise_id ON materials(praise_id);
-CREATE INDEX IF NOT EXISTS idx_materials_material_kind ON materials(material_kind);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_praise_id ON praise_materials(praise_id);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_material_kind ON praise_materials(material_kind);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_source_material_id ON praise_materials(source_material_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_praise_id ON praise_tags(praise_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);

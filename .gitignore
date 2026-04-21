@@ -38,6 +38,15 @@ api/wrangler.toml
 # Vite
 web/dist/
 
+# Local R2 assets (uploaded separately to Cloudflare R2)
+api/assets/
+
+# Alternative ingestion files
+ingestion_no_tx.sql
+
+# Kilo CLI internal files
+.kilo/
+
 .dev.vars*
 !.dev.vars.example
 !.env.example

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { SortField } from '../types';
 
@@ -27,7 +27,7 @@ export function useFilters() {
     return defaultValue;
   };
 
-  const filters: FilterState = {
+  const filters = useMemo<FilterState>(() => ({
     query: getParam('q', ''),
     tags: getParam('tags', []),
     rhythm: getParam('rhythm', []),
@@ -38,7 +38,7 @@ export function useFilters() {
     sort: getParam('sort', 'number') as SortField,
     order: getParam('order', 'asc'),
     page: getParam('page', 1),
-  };
+  }), [searchParams]);
 
   const setFilters = useCallback((updates: Partial<FilterState>) => {
     setSearchParams(prev => {

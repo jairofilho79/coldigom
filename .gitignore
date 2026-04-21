@@ -37,3 +37,7 @@ api/wrangler.toml
 
 # Vite
 web/dist/
+
+.dev.vars*
+!.dev.vars.example
+!.env.example

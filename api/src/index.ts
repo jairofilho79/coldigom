@@ -123,8 +123,8 @@ app.get('/api/praises/:id', async (c) => {
     // Fetch materials for this praise
     const materialsQuery = `
       SELECT 
-        id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id
-      FROM materials
+        id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url
+      FROM praise_materials
       WHERE praise_id = ?
     `;
     const materialsResult = await c.env.DB.prepare(materialsQuery).bind(id).all();
@@ -191,6 +191,33 @@ app.get('/api/tags', async (c) => {
     console.error('Error fetching tags:', error);
     return c.json({ error: 'Failed to fetch tags' }, 500);
   }
+});
+
+// GET /assets/* - Serve files from R2
+app.get('/assets/*', async (c) => {
+  const r2Key = c.req.path.replace('/assets/', 'storage/');
+  
+  const object = await c.env.ASSETS.get(r2Key);
+  
+  if (!object) {
+    return c.json({ error: 'File not found' }, 404);
+  }
+  
+  const ext = r2Key.split('.').pop()?.toLowerCase();
+  const contentTypes: Record<string, string> = {
+    pdf: 'application/pdf',
+    mp3: 'audio/mpeg',
+    mid: 'audio/midi',
+    midi: 'audio/midi',
+    chord: 'text/plain',
+  };
+  
+  const contentType = contentTypes[ext || ''] || 'application/octet-stream';
+  
+  c.header('Content-Type', contentType);
+  c.header('Content-Disposition', `inline; filename="${r2Key.split('/').pop()}"`);
+  
+  return c.body(object.body);
 });
 
 // Health check endpoint

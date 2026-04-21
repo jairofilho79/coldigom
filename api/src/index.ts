@@ -315,7 +315,7 @@ app.get('/api/tags', async (c) => {
 
 // GET /assets/* - Serve files from R2
 app.get('/assets/*', async (c) => {
-  const r2Key = c.req.path.replace('/assets/', 'storage/');
+  const r2Key = c.req.path.replace(/^\/assets\//, 'storage/assets/');
   
   const object = await c.env.ASSETS.get(r2Key);
   

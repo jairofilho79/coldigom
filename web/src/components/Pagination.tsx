@@ -20,38 +20,42 @@ export function Pagination({ pagination, onPageChange }: PaginationProps) {
   }
 
   return (
-    <div className="pagination">
+    <nav className="pagination" aria-label="Paginação">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="pagination-button"
+        className="pagination-btn"
+        aria-label="Página anterior"
       >
-        Anterior
+        ←
       </button>
-      
+
       {items.map((item, idx) =>
         item === '...' ? (
-          <span key={`ellipsis-${idx}`} className="pagination-ellipsis">
-            ...
+          <span key={`ellipsis-${idx}`} className="pagination-ellipsis" aria-hidden="true">
+            …
           </span>
         ) : (
           <button
             key={item}
             onClick={() => onPageChange(item)}
-            className={`pagination-button ${item === page ? 'active' : ''}`}
+            className={`pagination-btn ${item === page ? 'active' : ''}`}
+            aria-label={`Página ${item}`}
+            aria-current={item === page ? 'page' : undefined}
           >
             {item}
           </button>
         )
       )}
-      
+
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        className="pagination-button"
+        className="pagination-btn"
+        aria-label="Próxima página"
       >
-        Próximo
+        →
       </button>
-    </div>
+    </nav>
   );
 }

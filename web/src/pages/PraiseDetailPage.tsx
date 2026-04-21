@@ -23,51 +23,116 @@ export function PraiseDetailPage() {
         setLoading(false);
       }
     };
-    
+
     fetchPraise();
   }, [id]);
 
-  if (loading) return <div className="loading">Carregando...</div>;
-  if (error) return <div className="error">{error}</div>;
-  if (!praise) return <div className="error">Louvor não encontrado</div>;
+  if (loading) {
+    return (
+      <div className="page-container detail-page">
+        <div className="loading-state">
+          <div className="loading-spinner" />
+          <div className="loading-text">Carregando louvor...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container detail-page">
+        <div className="error-state">
+          <div className="error-state-icon">⚠</div>
+          <div className="error-state-title">Erro ao carregar</div>
+          <div className="error-state-desc">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!praise) {
+    return (
+      <div className="page-container detail-page">
+        <div className="no-results">
+          <div className="no-results-icon">📖</div>
+          <div className="no-results-title">Louvor não encontrado</div>
+        </div>
+      </div>
+    );
+  }
 
   const audioMaterials = praise.materials.filter(m => m.type === 'mp3');
   const pdfMaterials = praise.materials.filter(m => m.type === 'pdf');
   const chordMaterials = praise.materials.filter(m => m.type === 'chord');
 
   return (
-    <div className="praise-detail-page">
-      <Link to="/" className="back-link">← Voltar para lista</Link>
-      
-      <header className="praise-header">
-        <h1>{praise.name}</h1>
-        <div className="praise-meta">
-          {praise.number && <span className="meta-item">Nº {praise.number}</span>}
-          {praise.author && <span className="meta-item">Autor: {praise.author}</span>}
-          {praise.rhythm && <span className="meta-item">Ritmo: {praise.rhythm}</span>}
-          {praise.tonality && <span className="meta-item">Tom: {praise.tonality}</span>}
-          {praise.category && <span className="meta-item">Categoria: {praise.category}</span>}
+    <div className="page-container detail-page">
+      <Link to="/" className="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        Voltar para lista
+      </Link>
+
+      <header className="detail-header animate-fade-in-scale">
+        {praise.number && (
+          <div className="detail-number">Nº {praise.number}</div>
+        )}
+        <h1 className="detail-title">{praise.name}</h1>
+
+        <div className="detail-meta-row">
+          {praise.author && (
+            <div className="detail-meta-item">
+              <span className="label">Autor</span>
+              <span className="value">{praise.author}</span>
+            </div>
+          )}
+          {praise.rhythm && (
+            <div className="detail-meta-item">
+              <span className="label">Ritmo</span>
+              <span className="value">{praise.rhythm}</span>
+            </div>
+          )}
+          {praise.tonality && (
+            <div className="detail-meta-item">
+              <span className="label">Tom</span>
+              <span className="value">{praise.tonality}</span>
+            </div>
+          )}
+          {praise.category && (
+            <div className="detail-meta-item">
+              <span className="label">Categoria</span>
+              <span className="value">{praise.category}</span>
+            </div>
+          )}
         </div>
+
         {praise.tags && praise.tags.length > 0 && (
-          <div className="praise-tags">
+          <div className="detail-tags">
             {praise.tags.map(tag => (
-              <span key={tag.id} className="tag">{tag.name}</span>
+              <span key={tag.id} className="detail-tag">{tag.name}</span>
             ))}
           </div>
         )}
       </header>
 
       {praise.lyrics && (
-        <section className="lyrics-section">
-          <h2>Letra</h2>
-          <pre className="lyrics">{praise.lyrics}</pre>
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">📝</span>
+            Letra
+          </h2>
+          <pre className="lyrics-content">{praise.lyrics}</pre>
         </section>
       )}
 
       {audioMaterials.length > 0 && (
-        <section className="materials-section">
-          <h2>Áudios</h2>
-          <div className="audio-player-container">
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">🎵</span>
+            Áudio
+          </h2>
+          <div className="audio-player-wrapper">
             <audio controls className="audio-player" key={audioMaterials[0].id}>
               <source src={getAssetUrl(audioMaterials[0].r2_key)} type="audio/mpeg" />
               Seu navegador não suporta o elemento de áudio.
@@ -91,18 +156,25 @@ export function PraiseDetailPage() {
       )}
 
       {pdfMaterials.length > 0 && (
-        <section className="materials-section">
-          <h2>Partituras (PDF)</h2>
-          <div className="pdf-list">
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">📄</span>
+            Partituras
+          </h2>
+          <div className="material-grid">
             {pdfMaterials.map(m => (
-              <a 
-                key={m.id} 
-                href={getAssetUrl(m.r2_key)} 
-                target="_blank" 
+              <a
+                key={m.id}
+                href={getAssetUrl(m.r2_key)}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="pdf-link"
+                className="material-link"
               >
-                📄 {m.material_kind_name || 'Partitura'}
+                <span className="material-link-icon">📄</span>
+                <div>
+                  <div className="material-link-text">{m.material_kind_name || 'Partitura'}</div>
+                  <div className="material-link-meta">PDF</div>
+                </div>
               </a>
             ))}
           </div>
@@ -110,18 +182,25 @@ export function PraiseDetailPage() {
       )}
 
       {chordMaterials.length > 0 && (
-        <section className="materials-section">
-          <h2>Acordes</h2>
-          <div className="pdf-list">
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">🎸</span>
+            Acordes
+          </h2>
+          <div className="material-grid">
             {chordMaterials.map(m => (
-              <a 
-                key={m.id} 
-                href={getAssetUrl(m.r2_key)} 
-                target="_blank" 
+              <a
+                key={m.id}
+                href={getAssetUrl(m.r2_key)}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="pdf-link"
+                className="material-link"
               >
-                🎵 {m.material_kind_name || 'Acordes'}
+                <span className="material-link-icon">🎸</span>
+                <div>
+                  <div className="material-link-text">{m.material_kind_name || 'Acordes'}</div>
+                  <div className="material-link-meta">Arquivo de acordes</div>
+                </div>
               </a>
             ))}
           </div>

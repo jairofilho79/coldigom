@@ -23,6 +23,61 @@ const app = new Hono<{ Bindings: Env }>();
 // Enable CORS for all routes
 app.use('/*', cors());
 
+const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;
+type SortField = typeof VALID_SORT_FIELDS[number];
+
+function buildWhereClause(params: {
+  search?: string;
+  tags?: string[];
+  rhythm?: string[];
+  tonality?: string[];
+  category?: string[];
+  numberMin?: number;
+  numberMax?: number;
+}): { clause: string; bindings: (string | number)[] } {
+  const conditions: string[] = [];
+  const bindings: (string | number)[] = [];
+
+  if (params.search) {
+    conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ?)`);
+    const pattern = `%${params.search}%`;
+    bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
+  }
+
+  if (params.tags && params.tags.length > 0) {
+    conditions.push(`pt.tag_id IN (${params.tags.map(() => '?').join(',')})`);
+    bindings.push(...params.tags);
+  }
+
+  if (params.rhythm && params.rhythm.length > 0) {
+    conditions.push(`p.rhythm IN (${params.rhythm.map(() => '?').join(',')})`);
+    bindings.push(...params.rhythm);
+  }
+
+  if (params.tonality && params.tonality.length > 0) {
+    conditions.push(`p.tonality IN (${params.tonality.map(() => '?').join(',')})`);
+    bindings.push(...params.tonality);
+  }
+
+  if (params.category && params.category.length > 0) {
+    conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
+    bindings.push(...params.category);
+  }
+
+  if (params.numberMin !== undefined) {
+    conditions.push(`CAST(p.number AS INTEGER) >= ?`);
+    bindings.push(params.numberMin);
+  }
+
+  if (params.numberMax !== undefined) {
+    conditions.push(`CAST(p.number AS INTEGER) <= ?`);
+    bindings.push(params.numberMax);
+  }
+
+  const clause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  return { clause, bindings };
+}
+
 // GET /api/praises - List all praises with optional search
 app.get('/api/praises', async (c) => {
   const search = c.req.query('q') || '';
@@ -30,25 +85,54 @@ app.get('/api/praises', async (c) => {
   const limit = parseInt(c.req.query('limit') || '20', 10);
   const offset = (page - 1) * limit;
 
-  try {
-    let query: string;
-    let bindings: (string | number)[];
+  const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
+  const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
+  const tonality = c.req.query('tonality') ? c.req.query('tonality')!.split(',').filter(Boolean) : undefined;
+  const category = c.req.query('category') ? c.req.query('category')!.split(',').filter(Boolean) : undefined;
+  const numberMin = c.req.query('numberMin') ? parseInt(c.req.query('numberMin')!, 10) : undefined;
+  const numberMax = c.req.query('numberMax') ? parseInt(c.req.query('numberMax')!, 10) : undefined;
 
-    if (search) {
-      // Search in name and lyrics fields
+  const sortParam = c.req.query('sort') as SortField | undefined;
+  const sort = VALID_SORT_FIELDS.includes(sortParam!) ? sortParam! : 'number';
+  const order = c.req.query('order')?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+
+  try {
+    const { clause: whereClause, bindings: whereBindings } = buildWhereClause({
+      search: search || undefined,
+      tags,
+      rhythm,
+      tonality,
+      category,
+      numberMin,
+      numberMax,
+    });
+
+    const hasTagFilter = tags && tags.length > 0;
+    const joinClause = hasTagFilter ? 'INNER JOIN praise_tags pt ON p.id = pt.praise_id' : 'LEFT JOIN praise_tags pt ON p.id = pt.praise_id';
+    const groupClause = hasTagFilter ? 'GROUP BY p.id HAVING COUNT(DISTINCT pt.tag_id) = ?' : 'GROUP BY p.id';
+
+    let query: string;
+    const bindings: (string | number)[] = [...whereBindings];
+
+    if (hasTagFilter) {
+      bindings.push(tags!.length);
+    }
+
+    const orderClause = sort === 'created_at' ? `ORDER BY p.created_at ${order}` : `ORDER BY p.${sort} ${order} COLLATE NOCASE`;
+
+    if (whereClause || hasTagFilter) {
       query = `
         SELECT 
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
           GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids
         FROM praises p
-        LEFT JOIN praise_tags pt ON p.id = pt.praise_id
-        WHERE p.name LIKE ? OR p.lyrics LIKE ?
-        GROUP BY p.id
-        ORDER BY p.number ASC
+        ${joinClause}
+        ${whereClause}
+        ${groupClause}
+        ${orderClause}
         LIMIT ? OFFSET ?
       `;
-      const searchPattern = `%${search}%`;
-      bindings = [searchPattern, searchPattern, limit, offset];
+      bindings.push(limit, offset);
     } else {
       query = `
         SELECT 
@@ -57,30 +141,34 @@ app.get('/api/praises', async (c) => {
         FROM praises p
         LEFT JOIN praise_tags pt ON p.id = pt.praise_id
         GROUP BY p.id
-        ORDER BY p.number ASC
+        ${orderClause}
         LIMIT ? OFFSET ?
       `;
-      bindings = [limit, offset];
+      bindings.push(limit, offset);
     }
 
     const result = await c.env.DB.prepare(query).bind(...bindings).all();
-    
-    // Get total count for pagination
+
     let countQuery: string;
-    let countBindings: string[];
-    
-    if (search) {
+    let countBindings: (string | number)[] = [...whereBindings];
+
+    if (hasTagFilter) {
       countQuery = `
-        SELECT COUNT(*) as total FROM praises 
-        WHERE name LIKE ? OR lyrics LIKE ?
+        SELECT COUNT(*) as total FROM (
+          SELECT p.id FROM praises p
+          ${joinClause}
+          ${whereClause}
+          ${groupClause}
+        )
       `;
-      const searchPattern = `%${search}%`;
-      countBindings = [searchPattern, searchPattern];
+      countBindings.push(tags!.length);
+    } else if (whereClause) {
+      countQuery = `SELECT COUNT(*) as total FROM praises p ${whereClause}`;
     } else {
       countQuery = `SELECT COUNT(*) as total FROM praises`;
       countBindings = [];
     }
-    
+
     const countResult = await c.env.DB.prepare(countQuery).bind(...countBindings).first();
     const total = (countResult?.total as number) || 0;
 
@@ -96,6 +184,38 @@ app.get('/api/praises', async (c) => {
   } catch (error) {
     console.error('Error fetching praises:', error);
     return c.json({ error: 'Failed to fetch praises' }, 500);
+  }
+});
+
+// GET /api/praises/filters - Get filter options
+app.get('/api/praises/filters', async (c) => {
+  try {
+    const [rhythmsResult, tonalitiesResult, categoriesResult, tagsResult] = await Promise.all([
+      c.env.DB.prepare(`SELECT DISTINCT rhythm FROM praises WHERE rhythm IS NOT NULL AND rhythm != '' ORDER BY rhythm`).all(),
+      c.env.DB.prepare(`SELECT DISTINCT tonality FROM praises WHERE tonality IS NOT NULL AND tonality != '' ORDER BY tonality`).all(),
+      c.env.DB.prepare(`SELECT DISTINCT category FROM praises WHERE category IS NOT NULL AND category != '' ORDER BY category`).all(),
+      c.env.DB.prepare(`
+        SELECT t.id, t.name, COUNT(pt.praise_id) as count 
+        FROM tags t 
+        LEFT JOIN praise_tags pt ON t.id = pt.tag_id 
+        GROUP BY t.id 
+        ORDER BY t.name
+      `).all(),
+    ]);
+
+    return c.json({
+      rhythms: (rhythmsResult.results as { rhythm: string }[]).map(r => r.rhythm),
+      tonalities: (tonalitiesResult.results as { tonality: string }[]).map(r => r.tonality),
+      categories: (categoriesResult.results as { category: string }[]).map(r => r.category),
+      tags: (tagsResult.results as { id: string; name: string; count: number }[]).map(r => ({
+        id: r.id,
+        name: r.name,
+        count: r.count,
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching filters:', error);
+    return c.json({ error: 'Failed to fetch filters' }, 500);
   }
 });
 

@@ -1,0 +1,285 @@
+/* ==========================================================================
+   COLDIGOM DESIGN SYSTEM
+   Archival Editorial Aesthetic — Warm, refined, distinctive
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   TOKENS: Colors
+   -------------------------------------------------------------------------- */
+:root {
+  /* Primary: Deep warm indigo — authority, archive, sacred */
+  --c-primary-50:  #f4f3ff;
+  --c-primary-100: #ebe9fe;
+  --c-primary-200: #d9d6fe;
+  --c-primary-300: #bbb4fd;
+  --c-primary-400: #978afb;
+  --c-primary-500: #735bf7;
+  --c-primary-600: #5d3aed;
+  --c-primary-700: #4e28d9;
+  --c-primary-800: #4121b5;
+  --c-primary-900: #361d94;
+  --c-primary-950: #221065;
+
+  /* Accent: Warm amber/gold — hymnals, aged paper, tradition */
+  --c-accent-50:  #fbf8f1;
+  --c-accent-100: #f5eede;
+  --c-accent-200: #eadaba;
+  --c-accent-300: #dec08e;
+  --c-accent-400: #d0a265;
+  --c-accent-500: #c9a96e;
+  --c-accent-600: #b08a4a;
+  --c-accent-700: #8f6e3c;
+  --c-accent-800: #765a36;
+  --c-accent-900: #654b31;
+  --c-accent-950: #3a2718;
+
+  /* Neutral: Warm slate — archival paper, wood, stone */
+  --c-neutral-0:   #ffffff;
+  --c-neutral-50:  #fafaf9;
+  --c-neutral-100: #f5f5f4;
+  --c-neutral-200: #e7e5e4;
+  --c-neutral-300: #d6d3d1;
+  --c-neutral-400: #a8a29e;
+  --c-neutral-500: #78716c;
+  --c-neutral-600: #57534e;
+  --c-neutral-700: #44403c;
+  --c-neutral-800: #292524;
+  --c-neutral-900: #1c1917;
+  --c-neutral-950: #0c0a09;
+
+  /* Semantic */
+  --c-success: #2d7d46;
+  --c-success-bg: #ecfdf3;
+  --c-warning: #b45309;
+  --c-warning-bg: #fffbeb;
+  --c-error: #b91c1c;
+  --c-error-bg: #fef2f2;
+  --c-info: #1d4ed8;
+  --c-info-bg: #eff6ff;
+
+  /* Surface: Dark mode first with warm undertones */
+  --bg-base: #0f0e13;
+  --bg-elevated: #17161f;
+  --bg-surface: #1e1d28;
+  --bg-surface-hover: #252431;
+  --bg-inset: #0a090e;
+
+  --text-primary: #f5f0e8;
+  --text-secondary: #a89f91;
+  --text-tertiary: #6b6459;
+  --text-inverse: #1c1917;
+
+  --border-subtle: rgba(245, 240, 232, 0.06);
+  --border-default: rgba(245, 240, 232, 0.1);
+  --border-strong: rgba(245, 240, 232, 0.16);
+  --border-accent: rgba(201, 169, 110, 0.3);
+
+  /* ------------------------------------------------------------------------
+     TOKENS: Typography
+     ------------------------------------------------------------------------ */
+  --font-display: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+  --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Source Code Pro', 'SF Mono', Monaco, monospace;
+
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px */
+
+  --leading-none:    1;
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  --weight-light:   300;
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold:600;
+  --weight-bold:    700;
+
+  /* ------------------------------------------------------------------------
+     TOKENS: Spacing (4px base)
+     ------------------------------------------------------------------------ */
+  --space-0:  0;
+  --space-1:  0.25rem;   /* 4px */
+  --space-2:  0.5rem;    /* 8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  /* ------------------------------------------------------------------------
+     TOKENS: Elevation & Shadows
+     ------------------------------------------------------------------------ */
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.2);
+  --shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl:  0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(201, 169, 110, 0.08);
+  --shadow-glow-strong: 0 0 30px rgba(201, 169, 110, 0.15);
+
+  /* ------------------------------------------------------------------------
+     TOKENS: Radii
+     ------------------------------------------------------------------------ */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* ------------------------------------------------------------------------
+     TOKENS: Transitions
+     ------------------------------------------------------------------------ */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  /* ------------------------------------------------------------------------
+     TOKENS: Layout
+     ------------------------------------------------------------------------ */
+  --max-content: 1280px;
+  --header-height: 72px;
+}
+
+/* --------------------------------------------------------------------------
+   RESET & BASE
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+  min-height: 100vh;
+}
+
+/* Selection */
+::selection {
+  background: rgba(201, 169, 110, 0.25);
+  color: var(--text-primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-inset);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-neutral-700);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--c-neutral-600);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--c-accent-500);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   TYPOGRAPHY UTILITIES
+   -------------------------------------------------------------------------- */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-body {
+  font-family: var(--font-body);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* --------------------------------------------------------------------------
+   ANIMATIONS
+   -------------------------------------------------------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out) forwards;
+}
+.animate-fade-in-up {
+  animation: fadeInUp var(--duration-normal) var(--ease-out) forwards;
+}
+.animate-fade-in-scale {
+  animation: fadeInScale var(--duration-slow) var(--ease-out) forwards;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp var(--duration-normal) var(--ease-out) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 320ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 360ms; }

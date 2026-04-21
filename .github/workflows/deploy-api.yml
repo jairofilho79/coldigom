@@ -26,8 +26,12 @@ jobs:
         working-directory: ./api
         run: npm ci
 
+      - name: Install Wrangler
+        working-directory: ./api
+        run: npm install wrangler@latest
+
       - name: Deploy Worker
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: api

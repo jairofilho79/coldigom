@@ -38,4 +38,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ae6f9337c75828a1c114e9ec10119d0f
           workingDirectory: ./web
-          command: pages deploy dist --project-name=coldigom
+          command: pages deploy dist --project-name=coldigom-web

@@ -16,7 +16,13 @@
     "ingest": "tsx scripts/ingest.ts",
     "ingest:execute": "tsx scripts/ingest.ts --execute"
   },
-  "keywords": ["cloudflare", "worker", "hono", "d1", "r2"],
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "hono",
+    "d1",
+    "r2"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -26,7 +32,7 @@
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.84.1"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

@@ -3,7 +3,9 @@
     "wrangler": "^4.84.0"
   },
   "scripts": {
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
+    "dev:api": "cd api && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "build:api": "cd api && npm run build",
+    "build:web": "cd web && npm run build"
   }
 }

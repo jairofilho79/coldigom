@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { HomePage } from '../pages/HomePage';
 import { MemoryRouter } from 'react-router-dom';
 import type { Praise, PaginationInfo } from '../types';
@@ -14,22 +14,21 @@ vi.mock('../services/api', () => ({
 const mockSetFilters = vi.fn();
 const mockToggleTag = vi.fn();
 const mockClearAllFilters = vi.fn();
-const stableFilters = {
-  query: '',
-  tags: [] as string[],
-  rhythm: [] as string[],
-  tonality: [] as string[],
-  category: [] as string[],
-  numberMin: undefined as number | undefined,
-  numberMax: undefined as number | undefined,
-  sort: 'number' as const,
-  order: 'asc' as const,
-  page: 1,
-};
 
 vi.mock('../hooks/useFilters', () => ({
   useFilters: () => ({
-    filters: stableFilters,
+    filters: {
+      query: '',
+      tags: [],
+      rhythm: [],
+      tonality: [],
+      category: [],
+      numberMin: undefined,
+      numberMax: undefined,
+      sort: 'number',
+      order: 'asc',
+      page: 1,
+    },
     setFilters: mockSetFilters,
     toggleTag: mockToggleTag,
     clearAllFilters: mockClearAllFilters,
@@ -90,53 +89,47 @@ describe('HomePage Component', () => {
   });
 
   it('should render brand header', async () => {
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText('Coldigom')).toBeTruthy();
     expect(screen.getByText('Coletânea Digital de Objetos Musicais')).toBeTruthy();
   });
 
   it('should render search bar', async () => {
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByPlaceholderText(/buscar por nome, letra, autor/i)).toBeTruthy();
   });
 
   it('should render results count', async () => {
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
-    expect(screen.getByText('resultados encontrados')).toBeTruthy();
-    expect(screen.getByText('2')).toBeTruthy();
+      const count = document.querySelector('.results-count');
+      expect(count?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(
+        /^2\s+resultados encontrados$/i
+      );
     });
   });
 
   it('should render praise list', async () => {
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Grande Deus')).toBeTruthy();
@@ -149,13 +142,11 @@ describe('HomePage Component', () => {
       () => new Promise(() => {})
     );
 
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText(/buscando louvores/i)).toBeTruthy();
   });
@@ -163,13 +154,11 @@ describe('HomePage Component', () => {
   it('should show error state on API error', async () => {
     (searchPraises as any).mockRejectedValue(new Error('API Error'));
 
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/erro ao carregar/i)).toBeTruthy();
@@ -182,13 +171,11 @@ describe('HomePage Component', () => {
       pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
     });
 
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/nenhum louvor encontrado/i)).toBeTruthy();
@@ -196,13 +183,11 @@ describe('HomePage Component', () => {
   });
 
   it('should call searchPraises with filters', async () => {
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(searchPraises).toHaveBeenCalledWith(
@@ -226,13 +211,11 @@ describe('HomePage Component', () => {
       pagination: { page: 1, limit: 1, total: 2, totalPages: 2 },
     });
 
-    await act(async () => {
-      render(
-        <MemoryRouter>
-          <HomePage />
-        </MemoryRouter>
-      );
-    });
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       const nextButton = screen.queryByLabelText(/próxima página/i);

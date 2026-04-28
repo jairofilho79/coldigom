@@ -38,7 +38,9 @@ describe('SearchBar Component', () => {
     const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
     fireEvent.change(input, { target: { value: 'test query' } });
     
-    fireEvent.submit(input.closest('form')!);
+    const form = input.closest('form');
+    expect(form).toBeTruthy();
+    fireEvent.submit(form!);
     
     expect(mockOnSearch).toHaveBeenCalledWith('test query');
   });

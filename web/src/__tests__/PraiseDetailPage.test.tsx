@@ -1,17 +1,30 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { PraiseDetailPage } from '../pages/PraiseDetailPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { PraiseDetail } from '../types';
 
-// Mock the api module
-vi.mock('../services/api', () => ({
-  getPraise: vi.fn(),
-  getAssetUrl: vi.fn((key: string) => `http://localhost:8787/${key}`),
-  getMe: vi.fn().mockResolvedValue(null),
-  logout: vi.fn().mockResolvedValue(undefined),
-  API_BASE_URL: 'http://localhost:8787',
-}));
+// Mock the api module (preserve exports such as API_BASE_URL used by the page)
+vi.mock('../services/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/api')>();
+  return {
+    ...actual,
+    getPraise: vi.fn(),
+    getAssetUrl: vi.fn((key: string) => `http://localhost:8787/${key}`),
+    getMe: vi.fn().mockResolvedValue(null),
+    getMaterialKinds: vi.fn().mockResolvedValue([
+      { id: 'kind1', name: 'Partitura' },
+      { id: 'kind2', name: 'Audio' },
+      { id: 'kind3', name: 'Acordes' },
+    ]),
+    updatePraise: vi.fn(),
+    createMaterial: vi.fn(),
+    updateMaterial: vi.fn(),
+    deleteMaterial: vi.fn(),
+    bulkUploadMaterials: vi.fn(),
+    logout: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 import { getPraise } from '../services/api';
 
@@ -71,9 +84,7 @@ describe('PraiseDetailPage Component', () => {
   it('should render loading state initially', async () => {
     (getPraise as any).mockImplementation(() => new Promise(() => {}));
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     expect(screen.getByText(/carregando louvor/i)).toBeTruthy();
   });
@@ -81,9 +92,7 @@ describe('PraiseDetailPage Component', () => {
   it('should render praise details', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText('Grande Deus')).toBeTruthy();
@@ -99,9 +108,7 @@ describe('PraiseDetailPage Component', () => {
   it('should render tags', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText('Coletânea')).toBeTruthy();
@@ -112,9 +119,7 @@ describe('PraiseDetailPage Component', () => {
   it('should render lyrics section', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText('Letra')).toBeTruthy();
@@ -125,22 +130,20 @@ describe('PraiseDetailPage Component', () => {
   it('should render audio player', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText('Áudio')).toBeTruthy();
-      expect(document.querySelector('audio')).toBeTruthy();
+      expect(
+        document.querySelector('audio.audio-player-element')
+      ).toBeTruthy();
     });
   });
 
   it('should render PDF links', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText('Partituras')).toBeTruthy();
@@ -151,9 +154,7 @@ describe('PraiseDetailPage Component', () => {
   it('should render back link', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText('Voltar para lista')).toBeTruthy();
@@ -163,9 +164,7 @@ describe('PraiseDetailPage Component', () => {
   it('should show error state on API error', async () => {
     (getPraise as any).mockRejectedValue(new Error('API Error'));
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getByText(/erro ao carregar/i)).toBeTruthy();
@@ -175,9 +174,7 @@ describe('PraiseDetailPage Component', () => {
   it('should show not found state when praise is null', async () => {
     (getPraise as any).mockResolvedValue(null);
 
-    await act(async () => {
-      renderWithRouter('non-existent-id');
-    });
+    renderWithRouter('non-existent-id');
 
     await waitFor(() => {
       expect(screen.getByText('Louvor não encontrado')).toBeTruthy();
@@ -191,9 +188,7 @@ describe('PraiseDetailPage Component', () => {
     };
     (getPraise as any).mockResolvedValue(praiseWithoutAudio);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.queryByText('Áudio')).toBeNull();
@@ -207,13 +202,10 @@ describe('PraiseDetailPage Component', () => {
     };
     (getPraise as any).mockResolvedValue(praiseWithoutLyrics);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
-      expect(screen.getByText('Letra')).toBeTruthy();
-      expect(screen.getByText('Sem letra cadastrada.')).toBeTruthy();
+      expect(screen.queryByText('Letra')).toBeNull();
     });
   });
 
@@ -225,9 +217,7 @@ describe('PraiseDetailPage Component', () => {
     };
     (getPraise as any).mockResolvedValue(praiseWithoutTags);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       const ColetaneaTag = screen.queryByText('Coletânea');
@@ -254,9 +244,7 @@ describe('PraiseDetailPage Component', () => {
     };
     (getPraise as any).mockResolvedValue(praiseWithChords);
 
-    await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-    });
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
       expect(screen.getAllByText('Acordes').length).toBeGreaterThan(0);

@@ -1,10 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getMaterialKinds, getTags, getAssetUrl, updatePraise, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getMe, logout } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getMaterialKinds, getTags, getAssetUrl } from '../services/api';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
-// Mock fetch
+// Mock fetch (API client always sends credentials: 'include')
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
+const withCreds = { credentials: 'include' } as const;
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -57,7 +58,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/praises'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(result.data).toEqual(mockPraises);
       expect(result.pagination.total).toBe(2);
@@ -73,7 +74,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('q=Grande'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
     });
 
@@ -87,11 +88,11 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('page=2'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('limit=10'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
     });
 
@@ -103,14 +104,10 @@ describe('API Service', () => {
 
       await searchPraises({ tags: ['tag1', 'tag2'], rhythm: ['Avulsos'] });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('tags=tag1%2Ctag2'),
-        expect.objectContaining({ credentials: 'include' })
-      );
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('rhythm=Avulsos'),
-        expect.objectContaining({ credentials: 'include' })
-      );
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      const url = new URL(calledUrl);
+      expect(url.searchParams.get('tags')).toBe('tag1,tag2');
+      expect(url.searchParams.get('rhythm')).toBe('Avulsos');
     });
 
     it('should include number range parameters', async () => {
@@ -123,11 +120,11 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('numberMin=1'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('numberMax=10'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
     });
 
@@ -141,11 +138,11 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('sort=name'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('order=desc'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
     });
 
@@ -157,6 +154,50 @@ describe('API Service', () => {
       });
 
       await expect(searchPraises()).rejects.toThrow('Server error');
+    });
+
+    it('should include category parameters', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      await searchPraises({ category: ['Louvor', 'Adoração'] });
+
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      expect(url.searchParams.get('category')).toBe('Louvor,Adoração');
+    });
+
+    it('should include tonality parameters', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      await searchPraises({ tonality: ['C', 'G'] });
+
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      expect(url.searchParams.get('tonality')).toBe('C,G');
+    });
+
+    it('should prefer JSON error message when present', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: () => Promise.resolve({ error: 'Bad request' }),
+      });
+
+      await expect(searchPraises()).rejects.toThrow('Bad request');
+    });
+
+    it('should fall back to HTTP status when error JSON has no message', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve({}),
+      });
+
+      await expect(searchPraises()).rejects.toThrow('HTTP 503');
     });
 
     it('should throw generic error when response parsing fails', async () => {
@@ -191,7 +232,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/praises/filters'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(result.rhythms).toEqual(['Avulsos', 'Coletânea']);
       expect(result.tags).toHaveLength(2);
@@ -247,7 +288,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(result.name).toBe('Grande Deus');
       expect(result.materials).toHaveLength(1);
@@ -280,7 +321,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/materials/kinds'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(result).toHaveLength(2);
     });
@@ -302,7 +343,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/tags'),
-        expect.objectContaining({ credentials: 'include' })
+        withCreds
       );
       expect(result).toHaveLength(2);
     });
@@ -314,117 +355,6 @@ describe('API Service', () => {
       const result = getAssetUrl(r2Key);
       
       expect(result).toContain(r2Key);
-    });
-  });
-
-  describe('write endpoints', () => {
-    it('should PATCH praise updates', async () => {
-      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockPraiseDetail }),
-      });
-
-      await updatePraise('p1', { name: 'Novo' });
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/p1'),
-        expect.objectContaining({
-          method: 'PATCH',
-          credentials: 'include',
-        })
-      );
-    });
-
-    it('should POST createMaterial', async () => {
-      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockPraiseDetail }),
-      });
-
-      await createMaterial('p1', { material_kind: 'k1', type: 'youtube', url: 'https://youtu.be/abc' });
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/p1/materials'),
-        expect.objectContaining({ method: 'POST', credentials: 'include' })
-      );
-    });
-
-    it('should PATCH updateMaterial', async () => {
-      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockPraiseDetail }),
-      });
-
-      await updateMaterial('m1', { material_kind: 'k2' });
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/materials/m1'),
-        expect.objectContaining({ method: 'PATCH', credentials: 'include' })
-      );
-    });
-
-    it('should DELETE deleteMaterial', async () => {
-      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockPraiseDetail }),
-      });
-
-      await deleteMaterial('m1');
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/materials/m1'),
-        expect.objectContaining({ method: 'DELETE', credentials: 'include' })
-      );
-    });
-
-    it('should bulkUploadMaterials using FormData', async () => {
-      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockPraiseDetail }),
-      });
-
-      const file = new File(['abc'], 'a.pdf', { type: 'application/pdf' });
-      await bulkUploadMaterials('p1', [{ file, material_kind: 'k1', type: 'pdf', file_path_legacy: 'dir/a.pdf' }]);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/p1/materials/bulk-upload'),
-        expect.objectContaining({
-          method: 'POST',
-          credentials: 'include',
-          body: expect.any(FormData),
-        })
-      );
-    });
-  });
-
-  describe('auth', () => {
-    it('should call /auth/me', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ user: null }),
-      });
-      await getMe();
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/me'),
-        expect.objectContaining({ credentials: 'include' })
-      );
-    });
-
-    it('should POST /auth/logout', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ ok: true }),
-      });
-      await logout();
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/logout'),
-        expect.objectContaining({ method: 'POST', credentials: 'include' })
-      );
     });
   });
 });

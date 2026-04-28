@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { handleOAuthCallback, buildGoogleAuthorizeRedirect, clearCookie, getCookie, getSessionCookieName, verifySessionJwt } from './auth';
 
 type Env = {
@@ -459,7 +460,7 @@ app.patch('/api/praises/:id', requireAuth, async (c) => {
   try {
     const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env as any);
     const json = await res.json();
-    return c.json(json, res.status);
+    return c.json(json, res.status as ContentfulStatusCode);
   } catch (error) {
     console.error('Error re-fetching praise after update:', error);
     return c.json({ ok: true });
@@ -517,7 +518,7 @@ app.post('/api/praises/:id/materials', requireAuth, async (c) => {
 
   const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
   const json = await res.json();
-  return c.json(json, res.status);
+  return c.json(json, res.status as ContentfulStatusCode);
 });
 
 // POST /api/praises/:id/materials/bulk-upload - Bulk upload files for a praise (admin, multipart)
@@ -549,8 +550,12 @@ app.post('/api/praises/:id/materials/bulk-upload', requireAuth, async (c) => {
       if (typeof item.material_kind !== 'string' || !item.material_kind) return c.json({ error: "Item missing 'material_kind'" }, 400);
       if (typeof item.type !== 'string' || !item.type) return c.json({ error: "Item missing 'type'" }, 400);
 
-      const file = form.get(item.key);
-      if (!(file instanceof File)) return c.json({ error: `Missing file for key ${item.key}` }, 400);
+      const fileEntry = form.get(item.key);
+      if (fileEntry === null || typeof fileEntry === 'string') {
+        return c.json({ error: `Missing file for key ${item.key}` }, 400);
+      }
+      // Remainder of FormData.get() is File (see Cloudflare FormData typings)
+      const file = fileEntry as File;
 
       const materialId = crypto.randomUUID();
       const r2_key = `assets/praises/${praiseId}/${materialId}.${item.type}`;
@@ -583,7 +588,7 @@ app.post('/api/praises/:id/materials/bulk-upload', requireAuth, async (c) => {
 
   const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
   const json = await res.json();
-  return c.json(json, res.status);
+  return c.json(json, res.status as ContentfulStatusCode);
 });
 
 // PATCH /api/materials/:materialId - Update a material (admin)
@@ -652,7 +657,7 @@ app.patch('/api/materials/:materialId', requireAuth, async (c) => {
 
     const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env as any);
     const json = await res.json();
-    return c.json(json, res.status);
+    return c.json(json, res.status as ContentfulStatusCode);
   } catch (error) {
     console.error('Error updating material:', error);
     return c.json({ error: 'Failed to update material' }, 500);
@@ -681,7 +686,7 @@ app.delete('/api/materials/:materialId', requireAuth, async (c) => {
 
     const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env as any);
     const json = await res.json();
-    return c.json(json, res.status);
+    return c.json(json, res.status as ContentfulStatusCode);
   } catch (error) {
     console.error('Error deleting material:', error);
     return c.json({ error: 'Failed to delete material' }, 500);

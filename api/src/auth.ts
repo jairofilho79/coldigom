@@ -110,7 +110,7 @@ export async function buildGoogleAuthorizeRedirect(params: {
   const codeVerifier = randomString(48);
   const codeChallenge = await sha256Base64Url(codeVerifier);
 
-  const redirectUri = new URL('/auth/callback', baseUrl).toString();
+  const redirectUri = new URL('/auth/callback', params.baseUrl).toString();
   const url = new URL(GOOGLE_AUTH_URL);
   url.searchParams.set('client_id', params.clientId);
   url.searchParams.set('redirect_uri', redirectUri);

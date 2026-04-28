@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPraise, getAssetUrl, getMe, logout, API_BASE_URL, updatePraise, getMaterialKinds, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
+import { AudioPlayer } from '../components/AudioPlayer';
 import type { PraiseDetail } from '../types';
 import type { MaterialKind } from '../types';
 
@@ -576,30 +577,7 @@ export function PraiseDetailPage() {
             <span className="detail-section-icon">🎵</span>
             Áudio
           </h2>
-          <div className="audio-player-wrapper">
-            <audio controls className="audio-player" key={audioMaterials[0].id}>
-              {audioMaterials[0].r2_key && <source src={getAssetUrl(audioMaterials[0].r2_key)} type="audio/mpeg" />}
-              Seu navegador não suporta o elemento de áudio.
-            </audio>
-          </div>
-          {audioMaterials.length > 1 && (
-            <details className="additional-audios">
-              <summary>Mais {audioMaterials.length - 1} áudio(s)</summary>
-              <ul className="audio-list">
-                {audioMaterials.slice(1).map(m => (
-                  <li key={m.id}>
-                    {m.r2_key ? (
-                      <a href={getAssetUrl(m.r2_key)} target="_blank" rel="noopener noreferrer">
-                      {m.material_kind_name || 'Áudio'}
-                      </a>
-                    ) : (
-                      <span>{m.material_kind_name || 'Áudio'}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
+          <AudioPlayer materials={audioMaterials} getAssetUrl={getAssetUrl} />
         </section>
       )}
 

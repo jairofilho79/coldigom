@@ -124,9 +124,11 @@ describe('PraiseDetailPage Component', () => {
 
   it('should render audio player', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    let container: HTMLElement;
 
     await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const view = renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      container = view.container;
     });
 
     await waitFor(() => {

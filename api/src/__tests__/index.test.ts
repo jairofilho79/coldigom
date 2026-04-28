@@ -364,11 +364,62 @@ function createTestApp(mockDB: any, mockR2: any) {
   app.get('/assets/*', async (c) => {
     const env = c.env as { DB: any; ASSETS: any };
     const r2Key = c.req.path.replace(/^\/assets\//, 'storage/assets/');
+    const rangeHeader = c.req.header('range') ?? c.req.header('Range');
     
-    const object = await env.ASSETS.get(r2Key);
-    
-    if (!object) {
+    const metadata = await env.ASSETS.head(r2Key);
+    if (!metadata) {
       return c.json({ error: 'File not found' }, 404);
+    }
+    const totalSize = metadata.size;
+    let object: any = null;
+    let status = 200;
+
+    if (rangeHeader && totalSize > 0) {
+      const match = rangeHeader.match(/bytes=(\d*)-(\d*)/);
+      if (!match) {
+        c.header('Accept-Ranges', 'bytes');
+        c.header('Content-Range', `bytes */${totalSize}`);
+        return c.body(null, 416);
+      }
+
+      const [, startRaw, endRaw] = match;
+      let start = startRaw === '' ? 0 : Number.parseInt(startRaw, 10);
+      let end = endRaw === '' ? totalSize - 1 : Number.parseInt(endRaw, 10);
+
+      if (startRaw === '' && endRaw !== '') {
+        const suffixLength = Number.parseInt(endRaw, 10);
+        if (!Number.isFinite(suffixLength) || suffixLength <= 0) {
+          c.header('Accept-Ranges', 'bytes');
+          c.header('Content-Range', `bytes */${totalSize}`);
+          return c.body(null, 416);
+        }
+        start = Math.max(totalSize - suffixLength, 0);
+        end = totalSize - 1;
+      }
+
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || start >= totalSize) {
+        c.header('Accept-Ranges', 'bytes');
+        c.header('Content-Range', `bytes */${totalSize}`);
+        return c.body(null, 416);
+      }
+
+      end = Math.min(end, totalSize - 1);
+      const length = end - start + 1;
+      object = await env.ASSETS.get(r2Key, { range: { offset: start, length } });
+      if (!object) {
+        return c.json({ error: 'File not found' }, 404);
+      }
+      status = 206;
+      c.header('Content-Range', `bytes ${start}-${end}/${totalSize}`);
+      c.header('Content-Length', String(length));
+    } else {
+      object = await env.ASSETS.get(r2Key);
+      if (!object) {
+        return c.json({ error: 'File not found' }, 404);
+      }
+      if (totalSize > 0) {
+        c.header('Content-Length', String(totalSize));
+      }
     }
     
     const ext = r2Key.split('.').pop()?.toLowerCase();
@@ -383,8 +434,10 @@ function createTestApp(mockDB: any, mockR2: any) {
     const contentType = contentTypes[ext || ''] || 'application/octet-stream';
     
     c.header('Content-Type', contentType);
+    c.header('Accept-Ranges', 'bytes');
     c.header('Content-Disposition', `inline; filename="${r2Key.split('/').pop()}"`);
     
+    c.status(status as 200 | 206);
     return c.body(object.body);
   });
 
@@ -401,9 +454,27 @@ const createMockD1 = (responses: any) => ({
 });
 
 // Mock R2Bucket
-const createMockR2 = (object: any = null) => ({
-  get: vi.fn().mockResolvedValue(object),
-});
+const createMockR2 = (object: any = null) => {
+  const objectBody = object?.body ?? null;
+  const defaultBytes =
+    objectBody instanceof Uint8Array ? objectBody : objectBody ? new Uint8Array(objectBody) : null;
+
+  return {
+    head: vi.fn().mockImplementation(async () => {
+      if (!object) return null;
+      return { size: defaultBytes?.byteLength ?? 0 };
+    }),
+    get: vi.fn().mockImplementation(async (_key: string, opts?: any) => {
+      if (!object) return null;
+      if (!opts?.range || !defaultBytes) return object;
+
+      const offset = opts.range.offset ?? 0;
+      const length = opts.range.length ?? defaultBytes.byteLength;
+      const slice = defaultBytes.slice(offset, offset + length);
+      return { ...object, body: slice };
+    }),
+  };
+};
 
 describe('API Routes', () => {
   describe('Health Check', () => {
@@ -932,6 +1003,41 @@ describe('API Routes', () => {
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('application/octet-stream');
+    });
+
+    it('should support byte range requests for audio seek', async () => {
+      const mockObject = { body: new Uint8Array([0x10, 0x11, 0x12, 0x13, 0x14, 0x15]) };
+      const mockR2 = createMockR2(mockObject);
+      const mockDB = createMockD1({});
+
+      const app = createTestApp(mockDB, mockR2);
+      const res = await app.request(
+        '/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3',
+        { headers: { Range: 'bytes=2-4' } },
+        { DB: mockDB, ASSETS: mockR2 } as any
+      );
+
+      expect(res.status).toBe(206);
+      expect(res.headers.get('Accept-Ranges')).toBe('bytes');
+      expect(res.headers.get('Content-Range')).toBe('bytes 2-4/6');
+      expect(res.headers.get('Content-Length')).toBe('3');
+      expect(new Uint8Array(await res.arrayBuffer())).toEqual(new Uint8Array([0x12, 0x13, 0x14]));
+    });
+
+    it('should return 416 for invalid byte range', async () => {
+      const mockObject = { body: new Uint8Array([0x10, 0x11, 0x12, 0x13]) };
+      const mockR2 = createMockR2(mockObject);
+      const mockDB = createMockD1({});
+
+      const app = createTestApp(mockDB, mockR2);
+      const res = await app.request(
+        '/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3',
+        { headers: { Range: 'bytes=99-120' } },
+        { DB: mockDB, ASSETS: mockR2 } as any
+      );
+
+      expect(res.status).toBe(416);
+      expect(res.headers.get('Content-Range')).toBe('bytes */4');
     });
   });
 });

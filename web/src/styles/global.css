@@ -178,6 +178,8 @@
 .filter-bar {
   margin-bottom: var(--space-8);
   animation: fadeInUp var(--duration-slow) var(--ease-out) forwards;
+  position: relative;
+  z-index: 30;
 }
 
 .filter-section {

@@ -262,4 +262,115 @@ describe('useFilters Hook', () => {
       expect(result.current.activeFilterCount).toBe(0);
     });
   });
+
+  describe('setFilters URL branches', () => {
+    it('clears tags when empty array', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?tags=a,b'),
+      });
+      await act(async () => {
+        result.current.setFilters({ tags: [] });
+      });
+      expect(result.current.filters.tags).toEqual([]);
+    });
+
+    it('clears rhythm param when empty array', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?rhythm=Avulsos'),
+      });
+      await act(async () => {
+        result.current.setFilters({ rhythm: [] });
+      });
+      expect(result.current.filters.rhythm).toEqual([]);
+    });
+
+    it('clears tonality param when empty array', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?tonality=C'),
+      });
+      await act(async () => {
+        result.current.setFilters({ tonality: [] });
+      });
+      expect(result.current.filters.tonality).toEqual([]);
+    });
+
+    it('clears category param when empty array', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?category=Louvor'),
+      });
+      await act(async () => {
+        result.current.setFilters({ category: [] });
+      });
+      expect(result.current.filters.category).toEqual([]);
+    });
+
+    it('sets and clears numberMin', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/'),
+      });
+      await act(async () => {
+        result.current.setFilters({ numberMin: 3 });
+      });
+      expect(result.current.filters.numberMin).toBe(3);
+      await act(async () => {
+        result.current.setFilters({ numberMin: undefined });
+      });
+      expect(result.current.filters.numberMin).toBeUndefined();
+    });
+
+    it('sets and clears numberMax', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/'),
+      });
+      await act(async () => {
+        result.current.setFilters({ numberMax: 9 });
+      });
+      expect(result.current.filters.numberMax).toBe(9);
+      await act(async () => {
+        result.current.setFilters({ numberMax: undefined });
+      });
+      expect(result.current.filters.numberMax).toBeUndefined();
+    });
+
+    it('removes sort param when sort is default number', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?sort=name'),
+      });
+      await act(async () => {
+        result.current.setFilters({ sort: 'number' });
+      });
+      expect(result.current.filters.sort).toBe('number');
+    });
+
+    it('removes order param when order is asc', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?order=desc'),
+      });
+      await act(async () => {
+        result.current.setFilters({ order: 'asc' });
+      });
+      expect(result.current.filters.order).toBe('asc');
+    });
+
+    it('keeps explicit page when updating sort', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?page=5'),
+      });
+      await act(async () => {
+        result.current.setFilters({ sort: 'name', page: 4 });
+      });
+      expect(result.current.filters.sort).toBe('name');
+      expect(result.current.filters.page).toBe(4);
+    });
+
+    it('sets non-default page in URL', async () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/'),
+      });
+      await act(async () => {
+        result.current.setFilters({ page: 6 });
+      });
+      expect(result.current.filters.page).toBe(6);
+    });
+  });
 });

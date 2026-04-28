@@ -56,8 +56,7 @@ describe('API Service', () => {
       const result = await searchPraises();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises'),
-        undefined
+        expect.stringContaining('/api/praises')
       );
       expect(result.data).toEqual(mockPraises);
       expect(result.pagination.total).toBe(2);
@@ -72,9 +71,7 @@ describe('API Service', () => {
       await searchPraises({ query: 'Grande' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('q=Grande'),
-        undefined
-      );
+        expect.stringContaining('q=Grande')      );
     });
 
     it('should include pagination parameters', async () => {
@@ -86,13 +83,9 @@ describe('API Service', () => {
       await searchPraises({ page: 2, limit: 10 });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('page=2'),
-        undefined
-      );
+        expect.stringContaining('page=2')      );
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('limit=10'),
-        undefined
-      );
+        expect.stringContaining('limit=10')      );
     });
 
     it('should include array filters as comma-separated', async () => {
@@ -103,14 +96,10 @@ describe('API Service', () => {
 
       await searchPraises({ tags: ['tag1', 'tag2'], rhythm: ['Avulsos'] });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('tags=tag1,tag2'),
-        undefined
-      );
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('rhythm=Avulsos'),
-        undefined
-      );
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      const url = new URL(calledUrl);
+      expect(url.searchParams.get('tags')).toBe('tag1,tag2');
+      expect(url.searchParams.get('rhythm')).toBe('Avulsos');
     });
 
     it('should include number range parameters', async () => {
@@ -122,13 +111,9 @@ describe('API Service', () => {
       await searchPraises({ numberMin: 1, numberMax: 10 });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('numberMin=1'),
-        undefined
-      );
+        expect.stringContaining('numberMin=1')      );
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('numberMax=10'),
-        undefined
-      );
+        expect.stringContaining('numberMax=10')      );
     });
 
     it('should include sort and order parameters', async () => {
@@ -140,13 +125,9 @@ describe('API Service', () => {
       await searchPraises({ sort: 'name', order: 'desc' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('sort=name'),
-        undefined
-      );
+        expect.stringContaining('sort=name')      );
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('order=desc'),
-        undefined
-      );
+        expect.stringContaining('order=desc')      );
     });
 
     it('should throw error when response is not ok', async () => {
@@ -159,6 +140,50 @@ describe('API Service', () => {
       await expect(searchPraises()).rejects.toThrow('Server error');
     });
 
+    it('should include category parameters', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      await searchPraises({ category: ['Louvor', 'Adoração'] });
+
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      expect(url.searchParams.get('category')).toBe('Louvor,Adoração');
+    });
+
+    it('should include tonality parameters', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      await searchPraises({ tonality: ['C', 'G'] });
+
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      expect(url.searchParams.get('tonality')).toBe('C,G');
+    });
+
+    it('should prefer JSON error message when present', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: () => Promise.resolve({ error: 'Bad request' }),
+      });
+
+      await expect(searchPraises()).rejects.toThrow('Bad request');
+    });
+
+    it('should fall back to HTTP status when error JSON has no message', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve({}),
+      });
+
+      await expect(searchPraises()).rejects.toThrow('HTTP 503');
+    });
+
     it('should throw generic error when response parsing fails', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -166,7 +191,7 @@ describe('API Service', () => {
         json: () => Promise.reject(new Error('Parse error')),
       });
 
-      await expect(searchPraises()).rejects.toThrow('HTTP 500');
+      await expect(searchPraises()).rejects.toThrow('Request failed');
     });
   });
 
@@ -190,9 +215,7 @@ describe('API Service', () => {
       const result = await getFilterOptions();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/filters'),
-        undefined
-      );
+        expect.stringContaining('/api/praises/filters')      );
       expect(result.rhythms).toEqual(['Avulsos', 'Coletânea']);
       expect(result.tags).toHaveLength(2);
     });
@@ -246,9 +269,7 @@ describe('API Service', () => {
       const result = await getPraise('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8'),
-        undefined
-      );
+        expect.stringContaining('/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8')      );
       expect(result.name).toBe('Grande Deus');
       expect(result.materials).toHaveLength(1);
     });
@@ -279,9 +300,7 @@ describe('API Service', () => {
       const result = await getMaterialKinds();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/materials/kinds'),
-        undefined
-      );
+        expect.stringContaining('/api/materials/kinds')      );
       expect(result).toHaveLength(2);
     });
   });
@@ -301,9 +320,7 @@ describe('API Service', () => {
       const result = await getTags();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tags'),
-        undefined
-      );
+        expect.stringContaining('/api/tags')      );
       expect(result).toHaveLength(2);
     });
   });

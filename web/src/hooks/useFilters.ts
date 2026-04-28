@@ -85,6 +85,22 @@ export function useFilters() {
         else newParams.delete('page');
       }
 
+      const shouldResetPage =
+        ('query' in updates ||
+          'tags' in updates ||
+          'rhythm' in updates ||
+          'tonality' in updates ||
+          'category' in updates ||
+          'numberMin' in updates ||
+          'numberMax' in updates ||
+          'sort' in updates ||
+          'order' in updates) &&
+        !('page' in updates);
+
+      if (shouldResetPage) {
+        newParams.delete('page');
+      }
+
       return newParams;
     });
   }, [setSearchParams]);

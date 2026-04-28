@@ -1,4 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import app from '../index';
+
 
 // Mock data
 const mockPraises = [
@@ -59,338 +61,6 @@ const mockMaterialKinds = [
   { id: 'kind3', name: 'Acordes' },
 ];
 
-// Re-create app for testing with proper environment
-function createTestApp(mockDB: any, mockR2: any) {
-  const { Hono } = require('hono');
-  const { cors } = require('hono/cors');
-  
-  const app = new Hono();
-  app.use('/*', cors());
-
-  const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'];
-  type SortField = typeof VALID_SORT_FIELDS[number];
-
-  function buildWhereClause(params: {
-    search?: string;
-    tags?: string[];
-    rhythm?: string[];
-    tonality?: string[];
-    category?: string[];
-    numberMin?: number;
-    numberMax?: number;
-  }): { clause: string; bindings: (string | number)[] } {
-    const conditions: string[] = [];
-    const bindings: (string | number)[] = [];
-
-    if (params.search) {
-      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ?)`);
-      const pattern = `%${params.search}%`;
-      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
-    }
-
-    if (params.tags && params.tags.length > 0) {
-      conditions.push(`pt.tag_id IN (${params.tags.map(() => '?').join(',')})`);
-      bindings.push(...params.tags);
-    }
-
-    if (params.rhythm && params.rhythm.length > 0) {
-      conditions.push(`p.rhythm IN (${params.rhythm.map(() => '?').join(',')})`);
-      bindings.push(...params.rhythm);
-    }
-
-    if (params.tonality && params.tonality.length > 0) {
-      conditions.push(`p.tonality IN (${params.tonality.map(() => '?').join(',')})`);
-      bindings.push(...params.tonality);
-    }
-
-    if (params.category && params.category.length > 0) {
-      conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
-      bindings.push(...params.category);
-    }
-
-    if (params.numberMin !== undefined) {
-      conditions.push(`CAST(p.number AS INTEGER) >= ?`);
-      bindings.push(params.numberMin);
-    }
-
-    if (params.numberMax !== undefined) {
-      conditions.push(`CAST(p.number AS INTEGER) <= ?`);
-      bindings.push(params.numberMax);
-    }
-
-    const clause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    return { clause, bindings };
-  }
-
-  // Health check
-  app.get('/health', (c) => c.json({ status: 'ok' }));
-
-  // GET /api/praises
-  app.get('/api/praises', async (c) => {
-    const env = c.env as { DB: any; ASSETS: any };
-    const search = c.req.query('q') || '';
-    const page = parseInt(c.req.query('page') || '1', 10);
-    const limit = parseInt(c.req.query('limit') || '20', 10);
-    const offset = (page - 1) * limit;
-
-    const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
-    const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
-    const tonality = c.req.query('tonality') ? c.req.query('tonality')!.split(',').filter(Boolean) : undefined;
-    const category = c.req.query('category') ? c.req.query('category')!.split(',').filter(Boolean) : undefined;
-    const numberMin = c.req.query('numberMin') ? parseInt(c.req.query('numberMin')!, 10) : undefined;
-    const numberMax = c.req.query('numberMax') ? parseInt(c.req.query('numberMax')!, 10) : undefined;
-
-    const sortParam = c.req.query('sort') as SortField | undefined;
-    const sort = VALID_SORT_FIELDS.includes(sortParam!) ? sortParam! : 'number';
-    const order = c.req.query('order')?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
-
-    try {
-      const { clause: whereClause, bindings: whereBindings } = buildWhereClause({
-        search: search || undefined,
-        tags,
-        rhythm,
-        tonality,
-        category,
-        numberMin,
-        numberMax,
-      });
-
-      const hasTagFilter = tags && tags.length > 0;
-      const joinClause = hasTagFilter ? 'INNER JOIN praise_tags pt ON p.id = pt.praise_id' : 'LEFT JOIN praise_tags pt ON p.id = pt.praise_id';
-      const groupClause = hasTagFilter ? 'GROUP BY p.id HAVING COUNT(DISTINCT pt.tag_id) = ?' : 'GROUP BY p.id';
-
-      let query: string;
-      const bindings: (string | number)[] = [...whereBindings];
-
-      if (hasTagFilter) {
-        bindings.push(tags!.length);
-      }
-
-      const orderClause = sort === 'created_at' ? `ORDER BY p.created_at ${order}` : `ORDER BY p.${sort} ${order} COLLATE NOCASE`;
-
-      if (whereClause || hasTagFilter) {
-        query = `
-          SELECT 
-            p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-            GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids
-          FROM praises p
-          ${joinClause}
-          ${whereClause}
-          ${groupClause}
-          ${orderClause}
-          LIMIT ? OFFSET ?
-        `;
-        bindings.push(limit, offset);
-      } else {
-        query = `
-          SELECT 
-            p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-            GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids
-          FROM praises p
-          LEFT JOIN praise_tags pt ON p.id = pt.praise_id
-          GROUP BY p.id
-          ${orderClause}
-          LIMIT ? OFFSET ?
-        `;
-        bindings.push(limit, offset);
-      }
-
-      const result = await env.DB.prepare(query).bind(...bindings).all();
-
-      let countQuery: string;
-      let countBindings: (string | number)[] = [...whereBindings];
-
-      if (hasTagFilter) {
-        countQuery = `
-          SELECT COUNT(*) as total FROM (
-            SELECT p.id FROM praises p
-            ${joinClause}
-            ${whereClause}
-            ${groupClause}
-          )
-        `;
-        countBindings.push(tags!.length);
-      } else if (whereClause) {
-        countQuery = `SELECT COUNT(*) as total FROM praises p ${whereClause}`;
-      } else {
-        countQuery = `SELECT COUNT(*) as total FROM praises`;
-        countBindings = [];
-      }
-
-      const countResult = await env.DB.prepare(countQuery).bind(...countBindings).first();
-      const total = (countResult?.total as number) || 0;
-
-      return c.json({
-        data: result.results,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching praises:', error);
-      return c.json({ error: 'Failed to fetch praises' }, 500);
-    }
-  });
-
-  // GET /api/praises/filters
-  app.get('/api/praises/filters', async (c) => {
-    const env = c.env as { DB: any; ASSETS: any };
-    try {
-      const [rhythmsResult, tonalitiesResult, categoriesResult, tagsResult] = await Promise.all([
-        env.DB.prepare(`SELECT DISTINCT rhythm FROM praises WHERE rhythm IS NOT NULL AND rhythm != '' ORDER BY rhythm`).all(),
-        env.DB.prepare(`SELECT DISTINCT tonality FROM praises WHERE tonality IS NOT NULL AND tonality != '' ORDER BY tonality`).all(),
-        env.DB.prepare(`SELECT DISTINCT category FROM praises WHERE category IS NOT NULL AND category != '' ORDER BY category`).all(),
-        env.DB.prepare(`
-          SELECT t.id, t.name, COUNT(pt.praise_id) as count 
-          FROM tags t 
-          LEFT JOIN praise_tags pt ON t.id = pt.tag_id 
-          GROUP BY t.id 
-          ORDER BY t.name
-        `).all(),
-      ]);
-
-      return c.json({
-        rhythms: (rhythmsResult.results as { rhythm: string }[]).map(r => r.rhythm),
-        tonalities: (tonalitiesResult.results as { tonality: string }[]).map(r => r.tonality),
-        categories: (categoriesResult.results as { category: string }[]).map(r => r.category),
-        tags: (tagsResult.results as { id: string; name: string; count: number }[]).map(r => ({
-          id: r.id,
-          name: r.name,
-          count: r.count,
-        })),
-      });
-    } catch (error) {
-      console.error('Error fetching filters:', error);
-      return c.json({ error: 'Failed to fetch filters' }, 500);
-    }
-  });
-
-  // GET /api/praises/:id
-  app.get('/api/praises/:id', async (c) => {
-    const env = c.env as { DB: any; ASSETS: any };
-    const id = c.req.param('id');
-
-    try {
-      const praiseQuery = `
-        SELECT 
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-          GROUP_CONCAT(pt.tag_id) as tag_ids
-        FROM praises p
-        LEFT JOIN praise_tags pt ON p.id = pt.praise_id
-        WHERE p.id = ?
-        GROUP BY p.id
-      `;
-      const praiseResult = await env.DB.prepare(praiseQuery).bind(id).first();
-
-      if (!praiseResult) {
-        return c.json({ error: 'Praise not found' }, 404);
-      }
-
-      const materialsQuery = `
-        SELECT 
-          id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url
-        FROM praise_materials
-        WHERE praise_id = ?
-      `;
-      const materialsResult = await env.DB.prepare(materialsQuery).bind(id).all();
-
-      const tagIds = (praiseResult as any).tag_ids ? (praiseResult as any).tag_ids.split(',') : [];
-      let tags: { id: string; name: string }[] = [];
-      
-      if (tagIds.length > 0) {
-        const placeholders = tagIds.map(() => '?').join(',');
-        const tagsQuery = `SELECT id, name FROM tags WHERE id IN (${placeholders})`;
-        const tagsResult = await env.DB.prepare(tagsQuery).bind(...tagIds).all();
-        tags = tagsResult.results as { id: string; name: string }[];
-      }
-
-      const materialKindsQuery = `SELECT id, name FROM material_kinds`;
-      const materialKindsResult = await env.DB.prepare(materialKindsQuery).all();
-      const materialKindsMap = new Map(
-        (materialKindsResult.results as { id: string; name: string }[]).map(k => [k.id, k.name])
-      );
-
-      const materials = (materialsResult.results as any[]).map(m => ({
-        ...m,
-        material_kind_name: materialKindsMap.get(m.material_kind) || 'Unknown',
-      }));
-
-      return c.json({
-        data: {
-          ...praiseResult,
-          tag_ids: tagIds,
-          tags,
-          materials,
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching praise:', error);
-      return c.json({ error: 'Failed to fetch praise' }, 500);
-    }
-  });
-
-  // GET /api/materials/kinds
-  app.get('/api/materials/kinds', async (c) => {
-    const env = c.env as { DB: any; ASSETS: any };
-    try {
-      const result = await env.DB.prepare(
-        `SELECT id, name FROM material_kinds ORDER BY name ASC`
-      ).all();
-      return c.json({ data: result.results });
-    } catch (error) {
-      console.error('Error fetching material kinds:', error);
-      return c.json({ error: 'Failed to fetch material kinds' }, 500);
-    }
-  });
-
-  // GET /api/tags
-  app.get('/api/tags', async (c) => {
-    const env = c.env as { DB: any; ASSETS: any };
-    try {
-      const result = await env.DB.prepare(
-        `SELECT id, name FROM tags ORDER BY name ASC`
-      ).all();
-      return c.json({ data: result.results });
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      return c.json({ error: 'Failed to fetch tags' }, 500);
-    }
-  });
-
-  // GET /assets/*
-  app.get('/assets/*', async (c) => {
-    const env = c.env as { DB: any; ASSETS: any };
-    const r2Key = c.req.path.replace(/^\/assets\//, 'storage/assets/');
-    
-    const object = await env.ASSETS.get(r2Key);
-    
-    if (!object) {
-      return c.json({ error: 'File not found' }, 404);
-    }
-    
-    const ext = r2Key.split('.').pop()?.toLowerCase();
-    const contentTypes: Record<string, string> = {
-      pdf: 'application/pdf',
-      mp3: 'audio/mpeg',
-      mid: 'audio/midi',
-      midi: 'audio/midi',
-      chord: 'text/plain',
-    };
-    
-    const contentType = contentTypes[ext || ''] || 'application/octet-stream';
-    
-    c.header('Content-Type', contentType);
-    c.header('Content-Disposition', `inline; filename="${r2Key.split('/').pop()}"`);
-    
-    return c.body(object.body);
-  });
-
-  return app;
-}
-
 // Mock D1Database
 const createMockD1 = (responses: any) => ({
   prepare: vi.fn((query: string) => ({
@@ -410,11 +80,11 @@ describe('API Routes', () => {
     it('should return ok status', async () => {
       const mockDB = createMockD1({});
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/health', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/health', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -429,11 +99,11 @@ describe('API Routes', () => {
         first: { total: 2 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -453,11 +123,11 @@ describe('API Routes', () => {
         first: { total: 0 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -472,11 +142,11 @@ describe('API Routes', () => {
         first: { total: 1 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?q=Grande', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?q=Grande', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -491,11 +161,11 @@ describe('API Routes', () => {
         first: { total: 2 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?page=2&limit=1', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?page=2&limit=1', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -511,11 +181,11 @@ describe('API Routes', () => {
         first: { total: 2 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?sort=name&order=desc', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?sort=name&order=desc', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -529,11 +199,11 @@ describe('API Routes', () => {
         first: { total: 1 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?tags=tag1,tag2', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?tags=tag1,tag2', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -547,11 +217,11 @@ describe('API Routes', () => {
         first: { total: 1 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?rhythm=Avulsos', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?rhythm=Avulsos', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -565,11 +235,11 @@ describe('API Routes', () => {
         first: { total: 1 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?tonality=C', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?tonality=C', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -583,11 +253,11 @@ describe('API Routes', () => {
         first: { total: 1 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?category=Adoração', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?category=Adoração', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -601,11 +271,11 @@ describe('API Routes', () => {
         first: { total: 1 },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises?numberMin=1&numberMax=10', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises?numberMin=1&numberMax=10', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -623,11 +293,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(500);
       
@@ -656,11 +326,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises/filters', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises/filters', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -677,11 +347,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises/filters', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises/filters', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(500);
     });
@@ -698,11 +368,11 @@ describe('API Routes', () => {
         })),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request(`/api/praises/${mockPraise.id}`, {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -721,11 +391,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises/non-existent-id', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises/non-existent-id', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(404);
       const json = await res.json();
@@ -742,11 +412,11 @@ describe('API Routes', () => {
         })),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request(`/api/praises/${mockPraise.id}`, {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -763,11 +433,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/praises/some-id', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/praises/some-id', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(500);
       const json = await res.json();
@@ -781,11 +451,11 @@ describe('API Routes', () => {
         all: { results: mockMaterialKinds },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/materials/kinds', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/materials/kinds', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -801,11 +471,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/materials/kinds', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/materials/kinds', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(500);
     });
@@ -817,11 +487,11 @@ describe('API Routes', () => {
         all: { results: mockTags },
       });
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/tags', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/tags', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       
@@ -837,11 +507,11 @@ describe('API Routes', () => {
         }),
       };
       const mockR2 = createMockR2();
-      const app = createTestApp(mockDB, mockR2);
       
-      const res = await app.request('/api/tags', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/api/tags', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(500);
     });
@@ -855,10 +525,10 @@ describe('API Routes', () => {
       const mockR2 = createMockR2(mockObject);
       const mockDB = createMockD1({});
       
-      const app = createTestApp(mockDB, mockR2);
-      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.pdf', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.pdf', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('application/pdf');
@@ -868,10 +538,10 @@ describe('API Routes', () => {
       const mockR2 = createMockR2(null);
       const mockDB = createMockD1({});
       
-      const app = createTestApp(mockDB, mockR2);
-      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/nonexistent.pdf', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/nonexistent.pdf', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(404);
       const json = await res.json();
@@ -883,10 +553,10 @@ describe('API Routes', () => {
       const mockR2 = createMockR2(mockObject);
       const mockDB = createMockD1({});
       
-      const app = createTestApp(mockDB, mockR2);
-      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('audio/mpeg');
@@ -897,10 +567,10 @@ describe('API Routes', () => {
       const mockR2 = createMockR2(mockObject);
       const mockDB = createMockD1({});
       
-      const app = createTestApp(mockDB, mockR2);
-      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.midi', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.midi', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('audio/midi');
@@ -911,10 +581,10 @@ describe('API Routes', () => {
       const mockR2 = createMockR2(mockObject);
       const mockDB = createMockD1({});
       
-      const app = createTestApp(mockDB, mockR2);
-      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.chord', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.chord', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('text/plain');
@@ -925,10 +595,10 @@ describe('API Routes', () => {
       const mockR2 = createMockR2(mockObject);
       const mockDB = createMockD1({});
       
-      const app = createTestApp(mockDB, mockR2);
-      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.xyz', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
-      } as any);
+      const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.xyz', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('application/octet-stream');

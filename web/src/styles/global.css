@@ -906,16 +906,10 @@
 .audio-player-wrapper audio {
   width: 100%;
   border-radius: var(--radius-md);
-  color-scheme: light;
 }
 
 .audio-player-wrapper audio::-webkit-media-controls-panel {
-  /* Mantém o card/section no tema escuro, mas clareia os controles do player */
-  background: rgba(245, 240, 232, 0.88);
-}
-
-.audio-player-wrapper audio::-webkit-media-controls-enclosure {
-  border-radius: var(--radius-md);
+  background: var(--bg-surface);
 }
 
 .additional-audios {

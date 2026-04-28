@@ -26,6 +26,8 @@ app.use('/*', cors());
 const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;
 type SortField = typeof VALID_SORT_FIELDS[number];
 
+const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality', 'category'];
+
 function buildWhereClause(params: {
   search?: string;
   tags?: string[];
@@ -118,7 +120,10 @@ app.get('/api/praises', async (c) => {
       bindings.push(tags!.length);
     }
 
-    const orderClause = sort === 'created_at' ? `ORDER BY p.created_at ${order}` : `ORDER BY p.${sort} ${order} COLLATE NOCASE`;
+    const collate = NOCASE_FIELDS.includes(sort) ? ' COLLATE NOCASE' : '';
+    const orderClause = sort === 'created_at'
+      ? `ORDER BY p.created_at ${order}`
+      : `ORDER BY p.${sort} ${order}${collate}`;
 
     if (whereClause || hasTagFilter) {
       query = `
@@ -339,6 +344,9 @@ app.get('/assets/*', async (c) => {
   
   return c.body(object.body);
 });
+
+// Root endpoint
+app.get('/', (c) => c.json({ name: 'coldigom-api', version: '1.0.0' }));
 
 // Health check endpoint
 app.get('/health', (c) => c.json({ status: 'ok' }));

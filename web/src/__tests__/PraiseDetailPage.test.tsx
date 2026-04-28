@@ -88,7 +88,8 @@ describe('PraiseDetailPage Component', () => {
 
     expect(screen.getByText('Nº 001')).toBeTruthy();
     expect(screen.getByText('Autor 1')).toBeTruthy();
-    expect(screen.getByText('Avulsos')).toBeTruthy();
+    // "Avulsos" appears both as ritmo and as tag
+    expect(screen.getAllByText('Avulsos').length).toBe(2);
     expect(screen.getByText('C')).toBeTruthy();
     expect(screen.getByText('Louvor')).toBeTruthy();
   });
@@ -102,7 +103,7 @@ describe('PraiseDetailPage Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Coletânea')).toBeTruthy();
-      expect(screen.getByText('Avulsos')).toBeTruthy();
+      expect(screen.getAllByText('Avulsos').length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -121,14 +122,16 @@ describe('PraiseDetailPage Component', () => {
 
   it('should render audio player', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    let container: HTMLElement;
 
     await act(async () => {
-      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const view = renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      container = view.container;
     });
 
     await waitFor(() => {
       expect(screen.getByText('Áudio')).toBeTruthy();
-      expect(screen.getByRole('audio')).toBeTruthy();
+      expect(container.querySelector('audio')).toBeTruthy();
     });
   });
 
@@ -255,7 +258,11 @@ describe('PraiseDetailPage Component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Acordes')).toBeTruthy();
+      // Título da secção e nome do material repetem "Acordes"
+      expect(screen.getAllByText('Acordes').length).toBeGreaterThanOrEqual(2);
+      expect(
+        document.querySelector('.material-grid a.material-link[href$="mat3.chord"]')
+      ).toBeTruthy();
     });
   });
 });

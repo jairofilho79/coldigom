@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, waitFor } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { FilterBar } from '../components/FilterBar';
 import { MemoryRouter } from 'react-router-dom';
 import type { FilterOptions } from '../types';

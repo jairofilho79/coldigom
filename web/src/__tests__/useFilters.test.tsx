@@ -1,7 +1,7 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFilters } from '../hooks/useFilters';
-import { MemoryRouter, useSearchParams } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 
 // Wrapper for testing hooks that use useSearchParams

@@ -4,7 +4,7 @@ import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOption
 
 // Mock fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 describe('API Service', () => {
   beforeEach(() => {

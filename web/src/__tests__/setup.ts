@@ -1,22 +1,17 @@
-import { expect, afterEach, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
 
-// Extend Vitest's expect with testing-library matchers
-expect.extend(matchers);
-
-// Cleanup after each test
 afterEach(() => {
   cleanup();
 });
 
 // Mock window.scrollTo
-vi.mock('window.scrollTo', () => ({
-  scrollTo: vi.fn(),
-}));
+vi.stubGlobal('scrollTo', vi.fn());
 
 // Mock URLSearchParams
-global.URLSearchParams = class URLSearchParams {
+// @ts-expect-error Mock class does not fully implement URLSearchParams
+globalThis.URLSearchParams = class URLSearchParams {
   private params: Record<string, string> = {};
   
   constructor(init?: string) {
@@ -28,11 +23,23 @@ global.URLSearchParams = class URLSearchParams {
     }
   }
   
+  get size(): number {
+    return Object.keys(this.params).length;
+  }
+  
   get(key: string): string | null {
     return this.params[key] || null;
   }
   
+  getAll(key: string): string[] {
+    return this.params[key] ? [this.params[key]] : [];
+  }
+  
   set(key: string, value: string): void {
+    this.params[key] = value;
+  }
+  
+  append(key: string, value: string): void {
     this.params[key] = value;
   }
   
@@ -44,15 +51,31 @@ global.URLSearchParams = class URLSearchParams {
     return key in this.params;
   }
   
+  sort(): void {}
+  
   forEach(callback: (value: string, key: string) => void): void {
     Object.entries(this.params).forEach(([key, value]) => callback(value, key));
+  }
+  
+  keys(): IterableIterator<string> {
+    return Object.keys(this.params)[Symbol.iterator]();
+  }
+  
+  values(): IterableIterator<string> {
+    return Object.values(this.params)[Symbol.iterator]();
   }
   
   entries(): IterableIterator<[string, string]> {
     return Object.entries(this.params)[Symbol.iterator]();
   }
   
+  [Symbol.iterator](): IterableIterator<[string, string]> {
+    return this.entries();
+  }
+  
   toString(): string {
-    return new URLSearchParams(this.params).toString();
+    return Object.entries(this.params)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
   }
 };

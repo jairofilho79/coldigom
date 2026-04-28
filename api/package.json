@@ -14,7 +14,8 @@
     "d1:execute:remote": "wrangler d1 execute coldigom --remote --file=schema.sql",
     "ingest:dry-run": "tsx scripts/ingest.ts --dry-run",
     "ingest": "tsx scripts/ingest.ts",
-    "ingest:execute": "tsx scripts/ingest.ts --execute"
+    "ingest:execute": "tsx scripts/ingest.ts --execute",
+    "test": "vitest"
   },
   "keywords": [
     "cloudflare",
@@ -30,8 +31,10 @@
     "@cloudflare/workers-types": "^4.20241127.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
+    "vitest": "^4.1.5",
     "wrangler": "^4.84.1"
   },
   "dependencies": {

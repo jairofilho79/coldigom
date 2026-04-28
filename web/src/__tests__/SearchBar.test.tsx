@@ -38,8 +38,7 @@ describe('SearchBar Component', () => {
     const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
     fireEvent.change(input, { target: { value: 'test query' } });
     
-    const form = screen.getByRole('form') || screen.getByTestId('search-form');
-    fireEvent.submit(form || input.closest('form')!);
+    fireEvent.submit(input.closest('form')!);
     
     expect(mockOnSearch).toHaveBeenCalledWith('test query');
   });

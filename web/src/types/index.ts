@@ -17,8 +17,9 @@ export interface Material {
   praise_id: string;
   material_kind: string;
   material_kind_name?: string;
-  type: 'pdf' | 'mp3' | 'chord';
-  r2_key: string;
+  type: 'pdf' | 'mp3' | 'chord' | 'youtube';
+  r2_key: string | null;
+  url?: string | null;
   file_path_legacy: string;
   source_material_id: string | null;
 }

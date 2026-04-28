@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react';
 import { FilterBar } from '../components/FilterBar';
 import { MemoryRouter } from 'react-router-dom';
 import type { FilterOptions } from '../types';
@@ -97,7 +97,7 @@ describe('FilterBar Component', () => {
       );
     });
 
-    expect(screen.getByText('Ritmo')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Ritmo/ })).toBeTruthy();
   });
 
   it('should render tonality dropdown', async () => {
@@ -109,7 +109,7 @@ describe('FilterBar Component', () => {
       );
     });
 
-    expect(screen.getByText('Tom')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Tom/ })).toBeTruthy();
   });
 
   it('should render category dropdown', async () => {
@@ -121,7 +121,7 @@ describe('FilterBar Component', () => {
       );
     });
 
-    expect(screen.getByText('Categoria')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Categoria/ })).toBeTruthy();
   });
 
   it('should open dropdown when clicked', async () => {
@@ -133,12 +133,13 @@ describe('FilterBar Component', () => {
       );
     });
 
-    const rhythmButton = screen.getByText('Ritmo');
+    const rhythmButton = screen.getByRole('button', { name: /^Ritmo/ });
     fireEvent.click(rhythmButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Avulsos')).toBeTruthy();
-      expect(screen.getByText('Coletânea')).toBeTruthy();
+      const listbox = screen.getByRole('listbox');
+      expect(within(listbox).getByText('Avulsos')).toBeTruthy();
+      expect(within(listbox).getByText('Coletânea')).toBeTruthy();
     });
   });
 
@@ -157,7 +158,7 @@ describe('FilterBar Component', () => {
     });
 
     // Should show loading spinner
-    expect(screen.queryByTestId('loading-spinner') || screen.queryByRole('progressbar')).toBeTruthy();
+    expect(document.querySelector('.loading-spinner')).toBeTruthy();
   });
 
   it('should handle API error gracefully', async () => {

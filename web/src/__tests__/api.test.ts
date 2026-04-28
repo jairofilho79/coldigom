@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getMaterialKinds, getTags, getAssetUrl } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getMaterialKinds, getTags, getAssetUrl, updatePraise, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getMe, logout } from '../services/api';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
 // Mock fetch
@@ -57,7 +57,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/praises'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(result.data).toEqual(mockPraises);
       expect(result.pagination.total).toBe(2);
@@ -73,7 +73,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('q=Grande'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
     });
 
@@ -87,11 +87,11 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('page=2'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('limit=10'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
     });
 
@@ -104,12 +104,12 @@ describe('API Service', () => {
       await searchPraises({ tags: ['tag1', 'tag2'], rhythm: ['Avulsos'] });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('tags=tag1,tag2'),
-        undefined
+        expect.stringContaining('tags=tag1%2Ctag2'),
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('rhythm=Avulsos'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
     });
 
@@ -123,11 +123,11 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('numberMin=1'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('numberMax=10'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
     });
 
@@ -141,11 +141,11 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('sort=name'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('order=desc'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
     });
 
@@ -166,7 +166,7 @@ describe('API Service', () => {
         json: () => Promise.reject(new Error('Parse error')),
       });
 
-      await expect(searchPraises()).rejects.toThrow('HTTP 500');
+      await expect(searchPraises()).rejects.toThrow('Request failed');
     });
   });
 
@@ -191,7 +191,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/praises/filters'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(result.rhythms).toEqual(['Avulsos', 'Coletânea']);
       expect(result.tags).toHaveLength(2);
@@ -247,7 +247,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(result.name).toBe('Grande Deus');
       expect(result.materials).toHaveLength(1);
@@ -280,7 +280,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/materials/kinds'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(result).toHaveLength(2);
     });
@@ -302,7 +302,7 @@ describe('API Service', () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/tags'),
-        undefined
+        expect.objectContaining({ credentials: 'include' })
       );
       expect(result).toHaveLength(2);
     });
@@ -314,6 +314,117 @@ describe('API Service', () => {
       const result = getAssetUrl(r2Key);
       
       expect(result).toContain(r2Key);
+    });
+  });
+
+  describe('write endpoints', () => {
+    it('should PATCH praise updates', async () => {
+      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockPraiseDetail }),
+      });
+
+      await updatePraise('p1', { name: 'Novo' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1'),
+        expect.objectContaining({
+          method: 'PATCH',
+          credentials: 'include',
+        })
+      );
+    });
+
+    it('should POST createMaterial', async () => {
+      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockPraiseDetail }),
+      });
+
+      await createMaterial('p1', { material_kind: 'k1', type: 'youtube', url: 'https://youtu.be/abc' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/materials'),
+        expect.objectContaining({ method: 'POST', credentials: 'include' })
+      );
+    });
+
+    it('should PATCH updateMaterial', async () => {
+      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockPraiseDetail }),
+      });
+
+      await updateMaterial('m1', { material_kind: 'k2' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/materials/m1'),
+        expect.objectContaining({ method: 'PATCH', credentials: 'include' })
+      );
+    });
+
+    it('should DELETE deleteMaterial', async () => {
+      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockPraiseDetail }),
+      });
+
+      await deleteMaterial('m1');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/materials/m1'),
+        expect.objectContaining({ method: 'DELETE', credentials: 'include' })
+      );
+    });
+
+    it('should bulkUploadMaterials using FormData', async () => {
+      const mockPraiseDetail = { id: 'p1' } as any as PraiseDetail;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: mockPraiseDetail }),
+      });
+
+      const file = new File(['abc'], 'a.pdf', { type: 'application/pdf' });
+      await bulkUploadMaterials('p1', [{ file, material_kind: 'k1', type: 'pdf', file_path_legacy: 'dir/a.pdf' }]);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/materials/bulk-upload'),
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          body: expect.any(FormData),
+        })
+      );
+    });
+  });
+
+  describe('auth', () => {
+    it('should call /auth/me', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ user: null }),
+      });
+      await getMe();
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/me'),
+        expect.objectContaining({ credentials: 'include' })
+      );
+    });
+
+    it('should POST /auth/logout', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ok: true }),
+      });
+      await logout();
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/logout'),
+        expect.objectContaining({ method: 'POST', credentials: 'include' })
+      );
     });
   });
 });

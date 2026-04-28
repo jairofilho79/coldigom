@@ -10,13 +10,14 @@ afterEach(() => {
 vi.stubGlobal('scrollTo', vi.fn());
 
 // Mock URLSearchParams
+const NativeURLSearchParams = globalThis.URLSearchParams;
 // @ts-expect-error Mock class does not fully implement URLSearchParams
 globalThis.URLSearchParams = class URLSearchParams {
   private params: Record<string, string> = {};
   
   constructor(init?: string) {
     if (init) {
-      const searchParams = new URLSearchParams(init);
+      const searchParams = new NativeURLSearchParams(init);
       searchParams.forEach((value, key) => {
         this.params[key] = value;
       });

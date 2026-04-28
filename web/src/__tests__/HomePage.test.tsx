@@ -14,21 +14,22 @@ vi.mock('../services/api', () => ({
 const mockSetFilters = vi.fn();
 const mockToggleTag = vi.fn();
 const mockClearAllFilters = vi.fn();
+const stableFilters = {
+  query: '',
+  tags: [] as string[],
+  rhythm: [] as string[],
+  tonality: [] as string[],
+  category: [] as string[],
+  numberMin: undefined as number | undefined,
+  numberMax: undefined as number | undefined,
+  sort: 'number' as const,
+  order: 'asc' as const,
+  page: 1,
+};
 
 vi.mock('../hooks/useFilters', () => ({
   useFilters: () => ({
-    filters: {
-      query: '',
-      tags: [],
-      rhythm: [],
-      tonality: [],
-      category: [],
-      numberMin: undefined,
-      numberMax: undefined,
-      sort: 'number',
-      order: 'asc',
-      page: 1,
-    },
+    filters: stableFilters,
     setFilters: mockSetFilters,
     toggleTag: mockToggleTag,
     clearAllFilters: mockClearAllFilters,
@@ -123,7 +124,8 @@ describe('HomePage Component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('2 resultados encontrados')).toBeTruthy();
+    expect(screen.getByText('resultados encontrados')).toBeTruthy();
+    expect(screen.getByText('2')).toBeTruthy();
     });
   });
 

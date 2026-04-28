@@ -484,7 +484,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/health', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -503,7 +503,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -527,7 +527,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -546,7 +546,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?q=Grande', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -565,7 +565,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?page=2&limit=1', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -585,7 +585,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?sort=name&order=desc', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -603,7 +603,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?tags=tag1,tag2', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -621,7 +621,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?rhythm=Avulsos', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -639,7 +639,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?tonality=C', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -657,7 +657,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?category=Adoração', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -675,7 +675,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises?numberMin=1&numberMax=10', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -697,7 +697,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(500);
@@ -730,7 +730,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises/filters', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -751,7 +751,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises/filters', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(500);
@@ -772,7 +772,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -795,7 +795,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises/non-existent-id', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(404);
@@ -816,7 +816,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -837,7 +837,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/praises/some-id', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(500);
@@ -855,7 +855,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/materials/kinds', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -875,7 +875,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/materials/kinds', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(500);
@@ -891,7 +891,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/tags', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -911,7 +911,7 @@ describe('API Routes', () => {
       const app = createTestApp(mockDB, mockR2);
       
       const res = await app.request('/api/tags', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(500);
@@ -928,7 +928,7 @@ describe('API Routes', () => {
       
       const app = createTestApp(mockDB, mockR2);
       const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.pdf', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -941,7 +941,7 @@ describe('API Routes', () => {
       
       const app = createTestApp(mockDB, mockR2);
       const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/nonexistent.pdf', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(404);
@@ -956,7 +956,7 @@ describe('API Routes', () => {
       
       const app = createTestApp(mockDB, mockR2);
       const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -970,7 +970,7 @@ describe('API Routes', () => {
       
       const app = createTestApp(mockDB, mockR2);
       const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.midi', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -984,7 +984,7 @@ describe('API Routes', () => {
       
       const app = createTestApp(mockDB, mockR2);
       const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.chord', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -998,7 +998,7 @@ describe('API Routes', () => {
       
       const app = createTestApp(mockDB, mockR2);
       const res = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.xyz', {}, { 
-        Bindings: { DB: mockDB, ASSETS: mockR2 } 
+        DB: mockDB, ASSETS: mockR2
       } as any);
       
       expect(res.status).toBe(200);
@@ -1014,7 +1014,7 @@ describe('API Routes', () => {
       const res = await app.request(
         '/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3',
         { headers: { Range: 'bytes=2-4' } },
-        { Bindings: { DB: mockDB, ASSETS: mockR2 } } as any
+        { DB: mockDB, ASSETS: mockR2 } as any
       );
 
       expect(res.status).toBe(206);
@@ -1033,7 +1033,7 @@ describe('API Routes', () => {
       const res = await app.request(
         '/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.mp3',
         { headers: { Range: 'bytes=99-120' } },
-        { Bindings: { DB: mockDB, ASSETS: mockR2 } } as any
+        { DB: mockDB, ASSETS: mockR2 } as any
       );
 
       expect(res.status).toBe(416);

@@ -1,9 +1,15 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { handleOAuthCallback, buildGoogleAuthorizeRedirect, clearCookie, getCookie, getSessionCookieName, verifySessionJwt } from './auth';
 
 type Env = {
   DB: D1Database;
   ASSETS: R2Bucket;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  AUTH_JWT_SECRET?: string;
+  AUTH_BASE_URL?: string;
+  WEB_ORIGIN?: string;
 };
 
 interface PraiseResult {
@@ -21,7 +27,97 @@ interface PraiseResult {
 const app = new Hono<{ Bindings: Env }>();
 
 // Enable CORS for all routes
-app.use('/*', cors());
+app.use('/*', async (c, next) => {
+  const origin = c.req.header('origin');
+  const allowed = c.env.WEB_ORIGIN || origin || '*';
+  return cors({
+    origin: allowed,
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+  })(c, next);
+});
+
+function getBaseUrl(c: any): string {
+  // Prefer explicit AUTH_BASE_URL (recommended in production)
+  if (c.env.AUTH_BASE_URL) return c.env.AUTH_BASE_URL;
+  const url = new URL(c.req.url);
+  return `${url.protocol}//${url.host}`;
+}
+
+async function requireAuth(c: any, next: any) {
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
+
+  const cookie = getCookie(c.req.raw, getSessionCookieName());
+  if (!cookie) return c.json({ error: 'Unauthorized' }, 401);
+  try {
+    const user = await verifySessionJwt({ jwtSecret, token: cookie });
+    c.set('user', user);
+    return await next();
+  } catch {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+}
+
+// --- Auth routes ---
+app.get('/auth/login', async (c) => {
+  const clientId = c.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return c.json({ error: 'Google OAuth not configured' }, 500);
+
+  const baseUrl = getBaseUrl(c);
+  const redirectTo = c.req.query('redirect') || '/';
+  const { location, setCookies } = await buildGoogleAuthorizeRedirect({
+    requestUrl: new URL(c.req.url),
+    baseUrl,
+    clientId,
+    redirectTo,
+  });
+
+  setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
+  return c.redirect(location);
+});
+
+app.get('/auth/callback', async (c) => {
+  const clientId = c.env.GOOGLE_CLIENT_ID;
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  if (!clientId || !jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
+
+  const baseUrl = getBaseUrl(c);
+  try {
+    const { redirectTo, setCookies } = await handleOAuthCallback({
+      request: c.req.raw,
+      requestUrl: new URL(c.req.url),
+      baseUrl,
+      clientId,
+      clientSecret: c.env.GOOGLE_CLIENT_SECRET,
+      jwtSecret,
+    });
+    setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
+    return c.redirect(redirectTo);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Auth failed';
+    return c.json({ error: msg }, 400);
+  }
+});
+
+app.post('/auth/logout', async (c) => {
+  c.header('Set-Cookie', clearCookie(new URL(c.req.url), getSessionCookieName()));
+  return c.json({ ok: true });
+});
+
+app.get('/auth/me', async (c) => {
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  if (!jwtSecret) return c.json({ user: null });
+  const cookie = getCookie(c.req.raw, getSessionCookieName());
+  if (!cookie) return c.json({ user: null });
+  try {
+    const user = await verifySessionJwt({ jwtSecret, token: cookie });
+    return c.json({ user });
+  } catch {
+    return c.json({ user: null });
+  }
+});
 
 const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;
 type SortField = typeof VALID_SORT_FIELDS[number];
@@ -315,6 +411,280 @@ app.get('/api/tags', async (c) => {
   } catch (error) {
     console.error('Error fetching tags:', error);
     return c.json({ error: 'Failed to fetch tags' }, 500);
+  }
+});
+
+// PATCH /api/praises/:id - Update praise fields (admin)
+app.patch('/api/praises/:id', requireAuth, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => null) as any;
+  if (!body || typeof body !== 'object') {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+  const sets: string[] = [];
+  const bindings: (string | null)[] = [];
+
+  for (const key of updatable) {
+    if (!(key in body)) continue;
+    const val = body[key];
+    if (val === null || val === undefined) {
+      sets.push(`${key} = ?`);
+      bindings.push(null);
+      continue;
+    }
+    if (typeof val !== 'string') {
+      return c.json({ error: `Field '${key}' must be a string` }, 400);
+    }
+    sets.push(`${key} = ?`);
+    bindings.push(val);
+  }
+
+  if (sets.length === 0) {
+    return c.json({ error: 'No fields to update' }, 400);
+  }
+
+  try {
+    const sql = `UPDATE praises SET ${sets.join(', ')}, updated_at = datetime('now') WHERE id = ?`;
+    await c.env.DB.prepare(sql).bind(...bindings, id).run();
+  } catch (error) {
+    console.error('Error updating praise:', error);
+    return c.json({ error: 'Failed to update praise' }, 500);
+  }
+
+  // Return updated detail (same shape as GET /api/praises/:id)
+  const reqUrl = new URL(c.req.url);
+  const base = `${reqUrl.protocol}//${reqUrl.host}`;
+  try {
+    const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env as any);
+    const json = await res.json();
+    return c.json(json, res.status);
+  } catch (error) {
+    console.error('Error re-fetching praise after update:', error);
+    return c.json({ ok: true });
+  }
+});
+
+// POST /api/praises/:id/materials - Create a material (admin, JSON)
+app.post('/api/praises/:id/materials', requireAuth, async (c) => {
+  const praiseId = c.req.param('id');
+  const body = await c.req.json().catch(() => null) as any;
+  if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const material_kind = body.material_kind;
+  const type = body.type;
+  const url = body.url;
+
+  if (typeof material_kind !== 'string' || !material_kind) return c.json({ error: "Field 'material_kind' is required" }, 400);
+  if (typeof type !== 'string' || !type) return c.json({ error: "Field 'type' is required" }, 400);
+
+  const hasUrl = typeof url === 'string' && url.trim().length > 0;
+  const isYouTube = (u: string) => {
+    try {
+      const parsed = new URL(u);
+      const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+      return host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com';
+    } catch {
+      return false;
+    }
+  };
+
+  if (type === 'youtube') {
+    if (!hasUrl) return c.json({ error: "Field 'url' is required for type youtube" }, 400);
+    if (!isYouTube(url)) return c.json({ error: 'Invalid YouTube URL' }, 400);
+  }
+  const id = crypto.randomUUID();
+
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      id,
+      praiseId,
+      material_kind,
+      type,
+      null,
+      '',
+      null,
+      hasUrl ? url.trim() : null
+    ).run();
+  } catch (error) {
+    console.error('Error creating material:', error);
+    return c.json({ error: 'Failed to create material' }, 500);
+  }
+
+  const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+  const json = await res.json();
+  return c.json(json, res.status);
+});
+
+// POST /api/praises/:id/materials/bulk-upload - Bulk upload files for a praise (admin, multipart)
+app.post('/api/praises/:id/materials/bulk-upload', requireAuth, async (c) => {
+  const praiseId = c.req.param('id');
+
+  let form: FormData;
+  try {
+    form = await c.req.formData();
+  } catch {
+    return c.json({ error: 'Expected multipart/form-data' }, 400);
+  }
+
+  const itemsRaw = form.get('items');
+  if (typeof itemsRaw !== 'string') return c.json({ error: "Missing 'items' field" }, 400);
+
+  let items: Array<{ key: string; material_kind: string; type: string; file_path_legacy?: string }>;
+  try {
+    items = JSON.parse(itemsRaw);
+    if (!Array.isArray(items)) throw new Error('items must be an array');
+  } catch (e) {
+    return c.json({ error: 'Invalid items JSON' }, 400);
+  }
+
+  try {
+    for (const item of items) {
+      if (!item || typeof item !== 'object') return c.json({ error: 'Invalid item' }, 400);
+      if (typeof item.key !== 'string') return c.json({ error: "Item missing 'key'" }, 400);
+      if (typeof item.material_kind !== 'string' || !item.material_kind) return c.json({ error: "Item missing 'material_kind'" }, 400);
+      if (typeof item.type !== 'string' || !item.type) return c.json({ error: "Item missing 'type'" }, 400);
+
+      const file = form.get(item.key);
+      if (!(file instanceof File)) return c.json({ error: `Missing file for key ${item.key}` }, 400);
+
+      const materialId = crypto.randomUUID();
+      const r2_key = `assets/praises/${praiseId}/${materialId}.${item.type}`;
+      const storageKey = `storage/${r2_key}`;
+
+      await c.env.ASSETS.put(storageKey, file.stream(), {
+        httpMetadata: {
+          contentType: file.type || undefined,
+        },
+      });
+
+      await c.env.DB.prepare(
+        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        materialId,
+        praiseId,
+        item.material_kind,
+        item.type,
+        r2_key,
+        item.file_path_legacy || file.name,
+        null,
+        null
+      ).run();
+    }
+  } catch (error) {
+    console.error('Error bulk uploading materials:', error);
+    return c.json({ error: 'Failed to bulk upload materials' }, 500);
+  }
+
+  const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+  const json = await res.json();
+  return c.json(json, res.status);
+});
+
+// PATCH /api/materials/:materialId - Update a material (admin)
+app.patch('/api/materials/:materialId', requireAuth, async (c) => {
+  const materialId = c.req.param('materialId');
+  const body = await c.req.json().catch(() => null) as any;
+  if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const sets: string[] = [];
+  const bindings: (string | null)[] = [];
+
+  if ('material_kind' in body) {
+    if (body.material_kind !== null && typeof body.material_kind !== 'string') {
+      return c.json({ error: "Field 'material_kind' must be a string" }, 400);
+    }
+    sets.push(`material_kind = ?`);
+    bindings.push(body.material_kind);
+  }
+
+  if ('type' in body) {
+    if (body.type !== null && typeof body.type !== 'string') {
+      return c.json({ error: "Field 'type' must be a string" }, 400);
+    }
+    sets.push(`type = ?`);
+    bindings.push(body.type);
+  }
+
+  if ('url' in body) {
+    if (body.url !== null && typeof body.url !== 'string') {
+      return c.json({ error: "Field 'url' must be a string" }, 400);
+    }
+    const trimmed = typeof body.url === 'string' ? body.url.trim() : null;
+    sets.push(`url = ?`);
+    bindings.push(trimmed && trimmed.length > 0 ? trimmed : null);
+    // If url is set, ensure r2_key is NULL (logical material)
+    if (trimmed && trimmed.length > 0) {
+      sets.push(`r2_key = NULL`);
+    }
+  }
+
+  if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
+
+  try {
+    const row = await c.env.DB.prepare(`SELECT praise_id FROM praise_materials WHERE id = ?`).bind(materialId).first() as any;
+    if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
+
+    // Enforce: if type is youtube, url must be a valid youtube url
+    const newType = typeof body.type === 'string' ? body.type : null;
+    const newUrl = 'url' in body ? (typeof body.url === 'string' ? body.url.trim() : null) : null;
+    if (newType === 'youtube') {
+      const effectiveUrl = newUrl ?? undefined;
+      if (!effectiveUrl || effectiveUrl.length === 0) return c.json({ error: "Field 'url' is required for type youtube" }, 400);
+      try {
+        const parsed = new URL(effectiveUrl);
+        const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+        const ok = host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com';
+        if (!ok) return c.json({ error: 'Invalid YouTube URL' }, 400);
+      } catch {
+        return c.json({ error: 'Invalid YouTube URL' }, 400);
+      }
+    }
+
+    await c.env.DB.prepare(`UPDATE praise_materials SET ${sets.join(', ')} WHERE id = ?`)
+      .bind(...bindings, materialId)
+      .run();
+
+    const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env as any);
+    const json = await res.json();
+    return c.json(json, res.status);
+  } catch (error) {
+    console.error('Error updating material:', error);
+    return c.json({ error: 'Failed to update material' }, 500);
+  }
+});
+
+// DELETE /api/materials/:materialId - Delete a material (admin)
+app.delete('/api/materials/:materialId', requireAuth, async (c) => {
+  const materialId = c.req.param('materialId');
+  try {
+    const row = await c.env.DB.prepare(`SELECT praise_id, r2_key FROM praise_materials WHERE id = ?`)
+      .bind(materialId)
+      .first() as any;
+    if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
+
+    await c.env.DB.prepare(`DELETE FROM praise_materials WHERE id = ?`).bind(materialId).run();
+
+    if (row.r2_key) {
+      try {
+        await c.env.ASSETS.delete(`storage/${row.r2_key}`);
+      } catch (e) {
+        // Best-effort cleanup
+        console.warn('Failed to delete R2 object:', e);
+      }
+    }
+
+    const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env as any);
+    const json = await res.json();
+    return c.json(json, res.status);
+  } catch (error) {
+    console.error('Error deleting material:', error);
+    return c.json({ error: 'Failed to delete material' }, 500);
   }
 });
 

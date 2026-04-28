@@ -41,7 +41,7 @@ export function AudioPlayer({ materials, getAssetUrl }: Props) {
   const [isMuted, setIsMuted] = useState(false);
 
   const current = materials[currentIndex];
-  const src = current ? getAssetUrl(current.r2_key) : '';
+  const src = current?.r2_key ? getAssetUrl(current.r2_key) : '';
   const trackName = current?.material_kind_name || 'Áudio';
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
   const fillPct =
@@ -264,20 +264,22 @@ export function AudioPlayer({ materials, getAssetUrl }: Props) {
                   </span>
                   <span className="audio-track-label">{name}</span>
                 </button>
-                <a
-                  className="audio-track-open"
-                  href={getAssetUrl(m.r2_key)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  aria-label="Abrir em nova aba"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </a>
+                {m.r2_key && (
+                  <a
+                    className="audio-track-open"
+                    href={getAssetUrl(m.r2_key)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    aria-label="Abrir em nova aba"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                )}
               </li>
             );
           })}

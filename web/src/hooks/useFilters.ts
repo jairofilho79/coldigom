@@ -43,6 +43,21 @@ export function useFilters() {
   const setFilters = useCallback((updates: Partial<FilterState>) => {
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
+      const shouldResetPage =
+        !('page' in updates) &&
+        ('query' in updates ||
+          'tags' in updates ||
+          'rhythm' in updates ||
+          'tonality' in updates ||
+          'category' in updates ||
+          'numberMin' in updates ||
+          'numberMax' in updates ||
+          'sort' in updates ||
+          'order' in updates);
+
+      if (shouldResetPage) {
+        newParams.delete('page');
+      }
 
       if ('query' in updates) {
         if (updates.query) newParams.set('q', updates.query);
@@ -83,22 +98,6 @@ export function useFilters() {
       if ('page' in updates) {
         if (updates.page && updates.page !== 1) newParams.set('page', updates.page.toString());
         else newParams.delete('page');
-      }
-
-      const shouldResetPage =
-        ('query' in updates ||
-          'tags' in updates ||
-          'rhythm' in updates ||
-          'tonality' in updates ||
-          'category' in updates ||
-          'numberMin' in updates ||
-          'numberMax' in updates ||
-          'sort' in updates ||
-          'order' in updates) &&
-        !('page' in updates);
-
-      if (shouldResetPage) {
-        newParams.delete('page');
       }
 
       return newParams;

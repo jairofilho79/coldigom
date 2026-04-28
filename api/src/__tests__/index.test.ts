@@ -70,10 +70,28 @@ const createMockD1 = (responses: any) => ({
   })),
 });
 
-// Mock R2Bucket
-const createMockR2 = (object: any = null) => ({
-  get: vi.fn().mockResolvedValue(object),
-});
+// Mock R2Bucket (head + ranged get, aligned with Worker R2 API)
+const createMockR2 = (object: any = null) => {
+  const objectBody = object?.body ?? null;
+  const defaultBytes =
+    objectBody instanceof Uint8Array ? objectBody : objectBody ? new Uint8Array(objectBody) : null;
+
+  return {
+    head: vi.fn().mockImplementation(async () => {
+      if (!object) return null;
+      return { size: defaultBytes?.byteLength ?? 0 };
+    }),
+    get: vi.fn().mockImplementation(async (_key: string, opts?: { range?: { offset: number; length: number } }) => {
+      if (!object) return null;
+      if (!opts?.range || !defaultBytes) return object;
+
+      const offset = opts.range.offset ?? 0;
+      const length = opts.range.length ?? defaultBytes.byteLength;
+      const slice = defaultBytes.slice(offset, offset + length);
+      return { ...object, body: slice };
+    }),
+  };
+};
 
 describe('API Routes', () => {
   describe('Health Check', () => {

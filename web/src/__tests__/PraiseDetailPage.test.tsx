@@ -4,11 +4,27 @@ import { PraiseDetailPage } from '../pages/PraiseDetailPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { PraiseDetail } from '../types';
 
-// Mock the api module
-vi.mock('../services/api', () => ({
-  getPraise: vi.fn(),
-  getAssetUrl: vi.fn((key: string) => `http://localhost:8787/${key}`),
-}));
+// Mock the api module (preserve exports such as API_BASE_URL used by the page)
+vi.mock('../services/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/api')>();
+  return {
+    ...actual,
+    getPraise: vi.fn(),
+    getAssetUrl: vi.fn((key: string) => `http://localhost:8787/${key}`),
+    getMe: vi.fn().mockResolvedValue(null),
+    getMaterialKinds: vi.fn().mockResolvedValue([
+      { id: 'kind1', name: 'Partitura' },
+      { id: 'kind2', name: 'Audio' },
+      { id: 'kind3', name: 'Acordes' },
+    ]),
+    updatePraise: vi.fn(),
+    createMaterial: vi.fn(),
+    updateMaterial: vi.fn(),
+    deleteMaterial: vi.fn(),
+    bulkUploadMaterials: vi.fn(),
+    logout: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 import { getPraise } from '../services/api';
 
@@ -118,7 +134,9 @@ describe('PraiseDetailPage Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Áudio')).toBeTruthy();
-      expect(document.querySelector('audio.audio-player')).toBeTruthy();
+      expect(
+        document.querySelector('audio.audio-player-element')
+      ).toBeTruthy();
     });
   });
 

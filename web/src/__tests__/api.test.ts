@@ -2,9 +2,10 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { searchPraises, getFilterOptions, getPraise, getMaterialKinds, getTags, getAssetUrl } from '../services/api';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
-// Mock fetch
+// Mock fetch (API client always sends credentials: 'include')
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
+const withCreds = { credentials: 'include' } as const;
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -56,7 +57,8 @@ describe('API Service', () => {
       const result = await searchPraises();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises')
+        expect.stringContaining('/api/praises'),
+        withCreds
       );
       expect(result.data).toEqual(mockPraises);
       expect(result.pagination.total).toBe(2);
@@ -71,7 +73,9 @@ describe('API Service', () => {
       await searchPraises({ query: 'Grande' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('q=Grande')      );
+        expect.stringContaining('q=Grande'),
+        withCreds
+      );
     });
 
     it('should include pagination parameters', async () => {
@@ -83,9 +87,13 @@ describe('API Service', () => {
       await searchPraises({ page: 2, limit: 10 });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('page=2')      );
+        expect.stringContaining('page=2'),
+        withCreds
+      );
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('limit=10')      );
+        expect.stringContaining('limit=10'),
+        withCreds
+      );
     });
 
     it('should include array filters as comma-separated', async () => {
@@ -111,9 +119,13 @@ describe('API Service', () => {
       await searchPraises({ numberMin: 1, numberMax: 10 });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('numberMin=1')      );
+        expect.stringContaining('numberMin=1'),
+        withCreds
+      );
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('numberMax=10')      );
+        expect.stringContaining('numberMax=10'),
+        withCreds
+      );
     });
 
     it('should include sort and order parameters', async () => {
@@ -125,9 +137,13 @@ describe('API Service', () => {
       await searchPraises({ sort: 'name', order: 'desc' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('sort=name')      );
+        expect.stringContaining('sort=name'),
+        withCreds
+      );
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('order=desc')      );
+        expect.stringContaining('order=desc'),
+        withCreds
+      );
     });
 
     it('should throw error when response is not ok', async () => {
@@ -215,7 +231,9 @@ describe('API Service', () => {
       const result = await getFilterOptions();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/filters')      );
+        expect.stringContaining('/api/praises/filters'),
+        withCreds
+      );
       expect(result.rhythms).toEqual(['Avulsos', 'Coletânea']);
       expect(result.tags).toHaveLength(2);
     });
@@ -269,7 +287,9 @@ describe('API Service', () => {
       const result = await getPraise('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8')      );
+        expect.stringContaining('/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8'),
+        withCreds
+      );
       expect(result.name).toBe('Grande Deus');
       expect(result.materials).toHaveLength(1);
     });
@@ -300,7 +320,9 @@ describe('API Service', () => {
       const result = await getMaterialKinds();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/materials/kinds')      );
+        expect.stringContaining('/api/materials/kinds'),
+        withCreds
+      );
       expect(result).toHaveLength(2);
     });
   });
@@ -320,7 +342,9 @@ describe('API Service', () => {
       const result = await getTags();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/tags')      );
+        expect.stringContaining('/api/tags'),
+        withCreds
+      );
       expect(result).toHaveLength(2);
     });
   });

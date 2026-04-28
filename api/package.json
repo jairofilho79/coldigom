@@ -15,7 +15,8 @@
     "ingest:dry-run": "tsx scripts/ingest.ts --dry-run",
     "ingest": "tsx scripts/ingest.ts",
     "ingest:execute": "tsx scripts/ingest.ts --execute",
-    "test": "vitest"
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
   },
   "keywords": [
     "cloudflare",

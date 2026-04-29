@@ -1,7 +1,16 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { handleOAuthCallback, buildGoogleAuthorizeRedirect, clearCookie, getCookie, getSessionCookieName, verifySessionJwt } from './auth';
+import {
+  handleOAuthCallback,
+  buildGoogleAuthorizeRedirect,
+  getCookie,
+  resolveUserFromCookies,
+  buildLogoutCookies,
+  rotateRefreshSession,
+  clearAllAuthCookieHeaders,
+  getRefreshCookieName,
+} from './auth';
 
 type Env = {
   DB: D1Database;
@@ -27,12 +36,16 @@ interface PraiseResult {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Enable CORS for all routes
+// CORS: with credentials, never use '*'. If WEB_ORIGIN is set, only that origin is allowed.
 app.use('/*', async (c, next) => {
   const origin = c.req.header('origin');
-  const allowed = c.env.WEB_ORIGIN || origin || '*';
+  const allowOrigin = c.env.WEB_ORIGIN
+    ? origin === c.env.WEB_ORIGIN
+      ? c.env.WEB_ORIGIN
+      : ''
+    : origin || '*';
   return cors({
-    origin: allowed,
+    origin: allowOrigin,
     credentials: true,
     allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -46,14 +59,26 @@ function getBaseUrl(c: any): string {
   return `${url.protocol}//${url.host}`;
 }
 
+function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) => string | undefined }; json: (b: object, s: number) => Response }): Response | null {
+  const web = c.env.WEB_ORIGIN;
+  if (!web) return null;
+  const origin = c.req.header('origin');
+  if (!origin || origin !== web) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+  return null;
+}
+
 async function requireAuth(c: any, next: any) {
+  const blocked = assertTrustedMutationOrigin(c);
+  if (blocked) return blocked;
+
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
 
-  const cookie = getCookie(c.req.raw, getSessionCookieName());
-  if (!cookie) return c.json({ error: 'Unauthorized' }, 401);
   try {
-    const user = await verifySessionJwt({ jwtSecret, token: cookie });
+    const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
+    if (!user) return c.json({ error: 'Unauthorized' }, 401);
     c.set('user', user);
     return await next();
   } catch {
@@ -93,6 +118,7 @@ app.get('/auth/callback', async (c) => {
       clientId,
       clientSecret: c.env.GOOGLE_CLIENT_SECRET,
       jwtSecret,
+      db: c.env.DB,
     });
     setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
     return c.redirect(redirectTo);
@@ -103,17 +129,50 @@ app.get('/auth/callback', async (c) => {
 });
 
 app.post('/auth/logout', async (c) => {
-  c.header('Set-Cookie', clearCookie(new URL(c.req.url), getSessionCookieName()));
+  const blocked = assertTrustedMutationOrigin(c);
+  if (blocked) return blocked;
+  const cookies = await buildLogoutCookies({
+    request: c.req.raw,
+    requestUrl: new URL(c.req.url),
+    db: c.env.DB,
+  });
+  cookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
   return c.json({ ok: true });
+});
+
+app.post('/auth/refresh', async (c) => {
+  const blocked = assertTrustedMutationOrigin(c);
+  if (blocked) return blocked;
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
+
+  const rawRefresh = getCookie(c.req.raw, getRefreshCookieName());
+  if (!rawRefresh) {
+    clearAllAuthCookieHeaders(new URL(c.req.url)).forEach(v => c.header('Set-Cookie', v, { append: true }));
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  const result = await rotateRefreshSession({
+    db: c.env.DB,
+    requestUrl: new URL(c.req.url),
+    jwtSecret,
+    rawRefresh,
+  });
+
+  if ('error' in result) {
+    clearAllAuthCookieHeaders(new URL(c.req.url)).forEach(v => c.header('Set-Cookie', v, { append: true }));
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  result.setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
+  return c.json({ ok: true, user: result.user });
 });
 
 app.get('/auth/me', async (c) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return c.json({ user: null });
-  const cookie = getCookie(c.req.raw, getSessionCookieName());
-  if (!cookie) return c.json({ user: null });
   try {
-    const user = await verifySessionJwt({ jwtSecret, token: cookie });
+    const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
     return c.json({ user });
   } catch {
     return c.json({ user: null });

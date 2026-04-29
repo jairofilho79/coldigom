@@ -2,13 +2,42 @@ import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationIn
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
 
-async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+function isAuthPathNoRefresh(url: string): boolean {
+  return /\/auth\/(login|callback|refresh)(?:\?|$)/.test(url);
+}
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/** Rotates refresh cookie + issues new access cookie. Returns true if session renewed. */
+export async function refreshSession(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      return res.ok;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = false): Promise<T> {
   const response = await fetch(url, { credentials: 'include', ...init });
+  if (response.status === 401 && !isAfterRefresh && !isAuthPathNoRefresh(url)) {
+    const renewed = await refreshSession();
+    if (renewed) {
+      return fetchJson<T>(url, init, true);
+    }
+  }
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
+    const error = await response.json().catch(() => ({ error: 'Request failed' })) as { error?: string };
     throw new Error(error.error || `HTTP ${response.status}`);
   }
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
 export interface SearchParams {
@@ -29,11 +58,11 @@ export async function searchPraises(
   params: SearchParams = {}
 ): Promise<{ data: Praise[]; pagination: PaginationInfo }> {
   const urlParams = new URLSearchParams();
-  
+
   if (params.query) urlParams.set('q', params.query);
   urlParams.set('page', (params.page || 1).toString());
   urlParams.set('limit', (params.limit || 20).toString());
-  
+
   if (params.tags && params.tags.length > 0) urlParams.set('tags', params.tags.join(','));
   if (params.rhythm && params.rhythm.length > 0) urlParams.set('rhythm', params.rhythm.join(','));
   if (params.tonality && params.tonality.length > 0) urlParams.set('tonality', params.tonality.join(','));
@@ -171,7 +200,5 @@ export async function logout(): Promise<void> {
 }
 
 export function getAssetUrl(r2Key: string): string {
-  // r2Key already contains the full path starting with assets/
-  // Example: assets/praises/228bf66e-3723-41f1-98ae-9d3a49d3d615/fd1ccc3a-03e3-450e-9d0c-4706bfe56f4c.pdf
   return `${API_BASE_URL}/${r2Key}`;
 }

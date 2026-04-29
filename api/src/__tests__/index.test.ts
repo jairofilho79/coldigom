@@ -622,6 +622,46 @@ describe('API Routes', () => {
       expect(res.headers.get('Content-Type')).toBe('application/octet-stream');
     });
   });
+
+  describe('POST /auth/refresh', () => {
+    it('returns 401 when no refresh cookie', async () => {
+      const mockDB = createMockD1({});
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/auth/refresh',
+        { method: 'POST' },
+        {
+          DB: mockDB,
+          ASSETS: mockR2,
+          AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+        }
+      );
+
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 403 when Origin does not match WEB_ORIGIN', async () => {
+      const mockDB = createMockD1({});
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/auth/refresh',
+        {
+          method: 'POST',
+          headers: { origin: 'https://evil.example' },
+        },
+        {
+          DB: mockDB,
+          ASSETS: mockR2,
+          AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+          WEB_ORIGIN: 'https://good.example',
+        }
+      );
+
+      expect(res.status).toBe(403);
+    });
+  });
 });
 
 describe('buildWhereClause', () => {

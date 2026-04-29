@@ -146,6 +146,33 @@ describe('API Service', () => {
       );
     });
 
+    it('should retry after 401 when session refresh succeeds', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: () => Promise.resolve({ error: 'Unauthorized' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ ok: true, user: { sub: 'u1' } }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse),
+        });
+
+      const result = await searchPraises();
+
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(result.data).toEqual(mockPraises);
+      const urls = mockFetch.mock.calls.map(c => String(c[0]));
+      expect(urls.some(u => u.includes('/auth/refresh'))).toBe(true);
+      const refreshCall = mockFetch.mock.calls.find(c => String(c[0]).includes('/auth/refresh'));
+      expect((refreshCall?.[1] as RequestInit)?.method).toBe('POST');
+    });
+
     it('should throw error when response is not ok', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,

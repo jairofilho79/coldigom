@@ -777,6 +777,43 @@
   margin-bottom: var(--space-4);
 }
 
+.auth-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+}
+
+.auth-user.muted {
+  opacity: 0.7;
+  font-size: var(--text-xs);
+}
+
+.brand-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.brand-header-auth {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+}
+
+.brand-header-auth a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: var(--weight-semibold);
+}
+
+.brand-header-auth a:hover {
+  color: var(--text-primary);
+}
+
 .auth-user {
   font-family: var(--font-body);
   font-size: var(--text-xs);

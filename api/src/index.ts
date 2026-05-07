@@ -10,6 +10,7 @@ import {
   rotateRefreshSession,
   clearAllAuthCookieHeaders,
   getRefreshCookieName,
+  type AuthUser,
 } from './auth';
 
 type Env = {
@@ -35,7 +36,7 @@ interface PraiseResult {
   tag_ids: string | null;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
 // CORS: with credentials, never use '*'. If WEB_ORIGIN is set, only that origin is allowed.
 app.use('/*', async (c, next) => {

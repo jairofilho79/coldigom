@@ -39,6 +39,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [ready, refetch]);
 
   useEffect(() => {
+    const url = new URL(window.location.href);
+    const auth = url.searchParams.get('auth');
+    if (!auth) return;
+    let cancelled = false;
+    void (async () => {
+      const attempts = auth === 'success' ? 4 : 1;
+      for (let i = 0; i < attempts; i += 1) {
+        await refetch();
+        if (cancelled) return;
+        if (auth !== 'success') break;
+        if (i < attempts - 1) {
+          await new Promise(resolve => setTimeout(resolve, 350));
+        }
+      }
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete('auth');
+      window.history.replaceState({}, '', `${clean.pathname}${clean.search}${clean.hash}`);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refetch]);
+
+  useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === 'visible') revalidateIfReady();
     };

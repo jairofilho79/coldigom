@@ -90,6 +90,23 @@ function getAuthCookieSameSite(c: { env: Env; req: { url: string } }): 'Lax' | '
   return 'Lax';
 }
 
+function withAuthFlag(redirectTo: string, auth: 'success' | 'error'): string {
+  try {
+    const url = new URL(redirectTo);
+    url.searchParams.set('auth', auth);
+    return url.toString();
+  } catch {
+    // Relative URL fallback
+    try {
+      const url = new URL(redirectTo, 'http://local');
+      url.searchParams.set('auth', auth);
+      return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+      return redirectTo;
+    }
+  }
+}
+
 function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) => string | undefined }; json: (b: object, s: number) => Response }): Response | null {
   const web = c.env.WEB_ORIGIN;
   if (!web) return null;
@@ -154,10 +171,10 @@ app.get('/auth/callback', async (c) => {
       cookieSameSite: getAuthCookieSameSite(c),
     });
     setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
-    return c.redirect(redirectTo);
+    return c.redirect(withAuthFlag(redirectTo, 'success'));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Auth failed';
-    return c.json({ error: msg }, 400);
+    const fallback = c.req.query('redirect') || '/';
+    return c.redirect(withAuthFlag(fallback, 'error'));
   }
 });
 

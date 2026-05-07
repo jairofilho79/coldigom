@@ -3,11 +3,13 @@ import { SearchBar } from '../components/SearchBar';
 import { ResultsTable } from '../components/ResultsTable';
 import { Pagination } from '../components/Pagination';
 import { FilterBar } from '../components/FilterBar';
-import { searchPraises } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { searchPraises, API_BASE_URL } from '../services/api';
 import { useFilters } from '../hooks/useFilters';
 import type { Praise, PaginationInfo } from '../types';
 
 export function HomePage() {
+  const { user, ready: authReady, logout } = useAuth();
   const { filters, setFilters } = useFilters();
 
   const [praises, setPraises] = useState<Praise[]>([]);
@@ -56,8 +58,36 @@ export function HomePage() {
   return (
     <div className="page-container">
       <header className="brand-header animate-fade-in-up">
-        <h1 className="brand-title">Coldigom</h1>
-        <p className="brand-subtitle">Coletânea Digital de Objetos Musicais</p>
+        <div className="brand-header-top">
+          <div>
+            <h1 className="brand-title">Coldigom</h1>
+            <p className="brand-subtitle">Coletânea Digital de Objetos Musicais</p>
+          </div>
+          <div className="brand-header-auth">
+            {!authReady ? (
+              <span className="auth-user muted">Sessão…</span>
+            ) : user ? (
+              <>
+                {user.picture ? (
+                  <img className="auth-avatar" src={user.picture} alt="" width={24} height={24} />
+                ) : null}
+                <span className="auth-user">
+                  {user.name || user.email}
+                </span>
+                <button type="button" className="auth-btn" onClick={() => void logout()}>
+                  Sair
+                </button>
+              </>
+            ) : (
+              <a
+                className="auth-btn"
+                href={`${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(window.location.origin + '/')}`}
+              >
+                Entrar
+              </a>
+            )}
+          </div>
+        </div>
       </header>
 
       <SearchBar onSearch={handleSearch} initialValue={filters.query} />

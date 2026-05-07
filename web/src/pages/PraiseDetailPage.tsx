@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getPraise, getAssetUrl, getMe, logout, API_BASE_URL, updatePraise, getMaterialKinds, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { getPraise, getAssetUrl, API_BASE_URL, updatePraise, getMaterialKinds, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import type { PraiseDetail } from '../types';
 import type { MaterialKind } from '../types';
 
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user, ready: authReady, logout } = useAuth();
+  const userName = authReady ? (user?.name || user?.email || null) : null;
   const [praise, setPraise] = useState<PraiseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
@@ -57,18 +59,6 @@ export function PraiseDetailPage() {
 
     fetchPraise();
   }, [id]);
-
-  useEffect(() => {
-    const fetchMe = async () => {
-      try {
-        const me = await getMe();
-        setUserName(me?.name || me?.email || null);
-      } catch {
-        setUserName(null);
-      }
-    };
-    fetchMe();
-  }, []);
 
   useEffect(() => {
     const fetchKinds = async () => {
@@ -159,8 +149,13 @@ export function PraiseDetailPage() {
 
       <header className="detail-header animate-fade-in-scale">
         <div className="auth-row">
-          {userName ? (
+          {!authReady ? (
+            <div className="auth-user muted">Verificando sessão…</div>
+          ) : userName ? (
             <>
+              {user?.picture ? (
+                <img className="auth-avatar" src={user.picture} alt="" width={28} height={28} />
+              ) : null}
               <div className="auth-user">Logado como <strong>{userName}</strong></div>
               <button
                 type="button"
@@ -174,7 +169,6 @@ export function PraiseDetailPage() {
                 className="auth-btn"
                 onClick={async () => {
                   await logout();
-                  setUserName(null);
                   setIsEditing(false);
                 }}
               >

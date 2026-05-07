@@ -25,10 +25,21 @@ const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_JWKS_URL = new URL('https://www.googleapis.com/oauth2/v3/certs');
 const GOOGLE_ISSUERS = new Set(['accounts.google.com', 'https://accounts.google.com']);
 
-const SESSION_COOKIE = 'coldigom_session';
+/** Short-lived JWT (HS256) — API authorization */
+export const ACCESS_COOKIE = 'coldigom_access';
+/** Opaque rotating refresh token (stored hashed in D1) */
+export const REFRESH_COOKIE = 'coldigom_refresh';
+/** @deprecated Legacy 7-day session cookie; accepted until expiry for backward compatibility */
+const LEGACY_SESSION_COOKIE = 'coldigom_session';
+
 const PKCE_VERIFIER_COOKIE = 'coldigom_pkce_verifier';
 const STATE_COOKIE = 'coldigom_oauth_state';
 const REDIRECT_COOKIE = 'coldigom_post_login_redirect';
+
+/** Access token lifetime (seconds) */
+export const ACCESS_TTL_SEC = 300;
+/** Refresh token lifetime (seconds) — 30 days */
+export const REFRESH_TTL_SEC = 60 * 60 * 24 * 30;
 
 function base64UrlEncode(bytes: Uint8Array): string {
   let str = '';
@@ -37,7 +48,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function randomString(bytes = 32): string {
+export function randomString(bytes = 32): string {
   const buf = new Uint8Array(bytes);
   crypto.getRandomValues(buf);
   return base64UrlEncode(buf);
@@ -47,6 +58,14 @@ async function sha256Base64Url(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return base64UrlEncode(new Uint8Array(digest));
+}
+
+/** SHA-256 hex for opaque refresh token lookup in D1 */
+export async function hashRefreshTokenHex(raw: string): Promise<string> {
+  const bytes = new TextEncoder().encode(raw);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  const hex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex;
 }
 
 function isHttpsRequest(requestUrl: URL): boolean {
@@ -93,8 +112,17 @@ export function getCookie(req: Request, name: string): string | null {
   return null;
 }
 
+export function getAccessCookieName(): string {
+  return ACCESS_COOKIE;
+}
+
+export function getRefreshCookieName(): string {
+  return REFRESH_COOKIE;
+}
+
+/** @deprecated Use getAccessCookieName */
 export function getSessionCookieName(): string {
-  return SESSION_COOKIE;
+  return ACCESS_COOKIE;
 }
 
 export async function buildGoogleAuthorizeRedirect(params: {
@@ -156,11 +184,11 @@ async function exchangeCodeForTokens(params: {
     const text = await res.text().catch(() => '');
     throw new Error(`Google token exchange failed (${res.status}): ${text}`);
   }
-  const json = await res.json() as any;
+  const json = (await res.json()) as { id_token?: string };
   if (!json?.id_token) {
     throw new Error('Google token exchange missing id_token');
   }
-  return { id_token: json.id_token as string };
+  return { id_token: json.id_token };
 }
 
 export async function verifyGoogleIdToken(params: {
@@ -175,9 +203,12 @@ export async function verifyGoogleIdToken(params: {
   return payload as unknown as GoogleIdTokenClaims;
 }
 
-export async function signSessionJwt(params: {
+export type AuthUser = { sub: string; email?: string; name?: string; picture?: string };
+
+export async function signAccessJwt(params: {
   jwtSecret: string;
-  user: { sub: string; email?: string; name?: string; picture?: string };
+  user: AuthUser;
+  jti: string;
 }): Promise<string> {
   const secret = new TextEncoder().encode(params.jwtSecret);
   const now = Math.floor(Date.now() / 1000);
@@ -185,20 +216,29 @@ export async function signSessionJwt(params: {
     email: params.user.email,
     name: params.user.name,
     picture: params.user.picture,
+    jti: params.jti,
   })
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(params.user.sub)
     .setIssuedAt(now)
-    .setExpirationTime(now + 60 * 60 * 24 * 7)
+    .setExpirationTime(now + ACCESS_TTL_SEC)
     .sign(secret);
 }
 
-export async function verifySessionJwt(params: { jwtSecret: string; token: string }): Promise<{
-  sub: string;
-  email?: string;
-  name?: string;
-  picture?: string;
-}> {
+export async function verifyAccessJwt(params: { jwtSecret: string; token: string }): Promise<AuthUser & { jti?: string }> {
+  const secret = new TextEncoder().encode(params.jwtSecret);
+  const { payload } = await jwtVerify(params.token, secret);
+  return {
+    sub: String(payload.sub),
+    email: typeof payload.email === 'string' ? payload.email : undefined,
+    name: typeof payload.name === 'string' ? payload.name : undefined,
+    picture: typeof payload.picture === 'string' ? payload.picture : undefined,
+    jti: typeof payload.jti === 'string' ? payload.jti : undefined,
+  };
+}
+
+/** Legacy long-lived session JWT (7d) — read-only verification for migration */
+export async function verifyLegacySessionJwt(params: { jwtSecret: string; token: string }): Promise<AuthUser> {
   const secret = new TextEncoder().encode(params.jwtSecret);
   const { payload } = await jwtVerify(params.token, secret);
   return {
@@ -209,6 +249,135 @@ export async function verifySessionJwt(params: { jwtSecret: string; token: strin
   };
 }
 
+function cookieOpts(requestUrl: URL) {
+  return { sameSite: 'Lax' as const, secure: isHttpsRequest(requestUrl) };
+}
+
+export async function insertRefreshTokenRow(params: {
+  db: D1Database;
+  userSub: string;
+  rawRefresh: string;
+  /** Persist profile fields for renewal via refresh rotation */
+  userClaims?: Pick<AuthUser, 'email' | 'name' | 'picture'>;
+}): Promise<{ id: string; tokenHash: string; expiresAt: number }> {
+  const id = crypto.randomUUID();
+  const tokenHash = await hashRefreshTokenHex(params.rawRefresh);
+  const expiresAt = Math.floor(Date.now() / 1000) + REFRESH_TTL_SEC;
+  const claimsJson = params.userClaims
+    ? JSON.stringify({
+        email: params.userClaims.email,
+        name: params.userClaims.name,
+        picture: params.userClaims.picture,
+      })
+    : null;
+  await params.db
+    .prepare(
+      `INSERT INTO auth_refresh_tokens (id, user_sub, token_hash, expires_at, user_claims) VALUES (?, ?, ?, ?, ?)`
+    )
+    .bind(id, params.userSub, tokenHash, expiresAt, claimsJson)
+    .run();
+  return { id, tokenHash, expiresAt };
+}
+
+export async function revokeAllRefreshForUser(db: D1Database, userSub: string): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+  await db
+    .prepare(`UPDATE auth_refresh_tokens SET revoked_at = ? WHERE user_sub = ? AND revoked_at IS NULL`)
+    .bind(now, userSub)
+    .run();
+}
+
+export async function revokeRefreshRowById(db: D1Database, id: string): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare(`UPDATE auth_refresh_tokens SET revoked_at = ? WHERE id = ? AND revoked_at IS NULL`).bind(now, id).run();
+}
+
+/**
+ * Rotate refresh token: validates opaque cookie, issues new access + refresh, revokes old row.
+ * On reuse of a revoked token, revokes all sessions for that user.
+ */
+export async function rotateRefreshSession(params: {
+  db: D1Database;
+  requestUrl: URL;
+  jwtSecret: string;
+  rawRefresh: string;
+}): Promise<{ setCookies: string[]; user: AuthUser } | { error: 'invalid' | 'reuse' }> {
+  const hash = await hashRefreshTokenHex(params.rawRefresh);
+  const row = await params.db
+    .prepare(
+      `SELECT id, user_sub, expires_at, revoked_at, user_claims FROM auth_refresh_tokens WHERE token_hash = ?`
+    )
+    .bind(hash)
+    .first<{
+      id: string;
+      user_sub: string;
+      expires_at: number;
+      revoked_at: number | null;
+      user_claims: string | null;
+    }>();
+
+  const now = Math.floor(Date.now() / 1000);
+  const opts = cookieOpts(params.requestUrl);
+
+  if (!row) {
+    return { error: 'invalid' };
+  }
+
+  if (row.revoked_at !== null) {
+    await revokeAllRefreshForUser(params.db, row.user_sub);
+    return { error: 'reuse' };
+  }
+
+  if (row.expires_at <= now) {
+    await revokeRefreshRowById(params.db, row.id);
+    return { error: 'invalid' };
+  }
+
+  let claims: Partial<Pick<AuthUser, 'email' | 'name' | 'picture'>> = {};
+  if (row.user_claims) {
+    try {
+      claims = JSON.parse(row.user_claims) as typeof claims;
+    } catch {
+      claims = {};
+    }
+  }
+  const user: AuthUser = {
+    sub: row.user_sub,
+    email: claims.email,
+    name: claims.name,
+    picture: claims.picture,
+  };
+  const jti = crypto.randomUUID();
+  const accessJwt = await signAccessJwt({ jwtSecret: params.jwtSecret, user, jti });
+
+  const newRawRefresh = randomString(48);
+  const newRow = await insertRefreshTokenRow({
+    db: params.db,
+    userSub: row.user_sub,
+    rawRefresh: newRawRefresh,
+    userClaims: { email: user.email, name: user.name, picture: user.picture },
+  });
+
+  await params.db
+    .prepare(`UPDATE auth_refresh_tokens SET revoked_at = ?, replaced_by = ? WHERE id = ?`)
+    .bind(now, newRow.id, row.id)
+    .run();
+
+  const setCookies = [
+    buildSetCookie(params.requestUrl, ACCESS_COOKIE, accessJwt, {
+      maxAgeSeconds: ACCESS_TTL_SEC,
+      ...opts,
+    }),
+    buildSetCookie(params.requestUrl, REFRESH_COOKIE, newRawRefresh, {
+      maxAgeSeconds: REFRESH_TTL_SEC,
+      ...opts,
+    }),
+  ];
+
+  const fullUser = await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: accessJwt });
+  return { setCookies, user: fullUser };
+}
+
 export async function handleOAuthCallback(params: {
   request: Request;
   requestUrl: URL;
@@ -216,10 +385,11 @@ export async function handleOAuthCallback(params: {
   clientId: string;
   clientSecret?: string;
   jwtSecret: string;
+  db: D1Database;
 }): Promise<{
   redirectTo: string;
   setCookies: string[];
-  user: { sub: string; email?: string; name?: string; picture?: string };
+  user: AuthUser;
 }> {
   const code = params.requestUrl.searchParams.get('code');
   const state = params.requestUrl.searchParams.get('state');
@@ -243,17 +413,35 @@ export async function handleOAuthCallback(params: {
   const claims = await verifyGoogleIdToken({ idToken: id_token, clientId: params.clientId });
   if (!claims?.sub) throw new Error('Invalid id_token payload');
 
-  const user = {
+  const user: AuthUser = {
     sub: claims.sub,
     email: claims.email,
     name: claims.name,
     picture: claims.picture,
   };
 
-  const sessionJwt = await signSessionJwt({ jwtSecret: params.jwtSecret, user });
+  const rawRefresh = randomString(48);
+  await insertRefreshTokenRow({
+    db: params.db,
+    userSub: user.sub,
+    rawRefresh,
+    userClaims: { email: user.email, name: user.name, picture: user.picture },
+  });
 
+  const jti = crypto.randomUUID();
+  const accessJwt = await signAccessJwt({ jwtSecret: params.jwtSecret, user, jti });
+
+  const opts = cookieOpts(params.requestUrl);
   const setCookies = [
-    buildSetCookie(params.requestUrl, SESSION_COOKIE, sessionJwt, { maxAgeSeconds: 60 * 60 * 24 * 7, sameSite: 'Lax' }),
+    buildSetCookie(params.requestUrl, ACCESS_COOKIE, accessJwt, {
+      maxAgeSeconds: ACCESS_TTL_SEC,
+      ...opts,
+    }),
+    buildSetCookie(params.requestUrl, REFRESH_COOKIE, rawRefresh, {
+      maxAgeSeconds: REFRESH_TTL_SEC,
+      ...opts,
+    }),
+    clearCookie(params.requestUrl, LEGACY_SESSION_COOKIE),
     clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE),
     clearCookie(params.requestUrl, STATE_COOKIE),
     clearCookie(params.requestUrl, REDIRECT_COOKIE),
@@ -262,3 +450,60 @@ export async function handleOAuthCallback(params: {
   return { redirectTo, setCookies, user };
 }
 
+/** Resolve user from access cookie, legacy session cookie, or null */
+export async function resolveUserFromCookies(params: {
+  request: Request;
+  jwtSecret: string;
+}): Promise<AuthUser | null> {
+  const access = getCookie(params.request, ACCESS_COOKIE);
+  if (access) {
+    try {
+      return await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: access });
+    } catch {
+      /* fall through */
+    }
+  }
+  const legacy = getCookie(params.request, LEGACY_SESSION_COOKIE);
+  if (legacy) {
+    try {
+      return await verifyLegacySessionJwt({ jwtSecret: params.jwtSecret, token: legacy });
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** Clear auth cookies without DB (e.g. invalid refresh) */
+export function clearAllAuthCookieHeaders(requestUrl: URL): string[] {
+  return [
+    clearCookie(requestUrl, ACCESS_COOKIE),
+    clearCookie(requestUrl, REFRESH_COOKIE),
+    clearCookie(requestUrl, LEGACY_SESSION_COOKIE),
+  ];
+}
+
+/** Logout: revoke refresh row if present; clear all auth cookies */
+export async function buildLogoutCookies(params: {
+  request: Request;
+  requestUrl: URL;
+  db: D1Database;
+}): Promise<string[]> {
+  const rawRefresh = getCookie(params.request, REFRESH_COOKIE);
+  if (rawRefresh) {
+    const hash = await hashRefreshTokenHex(rawRefresh);
+    const row = await params.db
+      .prepare(`SELECT id FROM auth_refresh_tokens WHERE token_hash = ? AND revoked_at IS NULL`)
+      .bind(hash)
+      .first<{ id: string }>();
+    if (row?.id) {
+      await revokeRefreshRowById(params.db, row.id);
+    }
+  }
+
+  return [
+    clearCookie(params.requestUrl, ACCESS_COOKIE),
+    clearCookie(params.requestUrl, REFRESH_COOKIE),
+    clearCookie(params.requestUrl, LEGACY_SESSION_COOKIE),
+  ];
+}

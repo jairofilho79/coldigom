@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { PraiseDetailPage } from '../pages/PraiseDetailPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
 import type { PraiseDetail } from '../types';
 
 // Mock the api module (preserve exports such as API_BASE_URL used by the page)
@@ -12,6 +13,7 @@ vi.mock('../services/api', async (importOriginal) => {
     getPraise: vi.fn(),
     getAssetUrl: vi.fn((key: string) => `http://localhost:8787/${key}`),
     getMe: vi.fn().mockResolvedValue(null),
+    refreshSession: vi.fn().mockResolvedValue(false),
     getMaterialKinds: vi.fn().mockResolvedValue([
       { id: 'kind1', name: 'Partitura' },
       { id: 'kind2', name: 'Audio' },
@@ -74,9 +76,11 @@ describe('PraiseDetailPage Component', () => {
   function renderWithRouter(id: string) {
     return render(
       <MemoryRouter initialEntries={[`/praise/${id}`]}>
-        <Routes>
-          <Route path="/praise/:id" element={<PraiseDetailPage />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
       </MemoryRouter>
     );
   }

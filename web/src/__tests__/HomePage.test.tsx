@@ -2,13 +2,20 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { HomePage } from '../pages/HomePage';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
 import type { Praise, PaginationInfo } from '../types';
 
-// Mock the api module
-vi.mock('../services/api', () => ({
-  searchPraises: vi.fn(),
-  getFilterOptions: vi.fn(),
-}));
+// Mock the api module (keep real exports like API_BASE_URL)
+vi.mock('../services/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/api')>();
+  return {
+    ...actual,
+    searchPraises: vi.fn(),
+    getFilterOptions: vi.fn(),
+    getMe: vi.fn().mockResolvedValue(null),
+    refreshSession: vi.fn().mockResolvedValue(false),
+  };
+});
 
 // Mock useFilters hook
 const mockSetFilters = vi.fn();
@@ -37,6 +44,16 @@ vi.mock('../hooks/useFilters', () => ({
 }));
 
 import { searchPraises, getFilterOptions } from '../services/api';
+
+function renderHome() {
+  return render(
+    <MemoryRouter>
+      <AuthProvider>
+        <HomePage />
+      </AuthProvider>
+    </MemoryRouter>
+  );
+}
 
 describe('HomePage Component', () => {
   const mockPraises: Praise[] = [
@@ -89,32 +106,20 @@ describe('HomePage Component', () => {
   });
 
   it('should render brand header', async () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     expect(screen.getByText('Coldigom')).toBeTruthy();
     expect(screen.getByText('Coletânea Digital de Objetos Musicais')).toBeTruthy();
   });
 
   it('should render search bar', async () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     expect(screen.getByPlaceholderText(/buscar por nome, letra, autor/i)).toBeTruthy();
   });
 
   it('should render results count', async () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     await waitFor(() => {
       const count = document.querySelector('.results-count');
@@ -125,11 +130,7 @@ describe('HomePage Component', () => {
   });
 
   it('should render praise list', async () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     await waitFor(() => {
       expect(screen.getByText('Grande Deus')).toBeTruthy();
@@ -142,11 +143,7 @@ describe('HomePage Component', () => {
       () => new Promise(() => {})
     );
 
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     expect(screen.getByText(/buscando louvores/i)).toBeTruthy();
   });
@@ -154,11 +151,7 @@ describe('HomePage Component', () => {
   it('should show error state on API error', async () => {
     (searchPraises as any).mockRejectedValue(new Error('API Error'));
 
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     await waitFor(() => {
       expect(screen.getByText(/erro ao carregar/i)).toBeTruthy();
@@ -171,11 +164,7 @@ describe('HomePage Component', () => {
       pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
     });
 
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     await waitFor(() => {
       expect(screen.getByText(/nenhum louvor encontrado/i)).toBeTruthy();
@@ -183,11 +172,7 @@ describe('HomePage Component', () => {
   });
 
   it('should call searchPraises with filters', async () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     await waitFor(() => {
       expect(searchPraises).toHaveBeenCalledWith(
@@ -211,11 +196,7 @@ describe('HomePage Component', () => {
       pagination: { page: 1, limit: 1, total: 2, totalPages: 2 },
     });
 
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
+    renderHome();
 
     await waitFor(() => {
       const nextButton = screen.queryByLabelText(/próxima página/i);

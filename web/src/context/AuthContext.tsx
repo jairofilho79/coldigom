@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getMe, logout as apiLogout, refreshSession, type AuthUser } from '../services/api';
 
 type AuthContextValue = {
@@ -14,17 +14,42 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  const refetchInFlight = useRef<Promise<void> | null>(null);
 
   const refetch = useCallback(async () => {
-    let u = await getMe();
-    if (!u) {
-      const ok = await refreshSession();
-      if (ok) {
-        u = await getMe();
+    if (refetchInFlight.current) return refetchInFlight.current;
+    refetchInFlight.current = (async () => {
+      let u = await getMe();
+      if (!u) {
+        const ok = await refreshSession();
+        if (ok) {
+          u = await getMe();
+        }
       }
-    }
-    setUser(u);
+      setUser(u);
+    })().finally(() => {
+      refetchInFlight.current = null;
+    });
+    return refetchInFlight.current;
   }, []);
+
+  const revalidateIfReady = useCallback(() => {
+    if (!ready) return;
+    void refetch();
+  }, [ready, refetch]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') revalidateIfReady();
+    };
+    const onFocus = () => revalidateIfReady();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    }
+  }, [revalidateIfReady]);
 
   useEffect(() => {
     void (async () => {

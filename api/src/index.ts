@@ -20,6 +20,7 @@ type Env = {
   AUTH_JWT_SECRET?: string;
   AUTH_BASE_URL?: string;
   WEB_ORIGIN?: string;
+  AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
 };
 
 interface PraiseResult {
@@ -52,11 +53,40 @@ app.use('/*', async (c, next) => {
   })(c, next);
 });
 
+// Soft-auth: attaches user to context when present; never blocks public routes.
+app.use('/*', async (c, next) => {
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  if (!jwtSecret) return next();
+  try {
+    const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
+    if (user) {
+      c.set('user', user);
+      console.log(JSON.stringify({ msg: 'auth.soft.ok', method: c.req.method, path: c.req.path, sub: user.sub }));
+    } else {
+      console.log(JSON.stringify({ msg: 'auth.soft.none', method: c.req.method, path: c.req.path }));
+    }
+  } catch {
+    console.log(JSON.stringify({ msg: 'auth.soft.invalid', method: c.req.method, path: c.req.path }));
+  }
+  return next();
+});
+
 function getBaseUrl(c: any): string {
   // Prefer explicit AUTH_BASE_URL (recommended in production)
   if (c.env.AUTH_BASE_URL) return c.env.AUTH_BASE_URL;
   const url = new URL(c.req.url);
   return `${url.protocol}//${url.host}`;
+}
+
+function getAuthCookieSameSite(c: { env: Env; req: { url: string } }): 'Lax' | 'Strict' | 'None' {
+  // Explicit override wins
+  if (c.env.AUTH_COOKIE_SAMESITE) return c.env.AUTH_COOKIE_SAMESITE;
+  // If WEB_ORIGIN is configured, this deployment is expected to be called from a separate SPA origin.
+  // Cookie-based auth in that scenario requires SameSite=None for fetch/XHR.
+  const isHttps = new URL(c.req.url).protocol === 'https:';
+  if (c.env.WEB_ORIGIN && isHttps) return 'None';
+  // Local/insecure fallback (browsers reject SameSite=None without Secure on HTTP)
+  return 'Lax';
 }
 
 function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) => string | undefined }; json: (b: object, s: number) => Response }): Response | null {
@@ -77,7 +107,7 @@ async function requireAuth(c: any, next: any) {
   if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
 
   try {
-    const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
+    const user = c.get('user') ?? (await resolveUserFromCookies({ request: c.req.raw, jwtSecret }));
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     c.set('user', user);
     return await next();
@@ -98,6 +128,7 @@ app.get('/auth/login', async (c) => {
     baseUrl,
     clientId,
     redirectTo,
+    cookieSameSite: getAuthCookieSameSite(c),
   });
 
   setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
@@ -119,6 +150,7 @@ app.get('/auth/callback', async (c) => {
       clientSecret: c.env.GOOGLE_CLIENT_SECRET,
       jwtSecret,
       db: c.env.DB,
+      cookieSameSite: getAuthCookieSameSite(c),
     });
     setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
     return c.redirect(redirectTo);
@@ -157,6 +189,7 @@ app.post('/auth/refresh', async (c) => {
     requestUrl: new URL(c.req.url),
     jwtSecret,
     rawRefresh,
+    cookieSameSite: getAuthCookieSameSite(c),
   });
 
   if ('error' in result) {

@@ -6,6 +6,12 @@ export type AuthEnv = {
   AUTH_JWT_SECRET?: string;
   AUTH_BASE_URL?: string;
   WEB_ORIGIN?: string;
+  /**
+   * Cookie SameSite policy for session cookies.
+   * - `None`: required for cross-site SPA -> API cookie auth.
+   * - `Lax`: works when SPA and API are same-site.
+   */
+  AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
 };
 
 type GoogleIdTokenClaims = {
@@ -89,8 +95,12 @@ export function buildSetCookie(
   return parts.join('; ');
 }
 
-export function clearCookie(requestUrl: URL, name: string): string {
-  return buildSetCookie(requestUrl, name, '', { maxAgeSeconds: 0 });
+export function clearCookie(
+  requestUrl: URL,
+  name: string,
+  opts: { sameSite?: 'Lax' | 'Strict' | 'None'; path?: string; secure?: boolean } = {}
+): string {
+  return buildSetCookie(requestUrl, name, '', { maxAgeSeconds: 0, ...opts });
 }
 
 export function getCookie(req: Request, name: string): string | null {
@@ -130,6 +140,7 @@ export async function buildGoogleAuthorizeRedirect(params: {
   baseUrl: string;
   clientId: string;
   redirectTo: string;
+  cookieSameSite?: 'Lax' | 'Strict' | 'None';
 }): Promise<{
   location: string;
   setCookies: string[];
@@ -149,10 +160,12 @@ export async function buildGoogleAuthorizeRedirect(params: {
   url.searchParams.set('code_challenge_method', 'S256');
   url.searchParams.set('prompt', 'select_account');
 
+  const sameSite = params.cookieSameSite ?? 'Lax';
+  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
   const setCookies = [
-    buildSetCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, codeVerifier, { maxAgeSeconds: 600, sameSite: 'Lax' }),
-    buildSetCookie(params.requestUrl, STATE_COOKIE, state, { maxAgeSeconds: 600, sameSite: 'Lax' }),
-    buildSetCookie(params.requestUrl, REDIRECT_COOKIE, params.redirectTo, { maxAgeSeconds: 600, sameSite: 'Lax' }),
+    buildSetCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, codeVerifier, { maxAgeSeconds: 600, sameSite, secure }),
+    buildSetCookie(params.requestUrl, STATE_COOKIE, state, { maxAgeSeconds: 600, sameSite, secure }),
+    buildSetCookie(params.requestUrl, REDIRECT_COOKIE, params.redirectTo, { maxAgeSeconds: 600, sameSite, secure }),
   ];
 
   return { location: url.toString(), setCookies };
@@ -249,10 +262,6 @@ export async function verifyLegacySessionJwt(params: { jwtSecret: string; token:
   };
 }
 
-function cookieOpts(requestUrl: URL) {
-  return { sameSite: 'Lax' as const, secure: isHttpsRequest(requestUrl) };
-}
-
 export async function insertRefreshTokenRow(params: {
   db: D1Database;
   userSub: string;
@@ -301,6 +310,7 @@ export async function rotateRefreshSession(params: {
   requestUrl: URL;
   jwtSecret: string;
   rawRefresh: string;
+  cookieSameSite?: 'Lax' | 'Strict' | 'None';
 }): Promise<{ setCookies: string[]; user: AuthUser } | { error: 'invalid' | 'reuse' }> {
   const hash = await hashRefreshTokenHex(params.rawRefresh);
   const row = await params.db
@@ -317,7 +327,9 @@ export async function rotateRefreshSession(params: {
     }>();
 
   const now = Math.floor(Date.now() / 1000);
-  const opts = cookieOpts(params.requestUrl);
+  const sameSite = params.cookieSameSite ?? 'Lax';
+  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
+  const opts = { sameSite, secure };
 
   if (!row) {
     return { error: 'invalid' };
@@ -386,6 +398,7 @@ export async function handleOAuthCallback(params: {
   clientSecret?: string;
   jwtSecret: string;
   db: D1Database;
+  cookieSameSite?: 'Lax' | 'Strict' | 'None';
 }): Promise<{
   redirectTo: string;
   setCookies: string[];
@@ -431,7 +444,9 @@ export async function handleOAuthCallback(params: {
   const jti = crypto.randomUUID();
   const accessJwt = await signAccessJwt({ jwtSecret: params.jwtSecret, user, jti });
 
-  const opts = cookieOpts(params.requestUrl);
+  const sameSite = params.cookieSameSite ?? 'Lax';
+  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
+  const opts = { sameSite, secure };
   const setCookies = [
     buildSetCookie(params.requestUrl, ACCESS_COOKIE, accessJwt, {
       maxAgeSeconds: ACCESS_TTL_SEC,
@@ -441,10 +456,10 @@ export async function handleOAuthCallback(params: {
       maxAgeSeconds: REFRESH_TTL_SEC,
       ...opts,
     }),
-    clearCookie(params.requestUrl, LEGACY_SESSION_COOKIE),
-    clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE),
-    clearCookie(params.requestUrl, STATE_COOKIE),
-    clearCookie(params.requestUrl, REDIRECT_COOKIE),
+    clearCookie(params.requestUrl, LEGACY_SESSION_COOKIE, opts),
+    clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, opts),
+    clearCookie(params.requestUrl, STATE_COOKIE, opts),
+    clearCookie(params.requestUrl, REDIRECT_COOKIE, opts),
   ];
 
   return { redirectTo, setCookies, user };

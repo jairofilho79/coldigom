@@ -81,9 +81,9 @@ export function HomePage() {
             ) : (
               <a
                 className="auth-btn"
-                href={`${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(window.location.origin + '/')}`}
+                href={`${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(window.location.href)}`}
               >
-                Entrar
+                Entrar com o Google
               </a>
             )}
           </div>

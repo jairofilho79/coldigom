@@ -133,7 +133,7 @@ O schema D1 contém **5 entidades** e **4 relacionamentos** com as seguintes car
 - GET `/api/praises/:id` — louvor com materiais e nomes de `material_kinds` / tags.
 - GET `/api/praises/filters`, `/api/tags`, `/api/materials/kinds`.
 - GET `/assets/*` — serve PDF/MP3 do R2 com suporte a Range.
-- CRUD autenticado (PATCH louvor, POST/PATCH/DELETE materiais, bulk-upload).
+- CRUD autenticado (POST/PATCH louvor, POST/PATCH/DELETE materiais, bulk-upload).
 - GET `/auth/status` — diagnóstico de configuração OAuth (sem expor segredos).
 
 **Épico 3: Frontend (Cloudflare Pages + React/Vite)**

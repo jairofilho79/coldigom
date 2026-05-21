@@ -95,6 +95,29 @@ export async function getPraise(id: string): Promise<PraiseDetail> {
   return response.data;
 }
 
+export type CreatePraiseInput = {
+  name: string;
+  number?: string | null;
+  author?: string | null;
+  rhythm?: string | null;
+  tonality?: string | null;
+  category?: string | null;
+  lyrics?: string | null;
+  tag_ids?: string[];
+};
+
+export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  return response.data;
+}
+
 export async function updatePraise(
   id: string,
   updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>

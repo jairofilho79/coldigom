@@ -598,6 +598,89 @@ app.get('/api/tags', async (c) => {
   }
 });
 
+// POST /api/praises - Create a praise (admin)
+app.post('/api/praises', requireAuth, async (c) => {
+  const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body || typeof body !== 'object') {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const name = body.name;
+  if (typeof name !== 'string' || !name.trim()) {
+    return c.json({ error: "Field 'name' is required" }, 400);
+  }
+
+  const optionalFields = ['number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+  const fieldValues: Record<(typeof optionalFields)[number], string | null> = {
+    number: null,
+    author: null,
+    rhythm: null,
+    tonality: null,
+    category: null,
+    lyrics: null,
+  };
+
+  for (const key of optionalFields) {
+    if (!(key in body)) continue;
+    const val = body[key];
+    if (val === null || val === undefined) {
+      fieldValues[key] = null;
+      continue;
+    }
+    if (typeof val !== 'string') {
+      return c.json({ error: `Field '${key}' must be a string` }, 400);
+    }
+    fieldValues[key] = val;
+  }
+
+  let tagIds: string[] = [];
+  if ('tag_ids' in body) {
+    if (!Array.isArray(body.tag_ids)) {
+      return c.json({ error: "Field 'tag_ids' must be an array" }, 400);
+    }
+    tagIds = body.tag_ids.filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
+  }
+
+  const id = crypto.randomUUID();
+
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO praises (id, name, number, author, rhythm, tonality, category, lyrics)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      id,
+      name.trim(),
+      fieldValues.number,
+      fieldValues.author,
+      fieldValues.rhythm,
+      fieldValues.tonality,
+      fieldValues.category,
+      fieldValues.lyrics
+    ).run();
+
+    for (const tagId of tagIds) {
+      const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
+      if (!tag) return c.json({ error: 'Tag not found' }, 400);
+
+      await c.env.DB.prepare(
+        'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
+      ).bind(id, tagId).run();
+    }
+  } catch (error) {
+    console.error('Error creating praise:', error);
+    return c.json({ error: 'Failed to create praise' }, 500);
+  }
+
+  try {
+    const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env as Env);
+    const json = await res.json();
+    return c.json(json, res.status === 200 ? 201 : (res.status as ContentfulStatusCode));
+  } catch (error) {
+    console.error('Error re-fetching praise after create:', error);
+    return c.json({ ok: true }, 201);
+  }
+});
+
 // PATCH /api/praises/:id - Update praise fields (admin)
 app.patch('/api/praises/:id', requireAuth, async (c) => {
   const id = c.req.param('id');

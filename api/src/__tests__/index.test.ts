@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { SignJWT } from 'jose';
 import app from '../index';
 
 
@@ -84,6 +85,83 @@ const createMockD1 = (responses: any) => ({
     first: vi.fn().mockResolvedValue(responses.first || null),
   })),
 });
+
+const TEST_JWT_SECRET = '0123456789abcdef0123456789abcdef';
+const TEST_WEB_ORIGIN = 'https://web.example';
+
+async function authRequestInit(body?: object): Promise<RequestInit> {
+  const jwt = await new SignJWT({ email: 'admin@test.com', name: 'Admin', jti: 'j1' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject('sub-admin')
+    .setIssuedAt()
+    .setExpirationTime('2h')
+    .sign(new TextEncoder().encode(TEST_JWT_SECRET));
+
+  return {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      origin: TEST_WEB_ORIGIN,
+      cookie: `coldigom_access=${encodeURIComponent(jwt)}`,
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  };
+}
+
+function createStatefulMockD1() {
+  const praises = new Map<string, Record<string, unknown>>();
+  const praiseTagIds = new Map<string, string[]>();
+
+  return {
+    prepare: vi.fn((query: string) => ({
+      bind: vi.fn((...args: unknown[]) => ({
+        run: vi.fn(async () => {
+          if (query.includes('INSERT INTO praises')) {
+            praises.set(args[0] as string, {
+              id: args[0],
+              name: args[1],
+              number: args[2],
+              author: args[3],
+              rhythm: args[4],
+              tonality: args[5],
+              category: args[6],
+              lyrics: args[7],
+            });
+          }
+          if (query.includes('INSERT OR IGNORE INTO praise_tags')) {
+            const praiseId = args[0] as string;
+            const tagId = args[1] as string;
+            const list = praiseTagIds.get(praiseId) ?? [];
+            if (!list.includes(tagId)) list.push(tagId);
+            praiseTagIds.set(praiseId, list);
+          }
+        }),
+        first: vi.fn(async () => {
+          if (query.includes('SELECT id FROM tags')) {
+            return mockTags.find((t) => t.id === args[0]) ?? null;
+          }
+          if (query.includes('FROM praises p') && query.includes('WHERE p.id')) {
+            const p = praises.get(args[0] as string);
+            if (!p) return null;
+            const tagIds = praiseTagIds.get(p.id as string) ?? [];
+            return { ...p, tag_ids: tagIds.length > 0 ? tagIds.join(',') : null };
+          }
+          return null;
+        }),
+        all: vi.fn(async () => {
+          if (query.includes('FROM praise_materials')) {
+            return { results: [] };
+          }
+          if (query.includes('FROM tags WHERE id IN')) {
+            const ids = args as string[];
+            return { results: mockTags.filter((t) => ids.includes(t.id)) };
+          }
+          return resolveMockAll(query, {});
+        }),
+      })),
+    })),
+  };
+}
 
 // Mock R2Bucket (head + ranged get, aligned with Worker R2 API)
 const createMockR2 = (object: any = null) => {
@@ -678,6 +756,116 @@ describe('API Routes', () => {
       expect(body.webOriginSet).toBe(true);
       expect(body.cookieSameSiteEffective).toBe('None');
       expect(body.callbackUrl).toBe('https://api.example/auth/callback');
+    });
+  });
+
+  describe('POST /api/praises', () => {
+    const envBase = {
+      AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      WEB_ORIGIN: TEST_WEB_ORIGIN,
+    };
+
+    it('returns 401 without auth', async () => {
+      const mockDB = createStatefulMockD1();
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', origin: TEST_WEB_ORIGIN },
+          body: JSON.stringify({ name: 'Novo Louvor' }),
+        },
+        { DB: mockDB, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 400 when name is missing', async () => {
+      const mockDB = createStatefulMockD1();
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises',
+        await authRequestInit({}),
+        { DB: mockDB, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain('name');
+    });
+
+    it('returns 400 when name is empty', async () => {
+      const mockDB = createStatefulMockD1();
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises',
+        await authRequestInit({ name: '   ' }),
+        { DB: mockDB, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it('creates praise with minimal name', async () => {
+      const mockDB = createStatefulMockD1();
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises',
+        await authRequestInit({ name: 'Louvor Novo' }),
+        { DB: mockDB, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(201);
+      const json = await res.json();
+      expect(json.data.name).toBe('Louvor Novo');
+      expect(json.data.materials).toEqual([]);
+    });
+
+    it('creates praise with metadata and tag_ids', async () => {
+      const mockDB = createStatefulMockD1();
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises',
+        await authRequestInit({
+          name: 'Completo',
+          number: '099',
+          author: 'Autor X',
+          rhythm: 'Marcha',
+          tonality: 'C',
+          category: 'Adoração',
+          lyrics: 'Letra nova',
+          tag_ids: ['tag1', 'tag2'],
+        }),
+        { DB: mockDB, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(201);
+      const json = await res.json();
+      expect(json.data.name).toBe('Completo');
+      expect(json.data.number).toBe('099');
+      expect(json.data.tags).toHaveLength(2);
+      expect(json.data.tags.map((t: { id: string }) => t.id).sort()).toEqual(['tag1', 'tag2']);
+    });
+
+    it('returns 400 when tag_id does not exist', async () => {
+      const mockDB = createStatefulMockD1();
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises',
+        await authRequestInit({ name: 'Com tag inválida', tag_ids: ['missing-tag'] }),
+        { DB: mockDB, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toBe('Tag not found');
     });
   });
 

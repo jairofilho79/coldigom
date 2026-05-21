@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPraise, getAssetUrl, API_BASE_URL, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
+import { getPraise, getAssetUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { Select } from '../components/Select';
@@ -40,12 +40,15 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
 
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isCreate = id === 'new';
   const { user, ready: authReady, logout } = useAuth();
   const userName = authReady ? (user?.name || user?.email || null) : null;
   const [praise, setPraise] = useState<PraiseDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isCreate);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isCreate);
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
@@ -66,7 +69,7 @@ export function PraiseDetailPage() {
 
   useEffect(() => {
     const fetchPraise = async () => {
-      if (!id) return;
+      if (!id || id === 'new') return;
       setLoading(true);
       setError(null);
       try {
@@ -129,9 +132,13 @@ export function PraiseDetailPage() {
     [materialKinds]
   );
   const assignedTagIds = useMemo(
-    () => new Set((praise?.tags || []).map((t) => t.id)),
-    [praise?.tags]
+    () => (isCreate ? new Set(pendingTagIds) : new Set((praise?.tags || []).map((t) => t.id))),
+    [isCreate, pendingTagIds, praise?.tags]
   );
+  const displayTags = useMemo(() => {
+    if (!isCreate) return praise?.tags || [];
+    return catalogTags.filter((t) => pendingTagIds.includes(t.id));
+  }, [isCreate, praise?.tags, catalogTags, pendingTagIds]);
   const availableTags = useMemo(
     () => catalogTags.filter((t) => !assignedTagIds.has(t.id)),
     [catalogTags, assignedTagIds]
@@ -141,7 +148,7 @@ export function PraiseDetailPage() {
     [availableTags]
   );
 
-  if (loading) {
+  if (!isCreate && loading) {
     return (
       <div className="page-container detail-page">
         <div className="loading-state">
@@ -152,7 +159,7 @@ export function PraiseDetailPage() {
     );
   }
 
-  if (error) {
+  if (!isCreate && error && !praise) {
     return (
       <div className="page-container detail-page">
         <div className="error-state">
@@ -164,7 +171,7 @@ export function PraiseDetailPage() {
     );
   }
 
-  if (!praise) {
+  if (!isCreate && !praise) {
     return (
       <div className="page-container detail-page">
         <div className="no-results">
@@ -198,10 +205,66 @@ export function PraiseDetailPage() {
     }
   };
 
-  const youtubeMaterials = praise.materials.filter(m => m.type === 'youtube' && m.url);
-  const audioMaterials = praise.materials.filter(m => m.type === 'mp3');
-  const pdfMaterials = praise.materials.filter(m => m.type === 'pdf');
-  const chordMaterials = praise.materials.filter(m => m.type === 'chord');
+  const materials = praise?.materials ?? [];
+  const youtubeMaterials = materials.filter(m => m.type === 'youtube' && m.url);
+  const audioMaterials = materials.filter(m => m.type === 'mp3');
+  const pdfMaterials = materials.filter(m => m.type === 'pdf');
+  const chordMaterials = materials.filter(m => m.type === 'chord');
+
+  const savePraise = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      if (isCreate) {
+        if (!edit.name.trim()) {
+          setError('Nome é obrigatório');
+          return;
+        }
+        let created = await createPraise({
+          name: edit.name.trim(),
+          number: edit.number || null,
+          author: edit.author || null,
+          rhythm: edit.rhythm || null,
+          tonality: edit.tonality || null,
+          category: edit.category || null,
+          lyrics: edit.lyrics || null,
+          tag_ids: pendingTagIds,
+        });
+        if (bulkFiles.length > 0) {
+          created = await bulkUploadMaterials(
+            created.id,
+            bulkFiles.map((f) => ({
+              file: f.file,
+              material_kind: f.material_kind,
+              type: f.type,
+              file_path_legacy: f.relPath,
+            }))
+          );
+        }
+        navigate(`/praise/${created.id}`, { replace: true });
+        setPraise(created);
+        setIsEditing(false);
+        setBulkFiles([]);
+        setPendingTagIds([]);
+      } else if (id) {
+        const updated = await updatePraise(id, {
+          name: edit.name,
+          number: edit.number,
+          author: edit.author,
+          rhythm: edit.rhythm,
+          tonality: edit.tonality,
+          category: edit.category,
+          lyrics: edit.lyrics,
+        });
+        setPraise(updated);
+        setIsEditing(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao salvar');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="page-container detail-page">
@@ -211,6 +274,12 @@ export function PraiseDetailPage() {
         </svg>
         Voltar para lista
       </Link>
+
+      {error ? (
+        <div className="error-state" style={{ marginBottom: '1rem' }}>
+          <div className="error-state-desc">{error}</div>
+        </div>
+      ) : null}
 
       <header className="detail-header animate-fade-in-scale">
         <div className="auth-row">
@@ -222,13 +291,19 @@ export function PraiseDetailPage() {
                 <img className="auth-avatar" src={user.picture} alt="" width={28} height={28} />
               ) : null}
               <div className="auth-user">Logado como <strong>{userName}</strong></div>
-              <button
-                type="button"
-                className="auth-btn"
-                onClick={() => setIsEditing(v => !v)}
-              >
-                {isEditing ? 'Fechar edição' : 'Editar'}
-              </button>
+              {isCreate ? (
+                <Link to="/" className="auth-btn">
+                  Cancelar
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="auth-btn"
+                  onClick={() => setIsEditing(v => !v)}
+                >
+                  {isEditing ? 'Fechar edição' : 'Editar'}
+                </button>
+              )}
               <button
                 type="button"
                 className="auth-btn"
@@ -250,7 +325,15 @@ export function PraiseDetailPage() {
           )}
         </div>
 
-        {isEditing ? (
+        {isCreate && !userName && authReady ? (
+          <p className="muted">Entre com o Google para cadastrar um novo louvor.</p>
+        ) : null}
+
+        {isCreate && userName ? (
+          <h1 className="detail-title">Novo louvor</h1>
+        ) : null}
+
+        {isEditing && (userName || !isCreate) ? (
           <div className="edit-grid">
             <div className="edit-field">
               <label>Nome</label>
@@ -281,44 +364,23 @@ export function PraiseDetailPage() {
               <button
                 type="button"
                 className="auth-btn"
-                disabled={saving}
-                onClick={async () => {
-                  if (!id) return;
-                  setSaving(true);
-                  setError(null);
-                  try {
-                    const updated = await updatePraise(id, {
-                      name: edit.name,
-                      number: edit.number,
-                      author: edit.author,
-                      rhythm: edit.rhythm,
-                      tonality: edit.tonality,
-                      category: edit.category,
-                      lyrics: edit.lyrics,
-                    });
-                    setPraise(updated);
-                    setIsEditing(false);
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Falha ao salvar');
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
+                disabled={saving || (isCreate && !userName)}
+                onClick={() => void savePraise()}
               >
-                {saving ? 'Salvando…' : 'Salvar'}
+                {saving ? 'Salvando…' : isCreate ? 'Criar louvor' : 'Salvar'}
               </button>
             </div>
           </div>
-        ) : (
+        ) : praise ? (
           <>
             {praise.number && (
               <div className="detail-number">Nº {praise.number}</div>
             )}
             <h1 className="detail-title">{praise.name}</h1>
           </>
-        )}
+        ) : null}
 
-        {!isEditing && (
+        {!isEditing && praise && (
           <div className="detail-meta-row">
             {praise.author && (
             <div className="detail-meta-item">
@@ -350,7 +412,7 @@ export function PraiseDetailPage() {
         {isEditing && userName ? (
           <div className="detail-tags detail-tags--edit">
             <span className="detail-tags-label">Tags</span>
-            {(praise.tags || []).map(tag => (
+            {displayTags.map(tag => (
               <span key={tag.id} className="detail-tag detail-tag--editable">
                 {tag.name}
                 <button
@@ -359,6 +421,10 @@ export function PraiseDetailPage() {
                   aria-label={`Remover tag ${tag.name}`}
                   disabled={tagsBusy}
                   onClick={async () => {
+                    if (isCreate) {
+                      setPendingTagIds((ids) => ids.filter((tid) => tid !== tag.id));
+                      return;
+                    }
                     if (!id) return;
                     setTagsBusy(true);
                     setError(null);
@@ -389,9 +455,15 @@ export function PraiseDetailPage() {
                 <button
                   type="button"
                   className="auth-btn"
-                  disabled={!tagToAdd || tagsBusy || !id}
+                  disabled={!tagToAdd || tagsBusy || (!isCreate && !id)}
                   onClick={async () => {
-                    if (!id || !tagToAdd) return;
+                    if (!tagToAdd) return;
+                    if (isCreate) {
+                      setPendingTagIds((ids) => (ids.includes(tagToAdd) ? ids : [...ids, tagToAdd]));
+                      setTagToAdd('');
+                      return;
+                    }
+                    if (!id) return;
                     setTagsBusy(true);
                     setError(null);
                     try {
@@ -409,13 +481,13 @@ export function PraiseDetailPage() {
                 </button>
               </div>
             ) : (
-              (praise.tags || []).length === 0 && catalogTags.length > 0
+              displayTags.length === 0 && catalogTags.length > 0
                 ? <span className="detail-tags-hint muted">Todas as tags do catálogo já estão associadas.</span>
                 : null
             )}
           </div>
         ) : (
-          praise.tags && praise.tags.length > 0 && (
+          praise && praise.tags && praise.tags.length > 0 && (
             <div className="detail-tags">
               {praise.tags.map(tag => (
                 <span key={tag.id} className="detail-tag">{tag.name}</span>
@@ -438,11 +510,11 @@ export function PraiseDetailPage() {
             placeholder="Cole a letra aqui…"
             rows={10}
           />
-        ) : (
-          praise.lyrics
-            ? <pre className="lyrics-content">{praise.lyrics}</pre>
-            : <div className="lyrics-empty">Sem letra cadastrada.</div>
-        )}
+        ) : praise?.lyrics ? (
+            <pre className="lyrics-content">{praise.lyrics}</pre>
+          ) : (
+            <div className="lyrics-empty">Sem letra cadastrada.</div>
+          )}
       </section>
 
       {youtubeMaterials.length > 0 && (
@@ -468,7 +540,7 @@ export function PraiseDetailPage() {
                     <div className="yt-badge">YouTube</div>
                   </div>
                   <div className="yt-body">
-                    <div className="yt-title">{praise.name}</div>
+                    <div className="yt-title">{praise?.name ?? ''}</div>
                     <div className="yt-meta">{m.material_kind_name || 'Vídeo'}</div>
                   </div>
                 </a>
@@ -478,7 +550,47 @@ export function PraiseDetailPage() {
         </section>
       )}
 
-      {userName && (
+      {userName && isCreate && (
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">🧩</span>
+            Materiais (após salvar)
+          </h2>
+          <p className="materials-panel-help">
+            Salve o louvor para adicionar materiais individuais. Você pode já selecionar uma pasta abaixo;
+            os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
+          </p>
+          <div className="materials-panel materials-admin-bulk">
+            <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
+            <StyledFileInput
+              label="Escolher pasta"
+              directory
+              onChange={(files) => {
+                const defaultKind = materialKinds[0]?.id || '';
+                const mapped = files.map((f) => {
+                  const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
+                  const ext = f.name.split('.').pop()?.toLowerCase() || '';
+                  const inferred = ext === 'mp3' || ext === 'pdf' || ext === 'chord' ? ext : ext || 'bin';
+                  return {
+                    file: f,
+                    relPath: rel,
+                    type: inferred,
+                    material_kind: defaultKind,
+                  };
+                });
+                setBulkFiles(mapped);
+              }}
+            />
+            {bulkFiles.length > 0 && (
+              <div className="lyrics-empty">
+                {bulkFiles.length} arquivo(s) na fila — serão enviados ao criar o louvor.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {userName && !isCreate && praise && (
         <section className="detail-section animate-fade-in-up">
           <h2 className="detail-section-title">
             <span className="detail-section-icon">🧩</span>

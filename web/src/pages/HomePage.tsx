@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { SearchBar } from '../components/SearchBar';
 import { ResultsTable } from '../components/ResultsTable';
 import { Pagination } from '../components/Pagination';
@@ -74,6 +75,9 @@ export function HomePage() {
                 <span className="auth-user">
                   {user.name || user.email}
                 </span>
+                <Link to="/praise/new" className="auth-btn">
+                  Novo louvor
+                </Link>
                 <button type="button" className="auth-btn" onClick={() => void logout()}>
                   Sair
                 </button>

@@ -20,6 +20,7 @@ vi.mock('../services/api', async (importOriginal) => {
       { id: 'kind2', name: 'Áudio' },
       { id: 'kind3', name: 'Cifra' },
     ]),
+    createPraise: vi.fn(),
     updatePraise: vi.fn(),
     getTags: vi.fn().mockResolvedValue([
       { id: 'tag1', name: 'Coletânea' },
@@ -36,7 +37,7 @@ vi.mock('../services/api', async (importOriginal) => {
   };
 });
 
-import { getPraise, getMe } from '../services/api';
+import { getPraise, getMe, createPraise } from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
 
@@ -237,6 +238,56 @@ describe('PraiseDetailPage Component', () => {
     await waitFor(() => {
       const ColetaneaTag = screen.queryByText('Coletânea');
       expect(ColetaneaTag).toBeNull();
+    });
+  });
+
+  describe('Novo louvor', () => {
+    beforeEach(() => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+    });
+
+    it('exibe formulário vazio e não chama getPraise', async () => {
+      renderWithRouter('new');
+
+      await waitFor(() => {
+        expect(screen.getByText('Novo louvor')).toBeTruthy();
+      });
+      expect(getPraise).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Criar louvor' })).toBeTruthy();
+      expect(screen.getByText('Materiais (após salvar)')).toBeTruthy();
+      expect(screen.queryByText('Materiais (admin)')).toBeNull();
+    });
+
+    it('cria louvor ao salvar', async () => {
+      const user = userEvent.setup();
+      const created: PraiseDetail = {
+        ...mockPraiseDetail,
+        id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        name: 'Louvor Novo',
+        materials: [],
+        tags: [],
+        tag_ids: '',
+      };
+      (createPraise as ReturnType<typeof vi.fn>).mockResolvedValue(created);
+
+      renderWithRouter('new');
+
+      await waitFor(() => {
+        expect(screen.getByText('Novo louvor')).toBeTruthy();
+      });
+
+      const nameInput = screen.getAllByRole('textbox')[0];
+      await user.type(nameInput, 'Louvor Novo');
+      await user.click(screen.getByRole('button', { name: 'Criar louvor' }));
+
+      await waitFor(() => {
+        expect(createPraise).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Louvor Novo',
+            tag_ids: [],
+          })
+        );
+      });
     });
   });
 

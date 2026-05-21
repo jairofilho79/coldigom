@@ -3,7 +3,22 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPraise, getAssetUrl, API_BASE_URL, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { StyledFileInput } from '../components/StyledFileInput';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
+
+const DEFAULT_NEW_MAT = {
+  material_kind: '',
+  type: 'pdf' as const,
+  url: '',
+  file: null as File | null,
+};
+
+function canSubmitNewMaterial(mat: typeof DEFAULT_NEW_MAT): boolean {
+  if (!mat.material_kind) return false;
+  if (mat.type === 'youtube') return mat.url.trim().length > 0;
+  if (mat.type === 'pdf' || mat.type === 'mp3') return mat.file !== null;
+  return false;
+}
 
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +30,7 @@ export function PraiseDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
-  const [newMat, setNewMat] = useState({ material_kind: '', type: 'youtube', url: '' });
+  const [newMat, setNewMat] = useState({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<Array<{ file: File; relPath: string; type: string; material_kind: string }>>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
@@ -442,25 +457,153 @@ export function PraiseDetailPage() {
           </h2>
 
           <div className="materials-admin">
-            <div className="materials-admin-bulk">
-              <div className="materials-subtitle">Bulk add (pasta)</div>
-              <input
-                type="file"
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore - webkitdirectory is supported by Chromium browsers
-                webkitdirectory=""
-                multiple
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
+            <div className="materials-panel materials-admin-new">
+              <h3 className="materials-panel-title">Adicionar material</h3>
+              <div className="edit-grid">
+                <div className="edit-field">
+                  <label htmlFor="new-mat-kind">Categoria</label>
+                  <select
+                    id="new-mat-kind"
+                    value={newMat.material_kind}
+                    onChange={(e) => setNewMat(s => ({ ...s, material_kind: e.target.value }))}
+                  >
+                    {materialKinds.map(k => (
+                      <option key={k.id} value={k.id}>{k.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="edit-field">
+                  <label htmlFor="new-mat-type">Tipo do material</label>
+                  <select
+                    id="new-mat-type"
+                    value={newMat.type}
+                    onChange={(e) => {
+                      const type = e.target.value;
+                      setNewMat(s => ({
+                        ...s,
+                        type,
+                        url: '',
+                        file: null,
+                      }));
+                    }}
+                  >
+                    <option value="youtube">YouTube</option>
+                    <option value="pdf">PDF</option>
+                    <option value="mp3">MP3</option>
+                    <option value="chord">Cifra</option>
+                  </select>
+                </div>
+
+                {newMat.type === 'youtube' && (
+                  <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                    <label htmlFor="new-mat-youtube-url">Link do YouTube</label>
+                    <input
+                      id="new-mat-youtube-url"
+                      value={newMat.url}
+                      onChange={(e) => setNewMat(s => ({ ...s, url: e.target.value }))}
+                      placeholder="https://youtube.com/..."
+                    />
+                  </div>
+                )}
+
+                {newMat.type === 'pdf' && (
+                  <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Arquivo PDF</label>
+                    <StyledFileInput
+                      label="Escolher PDF"
+                      accept=".pdf,application/pdf"
+                      selectedName={newMat.file?.name ?? null}
+                      onChange={(files) => {
+                        setNewMat(s => ({ ...s, file: files[0] ?? null }));
+                      }}
+                    />
+                  </div>
+                )}
+
+                {newMat.type === 'mp3' && (
+                  <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Arquivo de áudio</label>
+                    <StyledFileInput
+                      label="Escolher MP3"
+                      accept="audio/mpeg,.mp3,audio/*"
+                      selectedName={newMat.file?.name ?? null}
+                      onChange={(files) => {
+                        setNewMat(s => ({ ...s, file: files[0] ?? null }));
+                      }}
+                    />
+                  </div>
+                )}
+
+                {newMat.type === 'chord' && (
+                  <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Cifra</label>
+                    <div className="materials-placeholder">
+                      Editor de cifras — em breve
+                    </div>
+                  </div>
+                )}
+
+                <div className="edit-actions">
+                  <button
+                    type="button"
+                    className="auth-btn"
+                    disabled={!id || saving || !canSubmitNewMaterial(newMat)}
+                    onClick={async () => {
+                      if (!id || !canSubmitNewMaterial(newMat)) return;
+                      setSaving(true);
+                      setError(null);
+                      try {
+                        let updated: PraiseDetail;
+                        if (newMat.type === 'youtube') {
+                          updated = await createMaterial(id, {
+                            material_kind: newMat.material_kind,
+                            type: 'youtube',
+                            url: newMat.url.trim(),
+                          });
+                        } else if (newMat.type === 'pdf' || newMat.type === 'mp3') {
+                          updated = await bulkUploadMaterials(id, [{
+                            file: newMat.file!,
+                            material_kind: newMat.material_kind,
+                            type: newMat.type,
+                          }]);
+                        } else {
+                          return;
+                        }
+                        setPraise(updated);
+                        setNewMat({ ...DEFAULT_NEW_MAT, material_kind: newMat.material_kind });
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : 'Falha ao criar material');
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                  >
+                    Adicionar material
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="materials-panel materials-admin-bulk">
+              <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
+              <p className="materials-panel-help">
+                Envie vários arquivos de uma vez selecionando uma pasta no computador.
+                O tipo de cada arquivo é detectado pela extensão; você pode ajustar a categoria antes de enviar.
+              </p>
+              <StyledFileInput
+                label="Escolher pasta"
+                directory
+                onChange={(files) => {
+                  const defaultKind = materialKinds[0]?.id || '';
                   const mapped = files.map((f) => {
-                    const rel = (f as any).webkitRelativePath || f.name;
+                    const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
                     const ext = f.name.split('.').pop()?.toLowerCase() || '';
                     const inferred = ext === 'mp3' || ext === 'pdf' || ext === 'chord' ? ext : ext || 'bin';
                     return {
                       file: f,
                       relPath: rel,
                       type: inferred,
-                      material_kind: newMat.material_kind || (materialKinds[0]?.id || ''),
+                      material_kind: defaultKind,
                     };
                   });
                   setBulkFiles(mapped);
@@ -519,7 +662,7 @@ export function PraiseDetailPage() {
                           setPraise(updated);
                           setBulkFiles([]);
                         } catch (err) {
-                          setError(err instanceof Error ? err.message : 'Falha no bulk upload');
+                          setError(err instanceof Error ? err.message : 'Falha na importação em lote');
                         } finally {
                           setBulkUploading(false);
                         }
@@ -532,69 +675,8 @@ export function PraiseDetailPage() {
               )}
             </div>
 
-            <div className="materials-admin-new">
-              <div className="edit-grid">
-                <div className="edit-field">
-                  <label>Kind</label>
-                  <select
-                    value={newMat.material_kind}
-                    onChange={(e) => setNewMat(s => ({ ...s, material_kind: e.target.value }))}
-                  >
-                    {materialKinds.map(k => (
-                      <option key={k.id} value={k.id}>{k.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="edit-field">
-                  <label>Type</label>
-                  <select
-                    value={newMat.type}
-                    onChange={(e) => setNewMat(s => ({ ...s, type: e.target.value }))}
-                  >
-                    <option value="youtube">youtube</option>
-                    <option value="pdf">pdf</option>
-                    <option value="mp3">mp3</option>
-                    <option value="chord">chord</option>
-                  </select>
-                </div>
-                <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
-                  <label>URL (para materiais lógicos)</label>
-                  <input
-                    value={newMat.url}
-                    onChange={(e) => setNewMat(s => ({ ...s, url: e.target.value }))}
-                    placeholder="https://..."
-                  />
-                </div>
-                <div className="edit-actions">
-                  <button
-                    type="button"
-                    className="auth-btn"
-                    disabled={!id || !newMat.material_kind || saving}
-                    onClick={async () => {
-                      if (!id) return;
-                      setSaving(true);
-                      try {
-                        const updated = await createMaterial(id, {
-                          material_kind: newMat.material_kind,
-                          type: newMat.type,
-                          url: newMat.url,
-                        });
-                        setPraise(updated);
-                        setNewMat(s => ({ ...s, url: '' }));
-                      } catch (err) {
-                        setError(err instanceof Error ? err.message : 'Falha ao criar material');
-                      } finally {
-                        setSaving(false);
-                      }
-                    }}
-                  >
-                    Adicionar material
-                  </button>
-                </div>
-              </div>
-            </div>
-
             <div className="materials-admin-list">
+              <h3 className="materials-panel-title">Materiais cadastrados</h3>
               {praise.materials.length === 0 ? (
                 <div className="lyrics-empty">Nenhum material cadastrado.</div>
               ) : (

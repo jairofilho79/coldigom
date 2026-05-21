@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { PraiseDetailPage } from '../pages/PraiseDetailPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
@@ -35,7 +36,9 @@ vi.mock('../services/api', async (importOriginal) => {
   };
 });
 
-import { getPraise } from '../services/api';
+import { getPraise, getMe } from '../services/api';
+
+const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
 
 describe('PraiseDetailPage Component', () => {
   const mockPraiseDetail: PraiseDetail = {
@@ -78,6 +81,7 @@ describe('PraiseDetailPage Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   function renderWithRouter(id: string) {
@@ -233,6 +237,67 @@ describe('PraiseDetailPage Component', () => {
     await waitFor(() => {
       const ColetaneaTag = screen.queryByText('Coletânea');
       expect(ColetaneaTag).toBeNull();
+    });
+  });
+
+  describe('Materiais (admin)', () => {
+    beforeEach(() => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+    });
+
+    it('exibe seções de adicionar material e importação em lote', async () => {
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByText('Materiais (admin)')).toBeTruthy();
+      });
+      expect(screen.getByRole('heading', { name: 'Adicionar material' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Importação em lote (pasta)' })).toBeTruthy();
+      expect(screen.getByText(/Envie vários arquivos de uma vez/)).toBeTruthy();
+    });
+
+    it('usa PDF como tipo padrão e mostra seletor de arquivo', async () => {
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
+      });
+
+      const typeSelect = screen.getByLabelText('Tipo do material') as HTMLSelectElement;
+      expect(typeSelect.value).toBe('pdf');
+      expect(screen.getByText('Escolher PDF')).toBeTruthy();
+      expect(screen.queryByLabelText('Link do YouTube')).toBeNull();
+    });
+
+    it('ao selecionar YouTube exibe campo de link em vez de arquivo', async () => {
+      const user = userEvent.setup();
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
+      });
+
+      await user.selectOptions(screen.getByLabelText('Tipo do material'), 'youtube');
+      expect(screen.getByLabelText('Link do YouTube')).toBeTruthy();
+      expect(screen.queryByText('Escolher PDF')).toBeNull();
+    });
+
+    it('ao selecionar Cifra exibe placeholder e desabilita adicionar', async () => {
+      const user = userEvent.setup();
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
+      });
+
+      await user.selectOptions(screen.getByLabelText('Tipo do material'), 'chord');
+      expect(screen.getByText('Editor de cifras — em breve')).toBeTruthy();
+
+      const addPanel = screen.getByRole('heading', { name: 'Adicionar material' }).closest('.materials-panel');
+      expect(addPanel).toBeTruthy();
+      const addBtn = within(addPanel!).getByRole('button', { name: 'Adicionar material' });
+      expect((addBtn as HTMLButtonElement).disabled).toBe(true);
     });
   });
 

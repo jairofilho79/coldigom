@@ -54,8 +54,24 @@ app.use('/*', async (c, next) => {
   })(c, next);
 });
 
+let authConfigWarningLogged = false;
+
 // Soft-auth: attaches user to context when present; never blocks public routes.
 app.use('/*', async (c, next) => {
+  if (
+    !authConfigWarningLogged &&
+    c.env.GOOGLE_CLIENT_ID &&
+    !c.env.WEB_ORIGIN
+  ) {
+    authConfigWarningLogged = true;
+    console.warn(
+      JSON.stringify({
+        msg: 'auth.config.warning',
+        detail: 'GOOGLE_CLIENT_ID is set but WEB_ORIGIN is missing; cross-site cookies will use SameSite=Lax and SPA sessions may not persist.',
+      })
+    );
+  }
+
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return next();
   try {
@@ -135,6 +151,21 @@ async function requireAuth(c: any, next: any) {
 }
 
 // --- Auth routes ---
+app.get('/auth/status', (c) => {
+  const sameSite = getAuthCookieSameSite(c);
+  return c.json({
+    googleClientConfigured: Boolean(c.env.GOOGLE_CLIENT_ID),
+    googleClientSecretConfigured: Boolean(c.env.GOOGLE_CLIENT_SECRET),
+    jwtConfigured: Boolean(c.env.AUTH_JWT_SECRET),
+    authBaseUrl: c.env.AUTH_BASE_URL || null,
+    webOriginSet: Boolean(c.env.WEB_ORIGIN),
+    webOrigin: c.env.WEB_ORIGIN || null,
+    cookieSameSiteConfigured: c.env.AUTH_COOKIE_SAMESITE || null,
+    cookieSameSiteEffective: sameSite,
+    callbackUrl: `${getBaseUrl(c)}/auth/callback`,
+  });
+});
+
 app.get('/auth/login', async (c) => {
   const clientId = c.env.GOOGLE_CLIENT_ID;
   if (!clientId) return c.json({ error: 'Google OAuth not configured' }, 500);
@@ -173,6 +204,14 @@ app.get('/auth/callback', async (c) => {
     setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
     return c.redirect(withAuthFlag(redirectTo, 'success'));
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      JSON.stringify({
+        msg: 'auth.callback.error',
+        error: message,
+        hasClientSecret: Boolean(c.env.GOOGLE_CLIENT_SECRET),
+      })
+    );
     const fallback = c.req.query('redirect') || '/';
     return c.redirect(withAuthFlag(fallback, 'error'));
   }
@@ -235,8 +274,20 @@ type SortField = typeof VALID_SORT_FIELDS[number];
 
 const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality', 'category'];
 
+/** Build FTS5 MATCH string (prefix terms, ANDed). */
+function buildFtsMatchQuery(search: string): string {
+  const terms = search
+    .trim()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(t => `"${t.replace(/"/g, '""')}"*`);
+  return terms.length > 0 ? terms.join(' AND ') : '';
+}
+
 function buildWhereClause(params: {
   search?: string;
+  useFts?: boolean;
   tags?: string[];
   rhythm?: string[];
   tonality?: string[];
@@ -248,9 +299,21 @@ function buildWhereClause(params: {
   const bindings: (string | number)[] = [];
 
   if (params.search) {
-    conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ?)`);
-    const pattern = `%${params.search}%`;
-    bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
+    if (params.useFts) {
+      const ftsQuery = buildFtsMatchQuery(params.search);
+      if (ftsQuery) {
+        conditions.push(
+          `p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?)`
+        );
+        bindings.push(ftsQuery);
+      }
+    } else {
+      conditions.push(
+        `(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ?)`
+      );
+      const pattern = `%${params.search}%`;
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
+    }
   }
 
   if (params.tags && params.tags.length > 0) {
@@ -305,9 +368,13 @@ app.get('/api/praises', async (c) => {
   const sort = VALID_SORT_FIELDS.includes(sortParam!) ? sortParam! : 'number';
   const order = c.req.query('order')?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
+  let useFtsAttempt = Boolean(search);
+
+  for (let attempt = 0; attempt < 2; attempt++) {
   try {
     const { clause: whereClause, bindings: whereBindings } = buildWhereClause({
       search: search || undefined,
+      useFts: useFtsAttempt,
       tags,
       rhythm,
       tonality,
@@ -394,9 +461,22 @@ app.get('/api/praises', async (c) => {
       },
     });
   } catch (error) {
+    if (useFtsAttempt && search) {
+      useFtsAttempt = false;
+      console.warn(
+        JSON.stringify({
+          msg: 'api.praises.fts_fallback',
+          error: error instanceof Error ? error.message : String(error),
+        })
+      );
+      continue;
+    }
     console.error('Error fetching praises:', error);
     return c.json({ error: 'Failed to fetch praises' }, 500);
   }
+  }
+
+  return c.json({ error: 'Failed to fetch praises' }, 500);
 });
 
 // GET /api/praises/filters - Get filter options
@@ -573,6 +653,69 @@ app.patch('/api/praises/:id', requireAuth, async (c) => {
     return c.json(json, res.status as ContentfulStatusCode);
   } catch (error) {
     console.error('Error re-fetching praise after update:', error);
+    return c.json({ ok: true });
+  }
+});
+
+// POST /api/praises/:id/tags - Attach a tag to a praise (admin)
+app.post('/api/praises/:id/tags', requireAuth, async (c) => {
+  const praiseId = c.req.param('id');
+  const body = await c.req.json().catch(() => null) as { tag_id?: unknown } | null;
+  if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const tagId = body.tag_id;
+  if (typeof tagId !== 'string' || !tagId.trim()) {
+    return c.json({ error: "Field 'tag_id' is required" }, 400);
+  }
+
+  try {
+    const praise = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(praiseId).first();
+    if (!praise) return c.json({ error: 'Praise not found' }, 404);
+
+    const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
+    if (!tag) return c.json({ error: 'Tag not found' }, 404);
+
+    await c.env.DB.prepare(
+      'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
+    ).bind(praiseId, tagId).run();
+  } catch (error) {
+    console.error('Error adding praise tag:', error);
+    return c.json({ error: 'Failed to add tag' }, 500);
+  }
+
+  try {
+    const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+    const json = await res.json();
+    return c.json(json, res.status as ContentfulStatusCode);
+  } catch (error) {
+    console.error('Error re-fetching praise after adding tag:', error);
+    return c.json({ ok: true });
+  }
+});
+
+// DELETE /api/praises/:id/tags/:tagId - Detach a tag from a praise (admin)
+app.delete('/api/praises/:id/tags/:tagId', requireAuth, async (c) => {
+  const praiseId = c.req.param('id');
+  const tagId = c.req.param('tagId');
+
+  try {
+    const praise = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(praiseId).first();
+    if (!praise) return c.json({ error: 'Praise not found' }, 404);
+
+    await c.env.DB.prepare(
+      'DELETE FROM praise_tags WHERE praise_id = ? AND tag_id = ?'
+    ).bind(praiseId, tagId).run();
+  } catch (error) {
+    console.error('Error removing praise tag:', error);
+    return c.json({ error: 'Failed to remove tag' }, 500);
+  }
+
+  try {
+    const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+    const json = await res.json();
+    return c.json(json, res.status as ContentfulStatusCode);
+  } catch (error) {
+    console.error('Error re-fetching praise after removing tag:', error);
     return c.json({ ok: true });
   }
 });

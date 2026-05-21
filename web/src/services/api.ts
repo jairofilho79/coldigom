@@ -110,6 +110,26 @@ export async function updatePraise(
   return response.data;
 }
 
+export async function addPraiseTag(praiseId: string, tagId: string): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/tags`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ tag_id: tagId }),
+    }
+  );
+  return response.data;
+}
+
+export async function removePraiseTag(praiseId: string, tagId: string): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/tags/${tagId}`,
+    { method: 'DELETE' }
+  );
+  return response.data;
+}
+
 export async function createMaterial(praiseId: string, material: {
   material_kind: string;
   type: string;

@@ -20,6 +20,13 @@ vi.mock('../services/api', async (importOriginal) => {
       { id: 'kind3', name: 'Acordes' },
     ]),
     updatePraise: vi.fn(),
+    getTags: vi.fn().mockResolvedValue([
+      { id: 'tag1', name: 'Coletânea' },
+      { id: 'tag2', name: 'Avulsos' },
+      { id: 'tag3', name: 'GLTM' },
+    ]),
+    addPraiseTag: vi.fn(),
+    removePraiseTag: vi.fn(),
     createMaterial: vi.fn(),
     updateMaterial: vi.fn(),
     deleteMaterial: vi.fn(),

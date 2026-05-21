@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPraise, getAssetUrl, API_BASE_URL, updatePraise, getMaterialKinds, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
+import { getPraise, getAssetUrl, API_BASE_URL, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
-import type { PraiseDetail } from '../types';
-import type { MaterialKind } from '../types';
+import type { PraiseDetail, Tag, MaterialKind } from '../types';
 
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +18,9 @@ export function PraiseDetailPage() {
   const [newMat, setNewMat] = useState({ material_kind: '', type: 'youtube', url: '' });
   const [bulkFiles, setBulkFiles] = useState<Array<{ file: File; relPath: string; type: string; material_kind: string }>>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
+  const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
+  const [tagToAdd, setTagToAdd] = useState('');
+  const [tagsBusy, setTagsBusy] = useState(false);
   const [edit, setEdit] = useState({
     name: '',
     number: '',
@@ -76,6 +78,19 @@ export function PraiseDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!userName) return;
+    const fetchTagCatalog = async () => {
+      try {
+        const tags = await getTags();
+        setCatalogTags(tags);
+      } catch {
+        // ignore
+      }
+    };
+    void fetchTagCatalog();
+  }, [userName]);
+
   if (loading) {
     return (
       <div className="page-container detail-page">
@@ -132,6 +147,9 @@ export function PraiseDetailPage() {
       return null;
     }
   };
+
+  const assignedTagIds = new Set((praise.tags || []).map(t => t.id));
+  const availableTags = catalogTags.filter(t => !assignedTagIds.has(t.id));
 
   const youtubeMaterials = praise.materials.filter(m => m.type === 'youtube' && m.url);
   const audioMaterials = praise.materials.filter(m => m.type === 'mp3');
@@ -282,12 +300,84 @@ export function PraiseDetailPage() {
           </div>
         )}
 
-        {praise.tags && praise.tags.length > 0 && (
-          <div className="detail-tags">
-            {praise.tags.map(tag => (
-              <span key={tag.id} className="detail-tag">{tag.name}</span>
+        {isEditing && userName ? (
+          <div className="detail-tags detail-tags--edit">
+            <span className="detail-tags-label">Tags</span>
+            {(praise.tags || []).map(tag => (
+              <span key={tag.id} className="detail-tag detail-tag--editable">
+                {tag.name}
+                <button
+                  type="button"
+                  className="detail-tag-remove"
+                  aria-label={`Remover tag ${tag.name}`}
+                  disabled={tagsBusy}
+                  onClick={async () => {
+                    if (!id) return;
+                    setTagsBusy(true);
+                    setError(null);
+                    try {
+                      const updated = await removePraiseTag(id, tag.id);
+                      setPraise(updated);
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Falha ao remover tag');
+                    } finally {
+                      setTagsBusy(false);
+                    }
+                  }}
+                >
+                  ×
+                </button>
+              </span>
             ))}
+            {availableTags.length > 0 ? (
+              <div className="detail-tag-add">
+                <select
+                  value={tagToAdd}
+                  onChange={(e) => setTagToAdd(e.target.value)}
+                  disabled={tagsBusy}
+                  aria-label="Adicionar tag"
+                >
+                  <option value="">Adicionar tag…</option>
+                  {availableTags.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={!tagToAdd || tagsBusy || !id}
+                  onClick={async () => {
+                    if (!id || !tagToAdd) return;
+                    setTagsBusy(true);
+                    setError(null);
+                    try {
+                      const updated = await addPraiseTag(id, tagToAdd);
+                      setPraise(updated);
+                      setTagToAdd('');
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Falha ao adicionar tag');
+                    } finally {
+                      setTagsBusy(false);
+                    }
+                  }}
+                >
+                  Adicionar
+                </button>
+              </div>
+            ) : (
+              (praise.tags || []).length === 0 && catalogTags.length > 0
+                ? <span className="detail-tags-hint muted">Todas as tags do catálogo já estão associadas.</span>
+                : null
+            )}
           </div>
+        ) : (
+          praise.tags && praise.tags.length > 0 && (
+            <div className="detail-tags">
+              {praise.tags.map(tag => (
+                <span key={tag.id} className="detail-tag">{tag.name}</span>
+              ))}
+            </div>
+          )
         )}
       </header>
 
@@ -581,22 +671,37 @@ export function PraiseDetailPage() {
             <span className="detail-section-icon">📄</span>
             Partituras
           </h2>
-          <div className="material-grid">
-            {pdfMaterials.map(m => (
-              <a
-                key={m.id}
-                href={m.r2_key ? getAssetUrl(m.r2_key) : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="material-link"
-              >
-                <span className="material-link-icon">📄</span>
-                <div>
-                  <div className="material-link-text">{m.material_kind_name || 'Partitura'}</div>
-                  <div className="material-link-meta">PDF</div>
+          <div className="pdf-viewer-list">
+            {pdfMaterials.map(m => {
+              const pdfUrl = m.r2_key ? getAssetUrl(m.r2_key) : null;
+              const title = m.material_kind_name || 'Partitura';
+              return (
+                <div key={m.id} className="pdf-viewer-block">
+                  <div className="pdf-viewer-header">
+                    <span className="pdf-viewer-title">{title}</span>
+                    {pdfUrl ? (
+                      <a
+                        href={pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pdf-viewer-open-link"
+                      >
+                        Abrir em nova aba
+                      </a>
+                    ) : null}
+                  </div>
+                  {pdfUrl ? (
+                    <iframe
+                      title={title}
+                      src={pdfUrl}
+                      className="pdf-viewer-frame"
+                    />
+                  ) : (
+                    <p className="muted">PDF indisponível</p>
+                  )}
                 </div>
-              </a>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

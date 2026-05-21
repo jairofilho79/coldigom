@@ -15,7 +15,7 @@ npm run build
 
 echo ""
 echo "Deploying to Cloudflare Pages..."
-npx wrangler pages deploy dist
+wrangler pages deploy dist
 
 echo ""
 echo "Deployment complete!"

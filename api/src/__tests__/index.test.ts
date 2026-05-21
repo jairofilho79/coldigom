@@ -623,6 +623,36 @@ describe('API Routes', () => {
     });
   });
 
+  describe('GET /auth/status', () => {
+    it('returns configuration flags without secrets', async () => {
+      const mockDB = createMockD1({});
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/auth/status', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+        GOOGLE_CLIENT_ID: 'client-id',
+        GOOGLE_CLIENT_SECRET: 'secret',
+        AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+        AUTH_BASE_URL: 'https://api.example',
+        WEB_ORIGIN: 'https://web.example',
+        AUTH_COOKIE_SAMESITE: 'None',
+      });
+
+      expect(res.status).toBe(200);
+      const body = await res.json() as {
+        googleClientConfigured: boolean;
+        webOriginSet: boolean;
+        cookieSameSiteEffective: string;
+        callbackUrl: string;
+      };
+      expect(body.googleClientConfigured).toBe(true);
+      expect(body.webOriginSet).toBe(true);
+      expect(body.cookieSameSiteEffective).toBe('None');
+      expect(body.callbackUrl).toBe('https://api.example/auth/callback');
+    });
+  });
+
   describe('POST /auth/refresh', () => {
     it('returns 401 when no refresh cookie', async () => {
       const mockDB = createMockD1({});

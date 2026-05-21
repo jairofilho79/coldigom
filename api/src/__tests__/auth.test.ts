@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildGoogleAuthorizeRedirect, buildSetCookie, clearCookie } from '../auth';
+import {
+  buildGoogleAuthorizeRedirect,
+  buildSetCookie,
+  clearCookie,
+  resolveUserFromCookies,
+} from '../auth';
+import { SignJWT } from 'jose';
 
 describe('auth cookie policy', () => {
   it('buildSetCookie emits SameSite=None with Secure when requested', () => {
@@ -18,6 +24,23 @@ describe('auth cookie policy', () => {
     expect(v).toContain('SameSite=None');
     expect(v).toContain('Secure');
     expect(v).toContain('Max-Age=0');
+  });
+
+  it('resolveUserFromCookies reads access cookie signed with same secret', async () => {
+    const secret = '0123456789abcdef0123456789abcdef';
+    const jwt = await new SignJWT({ email: 'a@b.com', name: 'Test', jti: 'j1' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('sub-1')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(secret));
+
+    const req = new Request('https://api.example/auth/me', {
+      headers: { cookie: `coldigom_access=${encodeURIComponent(jwt)}` },
+    });
+    const user = await resolveUserFromCookies({ request: req, jwtSecret: secret });
+    expect(user?.sub).toBe('sub-1');
+    expect(user?.email).toBe('a@b.com');
   });
 
   it('buildGoogleAuthorizeRedirect uses cookieSameSite and forces Secure for None', async () => {

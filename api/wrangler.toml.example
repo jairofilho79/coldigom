@@ -1,8 +1,8 @@
 name = "coldigom-api"
 account_id = "${CLOUDFLARE_ACCOUNT_ID}"
-main = "src/index.ts"
-compatibility_date = "2024-01-01"
-nodejs_compat = true
+main = "dist/index.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
 
 # D1 Database binding
 [[d1_databases]]
@@ -15,10 +15,19 @@ database_id = "${CLOUDFLARE_DATABASE_ID}"
 binding = "ASSETS"
 bucket_name = "coldigom-assets"
 
-# Dev configuration (local development)
+# OAuth / sessão (valores públicos). Secrets via: wrangler secret put <NAME>
+#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_JWT_SECRET
+# Use wrangler global 4.x (não npx wrangler).
+[vars]
+AUTH_BASE_URL = "https://coldigom-api.coletaneadigitalicm.workers.dev"
+WEB_ORIGIN = "https://coldigom-web.pages.dev"
+AUTH_COOKIE_SAMESITE = "None"
+
 [dev]
 port = 8787
 local_protocol = "http"
 
-# Build configuration
-build.command = "npx tsc"
+# Local secrets: copy to .dev.vars (gitignored)
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# AUTH_JWT_SECRET=

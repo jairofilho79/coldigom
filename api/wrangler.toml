@@ -15,6 +15,12 @@ database_id = "975818ec-73e0-40ca-b110-be9204e13d91"  # Created D1 database
 binding = "ASSETS"          # Variable name in code (c.env.ASSETS)
 bucket_name = "coldigom-assets"  # Name in Cloudflare dashboard
 
+# OAuth / sessão (não-secret). Secrets via `wrangler secret put` (usar wrangler global 4.x, não npx)
+[vars]
+AUTH_BASE_URL = "https://coldigom-api.coletaneadigitalicm.workers.dev"
+WEB_ORIGIN = "https://coldigom-web.pages.dev"
+AUTH_COOKIE_SAMESITE = "None"
+
 # Dev configuration (local development)
 [dev]
 port = 8787

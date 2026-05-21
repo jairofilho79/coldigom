@@ -15,7 +15,7 @@ npm run build 2>/dev/null || npx tsc
 
 echo ""
 echo "Deploying to Cloudflare Workers..."
-npx wrangler deploy
+wrangler deploy
 
 echo ""
 echo "Deployment complete!"

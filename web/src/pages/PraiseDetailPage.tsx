@@ -1,10 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPraise, getAssetUrl, API_BASE_URL, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { StyledFileInput } from '../components/StyledFileInput';
+import { Select } from '../components/Select';
+import { SearchableSelect } from '../components/SearchableSelect';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
+
+const MATERIAL_TYPE_OPTIONS = [
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'pdf', label: 'PDF' },
+  { value: 'mp3', label: 'MP3' },
+  { value: 'chord', label: 'Cifra' },
+] as const;
 
 type MaterialFormType = 'youtube' | 'pdf' | 'mp3' | 'chord';
 
@@ -115,6 +124,23 @@ export function PraiseDetailPage() {
     void fetchTagCatalog();
   }, [userName]);
 
+  const materialKindOptions = useMemo(
+    () => materialKinds.map((k) => ({ value: k.id, label: k.name })),
+    [materialKinds]
+  );
+  const assignedTagIds = useMemo(
+    () => new Set((praise?.tags || []).map((t) => t.id)),
+    [praise?.tags]
+  );
+  const availableTags = useMemo(
+    () => catalogTags.filter((t) => !assignedTagIds.has(t.id)),
+    [catalogTags, assignedTagIds]
+  );
+  const tagSelectOptions = useMemo(
+    () => availableTags.map((t) => ({ value: t.id, label: t.name })),
+    [availableTags]
+  );
+
   if (loading) {
     return (
       <div className="page-container detail-page">
@@ -171,9 +197,6 @@ export function PraiseDetailPage() {
       return null;
     }
   };
-
-  const assignedTagIds = new Set((praise.tags || []).map(t => t.id));
-  const availableTags = catalogTags.filter(t => !assignedTagIds.has(t.id));
 
   const youtubeMaterials = praise.materials.filter(m => m.type === 'youtube' && m.url);
   const audioMaterials = praise.materials.filter(m => m.type === 'mp3');
@@ -355,17 +378,14 @@ export function PraiseDetailPage() {
             ))}
             {availableTags.length > 0 ? (
               <div className="detail-tag-add">
-                <select
+                <Select
                   value={tagToAdd}
-                  onChange={(e) => setTagToAdd(e.target.value)}
+                  onChange={setTagToAdd}
+                  options={tagSelectOptions}
+                  placeholder="Adicionar tag…"
                   disabled={tagsBusy}
                   aria-label="Adicionar tag"
-                >
-                  <option value="">Adicionar tag…</option>
-                  {availableTags.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
+                />
                 <button
                   type="button"
                   className="auth-btn"
@@ -470,37 +490,29 @@ export function PraiseDetailPage() {
               <h3 className="materials-panel-title">Adicionar material</h3>
               <div className="edit-grid">
                 <div className="edit-field">
-                  <label htmlFor="new-mat-kind">Categoria</label>
-                  <select
+                  <SearchableSelect
                     id="new-mat-kind"
+                    label="Categoria"
                     value={newMat.material_kind}
-                    onChange={(e) => setNewMat(s => ({ ...s, material_kind: e.target.value }))}
-                  >
-                    {materialKinds.map(k => (
-                      <option key={k.id} value={k.id}>{k.name}</option>
-                    ))}
-                  </select>
+                    onChange={(material_kind) => setNewMat((s) => ({ ...s, material_kind }))}
+                    options={materialKindOptions}
+                  />
                 </div>
                 <div className="edit-field">
-                  <label htmlFor="new-mat-type">Tipo do material</label>
-                  <select
+                  <Select
                     id="new-mat-type"
+                    label="Tipo do material"
                     value={newMat.type}
-                    onChange={(e) => {
-                      const type = e.target.value as MaterialFormType;
-                      setNewMat(s => ({
+                    onChange={(type) => {
+                      setNewMat((s) => ({
                         ...s,
-                        type,
+                        type: type as MaterialFormType,
                         url: '',
                         file: null,
                       }));
                     }}
-                  >
-                    <option value="youtube">YouTube</option>
-                    <option value="pdf">PDF</option>
-                    <option value="mp3">MP3</option>
-                    <option value="chord">Cifra</option>
-                  </select>
+                    options={[...MATERIAL_TYPE_OPTIONS]}
+                  />
                 </div>
 
                 {newMat.type === 'youtube' && (
@@ -631,17 +643,17 @@ export function PraiseDetailPage() {
                             <span className="bulk-size">{Math.round(it.file.size / 1024)} KB</span>
                           </div>
                         </div>
-                        <select
+                        <SearchableSelect
+                          compact
                           value={it.material_kind}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setBulkFiles(list => list.map((x, i) => (i === idx ? { ...x, material_kind: v } : x)));
+                          onChange={(v) => {
+                            setBulkFiles((list) =>
+                              list.map((x, i) => (i === idx ? { ...x, material_kind: v } : x))
+                            );
                           }}
-                        >
-                          {materialKinds.map(k => (
-                            <option key={k.id} value={k.id}>{k.name}</option>
-                          ))}
-                        </select>
+                          options={materialKindOptions}
+                          aria-label="Categoria do material"
+                        />
                       </div>
                     ))}
                     {bulkFiles.length > 25 && (
@@ -700,22 +712,22 @@ export function PraiseDetailPage() {
                         </div>
                       </div>
                       <div className="materials-cell">
-                        <select
+                        <SearchableSelect
+                          compact
                           value={m.material_kind}
-                          onChange={async (e) => {
+                          disabled={saving}
+                          onChange={async (material_kind) => {
                             setSaving(true);
                             try {
-                              const updated = await updateMaterial(m.id, { material_kind: e.target.value });
+                              const updated = await updateMaterial(m.id, { material_kind });
                               setPraise(updated);
                             } finally {
                               setSaving(false);
                             }
                           }}
-                        >
-                          {materialKinds.map(k => (
-                            <option key={k.id} value={k.id}>{k.name}</option>
-                          ))}
-                        </select>
+                          options={materialKindOptions}
+                          aria-label="Categoria do material"
+                        />
                       </div>
                       <div className="materials-cell">
                         <button

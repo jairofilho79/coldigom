@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SortSelector } from '../components/SortSelector';
 
 describe('SortSelector Component', () => {
@@ -14,41 +15,44 @@ describe('SortSelector Component', () => {
       <SortSelector sort="number" order="asc" onChange={mockOnChange} />
     );
 
-    const select = screen.getByLabelText(/ordenar por/i);
-    expect(select).toHaveValue('number');
+    expect(screen.getByLabelText(/ordenar por/i)).toHaveTextContent('Número');
   });
 
-  it('should render all sort options', () => {
+  it('should render all sort options', async () => {
+    const user = userEvent.setup();
     render(
       <SortSelector sort="number" order="asc" onChange={mockOnChange} />
     );
 
-    expect(screen.getByText('Número')).toBeTruthy();
-    expect(screen.getByText('Nome')).toBeTruthy();
-    expect(screen.getByText('Ritmo')).toBeTruthy();
-    expect(screen.getByText('Tom')).toBeTruthy();
-    expect(screen.getByText('Categoria')).toBeTruthy();
-    expect(screen.getByText('Autor')).toBeTruthy();
+    await user.click(screen.getByLabelText(/ordenar por/i));
+    expect(screen.getByRole('option', { name: 'Número' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Nome' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Ritmo' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Tom' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Categoria' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Autor' })).toBeTruthy();
   });
 
-  it('should call onChange when sort selection changes', () => {
+  it('should call onChange when sort selection changes', async () => {
+    const user = userEvent.setup();
     render(
       <SortSelector sort="number" order="asc" onChange={mockOnChange} />
     );
 
-    const select = screen.getByLabelText(/ordenar por/i);
-    fireEvent.change(select, { target: { value: 'name' } });
+    await user.click(screen.getByLabelText(/ordenar por/i));
+    await user.click(screen.getByRole('option', { name: 'Nome' }));
 
     expect(mockOnChange).toHaveBeenCalledWith('name', 'asc');
   });
 
-  it('should toggle order when same sort is selected', () => {
+  it('should toggle order when same sort is selected', async () => {
+    const user = userEvent.setup();
     render(
       <SortSelector sort="number" order="asc" onChange={mockOnChange} />
     );
 
-    const select = screen.getByLabelText(/ordenar por/i);
-    fireEvent.change(select, { target: { value: 'number' } });
+    await user.click(screen.getByLabelText(/ordenar por/i));
+    await user.click(screen.getByRole('option', { name: 'Número' }));
 
     expect(mockOnChange).toHaveBeenCalledWith('number', 'desc');
   });

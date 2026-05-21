@@ -1,5 +1,6 @@
 import type { SortField } from '../types';
 import { SORT_OPTIONS } from '../types';
+import { Select } from './Select';
 
 interface SortSelectorProps {
   sort: SortField;
@@ -7,11 +8,16 @@ interface SortSelectorProps {
   onChange: (sort: SortField, order: 'asc' | 'desc') => void;
 }
 
+const sortSelectOptions = SORT_OPTIONS.map((opt) => ({
+  value: opt.field,
+  label: opt.label,
+}));
+
 export function SortSelector({ sort, order, onChange }: SortSelectorProps) {
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSort = e.target.value as SortField;
-    const newOrder = newSort === sort ? (order === 'asc' ? 'desc' : 'asc') : 'asc';
-    onChange(newSort, newOrder);
+  const handleSortChange = (newSort: string) => {
+    const field = newSort as SortField;
+    const newOrder = field === sort ? (order === 'asc' ? 'desc' : 'asc') : 'asc';
+    onChange(field, newOrder);
   };
 
   const toggleOrder = () => {
@@ -20,13 +26,12 @@ export function SortSelector({ sort, order, onChange }: SortSelectorProps) {
 
   return (
     <div className="sort-selector">
-      <select value={sort} onChange={handleSortChange} className="sort-select" aria-label="Ordenar por">
-        {SORT_OPTIONS.map(opt => (
-          <option key={opt.field} value={opt.field}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <Select
+        value={sort}
+        onChange={handleSortChange}
+        options={sortSelectOptions}
+        aria-label="Ordenar por"
+      />
       <button
         type="button"
         className="sort-order-btn"

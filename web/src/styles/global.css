@@ -374,39 +374,197 @@
   transform: rotate(45deg);
 }
 
+/* App select (Select / SearchableSelect) */
+.app-select {
+  position: relative;
+  width: 100%;
+}
+
+.app-select--compact {
+  width: auto;
+  min-width: 0;
+}
+
+.app-select--inline {
+  width: auto;
+}
+
+.sort-selector .app-select {
+  width: auto;
+}
+
+.app-select-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-2);
+}
+
+.app-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  padding-right: var(--space-10);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  text-align: left;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a89f91' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.app-select--compact .app-select-trigger {
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-8);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+  background-position: right 10px center;
+}
+
+.sort-selector .app-select-trigger {
+  padding: var(--space-2) var(--space-3);
+  padding-right: var(--space-8);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  background-position: right 10px center;
+}
+
+.app-select-trigger:hover:not(:disabled) {
+  border-color: var(--border-default);
+}
+
+.app-select-trigger:focus-visible,
+.app-select-trigger[aria-expanded="true"] {
+  border-color: var(--c-accent-500);
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.12);
+}
+
+.app-select-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.app-select-trigger.is-placeholder {
+  color: var(--text-tertiary);
+}
+
+.app-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-select-menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: slideDown var(--duration-fast) var(--ease-out) forwards;
+}
+
+.app-select--compact .app-select-menu,
+.app-select--inline .app-select-menu {
+  min-width: 12rem;
+}
+
+.app-select-search {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.app-select-search:focus {
+  border-color: var(--c-accent-500);
+  box-shadow: 0 0 0 2px rgba(201, 169, 110, 0.1);
+}
+
+.app-select-option {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  color: var(--text-secondary);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  outline: none;
+  transition: background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.app-select-option:hover:not(:disabled),
+.app-select-option.is-focused {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.app-select-option[aria-selected="true"] {
+  color: var(--c-accent-300);
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.app-select-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.app-select-empty {
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.detail-tag-add .app-select {
+  min-width: 10rem;
+  flex: 1;
+  max-width: 16rem;
+}
+
 /* Sort selector */
 .sort-selector {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   margin-left: auto;
-}
-
-.sort-select {
-  padding: var(--space-2) var(--space-3);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--text-secondary);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  outline: none;
-  transition: all var(--duration-fast) var(--ease-out);
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6459' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: var(--space-8);
-}
-
-.sort-select:hover {
-  border-color: var(--border-default);
-}
-
-.sort-select:focus {
-  border-color: var(--c-accent-500);
 }
 
 .sort-order-btn {
@@ -993,12 +1151,6 @@
   width: 100%;
 }
 
-.detail-tag-add select {
-  min-width: 10rem;
-  flex: 1;
-  max-width: 16rem;
-}
-
 .detail-tags-hint {
   font-size: var(--text-sm);
 }
@@ -1109,23 +1261,6 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   outline: none;
-}
-
-.edit-field select {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--text-primary);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  outline: none;
-}
-
-.edit-field select:focus {
-  border-color: var(--c-accent-500);
-  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.12);
 }
 
 .edit-field input:focus {

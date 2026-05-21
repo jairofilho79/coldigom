@@ -264,8 +264,7 @@ describe('PraiseDetailPage Component', () => {
         expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
       });
 
-      const typeSelect = screen.getByLabelText('Tipo do material') as HTMLSelectElement;
-      expect(typeSelect.value).toBe('pdf');
+      expect(screen.getByLabelText('Tipo do material')).toHaveTextContent('PDF');
       expect(screen.getByText('Escolher PDF')).toBeTruthy();
       expect(screen.queryByLabelText('Link do YouTube')).toBeNull();
     });
@@ -278,7 +277,8 @@ describe('PraiseDetailPage Component', () => {
         expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
       });
 
-      await user.selectOptions(screen.getByLabelText('Tipo do material'), 'youtube');
+      await user.click(screen.getByLabelText('Tipo do material'));
+      await user.click(screen.getByRole('option', { name: 'YouTube' }));
       expect(screen.getByLabelText('Link do YouTube')).toBeTruthy();
       expect(screen.queryByText('Escolher PDF')).toBeNull();
     });
@@ -291,7 +291,8 @@ describe('PraiseDetailPage Component', () => {
         expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
       });
 
-      await user.selectOptions(screen.getByLabelText('Tipo do material'), 'chord');
+      await user.click(screen.getByLabelText('Tipo do material'));
+      await user.click(screen.getByRole('option', { name: 'Cifra' }));
       expect(screen.getByText('Editor de cifras — em breve')).toBeTruthy();
 
       const addPanel = screen.getByRole('heading', { name: 'Adicionar material' }).closest('.materials-panel');

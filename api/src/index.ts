@@ -12,6 +12,7 @@ import {
   getRefreshCookieName,
   type AuthUser,
 } from './auth';
+import { labelFor, listMaterialKindsForLocale, loadMaterialKindLabels } from './materialKindLabels';
 
 type Env = {
   DB: D1Database;
@@ -552,17 +553,11 @@ app.get('/api/praises/:id', async (c) => {
       tags = tagsResult.results as { id: string; name: string }[];
     }
 
-    // Fetch material kind names
-    const materialKindsQuery = `SELECT id, name FROM material_kinds`;
-    const materialKindsResult = await c.env.DB.prepare(materialKindsQuery).all();
-    const materialKindsMap = new Map(
-      (materialKindsResult.results as { id: string; name: string }[]).map(k => [k.id, k.name])
-    );
+    const materialKindLabels = await loadMaterialKindLabels(c.env.DB);
 
-    // Enrich materials with kind names
     const materials = (materialsResult.results as any[]).map(m => ({
       ...m,
-      material_kind_name: materialKindsMap.get(m.material_kind) || 'Unknown',
+      material_kind_name: labelFor(materialKindLabels, m.material_kind),
     }));
 
     return c.json({
@@ -582,10 +577,8 @@ app.get('/api/praises/:id', async (c) => {
 // GET /api/materials/kinds - List all material kinds
 app.get('/api/materials/kinds', async (c) => {
   try {
-    const result = await c.env.DB.prepare(
-      `SELECT id, name FROM material_kinds ORDER BY name ASC`
-    ).all();
-    return c.json({ data: result.results });
+    const data = await listMaterialKindsForLocale(c.env.DB);
+    return c.json({ data });
   } catch (error) {
     console.error('Error fetching material kinds:', error);
     return c.json({ error: 'Failed to fetch material kinds' }, 500);

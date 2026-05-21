@@ -6,6 +6,14 @@ INSERT INTO material_kinds (id, name) VALUES ('04dfd0f1-ab99-4eec-948d-f5c178692
 INSERT INTO material_kinds (id, name) VALUES ('95ee0488-eae1-4551-b587-7e9617211b9d', 'Vozes');
 INSERT INTO material_kinds (id, name) VALUES ('d86323b8-633f-4b3c-a2a6-9c3b05fb7972', 'Instrumentos');
 INSERT INTO material_kinds (id, name) VALUES ('c16e9157-3b0e-4fec-ae9b-e6ed01852a58', 'Playalong');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('68d7b6f7-a6bd-45ad-b712-95db907f853c', 'pt-BR', 'Áudio');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('f2666cb0-d69a-4710-b6ef-03e4a69af164', 'pt-BR', 'Partitura');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('ab74b25c-72ed-4342-aef9-789282e5b3d5', 'pt-BR', 'MIDI');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('2d6c0599-ddf7-4a3b-b2e3-b999219bd9a0', 'pt-BR', 'Letra');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('04dfd0f1-ab99-4eec-948d-f5c17869259f', 'pt-BR', 'Cifra');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('95ee0488-eae1-4551-b587-7e9617211b9d', 'pt-BR', 'Vozes');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('d86323b8-633f-4b3c-a2a6-9c3b05fb7972', 'pt-BR', 'Instrumentos');
+INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('c16e9157-3b0e-4fec-ae9b-e6ed01852a58', 'pt-BR', 'Playalong');
 INSERT INTO tags (id, name) VALUES ('1c6139f0-536a-496a-9f86-6b281321acbd', 'Coletânea');
 INSERT INTO tags (id, name) VALUES ('dca5af40-3d5e-4e8d-a4b0-56b3b558e304', 'Avulsos');
 INSERT INTO tags (id, name) VALUES ('e49cea68-b261-42a8-9ea4-fae45f337597', 'CIAs');

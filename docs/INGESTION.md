@@ -18,6 +18,17 @@ cd api
 wrangler d1 execute coldigom --remote --file=schema.sql
 ```
 
+### Traduções PT-BR dos tipos de material (após ingestão)
+
+Rótulos exibidos na app vêm da tabela `material_kind_translations` no D1 (SSOT). Em bancos já populados com `material_kinds` em inglês, aplique:
+
+```bash
+cd api
+wrangler d1 execute coldigom --remote --file=migrations/002_material_kind_translations_pt-BR.sql
+```
+
+Ambiente local: troque `--remote` por `--local` se estiver usando D1 local.
+
 ## 2. Ingestão
 
 | Comando | Ação |

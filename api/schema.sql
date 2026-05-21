@@ -52,12 +52,22 @@ CREATE TABLE IF NOT EXISTS tags (
 -- Lookup table for material types (Audio, Score, MIDI, Lyrics, Chord Chart, Vozes, Instrumentos, etc.)
 CREATE TABLE IF NOT EXISTS material_kinds (
     id TEXT PRIMARY KEY,           -- UUID
-    name TEXT NOT NULL UNIQUE      -- Kind name
+    name TEXT NOT NULL UNIQUE      -- Canonical kind name (ingestion source language)
+);
+
+-- Display labels per locale (pt-BR first; SSOT for UI strings)
+CREATE TABLE IF NOT EXISTS material_kind_translations (
+    material_kind_id TEXT NOT NULL,
+    locale TEXT NOT NULL,
+    label TEXT NOT NULL,
+    PRIMARY KEY (material_kind_id, locale),
+    FOREIGN KEY (material_kind_id) REFERENCES material_kinds(id) ON DELETE CASCADE
 );
 
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_praise_materials_praise_id ON praise_materials(praise_id);
 CREATE INDEX IF NOT EXISTS idx_praise_materials_material_kind ON praise_materials(material_kind);
+CREATE INDEX IF NOT EXISTS idx_mk_translations_locale ON material_kind_translations(locale);
 CREATE INDEX IF NOT EXISTS idx_praise_materials_source_material_id ON praise_materials(source_material_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_praise_id ON praise_tags(praise_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);

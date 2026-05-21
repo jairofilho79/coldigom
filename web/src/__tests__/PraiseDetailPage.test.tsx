@@ -17,8 +17,8 @@ vi.mock('../services/api', async (importOriginal) => {
     refreshSession: vi.fn().mockResolvedValue(false),
     getMaterialKinds: vi.fn().mockResolvedValue([
       { id: 'kind1', name: 'Partitura' },
-      { id: 'kind2', name: 'Audio' },
-      { id: 'kind3', name: 'Acordes' },
+      { id: 'kind2', name: 'Áudio' },
+      { id: 'kind3', name: 'Cifra' },
     ]),
     updatePraise: vi.fn(),
     getTags: vi.fn().mockResolvedValue([
@@ -70,7 +70,7 @@ describe('PraiseDetailPage Component', () => {
         id: 'mat2',
         praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
         material_kind: 'kind2',
-        material_kind_name: 'Audio',
+        material_kind_name: 'Áudio',
         type: 'mp3',
         r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat2.mp3',
         file_path_legacy: 'path/to/file.mp3',
@@ -148,7 +148,7 @@ describe('PraiseDetailPage Component', () => {
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     await waitFor(() => {
-      expect(screen.getByText('Áudio')).toBeTruthy();
+      expect(screen.getByLabelText('Áudio')).toBeTruthy();
       expect(
         document.querySelector('audio.audio-player-element')
       ).toBeTruthy();

@@ -55,17 +55,32 @@ const mockTags = [
   { id: 'tag3', name: 'GLTM' },
 ];
 
-const mockMaterialKinds = [
-  { id: 'kind1', name: 'Partitura' },
-  { id: 'kind2', name: 'Audio' },
-  { id: 'kind3', name: 'Acordes' },
+const mockMaterialKindLabels = [
+  { id: 'kind1', label: 'Partitura' },
+  { id: 'kind2', label: 'Áudio' },
+  { id: 'kind3', label: 'Cifra' },
 ];
+
+const mockMaterialKinds = mockMaterialKindLabels.map(({ id, label }) => ({ id, name: label }));
+
+function resolveMockAll(query: string, responses: { all?: { results: unknown[] }; tags?: typeof mockTags }) {
+  if (query.includes('COALESCE(t.label')) {
+    if (query.includes('AS name')) {
+      return { results: mockMaterialKinds };
+    }
+    return { results: mockMaterialKindLabels };
+  }
+  if (query.includes('FROM tags')) {
+    return { results: responses.tags ?? mockTags };
+  }
+  return responses.all || { results: [] };
+}
 
 // Mock D1Database
 const createMockD1 = (responses: any) => ({
   prepare: vi.fn((query: string) => ({
     bind: vi.fn().mockReturnThis(),
-    all: vi.fn().mockResolvedValue(responses.all || { results: [] }),
+    all: vi.fn().mockImplementation(async () => resolveMockAll(query, responses)),
     first: vi.fn().mockResolvedValue(responses.first || null),
   })),
 });
@@ -381,7 +396,18 @@ describe('API Routes', () => {
       const mockDB = {
         prepare: vi.fn((query: string) => ({
           bind: vi.fn().mockReturnThis(),
-          all: vi.fn().mockResolvedValue({ results: mockMaterials }),
+          all: vi.fn().mockImplementation(async () => {
+            if (query.includes('COALESCE(t.label')) {
+              return { results: mockMaterialKindLabels };
+            }
+            if (query.includes('FROM tags')) {
+              return { results: mockTags.slice(0, 2) };
+            }
+            if (query.includes('praise_materials')) {
+              return { results: mockMaterials };
+            }
+            return { results: [] };
+          }),
           first: vi.fn().mockResolvedValue(mockPraise),
         })),
       };
@@ -398,6 +424,8 @@ describe('API Routes', () => {
       expect(json.data.name).toBe('Grande Deus');
       expect(json.data.tags).toHaveLength(2);
       expect(json.data.materials).toHaveLength(2);
+      expect(json.data.materials[0].material_kind_name).toBe('Partitura');
+      expect(json.data.materials[1].material_kind_name).toBe('Áudio');
     });
 
     it('should return 404 when praise not found', async () => {

@@ -107,6 +107,9 @@ function generateSQL(): string {
 
   for (const mk of materialKinds) {
     statements.push(`INSERT INTO material_kinds (id, name) VALUES ('${mk.id}', '${escapeSQLValue(mk.name)}');`);
+    statements.push(
+      `INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, label) VALUES ('${mk.id}', 'pt-BR', '${escapeSQLValue(mk.name)}');`
+    );
   }
 
   for (const tag of tags) {

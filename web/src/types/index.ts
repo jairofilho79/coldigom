@@ -34,6 +34,7 @@ export interface PraiseDetail extends Praise {
   materials: Material[];
 }
 
+/** Display name for the default locale (pt-BR); resolved by the API from D1 translations. */
 export interface MaterialKind {
   id: string;
   name: string;

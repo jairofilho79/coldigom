@@ -6,14 +6,23 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { StyledFileInput } from '../components/StyledFileInput';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
 
-const DEFAULT_NEW_MAT = {
-  material_kind: '',
-  type: 'pdf' as const,
-  url: '',
-  file: null as File | null,
+type MaterialFormType = 'youtube' | 'pdf' | 'mp3' | 'chord';
+
+type NewMaterialForm = {
+  material_kind: string;
+  type: MaterialFormType;
+  url: string;
+  file: File | null;
 };
 
-function canSubmitNewMaterial(mat: typeof DEFAULT_NEW_MAT): boolean {
+const DEFAULT_NEW_MAT: NewMaterialForm = {
+  material_kind: '',
+  type: 'pdf',
+  url: '',
+  file: null,
+};
+
+function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   if (!mat.material_kind) return false;
   if (mat.type === 'youtube') return mat.url.trim().length > 0;
   if (mat.type === 'pdf' || mat.type === 'mp3') return mat.file !== null;
@@ -30,7 +39,7 @@ export function PraiseDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
-  const [newMat, setNewMat] = useState({ ...DEFAULT_NEW_MAT });
+  const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<Array<{ file: File; relPath: string; type: string; material_kind: string }>>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
@@ -478,7 +487,7 @@ export function PraiseDetailPage() {
                     id="new-mat-type"
                     value={newMat.type}
                     onChange={(e) => {
-                      const type = e.target.value;
+                      const type = e.target.value as MaterialFormType;
                       setNewMat(s => ({
                         ...s,
                         type,

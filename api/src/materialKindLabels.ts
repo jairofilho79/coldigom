@@ -1,5 +1,15 @@
 export const DEFAULT_MATERIAL_KIND_LOCALE = 'pt-BR';
 
+const PT_BR_COLLATOR = new Intl.Collator('pt-BR', {
+  sensitivity: 'base',
+  ignorePunctuation: true,
+});
+
+/** Ordem alfabética PT-BR (Áudio antes de Baixo, não no fim da lista ASCII). */
+export function compareMaterialKindLabels(a: string, b: string): number {
+  return PT_BR_COLLATOR.compare(a, b);
+}
+
 export type MaterialKindLabelRow = {
   id: string;
   label: string;
@@ -45,11 +55,11 @@ export async function listMaterialKindsForLocale(
       `SELECT mk.id, COALESCE(t.label, mk.name) AS name
        FROM material_kinds mk
        LEFT JOIN material_kind_translations t
-         ON t.material_kind_id = mk.id AND t.locale = ?
-       ORDER BY name ASC`
+         ON t.material_kind_id = mk.id AND t.locale = ?`
     )
     .bind(locale)
     .all();
 
-  return (result.results ?? []) as Array<{ id: string; name: string }>;
+  const rows = (result.results ?? []) as Array<{ id: string; name: string }>;
+  return rows.sort((a, b) => compareMaterialKindLabels(a.name, b.name));
 }

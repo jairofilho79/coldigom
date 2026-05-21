@@ -25,7 +25,10 @@ Rótulos exibidos na app vêm da tabela `material_kind_translations` no D1 (SSOT
 ```bash
 cd api
 wrangler d1 execute coldigom --remote --file=migrations/002_material_kind_translations_pt-BR.sql
+wrangler d1 execute coldigom --remote --file=migrations/003_material_kind_translations_pt-BR_fixes.sql
 ```
+
+A migração `003` corrige rótulos (Score → Grade, Sheet Music → Partitura, Choir → Coro). A ordenação alfabética na API usa `Intl.Collator('pt-BR')` (ex.: Áudio antes de Baixo).
 
 Ambiente local: troque `--remote` por `--local` se estiver usando D1 local.
 

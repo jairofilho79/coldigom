@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "npm run build && wrangler deploy",
     "build": "tsc",
     "build:scripts": "tsc -p tsconfig.scripts.json",
     "d1:create": "wrangler d1 create coldigom",

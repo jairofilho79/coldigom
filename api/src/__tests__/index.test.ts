@@ -507,7 +507,7 @@ describe('API Routes', () => {
       
       const json = await res.json();
       expect(json.data).toHaveLength(3);
-      expect(json.data[0].name).toBe('Partitura');
+      expect(json.data.map((k: { name: string }) => k.name)).toEqual(['Áudio', 'Cifra', 'Partitura']);
     });
 
     it('should return 500 on database error', async () => {

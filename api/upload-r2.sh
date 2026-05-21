@@ -11,7 +11,7 @@ upload_r2_local() {
 
     echo "Fetching existing objects from R2..."
     local existing_objects
-    existing_objects=$(npx wrangler r2 object list "$BUCKET" 2>/dev/null | grep -E '"key": "[^"]+' | sed 's/.*"key": "\([^"]*\)".*/\1/' || true)
+    existing_objects=$(wrangler r2 object list "$BUCKET" 2>/dev/null | grep -E '"key": "[^"]+' | sed 's/.*"key": "\([^"]*\)".*/\1/' || true)
 
     local temp_file
     temp_file=$(mktemp)
@@ -34,7 +34,7 @@ upload_r2_local() {
         if grep -q "^${key}$" "$temp_file" 2>/dev/null; then
             skipped=$((skipped + 1))
         else
-            if npx wrangler r2 object put "$BUCKET/$key" --file="$file" 2>/dev/null; then
+            if wrangler r2 object put "$BUCKET/$key" --file="$file" 2>/dev/null; then
                 uploaded=$((uploaded + 1))
                 echo "[$count/$total] Uploaded: $key"
             else

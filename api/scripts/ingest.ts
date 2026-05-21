@@ -1,26 +1,26 @@
 /**
- * Ingestion Script for coldigom
- * 
- * This script:
- * 1. Reads metadata.yml files from storage/assets/praises/
- * 2. Uploads files to Cloudflare R2
- * 3. Generates SQL inserts for D1 database
- * 
- * Usage:
- *   npx wrangler d1 execute coldigom --local --file=schema.sql  # Initialize DB first
- *   npx tsx scripts/ingest.ts --dry-run                        # Preview SQL without executing
- *   npx tsx scripts/ingest.ts --execute                         # Execute SQL directly
+ * Unified ingestion: storage → ingestion.sql → R2 → D1
+ *
+ * Usage (from api/):
+ *   wrangler d1 execute coldigom --remote --file=schema.sql
+ *   npm run ingest:dry-run
+ *   npm run ingest              # --sql-only
+ *   npm run ingest:upload       # sql + R2
+ *   npm run ingest:execute      # sql + D1 remote
+ *   npm run ingest:full         # all steps
  */
 
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import yaml from 'js-yaml';
 
-// Configuration
-const STORAGE_PATH = path.join(process.cwd(), '..', 'storage', 'assets', 'praises');
-const OUTPUT_SQL_PATH = path.join(process.cwd(), '..', 'ingestion.sql');
+const REPO_ROOT = path.join(process.cwd(), '..');
+const STORAGE_PRAISES = path.join(REPO_ROOT, 'storage', 'assets', 'praises');
+const MK_CSV = path.join(REPO_ROOT, 'storage', 'material_kinds_unique.csv');
+const TAGS_CSV = path.join(REPO_ROOT, 'storage', 'praise_tags_unique.csv');
+const OUTPUT_SQL_PATH = path.join(REPO_ROOT, 'ingestion.sql');
 
-// R2 Configuration (for actual uploads)
 const R2_CONFIG = {
   accountId: process.env.CF_ACCOUNT_ID || '',
   accessKeyId: process.env.CF_ACCESS_KEY_ID || '',
@@ -28,13 +28,12 @@ const R2_CONFIG = {
   bucket: process.env.CF_R2_BUCKET || 'coldigom-assets',
 };
 
-// Types matching the PRD
 interface PraiseMaterial {
   praise_material_id: string;
   material_kind: string;
   type?: string;
   material_type?: string;
-  file_path_legacy: string;
+  file_path_legacy?: string;
   source_material_id?: string;
   url?: string;
 }
@@ -42,23 +41,42 @@ interface PraiseMaterial {
 interface Metadata {
   praise_id: string;
   praise_name: string;
-  praise_number: string;
-  praise_author: string;
-  praise_rhythm: string;
-  praise_tonality: string;
-  praise_category: string;
-  praise_lyrics: string;
-  praise_tags: string[];
+  praise_number?: string;
+  praise_author?: string;
+  praise_rhythm?: string;
+  praise_tonality?: string;
+  praise_category?: string;
+  praise_lyrics?: string;
+  praise_tags?: string[];
   praise_materiais?: PraiseMaterial[];
   praise_materials?: PraiseMaterial[];
 }
 
-// SQL statements to generate
-const sqlStatements: string[] = [];
+export interface IngestReport {
+  praisesProcessed: number;
+  materialsTotal: number;
+  materialsUrlOnly: number;
+  materialsMissingFile: number;
+  sqlStatements: number;
+  r2Uploaded: number;
+  r2Failed: number;
+  r2Skipped: number;
+}
 
-/**
- * Escape value for SQL
- */
+const sqlStatements: string[] = [];
+const report: IngestReport = {
+  praisesProcessed: 0,
+  materialsTotal: 0,
+  materialsUrlOnly: 0,
+  materialsMissingFile: 0,
+  sqlStatements: 0,
+  r2Uploaded: 0,
+  r2Failed: 0,
+  r2Skipped: 0,
+};
+
+const missingFiles: string[] = [];
+
 function escapeSql(value: unknown): string {
   if (value === null || value === undefined) return 'NULL';
   if (typeof value === 'number') return value.toString();
@@ -67,27 +85,36 @@ function escapeSql(value: unknown): string {
   return `'${str.replace(/'/g, "''")}'`;
 }
 
-/**
- * Parse a metadata.yml file
- */
+function parseCsvInserts(filePath: string, table: 'material_kinds' | 'tags'): string[] {
+  if (!fs.existsSync(filePath)) {
+    console.warn(`Catalog not found: ${filePath}`);
+    return [];
+  }
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const lines = content.trim().split('\n');
+  if (lines.length < 2) return [];
+  const inserts: string[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const comma = line.indexOf(',');
+    if (comma === -1) continue;
+    const id = line.slice(0, comma).trim();
+    const name = line.slice(comma + 1).trim();
+    inserts.push(`INSERT INTO ${table} (id, name) VALUES (${escapeSql(id)}, ${escapeSql(name)});`);
+  }
+  return inserts;
+}
+
 function parseMetadata(filePath: string): Metadata | null {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    if (!content.trim()) {
-      // Empty metadata.yml — skip silently
-      return null;
-    }
+    if (!content.trim()) return null;
     const data = yaml.load(content) as Metadata;
-    if (!data) return null;
-
-    // Normalize material_type → type for each material
+    if (!data?.praise_id) return null;
     const materials = data.praise_materiais || data.praise_materials || [];
     for (const mat of materials) {
-      if (mat.material_type && !mat.type) {
-        mat.type = mat.material_type;
-      }
+      if (mat.material_type && !mat.type) mat.type = mat.material_type;
     }
-
     return data;
   } catch (error) {
     console.error(`Error parsing ${filePath}:`, error);
@@ -95,172 +122,25 @@ function parseMetadata(filePath: string): Metadata | null {
   }
 }
 
-/**
- * Generate SQL INSERT for a praise
- */
-function generatePraiseInsert(metadata: Metadata): string {
-  const values = [
-    escapeSql(metadata.praise_id),
-    escapeSql(metadata.praise_name),
-    escapeSql(metadata.praise_number),
-    escapeSql(metadata.praise_author),
-    escapeSql(metadata.praise_rhythm),
-    escapeSql(metadata.praise_tonality),
-    escapeSql(metadata.praise_category),
-    escapeSql(metadata.praise_lyrics),
-  ];
-  
-  return `INSERT INTO praises (id, name, number, author, rhythm, tonality, category, lyrics) VALUES (${values.join(', ')});`;
-}
-
-/**
- * Generate SQL INSERT for a material
- */
-function generateMaterialInsert(praiseId: string, material: PraiseMaterial, r2Key: string | null): string {
-  const values = [
-    escapeSql(material.praise_material_id),
-    escapeSql(praiseId),
-    escapeSql(material.material_kind),
-    escapeSql(material.type || 'unknown'),
-    escapeSql(r2Key),
-    escapeSql(material.file_path_legacy),
-    escapeSql(material.source_material_id || null),
-    escapeSql(material.url || null),
-  ];
-  
-  return `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url) VALUES (${values.join(', ')});`;
-}
-
-/**
- * Generate SQL INSERT for praise-tag relationships
- */
-function generatePraiseTagInserts(praiseId: string, tagIds: string[]): string[] {
-  return tagIds.map(tagId => {
-    return `INSERT INTO praise_tags (praise_id, tag_id) VALUES (${escapeSql(praiseId)}, ${escapeSql(tagId)});`;
-  });
-}
-
-/**
- * Generate R2 key for a material file
- */
 function generateR2Key(praiseId: string, material: PraiseMaterial): string {
-  const extension = material.type;
-  return `assets/praises/${praiseId}/${material.praise_material_id}.${extension}`;
+  return `assets/praises/${praiseId}/${material.praise_material_id}.${material.type}`;
 }
 
-/**
- * Process a single praise directory
- */
-function processPraiseDirectory(praiseDir: string): void {
-  const metadataPath = path.join(praiseDir, 'metadata.yml');
-  
-  if (!fs.existsSync(metadataPath)) {
-    console.warn(`No metadata.yml found in ${praiseDir}`);
-    return;
+export function resolveLocalFile(praiseDir: string, material: PraiseMaterial): string | null {
+  const type = material.type || 'unknown';
+  const candidates = [
+    path.join(praiseDir, `${material.praise_material_id}.${type}`),
+    path.join(praiseDir, `${material.praise_material_id}.${material.material_kind}.${type}`),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p) && fs.statSync(p).isFile()) return p;
   }
-  
-  const metadata = parseMetadata(metadataPath);
-  if (!metadata) return;
-  
-  // Generate praise insert
-  sqlStatements.push(generatePraiseInsert(metadata));
-  
-  // Generate tag inserts
-  if (metadata.praise_tags && metadata.praise_tags.length > 0) {
-    sqlStatements.push(...generatePraiseTagInserts(metadata.praise_id, metadata.praise_tags));
-  }
-  
-  // Generate material inserts (handle both legacy and correct spellings)
-  const materials = metadata.praise_materiais || metadata.praise_materials || [];
-  if (materials.length > 0) {
-    for (const material of materials) {
-      // When url is present, r2_key is NULL (no local file to upload)
-      const r2Key = material.url ? null : generateR2Key(metadata.praise_id, material);
-      sqlStatements.push(generateMaterialInsert(metadata.praise_id, material, r2Key));
-    }
-  }
-  
-  console.log(`Processed: ${metadata.praise_name} (${metadata.praise_id})`);
+  return null;
 }
 
-/**
- * Main ingestion function
- */
-async function ingest(): Promise<void> {
-  const dryRun = process.argv.includes('--dry-run');
-  const execute = process.argv.includes('--execute');
-  
-  console.log('=== Coldigom Ingestion Script ===\n');
-  console.log(`Storage path: ${STORAGE_PATH}`);
-  console.log(`Mode: ${dryRun ? 'DRY RUN' : execute ? 'EXECUTE' : 'PREVIEW'}\n`);
-  
-  // Clear previous output
-  sqlStatements.length = 0;
-  
-  // Read all praise directories
-  if (!fs.existsSync(STORAGE_PATH)) {
-    console.error(`Storage path not found: ${STORAGE_PATH}`);
-    process.exit(1);
-  }
-  
-  const praiseDirs = fs.readdirSync(STORAGE_PATH).filter(item => {
-    const itemPath = path.join(STORAGE_PATH, item);
-    return fs.statSync(itemPath).isDirectory();
-  });
-  
-  console.log(`Found ${praiseDirs.length} praise directories\n`);
-  
-  // Process each directory
-  for (const praiseDir of praiseDirs) {
-    const fullPath = path.join(STORAGE_PATH, praiseDir);
-    processPraiseDirectory(fullPath);
-  }
-  
-  console.log(`\nGenerated ${sqlStatements.length} SQL statements`);
-  
-  // Output SQL
-  if (dryRun) {
-    console.log('\n--- DRY RUN: SQL Output Preview ---\n');
-    console.log(sqlStatements.slice(0, 20).join('\n'));
-    if (sqlStatements.length > 20) {
-      console.log(`\n... and ${sqlStatements.length - 20} more statements`);
-    }
-  } else {
-    // Write to file
-    const header = `-- Coldigom Ingestion SQL
--- Generated at: ${new Date().toISOString()}
--- Total statements: ${sqlStatements.length}
-
-BEGIN TRANSACTION;
-
-`;
-    const footer = `
-COMMIT;
-`;
-    
-    const sqlContent = header + sqlStatements.join('\n') + footer;
-    fs.writeFileSync(OUTPUT_SQL_PATH, sqlContent);
-    console.log(`\nSQL written to: ${OUTPUT_SQL_PATH}`);
-  }
-  
-  if (execute) {
-    console.log('\nExecuting SQL via wrangler...');
-    // This would run: wrangler d1 execute coldigom --remote --file=ingestion.sql
-    console.log('Command: wrangler d1 execute coldigom --remote --file=ingestion.sql');
-  }
-}
-
-/**
- * Upload a single file to R2 (requires S3-compatible client)
- */
-async function uploadToR2(
-  filePath: string,
-  key: string
-): Promise<{ success: boolean; error?: string }> {
+async function uploadToR2(filePath: string, storageKey: string): Promise<{ success: boolean; error?: string }> {
   try {
-    // Dynamic import for S3 client (only if needed)
     const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
-    
     const client = new S3Client({
       region: 'auto',
       endpoint: `https://${R2_CONFIG.accountId}.r2.cloudflarestorage.com`,
@@ -269,44 +149,220 @@ async function uploadToR2(
         secretAccessKey: R2_CONFIG.secretAccessKey,
       },
     });
-    
-    const fileContent = fs.readFileSync(filePath);
-    
-    await client.send(new PutObjectCommand({
-      Bucket: R2_CONFIG.bucket,
-      Key: key,
-      Body: fileContent,
-    }));
-    
+    const body = fs.readFileSync(filePath);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: R2_CONFIG.bucket,
+        Key: storageKey,
+        Body: body,
+      })
+    );
     return { success: true };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
-/**
- * Full ingestion with R2 upload
- */
-async function ingestWithUpload(): Promise<void> {
-  console.log('=== Coldigom Ingestion with R2 Upload ===\n');
-  
-  if (!R2_CONFIG.accountId || !R2_CONFIG.accessKeyId) {
-    console.warn('R2 credentials not configured. Set CF_ACCOUNT_ID, CF_ACCESS_KEY_ID, CF_SECRET_ACCESS_KEY');
-    console.warn('Running in SQL-only mode...\n');
-    await ingest();
-    return;
+function processPraiseDirectory(praiseDir: string): void {
+  const metadataPath = path.join(praiseDir, 'metadata.yml');
+  if (!fs.existsSync(metadataPath)) return;
+
+  const metadata = parseMetadata(metadataPath);
+  if (!metadata) return;
+
+  report.praisesProcessed++;
+
+  sqlStatements.push(
+    `INSERT INTO praises (id, name, number, author, rhythm, tonality, category, lyrics) VALUES (${[
+      escapeSql(metadata.praise_id),
+      escapeSql(metadata.praise_name),
+      escapeSql(metadata.praise_number ?? null),
+      escapeSql(metadata.praise_author ?? null),
+      escapeSql(metadata.praise_rhythm ?? null),
+      escapeSql(metadata.praise_tonality ?? null),
+      escapeSql(metadata.praise_category ?? null),
+      escapeSql(metadata.praise_lyrics ?? null),
+    ].join(', ')});`
+  );
+
+  if (metadata.praise_tags?.length) {
+    for (const tagId of metadata.praise_tags) {
+      sqlStatements.push(
+        `INSERT INTO praise_tags (praise_id, tag_id) VALUES (${escapeSql(metadata.praise_id)}, ${escapeSql(tagId)});`
+      );
+    }
   }
-  
-  // Similar to ingest() but also uploads files to R2
-  // Implementation would iterate through files and call uploadToR2
-  console.log('R2 upload functionality available');
-  console.log('Use uploadToR2() for each material file');
+
+  const materials = metadata.praise_materiais || metadata.praise_materials || [];
+  for (const material of materials) {
+    report.materialsTotal++;
+    const r2Key = material.url ? null : generateR2Key(metadata.praise_id, material);
+    sqlStatements.push(
+      `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url) VALUES (${[
+        escapeSql(material.praise_material_id),
+        escapeSql(metadata.praise_id),
+        escapeSql(material.material_kind),
+        escapeSql(material.type || 'unknown'),
+        escapeSql(r2Key),
+        escapeSql(material.file_path_legacy ?? null),
+        escapeSql(material.source_material_id ?? null),
+        escapeSql(material.url ?? null),
+      ].join(', ')});`
+    );
+
+    if (material.url) {
+      report.materialsUrlOnly++;
+    } else {
+      const localFile = resolveLocalFile(praiseDir, material);
+      if (!localFile) {
+        report.materialsMissingFile++;
+        missingFiles.push(`${metadata.praise_id}/${material.praise_material_id}.${material.type}`);
+      }
+    }
+  }
 }
 
-// Run if executed directly
-ingest().catch(console.error);
+async function uploadMaterialsForPraise(praiseDir: string, metadata: Metadata): Promise<void> {
+  const materials = metadata.praise_materiais || metadata.praise_materials || [];
+  for (const material of materials) {
+    if (material.url) {
+      report.r2Skipped++;
+      continue;
+    }
+    const r2Key = generateR2Key(metadata.praise_id, material);
+    const localFile = resolveLocalFile(praiseDir, material);
+    if (!localFile) continue;
+    const storageKey = `storage/${r2Key}`;
+    const result = await uploadToR2(localFile, storageKey);
+    if (result.success) report.r2Uploaded++;
+    else {
+      report.r2Failed++;
+      console.error(`R2 upload failed ${storageKey}: ${result.error}`);
+    }
+  }
+}
 
-export { ingest, uploadToR2, ingestWithUpload };
+function writeSqlFile(): void {
+  const catalog = [
+    '-- Lookup table data (material_kinds and tags)',
+    '',
+    ...parseCsvInserts(MK_CSV, 'material_kinds'),
+    ...parseCsvInserts(TAGS_CSV, 'tags'),
+    '',
+  ];
+
+  const header = `-- Coldigom Ingestion SQL
+-- Generated at: ${new Date().toISOString()}
+-- Total statements: ${sqlStatements.length}
+
+BEGIN TRANSACTION;
+
+`;
+  const footer = '\nCOMMIT;\n';
+  fs.writeFileSync(OUTPUT_SQL_PATH, header + catalog.join('\n') + sqlStatements.join('\n') + footer);
+  report.sqlStatements = sqlStatements.length;
+  console.log(`SQL written to: ${OUTPUT_SQL_PATH} (${report.sqlStatements} data statements)`);
+}
+
+function executeD1Remote(): void {
+  const sqlPath = path.relative(process.cwd(), OUTPUT_SQL_PATH);
+  console.log(`Executing: wrangler d1 execute coldigom --remote --file=${sqlPath}`);
+  execFileSync('wrangler', ['d1', 'execute', 'coldigom', '--remote', `--file=${sqlPath}`], {
+    stdio: 'inherit',
+    cwd: process.cwd(),
+  });
+}
+
+function printReport(): void {
+  console.log('\n=== Ingestion Report ===');
+  console.log(JSON.stringify(report, null, 2));
+  if (missingFiles.length > 0) {
+    console.log(`Missing files: ${missingFiles.length} (first 10)`, missingFiles.slice(0, 10));
+  }
+}
+
+export async function runIngest(argv: string[] = process.argv.slice(2)): Promise<IngestReport> {
+  const dryRun = argv.includes('--dry-run');
+  const uploadR2 = argv.includes('--upload-r2') || argv.includes('--full');
+  const executeD1Flag = argv.includes('--execute-d1') || argv.includes('--full');
+  const full = argv.includes('--full');
+  const sqlOnly =
+    argv.includes('--sql-only') ||
+    (!dryRun && !uploadR2 && !executeD1Flag && !full);
+
+  console.log('=== Coldigom Ingestion ===\n');
+  console.log(`Storage: ${STORAGE_PRAISES}`);
+  console.log(
+    `Mode: ${dryRun ? 'dry-run' : full ? 'full' : argv.join(' ') || 'sql-only'}\n`
+  );
+
+  if (!fs.existsSync(STORAGE_PRAISES)) {
+    console.error(`Storage path not found: ${STORAGE_PRAISES}`);
+    process.exit(1);
+  }
+
+  sqlStatements.length = 0;
+  missingFiles.length = 0;
+  Object.assign(report, {
+    praisesProcessed: 0,
+    materialsTotal: 0,
+    materialsUrlOnly: 0,
+    materialsMissingFile: 0,
+    sqlStatements: 0,
+    r2Uploaded: 0,
+    r2Failed: 0,
+    r2Skipped: 0,
+  });
+
+  const praiseDirs = fs.readdirSync(STORAGE_PRAISES).filter(item => {
+    const p = path.join(STORAGE_PRAISES, item);
+    return fs.statSync(p).isDirectory();
+  });
+
+  console.log(`Found ${praiseDirs.length} praise directories\n`);
+
+  for (const dirName of praiseDirs) {
+    processPraiseDirectory(path.join(STORAGE_PRAISES, dirName));
+  }
+
+  if (dryRun) {
+    const catalogCount =
+      parseCsvInserts(MK_CSV, 'material_kinds').length + parseCsvInserts(TAGS_CSV, 'tags').length;
+    console.log(`Would generate ${catalogCount + sqlStatements.length} SQL statements`);
+    printReport();
+    return report;
+  }
+
+  if (sqlOnly || uploadR2 || executeD1Flag || full) {
+    writeSqlFile();
+  }
+
+  if (uploadR2 || full) {
+    if (!R2_CONFIG.accountId || !R2_CONFIG.accessKeyId) {
+      console.error('R2 credentials missing. Set CF_ACCOUNT_ID, CF_ACCESS_KEY_ID, CF_SECRET_ACCESS_KEY');
+      process.exit(1);
+    }
+    console.log('\nUploading to R2...');
+    for (const dirName of praiseDirs) {
+      const praiseDir = path.join(STORAGE_PRAISES, dirName);
+      const metadata = parseMetadata(path.join(praiseDir, 'metadata.yml'));
+      if (!metadata) continue;
+      await uploadMaterialsForPraise(praiseDir, metadata);
+    }
+  }
+
+  if (executeD1Flag || full) {
+    executeD1Remote();
+  }
+
+  printReport();
+  return report;
+}
+
+runIngest().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

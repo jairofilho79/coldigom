@@ -13,8 +13,11 @@
     "d1:execute": "wrangler d1 execute coldigom --local --file=schema.sql",
     "d1:execute:remote": "wrangler d1 execute coldigom --remote --file=schema.sql",
     "ingest:dry-run": "tsx scripts/ingest.ts --dry-run",
-    "ingest": "tsx scripts/ingest.ts",
-    "ingest:execute": "tsx scripts/ingest.ts --execute",
+    "ingest": "tsx scripts/ingest.ts --sql-only",
+    "ingest:upload": "tsx scripts/ingest.ts --upload-r2",
+    "ingest:execute": "tsx scripts/ingest.ts --execute-d1",
+    "ingest:full": "tsx scripts/ingest.ts --full",
+    "ingest:verify": "tsx scripts/ingest-verify.ts",
     "test": "vitest",
     "test:coverage": "vitest --coverage"
   },

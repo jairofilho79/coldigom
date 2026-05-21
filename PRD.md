@@ -119,18 +119,44 @@ O schema D1 contém **5 entidades** e **4 relacionamentos** com as seguintes car
 - PK composta: (`praise_id`, `tag_id`)
 
 ## 4. Requisitos (Épicos)
-**Épico 1: Ingestão de Dados (Script Local)**
-- Script em Node.js que varre diretórios locais lendo `metadata.yml`.
-- Faz upload dos arquivos referenciados para o R2 (chave: `assets/praises/{praise_id}/{material_id}.{type}`).
-- Gera as queries SQL (ou insere direto no D1 local/remoto) para popular as tabelas.
+
+**Épico 1: Ingestão de Dados (pipeline unificado)**
+- Script Node.js (`api/scripts/ingest.ts`) que varre `storage/assets/praises/` lendo `metadata.yml`.
+- Carrega catálogos de `storage/material_kinds_unique.csv` e `storage/praise_tags_unique.csv` no início do SQL.
+- Upload R2 com chave `storage/assets/praises/{praise_id}/{material_id}.{type}` (alinhado ao `r2_key` no D1).
+- Gera `ingestion.sql` e opcionalmente executa no D1 remoto (`--execute-d1`, `--full`).
+- Flags: `--dry-run`, `--sql-only`, `--upload-r2`, `--execute-d1`, `--full`.
+- Relatório pós-execução; verificação via `api/scripts/ingest-verify.ts` e [`docs/INGESTION.md`](docs/INGESTION.md).
 
 **Épico 2: API (Workers + Hono)**
-- Rota GET `/api/praises` com busca textual (LIKE) nos campos de título e letra.
-- Rota GET `/api/praises/:id` com JOIN na tabela `praise_materials`.
+- GET `/api/praises` — busca (FTS5 em nome/letra quando `q` presente; filtros por tags, ritmo, tom, categoria, número; paginação e ordenação).
+- GET `/api/praises/:id` — louvor com materiais e nomes de `material_kinds` / tags.
+- GET `/api/praises/filters`, `/api/tags`, `/api/materials/kinds`.
+- GET `/assets/*` — serve PDF/MP3 do R2 com suporte a Range.
+- CRUD autenticado (PATCH louvor, POST/PATCH/DELETE materiais, bulk-upload).
+- GET `/auth/status` — diagnóstico de configuração OAuth (sem expor segredos).
 
-**Épico 3: Frontend**
-- Interface de busca e listagem em formato de tabela/grid.
-- Página de detalhes do louvor com player de áudio HTML5 embutido e visualizador/link para PDF.
+**Épico 3: Frontend (Cloudflare Pages + React/Vite)**
+- Busca, filtros, tabela de resultados e paginação.
+- Página de detalhe: player HTML5, PDF embutido (iframe), links externos/YouTube.
+- Login Google via redirect para API; sessão com cookies cross-site (`credentials: 'include'`).
+
+**Épico 4: Autenticação (Google OAuth 2.0)**
+- Fluxo authorization code + PKCE; cookies HttpOnly `coldigom_access` (JWT 5 min) e `coldigom_refresh` (opaco, rotativo).
+- Tabela D1 `auth_refresh_tokens`; rotas `/auth/login`, `/auth/callback`, `/auth/refresh`, `/auth/me`, `/auth/logout`.
+- Variáveis Worker: secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_JWT_SECRET`; vars `AUTH_BASE_URL`, `WEB_ORIGIN`, `AUTH_COOKIE_SAMESITE=None`.
+- Runbook: [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md).
+
+**Épico 5: Busca avançada**
+- Índice FTS5 `praises_fts` (nome + letra), sincronizado por triggers.
+- API usa FTS quando parâmetro `q` está presente (fallback LIKE se FTS indisponível).
+
+### Entidades adicionais (auth)
+
+| Entidade | Descrição |
+|----------|-----------|
+| `auth_refresh_tokens` | Refresh tokens opacos (hash SHA-256), rotação e revogação |
+| `praises_fts` | Tabela virtual FTS5 sobre `praises.name` e `praises.lyrics` |
 
 ## 5. Deploy
 
@@ -150,9 +176,27 @@ Recursos de infraestrutura que não podem ser gerenciados via GitHub são feitos
 - **D1 (Banco de Dados)**: Criação e migração do banco de dados.
 - **R2 (Armazenamento)**: Upload de arquivos/assets.
 
-Comandos típicos:
+Comandos típicos (usar `wrangler` global 4.x, não `npx wrangler`):
+
 ```bash
-# Executar SQL no D1
-npx wrangler d1 execute coldigom --local --file=schema.sql
-npx wrangler d1 execute coldigom --remote --file=ingestion.sql
+# Schema e migração auth
+cd api && wrangler d1 execute coldigom --remote --file=schema.sql
+wrangler d1 execute coldigom --remote --file=scripts/migration-auth-refresh.sql
+
+# Ingestão completa (legado → SQL → R2 → D1)
+npm run ingest:full
+
+# Verificação
+npm run ingest:verify
+
+# OAuth / API
+wrangler secret put GOOGLE_CLIENT_ID
+wrangler deploy
 ```
+
+#### 5.3 Operação e smoke tests
+- **OAuth:** após deploy, `GET /auth/status` deve indicar `googleClientConfigured` e `webOriginSet`; login na SPA deve persistir após reload.
+- **Ingestão:** contagem de `praises` no D1 ≈ pastas com `metadata.yml` válido (~1846).
+- **Assets:** amostra de PDF/MP3 via `GET /assets/assets/praises/...` retorna 200.
+
+Documentação operacional: [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md), [`docs/INGESTION.md`](docs/INGESTION.md).

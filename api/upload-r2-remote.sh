@@ -44,7 +44,7 @@ upload_r2_remote() {
         fi
         
         local result
-        result=$(npx wrangler r2 object put "$BUCKET/$key" -f="$file" --remote 2>&1)
+        result=$(wrangler r2 object put "$BUCKET/$key" -f="$file" --remote 2>&1)
         
         if echo "$result" | grep -q "Upload complete\|Created object\|uploaded"; then
             uploaded=$((uploaded + 1))

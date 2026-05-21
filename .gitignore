@@ -1,6 +1,10 @@
 # OS files
 .DS_Store
+**/.DS_Store
 Thumbs.db
+
+# Cursor (local IDE rules)
+.cursor/
 
 # Dependencies
 node_modules/
@@ -42,7 +46,8 @@ web/dist/
 # Local R2 assets (uploaded separately to Cloudflare R2)
 api/assets/
 
-# Alternative ingestion files
+# Generated ingestion SQL (regenerate locally: cd api && npm run ingest)
+ingestion.sql
 ingestion_no_tx.sql
 
 # Kilo CLI internal files

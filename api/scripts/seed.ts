@@ -1,5 +1,5 @@
 // Seed script to populate the database with 50 praises
-// Run with: npx wrangler d1 execute coldigom --local --file=scripts/seed.sql
+// Run with: wrangler d1 execute coldigom --local --file=scripts/seed.sql
 // Or use the API directly
 
 function escapeSQLValue(value: string): string {

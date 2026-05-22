@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPraise, getAssetUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
+import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { Select } from '../components/Select';
@@ -305,6 +305,13 @@ export function PraiseDetailPage() {
                   >
                     {isEditing ? 'Fechar edição' : 'Editar'}
                   </button>
+                  <a
+                    className="auth-btn"
+                    href={getPraiseDownloadZipUrl(id!)}
+                    download
+                  >
+                    Baixar em ZIP
+                  </a>
                   <Link to={`/praise/${id}/merge`} className="auth-btn">
                     Mesclar
                   </Link>
@@ -322,12 +329,23 @@ export function PraiseDetailPage() {
               </button>
             </>
           ) : (
-            <a
-              className="auth-btn"
-              href={`${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(window.location.href)}`}
-            >
-              Entrar com Google
-            </a>
+            <>
+              {!isCreate && id ? (
+                <a
+                  className="auth-btn"
+                  href={getPraiseDownloadZipUrl(id)}
+                  download
+                >
+                  Baixar em ZIP
+                </a>
+              ) : null}
+              <a
+                className="auth-btn"
+                href={`${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(window.location.href)}`}
+              >
+                Entrar com Google
+              </a>
+            </>
           )}
         </div>
 

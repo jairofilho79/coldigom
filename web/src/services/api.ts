@@ -99,6 +99,10 @@ export async function getPraise(id: string): Promise<PraiseDetail> {
   return response.data;
 }
 
+export function getPraiseDownloadZipUrl(id: string): string {
+  return `${API_BASE_URL}/api/praises/${id}/download.zip`;
+}
+
 export type CreatePraiseInput = {
   name: string;
   number?: string | null;

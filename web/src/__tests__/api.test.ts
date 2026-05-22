@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getMaterialKinds, getTags, getAssetUrl } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl } from '../services/api';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
 // Mock fetch (API client always sends credentials: 'include')
@@ -345,6 +345,14 @@ describe('API Service', () => {
       });
 
       await expect(getPraise('non-existent')).rejects.toThrow('Praise not found');
+    });
+  });
+
+  describe('getPraiseDownloadZipUrl', () => {
+    it('should return public download zip URL for praise id', () => {
+      expect(getPraiseDownloadZipUrl('1b2b33ab-4dff-4014-8582-dcb9a92efbc8')).toBe(
+        'http://localhost:8787/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/download.zip'
+      );
     });
   });
 

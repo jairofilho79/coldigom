@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { SignJWT } from 'jose';
+import { unzipSync } from 'fflate';
+import yaml from 'js-yaml';
 import app from '../index';
 
 
@@ -584,6 +586,99 @@ describe('API Routes', () => {
       expect(res.status).toBe(500);
       const json = await res.json();
       expect(json.error).toBe('Failed to fetch praise');
+    });
+  });
+
+  describe('GET /api/praises/:id/download.zip', () => {
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
+    const mp3Bytes = new Uint8Array([0xff, 0xfb]);
+
+    function createZipRouteMocks(praise = mockPraises[0], materials = mockMaterials) {
+      const r2ByKey: Record<string, Uint8Array> = {};
+      for (const m of materials) {
+        if (m.r2_key) {
+          r2ByKey[`storage/${m.r2_key}`] = m.type === 'pdf' ? pdfBytes : mp3Bytes;
+        }
+      }
+
+      const mockDB = {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn().mockReturnThis(),
+          first: vi.fn().mockImplementation(async () => {
+            if (query.includes('FROM praises p')) return { ...praise, tag_ids: praise.tag_ids };
+            return null;
+          }),
+          all: vi.fn().mockImplementation(async () => {
+            if (query.includes('COALESCE(t.label')) {
+              return { results: mockMaterialKindLabels };
+            }
+            if (query.includes('praise_materials')) {
+              return { results: materials };
+            }
+            return { results: [] };
+          }),
+        })),
+      };
+
+      const mockR2 = {
+        head: vi.fn(),
+        get: vi.fn(async (key: string) => {
+          const bytes = r2ByKey[key];
+          if (!bytes) return null;
+          return {
+            body: bytes,
+            arrayBuffer: async () =>
+              bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+          };
+        }),
+      };
+
+      return { mockDB, mockR2 };
+    }
+
+    it('should return zip without authentication', async () => {
+      const { mockDB, mockR2 } = createZipRouteMocks();
+
+      const res = await app.request(
+        `/api/praises/${mockPraises[0].id}/download.zip`,
+        {},
+        { DB: mockDB, ASSETS: mockR2 }
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('Content-Type')).toBe('application/zip');
+      expect(res.headers.get('Content-Disposition')).toContain('attachment');
+      expect(res.headers.get('Content-Disposition')).toContain('001_Grande Deus.zip');
+
+      const buf = new Uint8Array(await res.arrayBuffer());
+      const unzipped = unzipSync(buf);
+      expect(unzipped['metadata.yml']).toBeDefined();
+      expect(unzipped['Partitura-mat1.pdf']).toEqual(pdfBytes);
+      expect(unzipped['Áudio-mat2.mp3']).toEqual(mp3Bytes);
+
+      const meta = yaml.load(new TextDecoder().decode(unzipped['metadata.yml'])) as Record<string, unknown>;
+      expect(meta.praise_id).toBe(mockPraises[0].id);
+    });
+
+    it('should return 404 when praise not found', async () => {
+      const mockDB = {
+        prepare: vi.fn(() => ({
+          bind: vi.fn().mockReturnThis(),
+          first: vi.fn().mockResolvedValue(null),
+          all: vi.fn(),
+        })),
+      };
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises/non-existent-id/download.zip',
+        {},
+        { DB: mockDB, ASSETS: mockR2 }
+      );
+
+      expect(res.status).toBe(404);
+      const json = await res.json();
+      expect(json.error).toBe('Praise not found');
     });
   });
 

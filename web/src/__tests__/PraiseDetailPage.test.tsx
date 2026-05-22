@@ -121,6 +121,22 @@ describe('PraiseDetailPage Component', () => {
     expect(screen.getByText('Louvor')).toBeTruthy();
   });
 
+  it('should show download zip link without login', async () => {
+    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+    await waitFor(() => {
+      const link = screen.getByRole('link', { name: 'Baixar em ZIP' });
+      expect(link.getAttribute('href')).toBe(
+        'http://localhost:8787/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/download.zip'
+      );
+      expect(link.getAttribute('download')).not.toBeNull();
+    });
+
+    expect(screen.queryByRole('button', { name: 'Editar' })).toBeNull();
+  });
+
   it('should show praise id and copy to clipboard', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
     const user = userEvent.setup();
@@ -280,6 +296,7 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.getByRole('button', { name: 'Criar louvor' })).toBeTruthy();
       expect(screen.getByText('Materiais (após salvar)')).toBeTruthy();
       expect(screen.queryByText('Materiais (admin)')).toBeNull();
+      expect(screen.queryByRole('link', { name: 'Baixar em ZIP' })).toBeNull();
     });
 
     it('cria louvor ao salvar', async () => {
@@ -331,6 +348,20 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.getByRole('link', { name: 'Mesclar' })).toHaveAttribute(
         'href',
         '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/merge'
+      );
+    });
+
+    it('exibe Baixar em ZIP ao lado de Editar quando logado', async () => {
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+        expect(screen.getByRole('link', { name: 'Baixar em ZIP' })).toBeTruthy();
+      });
+
+      expect(screen.getByRole('link', { name: 'Baixar em ZIP' })).toHaveAttribute(
+        'href',
+        'http://localhost:8787/api/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/download.zip'
       );
     });
 

@@ -13,6 +13,7 @@ import {
   type AuthUser,
 } from './auth';
 import { labelFor, listMaterialKindsForLocale, loadMaterialKindLabels } from './materialKindLabels';
+import { buildPraiseZipBytes } from './praiseZip';
 
 type Env = {
   DB: D1Database;
@@ -533,6 +534,30 @@ app.get('/api/praises/filters', async (c) => {
   } catch (error) {
     console.error('Error fetching filters:', error);
     return c.json({ error: 'Failed to fetch filters' }, 500);
+  }
+});
+
+// GET /api/praises/:id/download.zip - Public ZIP export (metadata.yml + materials)
+app.get('/api/praises/:id/download.zip', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const result = await buildPraiseZipBytes(c.env.DB, c.env.ASSETS, id);
+    if (!result) {
+      return c.json({ error: 'Praise not found' }, 404);
+    }
+
+    const encodedFilename = encodeURIComponent(result.filename);
+    const safeFilename = result.filename.replace(/"/g, '');
+    return new Response(result.bytes, {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`,
+      },
+    });
+  } catch (error) {
+    console.error('Error building praise ZIP:', error);
+    return c.json({ error: 'Failed to build download' }, 500);
   }
 });
 

@@ -6,6 +6,7 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { Select } from '../components/Select';
 import { SearchableSelect } from '../components/SearchableSelect';
+import { groupMaterialsByType } from '../lib/materials';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
 
 const MATERIAL_TYPE_OPTIONS = [
@@ -148,6 +149,17 @@ export function PraiseDetailPage() {
     () => availableTags.map((t) => ({ value: t.id, label: t.name })),
     [availableTags]
   );
+  const materialGroups = useMemo(
+    () => groupMaterialsByType(praise?.materials ?? []),
+    [praise?.materials]
+  );
+  const youtubeMaterials = useMemo(
+    () => (materialGroups.find((g) => g.type === 'youtube')?.items ?? []).filter((m) => m.url),
+    [materialGroups]
+  );
+  const audioMaterials = materialGroups.find((g) => g.type === 'mp3')?.items ?? [];
+  const pdfMaterials = materialGroups.find((g) => g.type === 'pdf')?.items ?? [];
+  const chordMaterials = materialGroups.find((g) => g.type === 'chord')?.items ?? [];
 
   if (!isCreate && loading) {
     return (
@@ -205,12 +217,6 @@ export function PraiseDetailPage() {
       return null;
     }
   };
-
-  const materials = praise?.materials ?? [];
-  const youtubeMaterials = materials.filter(m => m.type === 'youtube' && m.url);
-  const audioMaterials = materials.filter(m => m.type === 'mp3');
-  const pdfMaterials = materials.filter(m => m.type === 'pdf');
-  const chordMaterials = materials.filter(m => m.type === 'chord');
 
   const savePraise = async () => {
     setSaving(true);
@@ -858,58 +864,63 @@ export function PraiseDetailPage() {
                 <div className="lyrics-empty">Nenhum material cadastrado.</div>
               ) : (
                 <div className="materials-table">
-                  {praise.materials.map(m => (
-                    <div key={m.id} className="materials-row">
-                      <div className="materials-cell materials-main">
-                        <div className="materials-title">{m.material_kind_name || 'Material'}</div>
-                        <div className="materials-meta">
-                          <span className="pill">{m.type}</span>
-                          {m.merged_from_praise_id ? (
-                            <span className="merge-material-badge" title={m.merged_from_praise_id}>
-                              Mesclado{m.merged_from_praise_name ? `: ${m.merged_from_praise_name}` : ''}
-                            </span>
-                          ) : null}
-                          {m.url ? <a href={m.url} target="_blank" rel="noreferrer">abrir link</a> : null}
+                  {materialGroups.map((group) => (
+                    <div key={group.type} className="materials-type-group">
+                      <h4 className="materials-type-heading">{group.label}</h4>
+                      {group.items.map((m) => (
+                        <div key={m.id} className="materials-row">
+                          <div className="materials-cell materials-main">
+                            <div className="materials-title">{m.material_kind_name || 'Material'}</div>
+                            <div className="materials-meta">
+                              <span className="pill">{m.type}</span>
+                              {m.merged_from_praise_id ? (
+                                <span className="merge-material-badge" title={m.merged_from_praise_id}>
+                                  Mesclado{m.merged_from_praise_name ? `: ${m.merged_from_praise_name}` : ''}
+                                </span>
+                              ) : null}
+                              {m.url ? <a href={m.url} target="_blank" rel="noreferrer">abrir link</a> : null}
+                            </div>
+                          </div>
+                          <div className="materials-cell">
+                            <SearchableSelect
+                              compact
+                              value={m.material_kind}
+                              disabled={saving}
+                              onChange={async (material_kind) => {
+                                setSaving(true);
+                                try {
+                                  const updated = await updateMaterial(m.id, { material_kind });
+                                  setPraise(updated);
+                                } finally {
+                                  setSaving(false);
+                                }
+                              }}
+                              options={materialKindOptions}
+                              aria-label="Categoria do material"
+                            />
+                          </div>
+                          <div className="materials-cell">
+                            <button
+                              type="button"
+                              className="auth-btn"
+                              disabled={saving}
+                              onClick={async () => {
+                                setSaving(true);
+                                try {
+                                  const updated = await deleteMaterial(m.id);
+                                  setPraise(updated);
+                                } catch (err) {
+                                  setError(err instanceof Error ? err.message : 'Falha ao remover material');
+                                } finally {
+                                  setSaving(false);
+                                }
+                              }}
+                            >
+                              Remover
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="materials-cell">
-                        <SearchableSelect
-                          compact
-                          value={m.material_kind}
-                          disabled={saving}
-                          onChange={async (material_kind) => {
-                            setSaving(true);
-                            try {
-                              const updated = await updateMaterial(m.id, { material_kind });
-                              setPraise(updated);
-                            } finally {
-                              setSaving(false);
-                            }
-                          }}
-                          options={materialKindOptions}
-                          aria-label="Categoria do material"
-                        />
-                      </div>
-                      <div className="materials-cell">
-                        <button
-                          type="button"
-                          className="auth-btn"
-                          disabled={saving}
-                          onClick={async () => {
-                            setSaving(true);
-                            try {
-                              const updated = await deleteMaterial(m.id);
-                              setPraise(updated);
-                            } catch (err) {
-                              setError(err instanceof Error ? err.message : 'Falha ao remover material');
-                            } finally {
-                              setSaving(false);
-                            }
-                          }}
-                        >
-                          Remover
-                        </button>
-                      </div>
+                      ))}
                     </div>
                   ))}
                 </div>

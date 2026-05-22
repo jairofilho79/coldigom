@@ -224,6 +224,33 @@ export async function getMaterialKinds(): Promise<MaterialKind[]> {
   return response.data;
 }
 
+export type MergePraisesInput = {
+  source_praise_id: string;
+  metadata: {
+    name: string;
+    number: string | null;
+    author: string | null;
+    rhythm: string | null;
+    tonality: string | null;
+    category: string | null;
+    lyrics: string | null;
+  };
+  tag_ids: string[];
+  material_ids_to_import: string[];
+};
+
+export async function mergePraises(keeperId: string, body: MergePraisesInput): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${keeperId}/merge`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  return response.data;
+}
+
 export async function getTags(): Promise<Tag[]> {
   const response = await fetchJson<ApiResponse<Tag[]>>(
     `${API_BASE_URL}/api/tags`

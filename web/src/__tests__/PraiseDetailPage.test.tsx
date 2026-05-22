@@ -121,6 +121,30 @@ describe('PraiseDetailPage Component', () => {
     expect(screen.getByText('Louvor')).toBeTruthy();
   });
 
+  it('should show praise id and copy to clipboard', async () => {
+    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    const user = userEvent.setup();
+
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+    await waitFor(() => {
+      expect(screen.getByText(mockPraiseDetail.id)).toBeTruthy();
+    });
+
+    const writeTextSpy = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockResolvedValue(undefined);
+
+    await user.click(screen.getByRole('button', { name: /copiar id/i }));
+
+    await waitFor(() => {
+      expect(writeTextSpy).toHaveBeenCalledWith(mockPraiseDetail.id);
+      expect(screen.getByRole('button', { name: /copiar id/i })).toHaveTextContent('Copiado!');
+    });
+
+    writeTextSpy.mockRestore();
+  });
+
   it('should render tags', async () => {
     (getPraise as any).mockResolvedValue(mockPraiseDetail);
 
@@ -295,6 +319,19 @@ describe('PraiseDetailPage Component', () => {
     beforeEach(() => {
       (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
       (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+    });
+
+    it('exibe botão Mesclar quando logado', async () => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'Mesclar' })).toBeTruthy();
+      });
+      expect(screen.getByRole('link', { name: 'Mesclar' })).toHaveAttribute(
+        'href',
+        '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/merge'
+      );
     });
 
     it('exibe seções de adicionar material e importação em lote', async () => {

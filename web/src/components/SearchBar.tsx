@@ -39,7 +39,7 @@ export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por nome, letra, autor..."
+          placeholder="Buscar por nome, letra, autor, ID..."
           className="search-input"
         />
         {query && (

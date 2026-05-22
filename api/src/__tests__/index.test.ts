@@ -869,6 +869,241 @@ describe('API Routes', () => {
     });
   });
 
+  describe('POST /api/praises/:keeperId/merge', () => {
+    const envBase = {
+      AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      WEB_ORIGIN: TEST_WEB_ORIGIN,
+    };
+    const keeperId = mockPraises[0].id;
+    const sourceId = mockPraises[1].id;
+
+    function createMergeMockD1() {
+      const praises = new Map<string, Record<string, unknown>>([
+        [keeperId, { ...mockPraises[0] }],
+        [sourceId, { ...mockPraises[1] }],
+      ]);
+      const materials = new Map<string, Record<string, unknown>>([
+        [
+          'mat-source',
+          {
+            id: 'mat-source',
+            praise_id: sourceId,
+            material_kind: 'kind1',
+            type: 'pdf',
+            r2_key: `assets/praises/${sourceId}/mat-source.pdf`,
+            file_path_legacy: '',
+            source_material_id: null,
+            merged_from_praise_id: null,
+            url: null,
+          },
+        ],
+        [
+          'mat-leftover',
+          {
+            id: 'mat-leftover',
+            praise_id: sourceId,
+            material_kind: 'kind2',
+            type: 'mp3',
+            r2_key: `assets/praises/${sourceId}/mat-leftover.mp3`,
+            file_path_legacy: '',
+            source_material_id: null,
+            merged_from_praise_id: null,
+            url: null,
+          },
+        ],
+      ]);
+      const praiseTagIds = new Map<string, string[]>([
+        [keeperId, ['tag1']],
+        [sourceId, ['tag2']],
+      ]);
+      const assetsDelete = vi.fn().mockResolvedValue(undefined);
+
+      const db = {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn((...args: unknown[]) => ({
+            run: vi.fn(async () => {
+              if (query.includes('UPDATE praises SET')) {
+                const id = args[7] as string;
+                const p = praises.get(id);
+                if (p) {
+                  praises.set(id, {
+                    ...p,
+                    name: args[0],
+                    number: args[1],
+                    author: args[2],
+                    rhythm: args[3],
+                    tonality: args[4],
+                    category: args[5],
+                    lyrics: args[6],
+                  });
+                }
+              }
+              if (query.includes('DELETE FROM praise_tags WHERE praise_id')) {
+                praiseTagIds.set(args[0] as string, []);
+              }
+              if (query.includes('INSERT OR IGNORE INTO praise_tags')) {
+                const pid = args[0] as string;
+                const tid = args[1] as string;
+                const list = praiseTagIds.get(pid) ?? [];
+                if (!list.includes(tid)) list.push(tid);
+                praiseTagIds.set(pid, list);
+              }
+              if (query.includes('UPDATE praise_materials SET praise_id')) {
+                const mat = materials.get(args[2] as string);
+                if (mat) {
+                  materials.set(args[2] as string, {
+                    ...mat,
+                    praise_id: args[0],
+                    merged_from_praise_id: args[1],
+                  });
+                }
+              }
+              if (query.includes('DELETE FROM praises WHERE id')) {
+                praises.delete(args[0] as string);
+                for (const [mid, m] of materials.entries()) {
+                  if ((m as { praise_id: string }).praise_id === args[0]) {
+                    materials.delete(mid);
+                  }
+                }
+                praiseTagIds.delete(args[0] as string);
+              }
+            }),
+            first: vi.fn(async () => {
+              if (query.includes('SELECT id FROM praises WHERE id')) {
+                return praises.has(args[0] as string) ? { id: args[0] } : null;
+              }
+              if (query.includes('SELECT id FROM tags WHERE id')) {
+                return mockTags.find((t) => t.id === args[0]) ?? null;
+              }
+              if (query.includes('SELECT id, praise_id FROM praise_materials')) {
+                const m = materials.get(args[0] as string);
+                return m ? { id: m.id, praise_id: m.praise_id } : null;
+              }
+              if (query.includes('FROM praises p') && query.includes('WHERE p.id')) {
+                const p = praises.get(args[0] as string);
+                if (!p) return null;
+                const tagIds = praiseTagIds.get(p.id as string) ?? [];
+                return { ...p, tag_ids: tagIds.length > 0 ? tagIds.join(',') : null };
+              }
+              if (query.includes('SELECT praise_id, r2_key FROM praise_materials')) {
+                const pid = args[0] as string;
+                const row = [...materials.values()].find((m) => (m as { praise_id: string }).praise_id === pid);
+                return row ? { praise_id: row.praise_id, r2_key: row.r2_key } : null;
+              }
+              return null;
+            }),
+            all: vi.fn(async () => {
+              if (query.includes('COALESCE(t.label')) {
+                if (query.includes('AS name')) return { results: mockMaterialKinds };
+                return { results: mockMaterialKindLabels };
+              }
+              if (query.includes('SELECT id, r2_key FROM praise_materials WHERE praise_id')) {
+                const pid = args[0] as string;
+                return {
+                  results: [...materials.values()].filter((m) => (m as { praise_id: string }).praise_id === pid),
+                };
+              }
+              if (query.includes('FROM praise_materials pm')) {
+                const pid = args[0] as string;
+                return {
+                  results: [...materials.values()].filter((m) => (m as { praise_id: string }).praise_id === pid),
+                };
+              }
+              if (query.includes('FROM tags WHERE id IN')) {
+                const ids = args as string[];
+                return { results: mockTags.filter((t) => ids.includes(t.id)) };
+              }
+              return resolveMockAll(query, {});
+            }),
+          })),
+        })),
+      };
+
+      return { db, assetsDelete, materials, praises };
+    }
+
+    const mergeBody = {
+      source_praise_id: sourceId,
+      metadata: {
+        name: 'Grande Deus',
+        number: '001',
+        author: 'Autor mesclado',
+        rhythm: 'Avulsos',
+        tonality: 'C',
+        category: 'Louvor',
+        lyrics: 'Letra escolhida',
+      },
+      tag_ids: ['tag1', 'tag2'],
+      material_ids_to_import: ['mat-source'],
+    };
+
+    it('returns 401 without auth', async () => {
+      const { db } = createMergeMockD1();
+      const mockR2 = { delete: vi.fn() };
+
+      const res = await app.request(
+        `/api/praises/${keeperId}/merge`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', origin: TEST_WEB_ORIGIN },
+          body: JSON.stringify(mergeBody),
+        },
+        { DB: db, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 400 when merging into itself', async () => {
+      const { db } = createMergeMockD1();
+      const mockR2 = { delete: vi.fn() };
+
+      const res = await app.request(
+        `/api/praises/${keeperId}/merge`,
+        await authRequestInit({ ...mergeBody, source_praise_id: keeperId }),
+        { DB: db, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain('itself');
+    });
+
+    it('merges source into keeper and deletes source', async () => {
+      const { db, assetsDelete, materials, praises } = createMergeMockD1();
+      const mockR2 = { delete: assetsDelete };
+
+      const res = await app.request(
+        `/api/praises/${keeperId}/merge`,
+        await authRequestInit(mergeBody),
+        { DB: db, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data.author).toBe('Autor mesclado');
+      expect(json.data.tags.map((t: { id: string }) => t.id).sort()).toEqual(['tag1', 'tag2']);
+      expect(praises.has(sourceId)).toBe(false);
+      const moved = materials.get('mat-source') as { praise_id: string; merged_from_praise_id: string };
+      expect(moved.praise_id).toBe(keeperId);
+      expect(moved.merged_from_praise_id).toBe(sourceId);
+      expect(assetsDelete).toHaveBeenCalled();
+    });
+
+    it('returns 409 when material does not belong to source', async () => {
+      const { db } = createMergeMockD1();
+      const mockR2 = { delete: vi.fn() };
+
+      const res = await app.request(
+        `/api/praises/${keeperId}/merge`,
+        await authRequestInit({ ...mergeBody, material_ids_to_import: ['mat1'] }),
+        { DB: db, ASSETS: mockR2, ...envBase }
+      );
+
+      expect(res.status).toBe(409);
+    });
+  });
+
   describe('POST /auth/refresh', () => {
     it('returns 401 when no refresh cookie', async () => {
       const mockDB = createMockD1({});
@@ -925,9 +1160,9 @@ describe('buildWhereClause', () => {
     const bindings: (string | number)[] = [];
 
     if (params.search) {
-      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ?)`);
+      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ?)`);
       const pattern = `%${params.search}%`;
-      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     }
 
     if (params.tags && params.tags.length > 0) {
@@ -975,7 +1210,15 @@ describe('buildWhereClause', () => {
     expect(result.clause).toContain('p.name LIKE ?');
     expect(result.clause).toContain('p.lyrics LIKE ?');
     expect(result.clause).toContain('p.author LIKE ?');
-    expect(result.bindings).toEqual(['%test%', '%test%', '%test%', '%test%', '%test%', '%test%']);
+    expect(result.clause).toContain('p.id LIKE ?');
+    expect(result.bindings).toEqual(['%test%', '%test%', '%test%', '%test%', '%test%', '%test%', '%test%']);
+  });
+
+  it('should include id in search bindings for uuid', () => {
+    const uuid = '1b2b33ab-4dff-4014-8582-dcb9a92efbc8';
+    const result = buildWhereClause({ search: uuid });
+    expect(result.clause).toContain('p.id LIKE ?');
+    expect(result.bindings).toContain(`%${uuid}%`);
   });
 
   it('should build single tag clause correctly', () => {
@@ -1040,6 +1283,6 @@ describe('buildWhereClause', () => {
     expect(result.clause).toContain('p.rhythm IN (?)');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) >= ?');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) <= ?');
-    expect(result.bindings).toHaveLength(10);
+    expect(result.bindings).toHaveLength(11);
   });
 });

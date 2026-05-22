@@ -12,21 +12,21 @@ describe('SearchBar Component', () => {
   it('should render with initial value', () => {
     render(<SearchBar onSearch={mockOnSearch} initialValue="test query" />);
     
-    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
+    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor, id/i);
     expect(input).toHaveValue('test query');
   });
 
   it('should render empty when no initial value', () => {
     render(<SearchBar onSearch={mockOnSearch} />);
     
-    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
+    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor, id/i);
     expect(input).toHaveValue('');
   });
 
   it('should update internal value on change', () => {
     render(<SearchBar onSearch={mockOnSearch} />);
     
-    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
+    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor, id/i);
     fireEvent.change(input, { target: { value: 'new search' } });
     
     expect(input).toHaveValue('new search');
@@ -35,7 +35,7 @@ describe('SearchBar Component', () => {
   it('should call onSearch with query on form submit', () => {
     render(<SearchBar onSearch={mockOnSearch} />);
     
-    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
+    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor, id/i);
     fireEvent.change(input, { target: { value: 'test query' } });
     
     const form = input.closest('form');
@@ -71,7 +71,7 @@ describe('SearchBar Component', () => {
   it('should not call onSearch when pressing Enter without changes', () => {
     render(<SearchBar onSearch={mockOnSearch} initialValue="initial" />);
     
-    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor/i);
+    const input = screen.getByPlaceholderText(/buscar por nome, letra, autor, id/i);
     fireEvent.submit(input.closest('form')!);
     
     expect(mockOnSearch).toHaveBeenCalledWith('initial');

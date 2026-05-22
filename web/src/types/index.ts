@@ -22,6 +22,8 @@ export interface Material {
   url?: string | null;
   file_path_legacy: string;
   source_material_id: string | null;
+  merged_from_praise_id?: string | null;
+  merged_from_praise_name?: string | null;
 }
 
 export interface Tag {

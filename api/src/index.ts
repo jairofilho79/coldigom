@@ -300,20 +300,23 @@ function buildWhereClause(params: {
   const bindings: (string | number)[] = [];
 
   if (params.search) {
+    const pattern = `%${params.search}%`;
     if (params.useFts) {
       const ftsQuery = buildFtsMatchQuery(params.search);
       if (ftsQuery) {
         conditions.push(
-          `p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?)`
+          `(p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?) OR p.id LIKE ?)`
         );
-        bindings.push(ftsQuery);
+        bindings.push(ftsQuery, pattern);
+      } else {
+        conditions.push(`p.id LIKE ?`);
+        bindings.push(pattern);
       }
     } else {
       conditions.push(
-        `(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ?)`
+        `(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ?)`
       );
-      const pattern = `%${params.search}%`;
-      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     }
   }
 
@@ -536,9 +539,12 @@ app.get('/api/praises/:id', async (c) => {
     // Fetch materials for this praise
     const materialsQuery = `
       SELECT 
-        id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url
-      FROM praise_materials
-      WHERE praise_id = ?
+        pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.file_path_legacy,
+        pm.source_material_id, pm.merged_from_praise_id, pm.url,
+        mp.name AS merged_from_praise_name
+      FROM praise_materials pm
+      LEFT JOIN praises mp ON mp.id = pm.merged_from_praise_id
+      WHERE pm.praise_id = ?
     `;
     const materialsResult = await c.env.DB.prepare(materialsQuery).bind(id).all();
 
@@ -769,6 +775,159 @@ app.post('/api/praises/:id/tags', requireAuth, async (c) => {
   }
 });
 
+async function deletePraiseWithAssets(env: Env, praiseId: string): Promise<void> {
+  const materials = await env.DB.prepare(
+    `SELECT id, r2_key FROM praise_materials WHERE praise_id = ?`
+  ).bind(praiseId).all();
+  for (const row of (materials.results as { id: string; r2_key: string | null }[]) ?? []) {
+    if (row.r2_key) {
+      try {
+        await env.ASSETS.delete(`storage/${row.r2_key}`);
+      } catch (e) {
+        console.warn('Failed to delete R2 object:', e);
+      }
+    }
+  }
+  await env.DB.prepare('DELETE FROM praises WHERE id = ?').bind(praiseId).run();
+}
+
+// POST /api/praises/:keeperId/merge - Merge duplicate praise into keeper (admin)
+app.post('/api/praises/:keeperId/merge', requireAuth, async (c) => {
+  const keeperId = c.req.param('keeperId');
+  const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body || typeof body !== 'object') {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const sourcePraiseId = body.source_praise_id;
+  if (typeof sourcePraiseId !== 'string' || !sourcePraiseId.trim()) {
+    return c.json({ error: "Field 'source_praise_id' is required" }, 400);
+  }
+  const sourceId = sourcePraiseId.trim();
+  if (sourceId === keeperId) {
+    return c.json({ error: 'Cannot merge a praise into itself' }, 400);
+  }
+
+  const metadata = body.metadata;
+  if (!metadata || typeof metadata !== 'object') {
+    return c.json({ error: "Field 'metadata' is required" }, 400);
+  }
+
+  const metaObj = metadata as Record<string, unknown>;
+  const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+  const metaValues: Record<(typeof updatable)[number], string | null> = {
+    name: null,
+    number: null,
+    author: null,
+    rhythm: null,
+    tonality: null,
+    category: null,
+    lyrics: null,
+  };
+
+  for (const key of updatable) {
+    if (!(key in metaObj)) {
+      return c.json({ error: `Field 'metadata.${key}' is required` }, 400);
+    }
+    const val = metaObj[key];
+    if (key === 'name') {
+      if (typeof val !== 'string' || !val.trim()) {
+        return c.json({ error: "Field 'metadata.name' is required" }, 400);
+      }
+      metaValues[key] = val.trim();
+      continue;
+    }
+    if (val === null || val === undefined) {
+      metaValues[key] = null;
+      continue;
+    }
+    if (typeof val !== 'string') {
+      return c.json({ error: `Field 'metadata.${key}' must be a string` }, 400);
+    }
+    metaValues[key] = val;
+  }
+
+  let tagIds: string[] = [];
+  if (!('tag_ids' in body) || !Array.isArray(body.tag_ids)) {
+    return c.json({ error: "Field 'tag_ids' must be an array" }, 400);
+  }
+  tagIds = body.tag_ids.filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
+
+  let materialIdsToImport: string[] = [];
+  if (!('material_ids_to_import' in body) || !Array.isArray(body.material_ids_to_import)) {
+    return c.json({ error: "Field 'material_ids_to_import' must be an array" }, 400);
+  }
+  materialIdsToImport = body.material_ids_to_import.filter(
+    (id): id is string => typeof id === 'string' && id.trim().length > 0
+  );
+
+  try {
+    const keeper = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(keeperId).first();
+    if (!keeper) return c.json({ error: 'Keeper praise not found' }, 404);
+
+    const source = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(sourceId).first();
+    if (!source) return c.json({ error: 'Source praise not found' }, 404);
+
+    for (const tagId of tagIds) {
+      const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
+      if (!tag) return c.json({ error: 'Tag not found' }, 400);
+    }
+
+    for (const materialId of materialIdsToImport) {
+      const mat = await c.env.DB.prepare(
+        'SELECT id, praise_id FROM praise_materials WHERE id = ?'
+      ).bind(materialId).first() as { id: string; praise_id: string } | null;
+      if (!mat) {
+        return c.json({ error: `Material not found: ${materialId}` }, 409);
+      }
+      if (mat.praise_id !== sourceId) {
+        return c.json({ error: `Material ${materialId} does not belong to source praise` }, 409);
+      }
+    }
+
+    await c.env.DB.prepare(
+      `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, category = ?, lyrics = ?,
+       updated_at = datetime('now') WHERE id = ?`
+    ).bind(
+      metaValues.name,
+      metaValues.number,
+      metaValues.author,
+      metaValues.rhythm,
+      metaValues.tonality,
+      metaValues.category,
+      metaValues.lyrics,
+      keeperId
+    ).run();
+
+    await c.env.DB.prepare('DELETE FROM praise_tags WHERE praise_id = ?').bind(keeperId).run();
+    for (const tagId of tagIds) {
+      await c.env.DB.prepare(
+        'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
+      ).bind(keeperId, tagId).run();
+    }
+
+    for (const materialId of materialIdsToImport) {
+      await c.env.DB.prepare(
+        `UPDATE praise_materials SET praise_id = ?, merged_from_praise_id = ? WHERE id = ? AND praise_id = ?`
+      ).bind(keeperId, sourceId, materialId, sourceId).run();
+    }
+
+    await deletePraiseWithAssets(c.env, sourceId);
+  } catch (error) {
+    console.error('Error merging praises:', error);
+    return c.json({ error: 'Failed to merge praises' }, 500);
+  }
+
+  try {
+    const res = await app.request(`/api/praises/${keeperId}`, { method: 'GET' }, c.env as Env);
+    const json = await res.json();
+    return c.json(json, res.status as ContentfulStatusCode);
+  } catch (error) {
+    console.error('Error re-fetching praise after merge:', error);
+    return c.json({ ok: true });
+  }
+});
+
 // DELETE /api/praises/:id/tags/:tagId - Detach a tag from a praise (admin)
 app.delete('/api/praises/:id/tags/:tagId', requireAuth, async (c) => {
   const praiseId = c.req.param('id');
@@ -828,8 +987,8 @@ app.post('/api/praises/:id/materials', requireAuth, async (c) => {
 
   try {
     await c.env.DB.prepare(
-      `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id,
       praiseId,
@@ -837,6 +996,7 @@ app.post('/api/praises/:id/materials', requireAuth, async (c) => {
       type,
       null,
       '',
+      null,
       null,
       hasUrl ? url.trim() : null
     ).run();
@@ -897,8 +1057,8 @@ app.post('/api/praises/:id/materials/bulk-upload', requireAuth, async (c) => {
       });
 
       await c.env.DB.prepare(
-        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, url)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         materialId,
         praiseId,
@@ -906,6 +1066,7 @@ app.post('/api/praises/:id/materials/bulk-upload', requireAuth, async (c) => {
         item.type,
         r2_key,
         item.file_path_legacy || file.name,
+        null,
         null,
         null
       ).run();

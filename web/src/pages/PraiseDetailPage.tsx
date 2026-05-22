@@ -57,6 +57,7 @@ export function PraiseDetailPage() {
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
   const [edit, setEdit] = useState({
     name: '',
     number: '',
@@ -296,13 +297,18 @@ export function PraiseDetailPage() {
                   Cancelar
                 </Link>
               ) : (
-                <button
-                  type="button"
-                  className="auth-btn"
-                  onClick={() => setIsEditing(v => !v)}
-                >
-                  {isEditing ? 'Fechar edição' : 'Editar'}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="auth-btn"
+                    onClick={() => setIsEditing(v => !v)}
+                  >
+                    {isEditing ? 'Fechar edição' : 'Editar'}
+                  </button>
+                  <Link to={`/praise/${id}/merge`} className="auth-btn">
+                    Mesclar
+                  </Link>
+                </>
               )}
               <button
                 type="button"
@@ -382,6 +388,26 @@ export function PraiseDetailPage() {
 
         {!isEditing && praise && (
           <div className="detail-meta-row">
+            <div className="detail-meta-item detail-meta-item--id">
+              <span className="label">ID</span>
+              <span className="value detail-id-value">{praise.id}</span>
+              <button
+                type="button"
+                className="detail-copy-id-btn"
+                aria-label="Copiar ID"
+                onClick={() => void (async () => {
+                  try {
+                    await navigator.clipboard.writeText(praise.id);
+                    setIdCopied(true);
+                    window.setTimeout(() => setIdCopied(false), 2000);
+                  } catch {
+                    setError('Não foi possível copiar o ID');
+                  }
+                })()}
+              >
+                {idCopied ? 'Copiado!' : 'Copiar'}
+              </button>
+            </div>
             {praise.author && (
             <div className="detail-meta-item">
               <span className="label">Autor</span>
@@ -820,6 +846,11 @@ export function PraiseDetailPage() {
                         <div className="materials-title">{m.material_kind_name || 'Material'}</div>
                         <div className="materials-meta">
                           <span className="pill">{m.type}</span>
+                          {m.merged_from_praise_id ? (
+                            <span className="merge-material-badge" title={m.merged_from_praise_id}>
+                              Mesclado{m.merged_from_praise_name ? `: ${m.merged_from_praise_name}` : ''}
+                            </span>
+                          ) : null}
                           {m.url ? <a href={m.url} target="_blank" rel="noreferrer">abrir link</a> : null}
                         </div>
                       </div>

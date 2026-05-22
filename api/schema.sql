@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS praise_materials (
     r2_key TEXT,                   -- Path in R2 bucket (NULL when url is present)
     file_path_legacy TEXT,         -- Legacy file path
     source_material_id TEXT,       -- For derivative materials (auto-relationship, no FK constraint)
+    merged_from_praise_id TEXT,    -- Source praise id when material was moved in a merge (duplicate removed)
     url TEXT,                      -- External link (YouTube, Google Drive, Spotify, etc.)
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
@@ -69,6 +70,7 @@ CREATE INDEX IF NOT EXISTS idx_praise_materials_praise_id ON praise_materials(pr
 CREATE INDEX IF NOT EXISTS idx_praise_materials_material_kind ON praise_materials(material_kind);
 CREATE INDEX IF NOT EXISTS idx_mk_translations_locale ON material_kind_translations(locale);
 CREATE INDEX IF NOT EXISTS idx_praise_materials_source_material_id ON praise_materials(source_material_id);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_merged_from ON praise_materials(merged_from_praise_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_praise_id ON praise_tags(praise_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);

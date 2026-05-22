@@ -4,6 +4,10 @@ import yaml from 'js-yaml';
 import {
   buildMetadataYaml,
   buildPraiseZipBytes,
+  buildPraiseZipStream,
+  readableStreamToBytes,
+  PraiseZipTooLargeError,
+  MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES,
   materialZipEntryName,
   materialZipExtension,
   sanitizeFileNamePart,
@@ -103,11 +107,23 @@ function createZipTestMocks() {
   };
 
   const mockR2 = {
+    head: vi.fn(async (key: string) => {
+      const bytes = r2Objects[key];
+      return bytes ? { size: bytes.byteLength } : null;
+    }),
     get: vi.fn(async (key: string) => {
       const bytes = r2Objects[key];
       if (!bytes) return null;
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(bytes);
+          controller.close();
+        },
+      });
       return {
-        arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+        body: stream,
+        arrayBuffer: async () =>
+          bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
       };
     }),
   };
@@ -162,6 +178,28 @@ describe('buildPraiseZipBytes', () => {
     expect(new TextDecoder().decode(unzipped['Cifra-mat3.txt'])).toBe(new TextDecoder().decode(chordBytes));
     expect(new TextDecoder().decode(unzipped['Partitura-mat4.txt']).trim()).toBe(
       'https://www.youtube.com/watch?v=abc123'
+    );
+  });
+
+  it('builds zip via streaming path', async () => {
+    const { mockDB, mockR2, pdfBytes } = createZipTestMocks();
+    const result = await buildPraiseZipStream(mockDB, mockR2, mockPraise.id);
+    expect(result).not.toBeNull();
+    const bytes = await readableStreamToBytes(result!.stream);
+    const unzipped = unzipSync(bytes);
+    expect(unzipped['Partitura-mat1.pdf']).toEqual(pdfBytes);
+  });
+
+  it('throws when uncompressed size exceeds limit', async () => {
+    const { mockDB, mockR2 } = createZipTestMocks();
+    const huge = new Uint8Array(MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES + 1);
+    (mockR2.head as ReturnType<typeof vi.fn>).mockImplementation(async (key: string) => {
+      if (key.includes('mat1.pdf')) return { size: huge.byteLength };
+      return { size: 0 };
+    });
+
+    await expect(buildPraiseZipBytes(mockDB, mockR2, mockPraise.id)).rejects.toThrow(
+      PraiseZipTooLargeError
     );
   });
 

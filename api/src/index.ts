@@ -13,7 +13,7 @@ import {
   type AuthUser,
 } from './auth';
 import { labelFor, listMaterialKindsForLocale, loadMaterialKindLabels } from './materialKindLabels';
-import { buildPraiseZipBytes } from './praiseZip';
+import { buildPraiseZipStream, PraiseZipTooLargeError } from './praiseZip';
 
 type Env = {
   DB: D1Database;
@@ -542,20 +542,23 @@ app.get('/api/praises/:id/download.zip', async (c) => {
   const id = c.req.param('id');
 
   try {
-    const result = await buildPraiseZipBytes(c.env.DB, c.env.ASSETS, id);
+    const result = await buildPraiseZipStream(c.env.DB, c.env.ASSETS, id);
     if (!result) {
       return c.json({ error: 'Praise not found' }, 404);
     }
 
     const encodedFilename = encodeURIComponent(result.filename);
     const safeFilename = result.filename.replace(/"/g, '');
-    return new Response(result.bytes, {
+    return new Response(result.stream, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`,
       },
     });
   } catch (error) {
+    if (error instanceof PraiseZipTooLargeError) {
+      return c.json({ error: error.message }, 413);
+    }
     console.error('Error building praise ZIP:', error);
     return c.json({ error: 'Failed to build download' }, 500);
   }

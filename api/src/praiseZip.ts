@@ -1,6 +1,9 @@
 import yaml from 'js-yaml';
-import { zipSync } from 'fflate';
+import { Zip, ZipPassThrough, zipSync, type AsyncFlateStreamHandler } from 'fflate';
 import { labelFor, loadMaterialKindLabels } from './materialKindLabels';
+
+/** Limite de bytes não comprimidos no ZIP (evita estourar 128 MB do Worker). */
+export const MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES = 80 * 1024 * 1024;
 
 export type PraiseRow = {
   id: string;
@@ -25,7 +28,17 @@ export type MaterialRow = {
   url?: string | null;
 };
 
-export type TagRow = { id: string; name: string };
+export class PraiseZipTooLargeError extends Error {
+  constructor(
+    public readonly bytes: number,
+    public readonly limit: number = MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES
+  ) {
+    super(
+      `Este louvor excede o limite de download (${Math.round(limit / (1024 * 1024))} MB de materiais).`
+    );
+    this.name = 'PraiseZipTooLargeError';
+  }
+}
 
 /** Remove caracteres inválidos em nomes de arquivo (mantém acentos PT-BR). */
 export function sanitizeFileNamePart(value: string): string {
@@ -47,7 +60,7 @@ export function materialZipEntryName(
 ): string {
   const safeLabel = sanitizeFileNamePart(label || 'Material');
   const ext = materialZipExtension(material.type);
-  let base = `${safeLabel}-${material.id}`;
+  const base = `${safeLabel}-${material.id}`;
   let name = `${base}.${ext}`;
   let n = 2;
   while (usedNames.has(name)) {
@@ -126,6 +139,161 @@ export async function fetchPraiseForZip(
   return { praise, tagIds, materials };
 }
 
+export async function estimatePraiseZipUncompressedSize(
+  assets: R2Bucket,
+  materials: MaterialRow[],
+  metadataByteLength: number
+): Promise<number> {
+  let total = metadataByteLength;
+  for (const material of materials) {
+    if (!material.r2_key) continue;
+    const head = await assets.head(`storage/${material.r2_key}`);
+    if (head?.size) total += head.size;
+  }
+  for (const material of materials) {
+    if (material.url?.trim()) {
+      total += new TextEncoder().encode(`${material.url.trim()}\n`).byteLength;
+    }
+  }
+  return total;
+}
+
+async function addBytesToZip(zip: Zip, entryName: string, data: Uint8Array): Promise<void> {
+  const pass = new ZipPassThrough(entryName);
+  zip.add(pass);
+  pass.push(data, true);
+}
+
+async function addR2ObjectToZip(
+  zip: Zip,
+  assets: R2Bucket,
+  storageKey: string,
+  entryName: string
+): Promise<void> {
+  const object = await assets.get(storageKey);
+  const pass = new ZipPassThrough(entryName);
+  zip.add(pass);
+
+  if (!object?.body) {
+    pass.push(new Uint8Array(0), true);
+    return;
+  }
+
+  const reader = object.body.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        pass.push(new Uint8Array(0), true);
+        break;
+      }
+      pass.push(value, false);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+async function populateStreamingZip(
+  zip: Zip,
+  assets: R2Bucket,
+  praise: PraiseRow,
+  tagIds: string[],
+  materials: MaterialRow[],
+  materialKindLabels: Map<string, string>
+): Promise<void> {
+  const usedNames = new Set<string>();
+  const yamlText = buildMetadataYaml(praise, tagIds, materials);
+  await addBytesToZip(zip, 'metadata.yml', new TextEncoder().encode(yamlText));
+
+  for (const material of materials) {
+    const label = labelFor(materialKindLabels, material.material_kind);
+    const entryName = materialZipEntryName(material, label, usedNames);
+
+    if (material.r2_key) {
+      await addR2ObjectToZip(zip, assets, `storage/${material.r2_key}`, entryName);
+      continue;
+    }
+
+    if (material.url?.trim()) {
+      await addBytesToZip(
+        zip,
+        entryName,
+        new TextEncoder().encode(`${material.url.trim()}\n`)
+      );
+    }
+  }
+}
+
+/**
+ * ZIP em streaming (STORE / sem compressão) — um arquivo R2 por vez na memória.
+ */
+export async function buildPraiseZipStream(
+  db: D1Database,
+  assets: R2Bucket,
+  praiseId: string
+): Promise<{ stream: ReadableStream<Uint8Array>; filename: string } | null> {
+  const data = await fetchPraiseForZip(db, praiseId);
+  if (!data) return null;
+
+  const { praise, tagIds, materials } = data;
+  const materialKindLabels = await loadMaterialKindLabels(db);
+  const filename = buildZipArchiveFilename(praise);
+  const yamlText = buildMetadataYaml(praise, tagIds, materials);
+  const metaBytes = new TextEncoder().encode(yamlText);
+
+  const estimated = await estimatePraiseZipUncompressedSize(assets, materials, metaBytes.byteLength);
+  if (estimated > MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES) {
+    throw new PraiseZipTooLargeError(estimated);
+  }
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const onZipData: AsyncFlateStreamHandler = (err, chunk, final) => {
+        if (err) {
+          controller.error(err);
+          return;
+        }
+        if (chunk.length) controller.enqueue(chunk);
+        if (final) controller.close();
+      };
+
+      try {
+        const zip = new Zip(onZipData);
+        await populateStreamingZip(zip, assets, praise, tagIds, materials, materialKindLabels);
+        zip.end();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+  });
+
+  return { stream, filename };
+}
+
+/** Coleta o stream em memória (testes e uso interno leve). */
+export async function readableStreamToBytes(
+  stream: ReadableStream<Uint8Array>
+): Promise<Uint8Array> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.byteLength;
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out;
+}
+
+/** Monta ZIP em memória com STORE (sem DEFLATE) — apenas para testes unitários. */
 export async function buildPraiseZipBytes(
   db: D1Database,
   assets: R2Bucket,
@@ -136,19 +304,24 @@ export async function buildPraiseZipBytes(
 
   const { praise, tagIds, materials } = data;
   const materialKindLabels = await loadMaterialKindLabels(db);
-  const entries: Record<string, Uint8Array> = {};
-  const usedNames = new Set<string>();
-
+  const filename = buildZipArchiveFilename(praise);
   const yamlText = buildMetadataYaml(praise, tagIds, materials);
-  entries['metadata.yml'] = new TextEncoder().encode(yamlText);
+  const metaBytes = new TextEncoder().encode(yamlText);
+
+  const estimated = await estimatePraiseZipUncompressedSize(assets, materials, metaBytes.byteLength);
+  if (estimated > MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES) {
+    throw new PraiseZipTooLargeError(estimated);
+  }
+
+  const entries: Record<string, Uint8Array> = { 'metadata.yml': metaBytes };
+  const usedNames = new Set<string>();
 
   for (const material of materials) {
     const label = labelFor(materialKindLabels, material.material_kind);
     const entryName = materialZipEntryName(material, label, usedNames);
 
     if (material.r2_key) {
-      const storageKey = `storage/${material.r2_key}`;
-      const object = await assets.get(storageKey);
+      const object = await assets.get(`storage/${material.r2_key}`);
       if (object) {
         entries[entryName] = new Uint8Array(await object.arrayBuffer());
       }
@@ -160,6 +333,6 @@ export async function buildPraiseZipBytes(
     }
   }
 
-  const bytes = zipSync(entries);
-  return { bytes, filename: buildZipArchiveFilename(praise) };
+  const bytes = zipSync(entries, { level: 0 });
+  return { bytes, filename };
 }

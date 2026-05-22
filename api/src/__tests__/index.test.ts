@@ -621,12 +621,21 @@ describe('API Routes', () => {
       };
 
       const mockR2 = {
-        head: vi.fn(),
+        head: vi.fn(async (key: string) => {
+          const bytes = r2ByKey[key];
+          return bytes ? { size: bytes.byteLength } : null;
+        }),
         get: vi.fn(async (key: string) => {
           const bytes = r2ByKey[key];
           if (!bytes) return null;
+          const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(bytes);
+              controller.close();
+            },
+          });
           return {
-            body: bytes,
+            body: stream,
             arrayBuffer: async () =>
               bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
           };

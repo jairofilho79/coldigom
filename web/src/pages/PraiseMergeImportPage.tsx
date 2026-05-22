@@ -6,6 +6,7 @@ import {
   mergePraises,
   deleteMaterial,
   updateMaterial,
+  type MergePraisesInput,
 } from '../services/api';
 import { SearchableSelect } from '../components/SearchableSelect';
 import type { PraiseDetail, MaterialKind } from '../types';
@@ -90,7 +91,7 @@ export function PraiseMergeImportPage() {
 
   const resolvedMetadata = useMemo(() => {
     if (!keeper || !source) return null;
-    const out: Record<MetaField, string | null> = {
+    const out: MergePraisesInput['metadata'] = {
       name: '',
       number: null,
       author: null,

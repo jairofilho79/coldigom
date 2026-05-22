@@ -8,6 +8,7 @@ export interface FilterState {
   rhythm: string[];
   tonality: string[];
   category: string[];
+  materialKinds: string[];
   numberMin?: number;
   numberMax?: number;
   sort: SortField;
@@ -33,6 +34,7 @@ export function useFilters() {
     rhythm: getParam('rhythm', []),
     tonality: getParam('tonality', []),
     category: getParam('category', []),
+    materialKinds: getParam('materialKinds', []),
     numberMin: searchParams.has('numberMin') ? parseInt(searchParams.get('numberMin')!, 10) : undefined,
     numberMax: searchParams.has('numberMax') ? parseInt(searchParams.get('numberMax')!, 10) : undefined,
     sort: getParam('sort', 'number') as SortField,
@@ -50,6 +52,7 @@ export function useFilters() {
           'rhythm' in updates ||
           'tonality' in updates ||
           'category' in updates ||
+          'materialKinds' in updates ||
           'numberMin' in updates ||
           'numberMax' in updates ||
           'sort' in updates ||
@@ -78,6 +81,11 @@ export function useFilters() {
       if ('category' in updates) {
         if (updates.category && updates.category.length > 0) newParams.set('category', updates.category.join(','));
         else newParams.delete('category');
+      }
+      if ('materialKinds' in updates) {
+        if (updates.materialKinds && updates.materialKinds.length > 0) {
+          newParams.set('materialKinds', updates.materialKinds.join(','));
+        } else newParams.delete('materialKinds');
       }
       if ('numberMin' in updates) {
         if (updates.numberMin !== undefined) newParams.set('numberMin', updates.numberMin.toString());
@@ -121,6 +129,7 @@ export function useFilters() {
     filters.rhythm.length +
     filters.tonality.length +
     filters.category.length +
+    filters.materialKinds.length +
     (filters.numberMin !== undefined ? 1 : 0) +
     (filters.numberMax !== undefined ? 1 : 0);
 

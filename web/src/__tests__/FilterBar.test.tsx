@@ -4,12 +4,11 @@ import { FilterBar } from '../components/FilterBar';
 import { MemoryRouter } from 'react-router-dom';
 import type { FilterOptions } from '../types';
 
-// Mock the api module
 vi.mock('../services/api', () => ({
   getFilterOptions: vi.fn(),
+  getMaterialKinds: vi.fn(),
 }));
 
-// Mock useFilters hook
 vi.mock('../hooks/useFilters', () => ({
   useFilters: () => ({
     filters: {
@@ -18,6 +17,7 @@ vi.mock('../hooks/useFilters', () => ({
       rhythm: [],
       tonality: [],
       category: [],
+      materialKinds: [],
       sort: 'number',
       order: 'asc',
       page: 1,
@@ -29,7 +29,7 @@ vi.mock('../hooks/useFilters', () => ({
   }),
 }));
 
-import { getFilterOptions } from '../services/api';
+import { getFilterOptions, getMaterialKinds } from '../services/api';
 
 describe('FilterBar Component', () => {
   const mockFilterOptions: FilterOptions = {
@@ -43,9 +43,15 @@ describe('FilterBar Component', () => {
     ],
   };
 
+  const mockMaterialKinds = [
+    { id: 'kind1', name: 'Partitura' },
+    { id: 'kind2', name: 'Áudio' },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
-    (getFilterOptions as any).mockResolvedValue(mockFilterOptions);
+    (getFilterOptions as ReturnType<typeof vi.fn>).mockResolvedValue(mockFilterOptions);
+    (getMaterialKinds as ReturnType<typeof vi.fn>).mockResolvedValue(mockMaterialKinds);
   });
 
   it('should render filter bar', async () => {
@@ -82,24 +88,26 @@ describe('FilterBar Component', () => {
     expect(screen.getByText('3')).toBeTruthy();
   });
 
-  it('should render rhythm dropdown', async () => {
+  it('should render Materiais dropdown', async () => {
     render(
       <MemoryRouter>
         <FilterBar />
       </MemoryRouter>
     );
 
-    expect((await screen.findAllByText('Ritmo'))[0]).toBeTruthy();
+    expect((await screen.findAllByText('Materiais'))[0]).toBeTruthy();
   });
 
-  it('should render tonality dropdown', async () => {
+  it('should not render Ritmo or Tom filter dropdowns', async () => {
     render(
       <MemoryRouter>
         <FilterBar />
       </MemoryRouter>
     );
 
-    expect((await screen.findAllByText('Tom'))[0]).toBeTruthy();
+    await screen.findByText('Coleções');
+    expect(screen.queryByRole('button', { name: /^Ritmo/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Tom$/ })).toBeNull();
   });
 
   it('should render category dropdown', async () => {
@@ -112,24 +120,24 @@ describe('FilterBar Component', () => {
     expect((await screen.findAllByText('Categoria'))[0]).toBeTruthy();
   });
 
-  it('should open dropdown when clicked', async () => {
+  it('should open Materiais dropdown when clicked', async () => {
     render(
       <MemoryRouter>
         <FilterBar />
       </MemoryRouter>
     );
 
-    const rhythmButton = (await screen.findAllByText('Ritmo'))[0];
-    fireEvent.click(rhythmButton);
+    const materiaisButton = (await screen.findAllByText('Materiais'))[0];
+    fireEvent.click(materiaisButton);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Avulsos').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('Coletânea').length).toBeGreaterThan(0);
+      expect(screen.getByText('Partitura')).toBeTruthy();
+      expect(screen.getByText('Áudio')).toBeTruthy();
     });
   });
 
   it('should show loading state initially', async () => {
-    (getFilterOptions as any).mockImplementation(() => new Promise(() => {}));
+    (getFilterOptions as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}));
 
     const { container } = render(
       <MemoryRouter>
@@ -141,7 +149,7 @@ describe('FilterBar Component', () => {
   });
 
   it('should handle API error gracefully', async () => {
-    (getFilterOptions as any).mockRejectedValue(new Error('API Error'));
+    (getFilterOptions as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API Error'));
 
     render(
       <MemoryRouter>

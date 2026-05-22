@@ -1,20 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
-import { getFilterOptions } from '../services/api';
-import type { FilterOptions, TagWithCount } from '../types';
+import { getFilterOptions, getMaterialKinds } from '../services/api';
+import type { FilterOptions, MaterialKind, TagWithCount } from '../types';
 import { SortSelector } from './SortSelector';
 import { useFilters } from '../hooks/useFilters';
+
+type MultiSelectKey = 'category' | 'materialKinds';
 
 export function FilterBar() {
   const { filters, setFilters, toggleTag, clearAllFilters, activeFilterCount } = useFilters();
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getFilterOptions().then(setFilterOptions).catch(console.error);
+    Promise.all([getFilterOptions(), getMaterialKinds()])
+      .then(([opts, kinds]) => {
+        setFilterOptions(opts);
+        setMaterialKinds(kinds);
+      })
+      .catch(console.error);
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -29,19 +36,15 @@ export function FilterBar() {
     setFilters({ sort: sort as 'number', order, page: 1 });
   };
 
-  const handleMultiSelect = (key: 'rhythm' | 'tonality' | 'category', value: string) => {
+  const handleMultiSelect = (key: MultiSelectKey, value: string) => {
     const current = filters[key];
     const newValues = current.includes(value)
-      ? current.filter(v => v !== value)
+      ? current.filter((v) => v !== value)
       : [...current, value];
     setFilters({ [key]: newValues, page: 1 });
   };
 
-  const renderDropdown = (
-    key: 'rhythm' | 'tonality' | 'category',
-    label: string,
-    options: string[]
-  ) => {
+  const renderStringDropdown = (key: 'category', label: string, options: string[]) => {
     const isOpen = openDropdown === key;
     const selectedCount = filters[key].length;
 
@@ -60,8 +63,13 @@ export function FilterBar() {
         </button>
         {isOpen && (
           <div className="filter-dropdown-menu" role="listbox">
-            {options.map(opt => (
-              <label key={opt} className="filter-dropdown-item" role="option" aria-selected={filters[key].includes(opt)}>
+            {options.map((opt) => (
+              <label
+                key={opt}
+                className="filter-dropdown-item"
+                role="option"
+                aria-selected={filters[key].includes(opt)}
+              >
                 <input
                   type="checkbox"
                   checked={filters[key].includes(opt)}
@@ -69,6 +77,48 @@ export function FilterBar() {
                   tabIndex={-1}
                 />
                 {opt}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderMaterialKindsDropdown = () => {
+    const key = 'materialKinds';
+    const isOpen = openDropdown === key;
+    const selectedCount = filters.materialKinds.length;
+
+    return (
+      <div className="filter-dropdown" key={key}>
+        <button
+          type="button"
+          className={`filter-dropdown-trigger ${selectedCount > 0 ? 'active' : ''}`}
+          onClick={() => setOpenDropdown(isOpen ? null : key)}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+        >
+          Materiais
+          {selectedCount > 0 && <span className="filter-dropdown-badge">{selectedCount}</span>}
+          <span className="arrow">▼</span>
+        </button>
+        {isOpen && (
+          <div className="filter-dropdown-menu" role="listbox">
+            {materialKinds.map((kind) => (
+              <label
+                key={kind.id}
+                className="filter-dropdown-item"
+                role="option"
+                aria-selected={filters.materialKinds.includes(kind.id)}
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.materialKinds.includes(kind.id)}
+                  onChange={() => handleMultiSelect(key, kind.id)}
+                  tabIndex={-1}
+                />
+                {kind.name}
               </label>
             ))}
           </div>
@@ -108,9 +158,8 @@ export function FilterBar() {
       </div>
 
       <div className="filter-controls-row">
-        {renderDropdown('rhythm', 'Ritmo', filterOptions.rhythms)}
-        {renderDropdown('tonality', 'Tom', filterOptions.tonalities)}
-        {renderDropdown('category', 'Categoria', filterOptions.categories)}
+        {renderMaterialKindsDropdown()}
+        {renderStringDropdown('category', 'Categoria', filterOptions.categories)}
 
         <SortSelector
           sort={filters.sort}

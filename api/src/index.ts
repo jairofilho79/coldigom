@@ -293,6 +293,7 @@ function buildWhereClause(params: {
   rhythm?: string[];
   tonality?: string[];
   category?: string[];
+  materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
 }): { clause: string; bindings: (string | number)[] } {
@@ -340,6 +341,18 @@ function buildWhereClause(params: {
     bindings.push(...params.category);
   }
 
+  if (params.materialKinds && params.materialKinds.length > 0) {
+    conditions.push(
+      `p.id IN (
+        SELECT pm.praise_id FROM praise_materials pm
+        WHERE pm.material_kind IN (${params.materialKinds.map(() => '?').join(',')})
+        GROUP BY pm.praise_id
+        HAVING COUNT(DISTINCT pm.material_kind) = ?
+      )`
+    );
+    bindings.push(...params.materialKinds, params.materialKinds.length);
+  }
+
   if (params.numberMin !== undefined) {
     conditions.push(`CAST(p.number AS INTEGER) >= ?`);
     bindings.push(params.numberMin);
@@ -365,6 +378,9 @@ app.get('/api/praises', async (c) => {
   const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
   const tonality = c.req.query('tonality') ? c.req.query('tonality')!.split(',').filter(Boolean) : undefined;
   const category = c.req.query('category') ? c.req.query('category')!.split(',').filter(Boolean) : undefined;
+  const materialKinds = c.req.query('materialKinds')
+    ? c.req.query('materialKinds')!.split(',').filter(Boolean)
+    : undefined;
   const numberMin = c.req.query('numberMin') ? parseInt(c.req.query('numberMin')!, 10) : undefined;
   const numberMax = c.req.query('numberMax') ? parseInt(c.req.query('numberMax')!, 10) : undefined;
 
@@ -383,6 +399,7 @@ app.get('/api/praises', async (c) => {
       rhythm,
       tonality,
       category,
+      materialKinds,
       numberMin,
       numberMax,
     });
@@ -407,9 +424,11 @@ app.get('/api/praises', async (c) => {
       query = `
         SELECT 
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-          GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids
+          GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
+          GROUP_CONCAT(DISTINCT t.name) as tag_names
         FROM praises p
         ${joinClause}
+        LEFT JOIN tags t ON pt.tag_id = t.id
         ${whereClause}
         ${groupClause}
         ${orderClause}
@@ -420,9 +439,11 @@ app.get('/api/praises', async (c) => {
       query = `
         SELECT 
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-          GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids
+          GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
+          GROUP_CONCAT(DISTINCT t.name) as tag_names
         FROM praises p
         LEFT JOIN praise_tags pt ON p.id = pt.praise_id
+        LEFT JOIN tags t ON pt.tag_id = t.id
         GROUP BY p.id
         ${orderClause}
         LIMIT ? OFFSET ?

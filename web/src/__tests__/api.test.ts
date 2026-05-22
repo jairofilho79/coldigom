@@ -24,6 +24,7 @@ describe('API Service', () => {
         category: 'Louvor',
         lyrics: 'Letra do louvor 1',
         tag_ids: 'tag1,tag2',
+        tag_names: 'Coletânea,GLTM',
       },
       {
         id: '1c12786e-4d32-4e95-a136-d85266008e11',
@@ -35,6 +36,7 @@ describe('API Service', () => {
         category: 'Adoração',
         lyrics: 'Letra do louvor 2',
         tag_ids: 'tag1',
+        tag_names: 'Coletânea',
       },
     ];
 
@@ -108,6 +110,19 @@ describe('API Service', () => {
       const url = new URL(calledUrl);
       expect(url.searchParams.get('tags')).toBe('tag1,tag2');
       expect(url.searchParams.get('rhythm')).toBe('Avulsos');
+    });
+
+    it('should include materialKinds filter as comma-separated', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      await searchPraises({ materialKinds: ['kind1', 'kind2'] });
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      const url = new URL(calledUrl);
+      expect(url.searchParams.get('materialKinds')).toBe('kind1,kind2');
     });
 
     it('should include number range parameters', async () => {
@@ -287,6 +302,7 @@ describe('API Service', () => {
       category: 'Louvor',
       lyrics: 'Letra do louvor 1',
       tag_ids: 'tag1,tag2',
+      tag_names: 'Coletânea,Avulsos',
       tags: [
         { id: 'tag1', name: 'Coletânea' },
         { id: 'tag2', name: 'Avulsos' },

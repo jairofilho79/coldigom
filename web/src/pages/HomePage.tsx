@@ -30,6 +30,7 @@ export function HomePage() {
           rhythm: filters.rhythm,
           tonality: filters.tonality,
           category: filters.category,
+          materialKinds: filters.materialKinds,
           numberMin: filters.numberMin,
           numberMax: filters.numberMax,
           sort: filters.sort,
@@ -45,7 +46,7 @@ export function HomePage() {
     };
 
     fetchPraises();
-  }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.category, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
+  }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.category, filters.materialKinds, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
 
   const handleSearch = (newQuery: string) => {
     setFilters({ query: newQuery, page: 1 });

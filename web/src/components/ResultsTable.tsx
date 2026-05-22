@@ -5,6 +5,11 @@ interface ResultsTableProps {
   praises: Praise[];
 }
 
+function parseTagNames(tagNames: string | null | undefined): string[] {
+  if (!tagNames) return [];
+  return tagNames.split(',').map((t) => t.trim()).filter(Boolean);
+}
+
 export function ResultsTable({ praises }: ResultsTableProps) {
   if (praises.length === 0) {
     return (
@@ -25,25 +30,36 @@ export function ResultsTable({ praises }: ResultsTableProps) {
           <tr>
             <th scope="col">Nº</th>
             <th scope="col">Nome</th>
-            <th scope="col">Autor</th>
-            <th scope="col">Ritmo</th>
+            <th scope="col">Coleções</th>
             <th scope="col">Tom</th>
-            <th scope="col">Categoria</th>
           </tr>
         </thead>
         <tbody>
-          {praises.map((praise) => (
-            <tr key={praise.id}>
-              <td className="col-number">{praise.number || '—'}</td>
-              <td className="col-name">
-                <Link to={`/praise/${praise.id}`}>{praise.name}</Link>
-              </td>
-              <td className="col-author">{praise.author || '—'}</td>
-              <td className="col-rhythm">{praise.rhythm || '—'}</td>
-              <td className="col-tonality">{praise.tonality || '—'}</td>
-              <td className="col-category">{praise.category || '—'}</td>
-            </tr>
-          ))}
+          {praises.map((praise) => {
+            const tags = parseTagNames(praise.tag_names);
+            return (
+              <tr key={praise.id}>
+                <td className="col-number">{praise.number || '—'}</td>
+                <td className="col-name">
+                  <Link to={`/praise/${praise.id}`}>{praise.name}</Link>
+                </td>
+                <td className="col-tags">
+                  {tags.length > 0 ? (
+                    <div className="col-tags-list">
+                      {tags.map((name) => (
+                        <span key={name} className="detail-tag">
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+                <td className="col-tonality">{praise.tonality || '—'}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

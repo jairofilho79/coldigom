@@ -732,12 +732,26 @@
   color: var(--c-accent-300);
 }
 
-.col-author,
-.col-rhythm,
-.col-tonality,
-.col-category {
+.col-tags {
   font-size: var(--text-sm);
   color: var(--text-tertiary);
+}
+
+.col-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.col-tags-list .detail-tag {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+.col-tonality {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  width: 4rem;
 }
 
 /* Empty state */

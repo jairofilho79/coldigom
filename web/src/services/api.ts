@@ -48,6 +48,7 @@ export interface SearchParams {
   rhythm?: string[];
   tonality?: string[];
   category?: string[];
+  materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
   sort?: SortField;
@@ -67,6 +68,9 @@ export async function searchPraises(
   if (params.rhythm && params.rhythm.length > 0) urlParams.set('rhythm', params.rhythm.join(','));
   if (params.tonality && params.tonality.length > 0) urlParams.set('tonality', params.tonality.join(','));
   if (params.category && params.category.length > 0) urlParams.set('category', params.category.join(','));
+  if (params.materialKinds && params.materialKinds.length > 0) {
+    urlParams.set('materialKinds', params.materialKinds.join(','));
+  }
   if (params.numberMin !== undefined) urlParams.set('numberMin', params.numberMin.toString());
   if (params.numberMax !== undefined) urlParams.set('numberMax', params.numberMax.toString());
   if (params.sort) urlParams.set('sort', params.sort);

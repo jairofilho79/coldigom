@@ -16,6 +16,7 @@ describe('ResultsTable Component', () => {
       category: 'Louvor',
       lyrics: 'Letra do louvor 1',
       tag_ids: 'tag1,tag2',
+      tag_names: 'Coletânea,GLTM',
     },
     {
       id: '1c12786e-4d32-4e95-a136-d85266008e11',
@@ -27,6 +28,7 @@ describe('ResultsTable Component', () => {
       category: 'Adoração',
       lyrics: 'Letra do louvor 2',
       tag_ids: 'tag1',
+      tag_names: 'Coletânea',
     },
   ];
 
@@ -46,10 +48,8 @@ describe('ResultsTable Component', () => {
 
     expect(screen.getByText('Nº')).toBeTruthy();
     expect(screen.getByText('Nome')).toBeTruthy();
-    expect(screen.getByText('Autor')).toBeTruthy();
-    expect(screen.getByText('Ritmo')).toBeTruthy();
+    expect(screen.getByText('Coleções')).toBeTruthy();
     expect(screen.getByText('Tom')).toBeTruthy();
-    expect(screen.getByText('Categoria')).toBeTruthy();
   });
 
   it('should render praise numbers', () => {
@@ -59,18 +59,11 @@ describe('ResultsTable Component', () => {
     expect(screen.getByText('002')).toBeTruthy();
   });
 
-  it('should render authors', () => {
+  it('should render tag names as chips', () => {
     renderWithRouter(<ResultsTable praises={mockPraises} />);
 
-    expect(screen.getByText('Autor 1')).toBeTruthy();
-    expect(screen.getByText('Autor 2')).toBeTruthy();
-  });
-
-  it('should render rhythms', () => {
-    renderWithRouter(<ResultsTable praises={mockPraises} />);
-
-    expect(screen.getByText('Avulsos')).toBeTruthy();
-    expect(screen.getByText('Coletânea')).toBeTruthy();
+    expect(screen.getByText('GLTM')).toBeTruthy();
+    expect(screen.getAllByText('Coletânea').length).toBeGreaterThanOrEqual(2);
   });
 
   it('should render tonalities', () => {
@@ -78,13 +71,6 @@ describe('ResultsTable Component', () => {
 
     expect(screen.getByText('C')).toBeTruthy();
     expect(screen.getByText('G')).toBeTruthy();
-  });
-
-  it('should render categories', () => {
-    renderWithRouter(<ResultsTable praises={mockPraises} />);
-
-    expect(screen.getByText('Louvor')).toBeTruthy();
-    expect(screen.getByText('Adoração')).toBeTruthy();
   });
 
   it('should show dash for missing number', () => {
@@ -100,28 +86,15 @@ describe('ResultsTable Component', () => {
     expect(screen.getByText('—')).toBeTruthy();
   });
 
-  it('should show dash for missing author', () => {
-    const praiseWithoutAuthor: Praise[] = [
+  it('should show dash for missing tags', () => {
+    const praiseWithoutTags: Praise[] = [
       {
         ...mockPraises[0],
-        author: '',
+        tag_names: null,
       },
     ];
 
-    renderWithRouter(<ResultsTable praises={praiseWithoutAuthor} />);
-
-    expect(screen.getByText('—')).toBeTruthy();
-  });
-
-  it('should show dash for missing rhythm', () => {
-    const praiseWithoutRhythm: Praise[] = [
-      {
-        ...mockPraises[0],
-        rhythm: '',
-      },
-    ];
-
-    renderWithRouter(<ResultsTable praises={praiseWithoutRhythm} />);
+    renderWithRouter(<ResultsTable praises={praiseWithoutTags} />);
 
     expect(screen.getByText('—')).toBeTruthy();
   });
@@ -135,19 +108,6 @@ describe('ResultsTable Component', () => {
     ];
 
     renderWithRouter(<ResultsTable praises={praiseWithoutTonality} />);
-
-    expect(screen.getByText('—')).toBeTruthy();
-  });
-
-  it('should show dash for missing category', () => {
-    const praiseWithoutCategory: Praise[] = [
-      {
-        ...mockPraises[0],
-        category: '',
-      },
-    ];
-
-    renderWithRouter(<ResultsTable praises={praiseWithoutCategory} />);
 
     expect(screen.getByText('—')).toBeTruthy();
   });

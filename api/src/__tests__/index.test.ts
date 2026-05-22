@@ -394,6 +394,24 @@ describe('API Routes', () => {
       expect(json.data).toHaveLength(1);
     });
 
+    it('should handle materialKinds filter', async () => {
+      const mockDB = createMockD1({
+        all: { results: [mockPraises[0]] },
+        first: { total: 1 },
+      });
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?materialKinds=kind1,kind2', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.data).toHaveLength(1);
+    });
+
     it('should return 500 on database error', async () => {
       const mockDB = {
         prepare: vi.fn().mockReturnValue({
@@ -1153,6 +1171,7 @@ describe('buildWhereClause', () => {
     rhythm?: string[];
     tonality?: string[];
     category?: string[];
+    materialKinds?: string[];
     numberMin?: number;
     numberMax?: number;
   }): { clause: string; bindings: (string | number)[] } {
@@ -1183,6 +1202,18 @@ describe('buildWhereClause', () => {
     if (params.category && params.category.length > 0) {
       conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
       bindings.push(...params.category);
+    }
+
+    if (params.materialKinds && params.materialKinds.length > 0) {
+      conditions.push(
+        `p.id IN (
+        SELECT pm.praise_id FROM praise_materials pm
+        WHERE pm.material_kind IN (${params.materialKinds.map(() => '?').join(',')})
+        GROUP BY pm.praise_id
+        HAVING COUNT(DISTINCT pm.material_kind) = ?
+      )`
+      );
+      bindings.push(...params.materialKinds, params.materialKinds.length);
     }
 
     if (params.numberMin !== undefined) {
@@ -1255,6 +1286,14 @@ describe('buildWhereClause', () => {
     const result = buildWhereClause({ category: ['Louvor'] });
     expect(result.clause).toContain('p.category IN (?)');
     expect(result.bindings).toEqual(['Louvor']);
+  });
+
+  it('should build materialKinds clause correctly', () => {
+    const result = buildWhereClause({ materialKinds: ['kind1', 'kind2'] });
+    expect(result.clause).toContain('praise_materials pm');
+    expect(result.clause).toContain('pm.material_kind IN (?,?)');
+    expect(result.clause).toContain('HAVING COUNT(DISTINCT pm.material_kind) = ?');
+    expect(result.bindings).toEqual(['kind1', 'kind2', 2]);
   });
 
   it('should build numberMin clause correctly', () => {

@@ -12,6 +12,7 @@ vi.mock('../services/api', async (importOriginal) => {
     ...actual,
     searchPraises: vi.fn(),
     getFilterOptions: vi.fn(),
+    getMaterialKinds: vi.fn(),
     getMe: vi.fn().mockResolvedValue(null),
     refreshSession: vi.fn().mockResolvedValue(false),
   };
@@ -30,6 +31,7 @@ vi.mock('../hooks/useFilters', () => ({
       rhythm: [],
       tonality: [],
       category: [],
+      materialKinds: [],
       numberMin: undefined,
       numberMax: undefined,
       sort: 'number',
@@ -43,7 +45,7 @@ vi.mock('../hooks/useFilters', () => ({
   }),
 }));
 
-import { searchPraises, getFilterOptions } from '../services/api';
+import { searchPraises, getFilterOptions, getMaterialKinds } from '../services/api';
 
 function renderHome() {
   return render(
@@ -67,6 +69,7 @@ describe('HomePage Component', () => {
       category: 'Louvor',
       lyrics: 'Letra do louvor 1',
       tag_ids: 'tag1,tag2',
+      tag_names: 'Coletânea,GLTM',
     },
     {
       id: '1c12786e-4d32-4e95-a136-d85266008e11',
@@ -78,6 +81,7 @@ describe('HomePage Component', () => {
       category: 'Adoração',
       lyrics: 'Letra do louvor 2',
       tag_ids: 'tag1',
+      tag_names: 'Coletânea',
     },
   ];
 
@@ -103,6 +107,10 @@ describe('HomePage Component', () => {
         { id: 'tag2', name: 'Avulsos', count: 5 },
       ],
     });
+    (getMaterialKinds as any).mockResolvedValue([
+      { id: 'kind1', name: 'Partitura' },
+      { id: 'kind2', name: 'Áudio' },
+    ]);
   });
 
   it('should render brand header', async () => {
@@ -183,6 +191,7 @@ describe('HomePage Component', () => {
           rhythm: [],
           tonality: [],
           category: [],
+          materialKinds: [],
           sort: 'number',
           order: 'asc',
         })

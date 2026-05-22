@@ -10,6 +10,7 @@ export interface Praise {
   category: string;
   lyrics: string;
   tag_ids: string | null;
+  tag_names: string | null;
 }
 
 export interface Material {

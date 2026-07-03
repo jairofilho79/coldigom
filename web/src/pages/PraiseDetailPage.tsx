@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { Select } from '../components/Select';
 import { SearchableSelect } from '../components/SearchableSelect';
@@ -160,6 +161,42 @@ export function PraiseDetailPage() {
   const audioMaterials = materialGroups.find((g) => g.type === 'mp3')?.items ?? [];
   const pdfMaterials = materialGroups.find((g) => g.type === 'pdf')?.items ?? [];
   const chordMaterials = materialGroups.find((g) => g.type === 'chord')?.items ?? [];
+  const canEditMaterialsInline = Boolean(userName && !isCreate);
+
+  const handleMaterialKindChange = async (materialId: string, material_kind: string) => {
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await updateMaterial(materialId, { material_kind });
+      setPraise(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao atualizar material');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleMaterialDelete = async (materialId: string) => {
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await deleteMaterial(materialId);
+      setPraise(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao remover material');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const materialAdminProps = canEditMaterialsInline
+    ? {
+        materialKindOptions,
+        saving,
+        onUpdateKind: handleMaterialKindChange,
+        onDelete: handleMaterialDelete,
+      }
+    : undefined;
 
   if (!isCreate && loading) {
     return (
@@ -575,25 +612,31 @@ export function PraiseDetailPage() {
           </h2>
           <div className="yt-grid">
             {youtubeMaterials.map(m => {
-              const id = m.url ? parseYouTubeId(m.url) : null;
-              const thumb = id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+              const ytId = m.url ? parseYouTubeId(m.url) : null;
+              const thumb = ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : null;
               return (
-                <a
-                  key={m.id}
-                  className="yt-card"
-                  href={m.url || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div className="yt-thumb">
-                    {thumb ? <img src={thumb} alt="" loading="lazy" /> : <div className="yt-thumb-fallback">YouTube</div>}
-                    <div className="yt-badge">YouTube</div>
-                  </div>
-                  <div className="yt-body">
-                    <div className="yt-title">{praise?.name ?? ''}</div>
-                    <div className="yt-meta">{m.material_kind_name || 'Vídeo'}</div>
-                  </div>
-                </a>
+                <div key={m.id} className="yt-card-wrap">
+                  <a
+                    className="yt-card"
+                    href={m.url || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="yt-thumb">
+                      {thumb ? <img src={thumb} alt="" loading="lazy" /> : <div className="yt-thumb-fallback">YouTube</div>}
+                      <div className="yt-badge">YouTube</div>
+                    </div>
+                    <div className="yt-body">
+                      <div className="yt-title">{praise?.name ?? ''}</div>
+                      <div className="yt-meta">{m.material_kind_name || 'Vídeo'}</div>
+                    </div>
+                  </a>
+                  {canEditMaterialsInline ? (
+                    <div className="materials-placeholder materials-placeholder--inline">
+                      Edição de categoria — em breve
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </div>
@@ -857,75 +900,6 @@ export function PraiseDetailPage() {
                 </>
               )}
             </div>
-
-            <div className="materials-admin-list">
-              <h3 className="materials-panel-title">Materiais cadastrados</h3>
-              {praise.materials.length === 0 ? (
-                <div className="lyrics-empty">Nenhum material cadastrado.</div>
-              ) : (
-                <div className="materials-table">
-                  {materialGroups.map((group) => (
-                    <div key={group.type} className="materials-type-group">
-                      <h4 className="materials-type-heading">{group.label}</h4>
-                      {group.items.map((m) => (
-                        <div key={m.id} className="materials-row">
-                          <div className="materials-cell materials-main">
-                            <div className="materials-title">{m.material_kind_name || 'Material'}</div>
-                            <div className="materials-meta">
-                              <span className="pill">{m.type}</span>
-                              {m.merged_from_praise_id ? (
-                                <span className="merge-material-badge" title={m.merged_from_praise_id}>
-                                  Mesclado{m.merged_from_praise_name ? `: ${m.merged_from_praise_name}` : ''}
-                                </span>
-                              ) : null}
-                              {m.url ? <a href={m.url} target="_blank" rel="noreferrer">abrir link</a> : null}
-                            </div>
-                          </div>
-                          <div className="materials-cell">
-                            <SearchableSelect
-                              compact
-                              value={m.material_kind}
-                              disabled={saving}
-                              onChange={async (material_kind) => {
-                                setSaving(true);
-                                try {
-                                  const updated = await updateMaterial(m.id, { material_kind });
-                                  setPraise(updated);
-                                } finally {
-                                  setSaving(false);
-                                }
-                              }}
-                              options={materialKindOptions}
-                              aria-label="Categoria do material"
-                            />
-                          </div>
-                          <div className="materials-cell">
-                            <button
-                              type="button"
-                              className="auth-btn"
-                              disabled={saving}
-                              onClick={async () => {
-                                setSaving(true);
-                                try {
-                                  const updated = await deleteMaterial(m.id);
-                                  setPraise(updated);
-                                } catch (err) {
-                                  setError(err instanceof Error ? err.message : 'Falha ao remover material');
-                                } finally {
-                                  setSaving(false);
-                                }
-                              }}
-                            >
-                              Remover
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </section>
       )}
@@ -936,7 +910,11 @@ export function PraiseDetailPage() {
             <span className="detail-section-icon">🎵</span>
             Áudio
           </h2>
-          <AudioPlayer materials={audioMaterials} getAssetUrl={getAssetUrl} />
+          <AudioPlayer
+            materials={audioMaterials}
+            getAssetUrl={getAssetUrl}
+            admin={materialAdminProps}
+          />
         </section>
       )}
 
@@ -953,7 +931,17 @@ export function PraiseDetailPage() {
               return (
                 <div key={m.id} className="pdf-viewer-block">
                   <div className="pdf-viewer-header">
-                    <span className="pdf-viewer-title">{title}</span>
+                    {canEditMaterialsInline ? (
+                      <MaterialInlineAdmin
+                        material={m}
+                        options={materialKindOptions}
+                        saving={saving}
+                        onUpdateKind={handleMaterialKindChange}
+                        onDelete={handleMaterialDelete}
+                      />
+                    ) : (
+                      <span className="pdf-viewer-title">{title}</span>
+                    )}
                     {pdfUrl ? (
                       <a
                         href={pdfUrl}
@@ -989,19 +977,25 @@ export function PraiseDetailPage() {
           </h2>
           <div className="material-grid">
             {chordMaterials.map(m => (
-              <a
-                key={m.id}
-                href={m.r2_key ? getAssetUrl(m.r2_key) : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="material-link"
-              >
-                <span className="material-link-icon">🎸</span>
-                <div>
-                  <div className="material-link-text">{m.material_kind_name || 'Acordes'}</div>
-                  <div className="material-link-meta">Arquivo de acordes</div>
-                </div>
-              </a>
+              <div key={m.id} className="material-card-wrap">
+                <a
+                  href={m.r2_key ? getAssetUrl(m.r2_key) : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="material-link"
+                >
+                  <span className="material-link-icon">🎸</span>
+                  <div>
+                    <div className="material-link-text">{m.material_kind_name || 'Acordes'}</div>
+                    <div className="material-link-meta">Arquivo de acordes</div>
+                  </div>
+                </a>
+                {canEditMaterialsInline ? (
+                  <div className="materials-placeholder materials-placeholder--inline">
+                    Edição de categoria — em breve
+                  </div>
+                ) : null}
+              </div>
             ))}
           </div>
         </section>

@@ -194,6 +194,8 @@ describe('PraiseDetailPage Component', () => {
         document.querySelector('audio.audio-player-element')
       ).toBeTruthy();
     });
+
+    expect(screen.queryByLabelText('Categoria do material')).toBeNull();
   });
 
   it('should render PDF links', async () => {
@@ -418,6 +420,55 @@ describe('PraiseDetailPage Component', () => {
       expect(addPanel).toBeTruthy();
       const addBtn = within(addPanel!).getByRole('button', { name: 'Adicionar material' });
       expect((addBtn as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('não exibe painel Materiais cadastrados', async () => {
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByText('Materiais (admin)')).toBeTruthy();
+      });
+
+      expect(screen.queryByRole('heading', { name: 'Materiais cadastrados' })).toBeNull();
+    });
+
+    it('exibe edição inline de categoria em Áudio e Partituras', async () => {
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByText('Partituras')).toBeTruthy();
+        expect(screen.getByLabelText('Áudio')).toBeTruthy();
+      });
+
+      const categorySelects = screen.getAllByLabelText('Categoria do material');
+      expect(categorySelects.length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole('button', { name: 'Remover' }).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('exibe placeholder de edição em Acordes quando logado', async () => {
+      const praiseWithChords = {
+        ...mockPraiseDetail,
+        materials: [
+          ...mockPraiseDetail.materials,
+          {
+            id: 'mat3',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind3',
+            material_kind_name: 'Acordes',
+            type: 'chord' as const,
+            r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat3.chord',
+            file_path_legacy: 'path/to/file.chord',
+            source_material_id: null,
+          },
+        ],
+      };
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithChords);
+
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByText('Edição de categoria — em breve')).toBeTruthy();
+      });
     });
   });
 

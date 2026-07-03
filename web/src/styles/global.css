@@ -1454,6 +1454,38 @@
   cursor: not-allowed;
 }
 
+.materials-placeholder--inline {
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.material-inline-admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.material-inline-admin-remove {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.yt-card-wrap,
+.material-card-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.material-card-wrap .materials-placeholder--inline {
+  margin-top: var(--space-2);
+}
+
 .styled-file-input {
   display: flex;
   flex-wrap: wrap;
@@ -1659,10 +1691,16 @@
 
 .audio-player-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin-bottom: var(--space-4);
+}
+
+.audio-player-header .material-inline-admin {
+  flex: 1;
+  min-width: min(100%, 200px);
 }
 
 .audio-player-track-name {
@@ -1840,8 +1878,9 @@
 
 .audio-track-item {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: 0;
   border-radius: var(--radius-md);
   background: var(--bg-inset);
   border: 1px solid var(--border-subtle);
@@ -1849,6 +1888,19 @@
   transition:
     border-color var(--duration-fast) var(--ease-out),
     background var(--duration-fast) var(--ease-out);
+}
+
+.audio-track-item-main {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.audio-track-item-main .material-inline-admin {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  align-self: center;
 }
 
 .audio-track-item:hover {
@@ -1940,11 +1992,17 @@
 
 .pdf-viewer-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
+}
+
+.pdf-viewer-header .material-inline-admin {
+  flex: 1;
+  min-width: min(100%, 200px);
 }
 
 .pdf-viewer-title {

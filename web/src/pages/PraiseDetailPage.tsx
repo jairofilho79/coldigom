@@ -51,7 +51,9 @@ export function PraiseDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(isCreate);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [savingMetadata, setSavingMetadata] = useState(false);
+  const [savingLyrics, setSavingLyrics] = useState(false);
+  const [savingMaterials, setSavingMaterials] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<Array<{ file: File; relPath: string; type: string; material_kind: string }>>([]);
@@ -164,7 +166,7 @@ export function PraiseDetailPage() {
   const canEditMaterialsInline = Boolean(userName && !isCreate);
 
   const handleMaterialKindChange = async (materialId: string, material_kind: string) => {
-    setSaving(true);
+    setSavingMaterials(true);
     setError(null);
     try {
       const updated = await updateMaterial(materialId, { material_kind });
@@ -172,12 +174,12 @@ export function PraiseDetailPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao atualizar material');
     } finally {
-      setSaving(false);
+      setSavingMaterials(false);
     }
   };
 
   const handleMaterialDelete = async (materialId: string) => {
-    setSaving(true);
+    setSavingMaterials(true);
     setError(null);
     try {
       const updated = await deleteMaterial(materialId);
@@ -185,14 +187,14 @@ export function PraiseDetailPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao remover material');
     } finally {
-      setSaving(false);
+      setSavingMaterials(false);
     }
   };
 
   const materialAdminProps = canEditMaterialsInline
     ? {
         materialKindOptions,
-        saving,
+        saving: savingMaterials,
         onUpdateKind: handleMaterialKindChange,
         onDelete: handleMaterialDelete,
       }
@@ -255,8 +257,8 @@ export function PraiseDetailPage() {
     }
   };
 
-  const savePraise = async () => {
-    setSaving(true);
+  const saveMetadata = async () => {
+    setSavingMetadata(true);
     setError(null);
     try {
       if (isCreate) {
@@ -298,15 +300,27 @@ export function PraiseDetailPage() {
           rhythm: edit.rhythm,
           tonality: edit.tonality,
           category: edit.category,
-          lyrics: edit.lyrics,
         });
         setPraise(updated);
-        setIsEditing(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao salvar');
+      setError(err instanceof Error ? err.message : 'Falha ao salvar metadados');
     } finally {
-      setSaving(false);
+      setSavingMetadata(false);
+    }
+  };
+
+  const saveLyrics = async () => {
+    if (!id || isCreate) return;
+    setSavingLyrics(true);
+    setError(null);
+    try {
+      const updated = await updatePraise(id, { lyrics: edit.lyrics });
+      setPraise(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao salvar letra');
+    } finally {
+      setSavingLyrics(false);
     }
   };
 
@@ -431,10 +445,10 @@ export function PraiseDetailPage() {
               <button
                 type="button"
                 className="auth-btn"
-                disabled={saving || (isCreate && !userName)}
-                onClick={() => void savePraise()}
+                disabled={savingMetadata || (isCreate && !userName)}
+                onClick={() => void saveMetadata()}
               >
-                {saving ? 'Salvando…' : isCreate ? 'Criar louvor' : 'Salvar'}
+                {savingMetadata ? 'Salvando…' : isCreate ? 'Criar louvor' : 'Salvar'}
               </button>
             </div>
           </div>
@@ -590,13 +604,27 @@ export function PraiseDetailPage() {
           Letra
         </h2>
         {isEditing ? (
-          <textarea
-            className="lyrics-editor"
-            value={edit.lyrics}
-            onChange={(e) => setEdit(s => ({ ...s, lyrics: e.target.value }))}
-            placeholder="Cole a letra aqui…"
-            rows={10}
-          />
+          <>
+            <textarea
+              className="lyrics-editor"
+              value={edit.lyrics}
+              onChange={(e) => setEdit(s => ({ ...s, lyrics: e.target.value }))}
+              placeholder="Cole a letra aqui…"
+              rows={10}
+            />
+            {!isCreate && id ? (
+              <div className="detail-section-actions">
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={savingLyrics}
+                  onClick={() => void saveLyrics()}
+                >
+                  {savingLyrics ? 'Salvando…' : 'Salvar'}
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : praise?.lyrics ? (
             <pre className="lyrics-content">{praise.lyrics}</pre>
           ) : (
@@ -773,10 +801,10 @@ export function PraiseDetailPage() {
                   <button
                     type="button"
                     className="auth-btn"
-                    disabled={!id || saving || !canSubmitNewMaterial(newMat)}
+                    disabled={!id || savingMaterials || !canSubmitNewMaterial(newMat)}
                     onClick={async () => {
                       if (!id || !canSubmitNewMaterial(newMat)) return;
-                      setSaving(true);
+                      setSavingMaterials(true);
                       setError(null);
                       try {
                         let updated: PraiseDetail;
@@ -800,7 +828,7 @@ export function PraiseDetailPage() {
                       } catch (err) {
                         setError(err instanceof Error ? err.message : 'Falha ao criar material');
                       } finally {
-                        setSaving(false);
+                        setSavingMaterials(false);
                       }
                     }}
                   >
@@ -935,7 +963,7 @@ export function PraiseDetailPage() {
                       <MaterialInlineAdmin
                         material={m}
                         options={materialKindOptions}
-                        saving={saving}
+                        saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
                         onDelete={handleMaterialDelete}
                       />

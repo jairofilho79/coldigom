@@ -1318,6 +1318,12 @@
   margin-top: var(--space-2);
 }
 
+.detail-section-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+
 .materials-admin {
   display: flex;
   flex-direction: column;

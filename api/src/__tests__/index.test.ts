@@ -203,6 +203,23 @@ describe('API Routes', () => {
       const json = await res.json();
       expect(json.status).toBe('ok');
     });
+
+    it('should return D1 counts on /health/db', async () => {
+      const mockDB = createMockD1({
+        first: { n: 3 },
+      });
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/health/db', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.status).toBe('ok');
+      expect(json.praises).toBe(3);
+    });
   });
 
   describe('GET /api/praises', () => {
@@ -304,6 +321,26 @@ describe('API Routes', () => {
       
       const json = await res.json();
       expect(json.data).toHaveLength(2);
+    });
+
+    it('should build valid COLLATE NOCASE order for tonality sort', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: mockPraises }),
+        first: vi.fn().mockResolvedValue({ total: 2 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?sort=tonality&order=asc', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain('ORDER BY p.tonality COLLATE NOCASE ASC');
+      expect(listQuery).not.toMatch(/ASC COLLATE NOCASE/);
     });
 
     it('should handle tag filter', async () => {

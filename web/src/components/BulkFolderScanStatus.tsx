@@ -1,5 +1,5 @@
-import type { BulkFileItem } from './scanFolder';
-import type { InferenceResult } from './index';
+import type { BulkFileItem } from '../lib/materialKindInference/scanFolder';
+import type { InferenceResult } from '../lib/materialKindInference';
 
 type BulkScanPhase = 'idle' | 'scanning' | 'done' | 'error';
 

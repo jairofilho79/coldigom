@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "generate:material-kind-aliases": "tsx scripts/generate-material-kind-aliases.ts"
   },
   "dependencies": {
     "react": "^19.2.4",

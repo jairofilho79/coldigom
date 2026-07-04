@@ -8,6 +8,12 @@ import { StyledFileInput } from '../components/StyledFileInput';
 import { Select } from '../components/Select';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { groupMaterialsByType } from '../lib/materials';
+import {
+  inferMaterialKind,
+  inferTypeFromExtension,
+  UNKNOWN_MATERIAL_KIND_ID,
+  type InferenceResult,
+} from '../lib/materialKindInference';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
 
 const MATERIAL_TYPE_OPTIONS = [
@@ -40,6 +46,50 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   return false;
 }
 
+type BulkFileItem = {
+  file: File;
+  relPath: string;
+  type: string;
+  material_kind: string;
+  inference: InferenceResult;
+};
+
+function mapFolderToBulkFiles(files: File[], materialKinds: MaterialKind[]): BulkFileItem[] {
+  const catalogIds = new Set(materialKinds.map((k) => k.id));
+  if (!catalogIds.has(UNKNOWN_MATERIAL_KIND_ID)) {
+    catalogIds.add(UNKNOWN_MATERIAL_KIND_ID);
+  }
+  return files.map((f) => {
+    const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
+    const inference = inferMaterialKind({ fileName: f.name, relPath: rel, catalogIds });
+    return {
+      file: f,
+      relPath: rel,
+      type: inferTypeFromExtension(f.name),
+      material_kind: inference.materialKindId,
+      inference,
+    };
+  });
+}
+
+function InferenceBadge({ inference }: { inference: InferenceResult }) {
+  if (inference.method === 'unknown') {
+    return (
+      <span className="bulk-inference bulk-inference-unknown" title="Categoria não identificada pelo nome">
+        Desconhecido
+      </span>
+    );
+  }
+  const level = inference.confidence >= 0.9 ? 'high' : 'medium';
+  const pct = Math.round(inference.confidence * 100);
+  const title = `${pct}% (${inference.method})${inference.matchedOn ? ` — ${inference.matchedOn}` : ''}`;
+  return (
+    <span className={`bulk-inference bulk-inference-${level}`} title={title}>
+      Auto {pct}%
+    </span>
+  );
+}
+
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -56,7 +106,7 @@ export function PraiseDetailPage() {
   const [savingMaterials, setSavingMaterials] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
-  const [bulkFiles, setBulkFiles] = useState<Array<{ file: File; relPath: string; type: string; material_kind: string }>>([]);
+  const [bulkFiles, setBulkFiles] = useState<BulkFileItem[]>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
   const [tagToAdd, setTagToAdd] = useState('');
@@ -687,24 +737,15 @@ export function PraiseDetailPage() {
               label="Escolher pasta"
               directory
               onChange={(files) => {
-                const defaultKind = materialKinds[0]?.id || '';
-                const mapped = files.map((f) => {
-                  const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
-                  const ext = f.name.split('.').pop()?.toLowerCase() || '';
-                  const inferred = ext === 'mp3' || ext === 'pdf' || ext === 'chord' ? ext : ext || 'bin';
-                  return {
-                    file: f,
-                    relPath: rel,
-                    type: inferred,
-                    material_kind: defaultKind,
-                  };
-                });
-                setBulkFiles(mapped);
+                setBulkFiles(mapFolderToBulkFiles(files, materialKinds));
               }}
             />
             {bulkFiles.length > 0 && (
               <div className="lyrics-empty">
                 {bulkFiles.length} arquivo(s) na fila — serão enviados ao criar o louvor.
+                {bulkFiles.some((f) => f.inference.method === 'unknown') && (
+                  <> Revise categorias marcadas como Desconhecido após salvar.</>
+                )}
               </div>
             )}
           </div>
@@ -842,25 +883,13 @@ export function PraiseDetailPage() {
               <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
               <p className="materials-panel-help">
                 Envie vários arquivos de uma vez selecionando uma pasta no computador.
-                O tipo de cada arquivo é detectado pela extensão; você pode ajustar a categoria antes de enviar.
+                A categoria de cada arquivo é inferida pelo nome; revise itens marcados como Desconhecido antes de enviar.
               </p>
               <StyledFileInput
                 label="Escolher pasta"
                 directory
                 onChange={(files) => {
-                  const defaultKind = materialKinds[0]?.id || '';
-                  const mapped = files.map((f) => {
-                    const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
-                    const ext = f.name.split('.').pop()?.toLowerCase() || '';
-                    const inferred = ext === 'mp3' || ext === 'pdf' || ext === 'chord' ? ext : ext || 'bin';
-                    return {
-                      file: f,
-                      relPath: rel,
-                      type: inferred,
-                      material_kind: defaultKind,
-                    };
-                  });
-                  setBulkFiles(mapped);
+                  setBulkFiles(mapFolderToBulkFiles(files, materialKinds));
                 }}
               />
 
@@ -873,6 +902,7 @@ export function PraiseDetailPage() {
                           <div className="bulk-name">{it.relPath}</div>
                           <div className="bulk-meta">
                             <span className="pill">{it.type}</span>
+                            <InferenceBadge inference={it.inference} />
                             <span className="bulk-size">{Math.round(it.file.size / 1024)} KB</span>
                           </div>
                         </div>

@@ -19,6 +19,7 @@ vi.mock('../services/api', async (importOriginal) => {
       { id: 'kind1', name: 'Partitura' },
       { id: 'kind2', name: 'Áudio' },
       { id: 'kind3', name: 'Cifra' },
+      { id: 'c7454ea9-3ae0-4548-9cc5-c4187b80641a', name: 'Desconhecido' },
     ]),
     createPraise: vi.fn(),
     updatePraise: vi.fn(),
@@ -375,7 +376,7 @@ describe('PraiseDetailPage Component', () => {
       });
       expect(screen.getByRole('heading', { name: 'Adicionar material' })).toBeTruthy();
       expect(screen.getByRole('heading', { name: 'Importação em lote (pasta)' })).toBeTruthy();
-      expect(screen.getByText(/Envie vários arquivos de uma vez/)).toBeTruthy();
+      expect(screen.getByText(/A categoria de cada arquivo é inferida pelo nome/)).toBeTruthy();
     });
 
     it('usa PDF como tipo padrão e mostra seletor de arquivo', async () => {

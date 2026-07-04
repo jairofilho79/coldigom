@@ -938,6 +938,7 @@
   margin-bottom: var(--space-8);
   box-shadow: var(--shadow-md);
   position: relative;
+  z-index: 2;
   overflow: visible;
 }
 

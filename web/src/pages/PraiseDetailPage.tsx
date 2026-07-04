@@ -1,19 +1,24 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
+import {
+  BulkFolderScanStatus,
+  InferenceBadge,
+  INITIAL_BULK_SCAN,
+  type BulkScanState,
+} from '../components/BulkFolderScanStatus';
 import { Select } from '../components/Select';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { groupMaterialsByType } from '../lib/materials';
 import {
-  inferMaterialKind,
-  inferTypeFromExtension,
-  UNKNOWN_MATERIAL_KIND_ID,
-  type InferenceResult,
-} from '../lib/materialKindInference';
+  folderNameFromFiles,
+  scanFolderFilesAsync,
+  type BulkFileItem,
+} from '../lib/materialKindInference/scanFolder';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
 
 const MATERIAL_TYPE_OPTIONS = [
@@ -46,47 +51,52 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   return false;
 }
 
-type BulkFileItem = {
-  file: File;
-  relPath: string;
-  type: string;
-  material_kind: string;
-  inference: InferenceResult;
-};
+const BULK_LIST_PREVIEW = 25;
 
-function mapFolderToBulkFiles(files: File[], materialKinds: MaterialKind[]): BulkFileItem[] {
-  const catalogIds = new Set(materialKinds.map((k) => k.id));
-  if (!catalogIds.has(UNKNOWN_MATERIAL_KIND_ID)) {
-    catalogIds.add(UNKNOWN_MATERIAL_KIND_ID);
-  }
-  return files.map((f) => {
-    const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
-    const inference = inferMaterialKind({ fileName: f.name, relPath: rel, catalogIds });
-    return {
-      file: f,
-      relPath: rel,
-      type: inferTypeFromExtension(f.name),
-      material_kind: inference.materialKindId,
-      inference,
-    };
-  });
-}
+function BulkFilePreviewList({
+  files,
+  materialKindOptions,
+  onKindChange,
+  editable = true,
+}: {
+  files: BulkFileItem[];
+  materialKindOptions: Array<{ value: string; label: string }>;
+  onKindChange?: (index: number, material_kind: string) => void;
+  editable?: boolean;
+}) {
+  if (files.length === 0) return null;
 
-function InferenceBadge({ inference }: { inference: InferenceResult }) {
-  if (inference.method === 'unknown') {
-    return (
-      <span className="bulk-inference bulk-inference-unknown" title="Categoria não identificada pelo nome">
-        Desconhecido
-      </span>
-    );
-  }
-  const level = inference.confidence >= 0.9 ? 'high' : 'medium';
-  const pct = Math.round(inference.confidence * 100);
-  const title = `${pct}% (${inference.method})${inference.matchedOn ? ` — ${inference.matchedOn}` : ''}`;
   return (
-    <span className={`bulk-inference bulk-inference-${level}`} title={title}>
-      Auto {pct}%
-    </span>
+    <div className="bulk-list">
+      {files.slice(0, BULK_LIST_PREVIEW).map((it, idx) => (
+        <div key={`${it.relPath}-${idx}`} className="bulk-row">
+          <div className="bulk-main">
+            <div className="bulk-name">{it.relPath}</div>
+            <div className="bulk-meta">
+              <span className="pill">{it.type}</span>
+              <InferenceBadge inference={it.inference} />
+              <span className="bulk-size">{Math.round(it.file.size / 1024)} KB</span>
+            </div>
+          </div>
+          {editable && onKindChange ? (
+            <SearchableSelect
+              compact
+              value={it.material_kind}
+              onChange={(v) => onKindChange(idx, v)}
+              options={materialKindOptions}
+              aria-label="Categoria do material"
+            />
+          ) : (
+            <span className="bulk-kind-readonly pill">
+              {materialKindOptions.find((o) => o.value === it.material_kind)?.label ?? '—'}
+            </span>
+          )}
+        </div>
+      ))}
+      {files.length > BULK_LIST_PREVIEW && (
+        <div className="lyrics-empty">… e mais {files.length - BULK_LIST_PREVIEW} arquivo(s)</div>
+      )}
+    </div>
   );
 }
 
@@ -108,6 +118,11 @@ export function PraiseDetailPage() {
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<BulkFileItem[]>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkScan, setBulkScan] = useState<BulkScanState>(INITIAL_BULK_SCAN);
+  const bulkScanAbortRef = useRef<AbortController | null>(null);
+  const pendingFolderFilesRef = useRef<File[] | null>(null);
+  const lastFolderFilesRef = useRef<File[]>([]);
+  const folderInputRetryRef = useRef<(() => void) | null>(null);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
@@ -186,6 +201,97 @@ export function PraiseDetailPage() {
     () => materialKinds.map((k) => ({ value: k.id, label: k.name })),
     [materialKinds]
   );
+
+  const handleBulkKindChange = useCallback((index: number, material_kind: string) => {
+    setBulkFiles((list) => list.map((x, i) => (i === index ? { ...x, material_kind } : x)));
+  }, []);
+
+  const runFolderScan = useCallback(async (files: File[]) => {
+    if (files.length === 0) {
+      setBulkFiles([]);
+      setBulkScan(INITIAL_BULK_SCAN);
+      lastFolderFilesRef.current = [];
+      return;
+    }
+
+    lastFolderFilesRef.current = files;
+    const folderName = folderNameFromFiles(files);
+
+    if (materialKinds.length === 0) {
+      pendingFolderFilesRef.current = files;
+      setBulkFiles([]);
+      setBulkScan({
+        phase: 'error',
+        processed: 0,
+        total: files.length,
+        folderName,
+        error: 'Catálogo de categorias ainda carregando. Aguarde um instante e clique em “Tentar novamente”.',
+      });
+      return;
+    }
+
+    pendingFolderFilesRef.current = null;
+    bulkScanAbortRef.current?.abort();
+    const ac = new AbortController();
+    bulkScanAbortRef.current = ac;
+
+    setBulkFiles([]);
+    setBulkScan({
+      phase: 'scanning',
+      processed: 0,
+      total: files.length,
+      folderName,
+      error: null,
+    });
+
+    try {
+      const mapped = await scanFolderFilesAsync(
+        files,
+        materialKinds,
+        (processed, total) => {
+          setBulkScan((s) => ({ ...s, processed, total }));
+        },
+        ac.signal
+      );
+      setBulkFiles(mapped);
+      setBulkScan({
+        phase: 'done',
+        processed: mapped.length,
+        total: mapped.length,
+        folderName,
+        error: null,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      setBulkScan({
+        phase: 'error',
+        processed: 0,
+        total: files.length,
+        folderName,
+        error: err instanceof Error ? err.message : 'Falha ao analisar a pasta',
+      });
+    }
+  }, [materialKinds]);
+
+  useEffect(() => {
+    folderInputRetryRef.current = () => {
+      const files = pendingFolderFilesRef.current ?? lastFolderFilesRef.current;
+      if (files.length) void runFolderScan(files);
+    };
+  }, [runFolderScan]);
+
+  useEffect(() => {
+    const pending = pendingFolderFilesRef.current;
+    if (pending?.length && materialKinds.length > 0) {
+      void runFolderScan(pending);
+    }
+  }, [materialKinds, runFolderScan]);
+
+  useEffect(() => {
+    return () => {
+      bulkScanAbortRef.current?.abort();
+    };
+  }, []);
   const assignedTagIds = useMemo(
     () => (isCreate ? new Set(pendingTagIds) : new Set((praise?.tags || []).map((t) => t.id))),
     [isCreate, pendingTagIds, praise?.tags]
@@ -341,6 +447,7 @@ export function PraiseDetailPage() {
         setPraise(created);
         setIsEditing(false);
         setBulkFiles([]);
+        setBulkScan(INITIAL_BULK_SCAN);
         setPendingTagIds([]);
       } else if (id) {
         const updated = await updatePraise(id, {
@@ -737,17 +844,35 @@ export function PraiseDetailPage() {
             <StyledFileInput
               label="Escolher pasta"
               directory
+              disabled={bulkScan.phase === 'scanning'}
+              selectedName={
+                bulkScan.folderName
+                  ? `${bulkScan.folderName} (${bulkScan.total || bulkFiles.length} arquivo(s))`
+                  : bulkFiles.length > 0
+                    ? `${bulkFiles.length} arquivo(s)`
+                    : null
+              }
               onChange={(files) => {
-                setBulkFiles(mapFolderToBulkFiles(files, materialKinds));
+                void runFolderScan(files);
               }}
             />
-            {bulkFiles.length > 0 && (
-              <div className="lyrics-empty">
-                {bulkFiles.length} arquivo(s) na fila — serão enviados ao criar o louvor.
-                {bulkFiles.some((f) => f.inference.method === 'unknown') && (
-                  <> Revise categorias marcadas como Desconhecido após salvar.</>
-                )}
-              </div>
+            <BulkFolderScanStatus
+              scan={bulkScan}
+              files={bulkFiles}
+              onRetry={() => folderInputRetryRef.current?.()}
+            />
+            {bulkScan.phase === 'done' && bulkFiles.length > 0 && (
+              <>
+                <BulkFilePreviewList
+                  files={bulkFiles}
+                  materialKindOptions={materialKindOptions}
+                  onKindChange={handleBulkKindChange}
+                  editable
+                />
+                <p className="bulk-scan-hint">
+                  Os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
+                </p>
+              </>
             )}
           </div>
         </section>
@@ -889,41 +1014,31 @@ export function PraiseDetailPage() {
               <StyledFileInput
                 label="Escolher pasta"
                 directory
+                disabled={bulkScan.phase === 'scanning' || bulkUploading}
+                selectedName={
+                  bulkScan.folderName
+                    ? `${bulkScan.folderName} (${bulkScan.total || bulkFiles.length} arquivo(s))`
+                    : bulkFiles.length > 0
+                      ? `${bulkFiles.length} arquivo(s)`
+                      : null
+                }
                 onChange={(files) => {
-                  setBulkFiles(mapFolderToBulkFiles(files, materialKinds));
+                  void runFolderScan(files);
                 }}
               />
+              <BulkFolderScanStatus
+                scan={bulkScan}
+                files={bulkFiles}
+                onRetry={() => folderInputRetryRef.current?.()}
+              />
 
-              {bulkFiles.length > 0 && (
+              {bulkScan.phase === 'done' && bulkFiles.length > 0 && (
                 <>
-                  <div className="bulk-list">
-                    {bulkFiles.slice(0, 25).map((it, idx) => (
-                      <div key={`${it.relPath}-${idx}`} className="bulk-row">
-                        <div className="bulk-main">
-                          <div className="bulk-name">{it.relPath}</div>
-                          <div className="bulk-meta">
-                            <span className="pill">{it.type}</span>
-                            <InferenceBadge inference={it.inference} />
-                            <span className="bulk-size">{Math.round(it.file.size / 1024)} KB</span>
-                          </div>
-                        </div>
-                        <SearchableSelect
-                          compact
-                          value={it.material_kind}
-                          onChange={(v) => {
-                            setBulkFiles((list) =>
-                              list.map((x, i) => (i === idx ? { ...x, material_kind: v } : x))
-                            );
-                          }}
-                          options={materialKindOptions}
-                          aria-label="Categoria do material"
-                        />
-                      </div>
-                    ))}
-                    {bulkFiles.length > 25 && (
-                      <div className="lyrics-empty">… e mais {bulkFiles.length - 25} arquivo(s)</div>
-                    )}
-                  </div>
+                  <BulkFilePreviewList
+                    files={bulkFiles}
+                    materialKindOptions={materialKindOptions}
+                    onKindChange={handleBulkKindChange}
+                  />
 
                   <div className="edit-actions">
                     <button
@@ -946,6 +1061,7 @@ export function PraiseDetailPage() {
                           );
                           setPraise(updated);
                           setBulkFiles([]);
+                          setBulkScan(INITIAL_BULK_SCAN);
                         } catch (err) {
                           setError(err instanceof Error ? err.message : 'Falha na importação em lote');
                         } finally {

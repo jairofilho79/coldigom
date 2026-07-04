@@ -1626,6 +1626,96 @@
   background: var(--bg-muted, rgba(128, 128, 128, 0.12));
 }
 
+.bulk-scan-status {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.bulk-scan-status--scanning {
+  border-color: color-mix(in srgb, var(--color-accent, #5c7cfa) 35%, var(--border-subtle));
+}
+
+.bulk-scan-status--done {
+  border-color: color-mix(in srgb, var(--color-success, #2d6a4f) 35%, var(--border-subtle));
+}
+
+.bulk-scan-status--error {
+  border-color: color-mix(in srgb, var(--color-danger, #c1121f) 35%, var(--border-subtle));
+}
+
+.bulk-scan-status-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.bulk-scan-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--color-accent, #5c7cfa);
+  border-radius: 50%;
+  animation: bulk-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes bulk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bulk-scan-progress {
+  margin-top: var(--space-2);
+  height: 6px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--border-subtle);
+  overflow: hidden;
+}
+
+.bulk-scan-progress-bar {
+  height: 100%;
+  background: var(--color-accent, #5c7cfa);
+  border-radius: inherit;
+  transition: width 120ms ease-out;
+}
+
+.bulk-scan-message {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.bulk-scan-hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.bulk-scan-retry {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-accent, #5c7cfa);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bulk-kind-readonly {
+  justify-self: end;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .yt-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

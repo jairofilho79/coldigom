@@ -595,11 +595,12 @@ export function PraiseDetailPage() {
             ))}
             {availableTags.length > 0 ? (
               <div className="detail-tag-add">
-                <Select
+                <SearchableSelect
                   value={tagToAdd}
                   onChange={setTagToAdd}
                   options={tagSelectOptions}
                   placeholder="Adicionar tag…"
+                  searchPlaceholder="Buscar tag…"
                   disabled={tagsBusy}
                   aria-label="Adicionar tag"
                 />

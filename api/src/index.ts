@@ -283,6 +283,22 @@ type SortField = typeof VALID_SORT_FIELDS[number];
 
 const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality', 'category'];
 
+/** NULL/empty values always sort last, regardless of ASC/DESC. */
+function buildOrderClause(sort: SortField, order: 'ASC' | 'DESC'): string {
+  if (sort === 'created_at') {
+    return `ORDER BY p.created_at ${order}`;
+  }
+
+  const emptyLast = `CASE WHEN p.${sort} IS NULL OR p.${sort} = '' THEN 1 ELSE 0 END ASC`;
+
+  if (sort === 'number') {
+    return `ORDER BY ${emptyLast}, CAST(p.number AS INTEGER) ${order}`;
+  }
+
+  const collate = NOCASE_FIELDS.includes(sort) ? ' COLLATE NOCASE' : '';
+  return `ORDER BY ${emptyLast}, p.${sort}${collate} ${order}`;
+}
+
 /** Build FTS5 MATCH string (prefix terms, ANDed). */
 function buildFtsMatchQuery(search: string): string {
   const terms = search
@@ -423,10 +439,7 @@ app.get('/api/praises', async (c) => {
       bindings.push(tags!.length);
     }
 
-    const collate = NOCASE_FIELDS.includes(sort) ? ' COLLATE NOCASE' : '';
-    const orderClause = sort === 'created_at'
-      ? `ORDER BY p.created_at ${order}`
-      : `ORDER BY p.${sort}${collate} ${order}`;
+    const orderClause = buildOrderClause(sort, order);
 
     if (whereClause || hasTagFilter) {
       query = `

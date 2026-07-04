@@ -339,8 +339,49 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200);
       const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
-      expect(listQuery).toContain('ORDER BY p.tonality COLLATE NOCASE ASC');
+      expect(listQuery).toContain('ORDER BY CASE WHEN p.tonality IS NULL OR p.tonality = \'\' THEN 1 ELSE 0 END ASC');
+      expect(listQuery).toContain('p.tonality COLLATE NOCASE ASC');
       expect(listQuery).not.toMatch(/ASC COLLATE NOCASE/);
+    });
+
+    it('should put empty values last for desc sort too', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: mockPraises }),
+        first: vi.fn().mockResolvedValue({ total: 2 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?sort=author&order=desc', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain('CASE WHEN p.author IS NULL OR p.author = \'\' THEN 1 ELSE 0 END ASC');
+      expect(listQuery).toContain('p.author COLLATE NOCASE DESC');
+    });
+
+    it('should use numeric cast for number sort with empty last', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: mockPraises }),
+        first: vi.fn().mockResolvedValue({ total: 2 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?sort=number&order=asc', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain('CASE WHEN p.number IS NULL OR p.number = \'\' THEN 1 ELSE 0 END ASC');
+      expect(listQuery).toContain('CAST(p.number AS INTEGER) ASC');
     });
 
     it('should handle tag filter', async () => {

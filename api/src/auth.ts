@@ -41,6 +41,12 @@ const LEGACY_SESSION_COOKIE = 'coldigom_session';
 const PKCE_VERIFIER_COOKIE = 'coldigom_pkce_verifier';
 const STATE_COOKIE = 'coldigom_oauth_state';
 const REDIRECT_COOKIE = 'coldigom_post_login_redirect';
+/** `login` (default) | `drive` — selects callback behavior after Google redirects */
+const OAUTH_PURPOSE_COOKIE = 'coldigom_oauth_purpose';
+
+export const DRIVE_READONLY_SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
+const LOGIN_SCOPES = 'openid email profile';
+const DRIVE_SCOPES = `${LOGIN_SCOPES} ${DRIVE_READONLY_SCOPE}`;
 
 /** Access token lifetime (seconds) */
 export const ACCESS_TTL_SEC = 300;
@@ -141,10 +147,13 @@ export async function buildGoogleAuthorizeRedirect(params: {
   clientId: string;
   redirectTo: string;
   cookieSameSite?: 'Lax' | 'Strict' | 'None';
+  /** Default login identity; `drive` requests drive.readonly + offline refresh token */
+  purpose?: 'login' | 'drive';
 }): Promise<{
   location: string;
   setCookies: string[];
 }> {
+  const purpose = params.purpose ?? 'login';
   const state = randomString(32);
   const codeVerifier = randomString(48);
   const codeChallenge = await sha256Base64Url(codeVerifier);
@@ -154,11 +163,17 @@ export async function buildGoogleAuthorizeRedirect(params: {
   url.searchParams.set('client_id', params.clientId);
   url.searchParams.set('redirect_uri', redirectUri);
   url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', 'openid email profile');
+  url.searchParams.set('scope', purpose === 'drive' ? DRIVE_SCOPES : LOGIN_SCOPES);
   url.searchParams.set('state', state);
   url.searchParams.set('code_challenge', codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
-  url.searchParams.set('prompt', 'select_account');
+  if (purpose === 'drive') {
+    url.searchParams.set('access_type', 'offline');
+    url.searchParams.set('include_granted_scopes', 'true');
+    url.searchParams.set('prompt', 'consent');
+  } else {
+    url.searchParams.set('prompt', 'select_account');
+  }
 
   const sameSite = params.cookieSameSite ?? 'Lax';
   const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
@@ -166,6 +181,7 @@ export async function buildGoogleAuthorizeRedirect(params: {
     buildSetCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, codeVerifier, { maxAgeSeconds: 600, sameSite, secure }),
     buildSetCookie(params.requestUrl, STATE_COOKIE, state, { maxAgeSeconds: 600, sameSite, secure }),
     buildSetCookie(params.requestUrl, REDIRECT_COOKIE, params.redirectTo, { maxAgeSeconds: 600, sameSite, secure }),
+    buildSetCookie(params.requestUrl, OAUTH_PURPOSE_COOKIE, purpose, { maxAgeSeconds: 600, sameSite, secure }),
   ];
 
   return { location: url.toString(), setCookies };
@@ -177,7 +193,7 @@ async function exchangeCodeForTokens(params: {
   codeVerifier: string;
   clientId: string;
   clientSecret?: string;
-}): Promise<{ id_token: string }> {
+}): Promise<{ id_token: string; access_token?: string; refresh_token?: string; scope?: string }> {
   const redirectUri = new URL('/auth/callback', params.baseUrl).toString();
 
   const body = new URLSearchParams();
@@ -197,11 +213,21 @@ async function exchangeCodeForTokens(params: {
     const text = await res.text().catch(() => '');
     throw new Error(`Google token exchange failed (${res.status}): ${text}`);
   }
-  const json = (await res.json()) as { id_token?: string };
+  const json = (await res.json()) as {
+    id_token?: string;
+    access_token?: string;
+    refresh_token?: string;
+    scope?: string;
+  };
   if (!json?.id_token) {
     throw new Error('Google token exchange missing id_token');
   }
-  return { id_token: json.id_token };
+  return {
+    id_token: json.id_token,
+    access_token: json.access_token,
+    refresh_token: json.refresh_token,
+    scope: json.scope,
+  };
 }
 
 export async function verifyGoogleIdToken(params: {
@@ -403,6 +429,8 @@ export async function handleOAuthCallback(params: {
   redirectTo: string;
   setCookies: string[];
   user: AuthUser;
+  purpose: 'login' | 'drive';
+  googleRefreshToken?: string;
 }> {
   const code = params.requestUrl.searchParams.get('code');
   const state = params.requestUrl.searchParams.get('state');
@@ -411,11 +439,13 @@ export async function handleOAuthCallback(params: {
   const cookieState = getCookie(params.request, STATE_COOKIE);
   const verifier = getCookie(params.request, PKCE_VERIFIER_COOKIE);
   const redirectTo = getCookie(params.request, REDIRECT_COOKIE) || '/';
+  const purposeRaw = getCookie(params.request, OAUTH_PURPOSE_COOKIE);
+  const purpose: 'login' | 'drive' = purposeRaw === 'drive' ? 'drive' : 'login';
 
   if (!cookieState || cookieState !== state) throw new Error('Invalid state');
   if (!verifier) throw new Error('Missing PKCE verifier');
 
-  const { id_token } = await exchangeCodeForTokens({
+  const tokenResponse = await exchangeCodeForTokens({
     baseUrl: params.baseUrl,
     code,
     codeVerifier: verifier,
@@ -423,7 +453,7 @@ export async function handleOAuthCallback(params: {
     clientSecret: params.clientSecret,
   });
 
-  const claims = await verifyGoogleIdToken({ idToken: id_token, clientId: params.clientId });
+  const claims = await verifyGoogleIdToken({ idToken: tokenResponse.id_token, clientId: params.clientId });
   if (!claims?.sub) throw new Error('Invalid id_token payload');
 
   const user: AuthUser = {
@@ -432,6 +462,37 @@ export async function handleOAuthCallback(params: {
     name: claims.name,
     picture: claims.picture,
   };
+
+  const sameSite = params.cookieSameSite ?? 'Lax';
+  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
+  const opts = { sameSite, secure };
+
+  if (purpose === 'drive') {
+    const sessionUser = await resolveUserFromCookies({
+      request: params.request,
+      jwtSecret: params.jwtSecret,
+    });
+    if (!sessionUser) throw new Error('Must be logged in to connect Drive');
+    if (sessionUser.sub !== user.sub) {
+      throw new Error('Drive Google account must match the logged-in user');
+    }
+    if (!tokenResponse.refresh_token) {
+      throw new Error('Google did not return a Drive refresh token; revoke Coldigom access in Google Account and try again');
+    }
+    const setCookies = [
+      clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, opts),
+      clearCookie(params.requestUrl, STATE_COOKIE, opts),
+      clearCookie(params.requestUrl, REDIRECT_COOKIE, opts),
+      clearCookie(params.requestUrl, OAUTH_PURPOSE_COOKIE, opts),
+    ];
+    return {
+      redirectTo,
+      setCookies,
+      user,
+      purpose: 'drive',
+      googleRefreshToken: tokenResponse.refresh_token,
+    };
+  }
 
   const rawRefresh = randomString(48);
   await insertRefreshTokenRow({
@@ -444,9 +505,6 @@ export async function handleOAuthCallback(params: {
   const jti = crypto.randomUUID();
   const accessJwt = await signAccessJwt({ jwtSecret: params.jwtSecret, user, jti });
 
-  const sameSite = params.cookieSameSite ?? 'Lax';
-  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
-  const opts = { sameSite, secure };
   const setCookies = [
     buildSetCookie(params.requestUrl, ACCESS_COOKIE, accessJwt, {
       maxAgeSeconds: ACCESS_TTL_SEC,
@@ -460,9 +518,10 @@ export async function handleOAuthCallback(params: {
     clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, opts),
     clearCookie(params.requestUrl, STATE_COOKIE, opts),
     clearCookie(params.requestUrl, REDIRECT_COOKIE, opts),
+    clearCookie(params.requestUrl, OAUTH_PURPOSE_COOKIE, opts),
   ];
 
-  return { redirectTo, setCookies, user };
+  return { redirectTo, setCookies, user, purpose: 'login' };
 }
 
 /** Resolve user from access cookie, legacy session cookie, or null */

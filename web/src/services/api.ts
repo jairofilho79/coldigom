@@ -225,6 +225,95 @@ export async function bulkUploadMaterials(
   return response.data;
 }
 
+export function getDriveConnectUrl(redirectTo: string): string {
+  const params = new URLSearchParams({ redirect: redirectTo });
+  return `${API_BASE_URL}/auth/drive/connect?${params}`;
+}
+
+export async function getDriveStatus(): Promise<{ connected: boolean }> {
+  return fetchJson<{ connected: boolean }>(`${API_BASE_URL}/api/drive/status`);
+}
+
+export type DriveScanFile = {
+  drive_file_id: string;
+  name: string;
+  rel_path: string;
+  mime_type?: string | null;
+  size_bytes?: number | null;
+};
+
+export type DriveScanResult = {
+  id: string;
+  status: string;
+  error?: string | null;
+  files: DriveScanFile[];
+  skipped: Array<{ path: string; reason: string }>;
+};
+
+export async function startDriveScan(url: string): Promise<DriveScanResult> {
+  const response = await fetchJson<{ data: DriveScanResult }>(
+    `${API_BASE_URL}/api/drive/scans`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url }),
+    }
+  );
+  return response.data;
+}
+
+export type ImportJobSummary = {
+  id: string;
+  praise_id: string;
+  status: string;
+  total_count: number;
+  done_count: number;
+  failed_count: number;
+  skipped_count: number;
+  items?: Array<{
+    id: string;
+    drive_file_id: string;
+    file_path_legacy: string | null;
+    status: string;
+    error: string | null;
+  }>;
+};
+
+export async function startDriveImport(
+  praiseId: string,
+  items: Array<{
+    drive_file_id: string;
+    material_kind: string;
+    type: string;
+    file_path_legacy?: string;
+  }>
+): Promise<ImportJobSummary> {
+  const response = await fetchJson<{ data: ImportJobSummary }>(
+    `${API_BASE_URL}/api/praises/${praiseId}/materials/drive-import`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ items }),
+    }
+  );
+  return response.data;
+}
+
+export async function getImportJob(jobId: string): Promise<ImportJobSummary> {
+  const response = await fetchJson<{ data: ImportJobSummary }>(
+    `${API_BASE_URL}/api/import-jobs/${jobId}`
+  );
+  return response.data;
+}
+
+export async function retryFailedImportItems(jobId: string): Promise<{ retried: number }> {
+  const response = await fetchJson<{ data: { retried: number } }>(
+    `${API_BASE_URL}/api/import-jobs/${jobId}/retry-failed`,
+    { method: 'POST' }
+  );
+  return response.data;
+}
+
 export async function getMaterialKinds(): Promise<MaterialKind[]> {
   const response = await fetchJson<ApiResponse<MaterialKind[]>>(
     `${API_BASE_URL}/api/materials/kinds`

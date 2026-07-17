@@ -2,11 +2,15 @@ import { inferMaterialKind, inferTypeFromExtension, UNKNOWN_MATERIAL_KIND_ID } f
 import type { InferenceResult } from './index';
 
 export type BulkFileItem = {
-  file: File;
+  /** Present for local folder import */
+  file?: File;
+  /** Present for Google Drive import */
+  driveFileId?: string;
   relPath: string;
   type: string;
   material_kind: string;
   inference: InferenceResult;
+  sizeBytes?: number;
 };
 
 export type MaterialKindRef = { id: string; name: string };
@@ -39,6 +43,26 @@ export function mapSingleBulkFile(
     type: inferTypeFromExtension(f.name),
     material_kind: inference.materialKindId,
     inference,
+    sizeBytes: f.size,
+  };
+}
+
+export function mapDriveScanFile(
+  f: { drive_file_id: string; name: string; rel_path: string; size_bytes?: number | null },
+  catalogIds: Set<string>
+): BulkFileItem {
+  const inference = inferMaterialKind({
+    fileName: f.name,
+    relPath: f.rel_path,
+    catalogIds,
+  });
+  return {
+    driveFileId: f.drive_file_id,
+    relPath: f.rel_path,
+    type: inferTypeFromExtension(f.name),
+    material_kind: inference.materialKindId,
+    inference,
+    sizeBytes: f.size_bytes ?? undefined,
   };
 }
 
@@ -68,6 +92,36 @@ export async function scanFolderFilesAsync(
       results.push(mapSingleBulkFile(f, catalogIds));
     }
 
+    onProgress(Math.min(i + batch.length, total), total);
+    await yieldToUi();
+  }
+
+  return results;
+}
+
+export async function mapDriveFilesAsync(
+  files: Array<{ drive_file_id: string; name: string; rel_path: string; size_bytes?: number | null }>,
+  materialKinds: MaterialKindRef[],
+  onProgress: (processed: number, total: number) => void,
+  signal?: AbortSignal
+): Promise<BulkFileItem[]> {
+  const catalogIds = new Set(materialKinds.map((k) => k.id));
+  if (!catalogIds.has(UNKNOWN_MATERIAL_KIND_ID)) {
+    catalogIds.add(UNKNOWN_MATERIAL_KIND_ID);
+  }
+
+  const results: BulkFileItem[] = [];
+  const total = files.length;
+  onProgress(0, total);
+
+  for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    if (signal?.aborted) {
+      throw new DOMException('Scan cancelled', 'AbortError');
+    }
+    const batch = files.slice(i, i + BATCH_SIZE);
+    for (const f of batch) {
+      results.push(mapDriveScanFile(f, catalogIds));
+    }
     onProgress(Math.min(i + batch.length, total), total);
     await yieldToUi();
   }

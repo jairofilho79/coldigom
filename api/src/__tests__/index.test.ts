@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { SignJWT } from 'jose';
 import { unzipSync } from 'fflate';
 import yaml from 'js-yaml';
-import app from '../index';
+import { app } from '../index';
 
 
 // Mock data

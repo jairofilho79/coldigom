@@ -12,7 +12,7 @@ Use o comando global **`wrangler`** (4.x). Não use `npx wrangler` (resolve vers
 ## 1. Google Cloud Console
 
 1. Crie ou selecione um projeto em [Google Cloud Console](https://console.cloud.google.com/).
-2. **APIs e serviços → Tela de consentimento OAuth**: tipo Externo (ou Interno se Workspace); escopos `openid`, `email`, `profile`; adicione **usuários de teste** enquanto o app estiver em Testando.
+2. **APIs e serviços → Tela de consentimento OAuth**: tipo Externo (ou Interno se Workspace); escopos `openid`, `email`, `profile` (e `drive.readonly` para importação do Drive — ver [DRIVE_SETUP.md](./DRIVE_SETUP.md)); adicione **usuários de teste** enquanto o app estiver em Testando.
 3. **Credenciais → Criar ID do cliente OAuth → Aplicativo da Web**:
    - **URI de redirecionamento autorizado** (exato):
      ```

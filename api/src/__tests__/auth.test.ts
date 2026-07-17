@@ -58,5 +58,21 @@ describe('auth cookie policy', () => {
       expect(c).toContain('Secure');
     }
   });
-});
 
+  it('buildGoogleAuthorizeRedirect drive purpose requests offline consent', async () => {
+    const requestUrl = new URL('https://coldigom-api.example/auth/drive/connect');
+    const { location, setCookies } = await buildGoogleAuthorizeRedirect({
+      requestUrl,
+      baseUrl: 'https://coldigom-api.example',
+      clientId: 'test-client-id',
+      redirectTo: 'https://app.example/praise/1',
+      cookieSameSite: 'None',
+      purpose: 'drive',
+    });
+    const url = new URL(location);
+    expect(url.searchParams.get('scope')).toContain('drive.readonly');
+    expect(url.searchParams.get('access_type')).toBe('offline');
+    expect(url.searchParams.get('prompt')).toBe('consent');
+    expect(setCookies.some((c) => c.includes('coldigom_oauth_purpose'))).toBe(true);
+  });
+});

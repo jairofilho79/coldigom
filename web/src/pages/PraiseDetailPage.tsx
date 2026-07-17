@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials } from '../services/api';
+import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
@@ -17,6 +17,7 @@ import { groupMaterialsByType } from '../lib/materials';
 import {
   folderNameFromFiles,
   scanFolderFilesAsync,
+  mapDriveFilesAsync,
   type BulkFileItem,
 } from '../lib/materialKindInference/scanFolder';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
@@ -57,42 +58,59 @@ function BulkFilePreviewList({
   files,
   materialKindOptions,
   onKindChange,
+  onRemove,
   editable = true,
 }: {
   files: BulkFileItem[];
   materialKindOptions: Array<{ value: string; label: string }>;
   onKindChange?: (index: number, material_kind: string) => void;
+  onRemove?: (index: number) => void;
   editable?: boolean;
 }) {
   if (files.length === 0) return null;
 
   return (
     <div className="bulk-list">
-      {files.slice(0, BULK_LIST_PREVIEW).map((it, idx) => (
-        <div key={`${it.relPath}-${idx}`} className="bulk-row">
-          <div className="bulk-main">
-            <div className="bulk-name">{it.relPath}</div>
-            <div className="bulk-meta">
-              <span className="pill">{it.type}</span>
-              <InferenceBadge inference={it.inference} />
-              <span className="bulk-size">{Math.round(it.file.size / 1024)} KB</span>
+      {files.slice(0, BULK_LIST_PREVIEW).map((it, idx) => {
+        const size = it.sizeBytes ?? it.file?.size;
+        return (
+          <div key={`${it.driveFileId || ''}-${it.relPath}-${idx}`} className="bulk-row">
+            <div className="bulk-main">
+              <div className="bulk-name">{it.relPath}</div>
+              <div className="bulk-meta">
+                <span className="pill">{it.type}</span>
+                <InferenceBadge inference={it.inference} />
+                {typeof size === 'number' ? (
+                  <span className="bulk-size">{Math.round(size / 1024)} KB</span>
+                ) : null}
+              </div>
             </div>
+            {editable && onKindChange ? (
+              <SearchableSelect
+                compact
+                value={it.material_kind}
+                onChange={(v) => onKindChange(idx, v)}
+                options={materialKindOptions}
+                aria-label="Categoria do material"
+              />
+            ) : (
+              <span className="bulk-kind-readonly pill">
+                {materialKindOptions.find((o) => o.value === it.material_kind)?.label ?? '—'}
+              </span>
+            )}
+            {editable && onRemove ? (
+              <button
+                type="button"
+                className="bulk-remove"
+                aria-label="Remover da importação"
+                onClick={() => onRemove(idx)}
+              >
+                Remover
+              </button>
+            ) : null}
           </div>
-          {editable && onKindChange ? (
-            <SearchableSelect
-              compact
-              value={it.material_kind}
-              onChange={(v) => onKindChange(idx, v)}
-              options={materialKindOptions}
-              aria-label="Categoria do material"
-            />
-          ) : (
-            <span className="bulk-kind-readonly pill">
-              {materialKindOptions.find((o) => o.value === it.material_kind)?.label ?? '—'}
-            </span>
-          )}
-        </div>
-      ))}
+        );
+      })}
       {files.length > BULK_LIST_PREVIEW && (
         <div className="lyrics-empty">… e mais {files.length - BULK_LIST_PREVIEW} arquivo(s)</div>
       )}
@@ -123,6 +141,14 @@ export function PraiseDetailPage() {
   const pendingFolderFilesRef = useRef<File[] | null>(null);
   const lastFolderFilesRef = useRef<File[]>([]);
   const folderInputRetryRef = useRef<(() => void) | null>(null);
+  const [driveUrl, setDriveUrl] = useState('');
+  const [driveConnected, setDriveConnected] = useState<boolean | null>(null);
+  const [driveFiles, setDriveFiles] = useState<BulkFileItem[]>([]);
+  const [driveScan, setDriveScan] = useState<BulkScanState>(INITIAL_BULK_SCAN);
+  const [driveSkipped, setDriveSkipped] = useState<Array<{ path: string; reason: string }>>([]);
+  const [driveImportJob, setDriveImportJob] = useState<ImportJobSummary | null>(null);
+  const [driveBusy, setDriveBusy] = useState(false);
+  const driveScanAbortRef = useRef<AbortController | null>(null);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
@@ -205,6 +231,122 @@ export function PraiseDetailPage() {
   const handleBulkKindChange = useCallback((index: number, material_kind: string) => {
     setBulkFiles((list) => list.map((x, i) => (i === index ? { ...x, material_kind } : x)));
   }, []);
+
+  const handleBulkRemove = useCallback((index: number) => {
+    setBulkFiles((list) => list.filter((_, i) => i !== index));
+  }, []);
+
+  const handleDriveKindChange = useCallback((index: number, material_kind: string) => {
+    setDriveFiles((list) => list.map((x, i) => (i === index ? { ...x, material_kind } : x)));
+  }, []);
+
+  const handleDriveRemove = useCallback((index: number) => {
+    setDriveFiles((list) => list.filter((_, i) => i !== index));
+  }, []);
+
+  useEffect(() => {
+    if (!userName) return;
+    void getDriveStatus()
+      .then((s) => setDriveConnected(s.connected))
+      .catch(() => setDriveConnected(false));
+  }, [userName]);
+
+  useEffect(() => {
+    const auth = new URLSearchParams(window.location.search).get('auth');
+    if (auth === 'drive_connected') {
+      setDriveConnected(true);
+      setError(null);
+    } else if (auth === 'drive_error') {
+      setError('Não foi possível conectar o Google Drive. Tente novamente.');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!driveImportJob?.id) return;
+    const terminal = ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status);
+    if (terminal) return;
+    const t = window.setInterval(() => {
+      void getImportJob(driveImportJob.id)
+        .then(async (job) => {
+          setDriveImportJob(job);
+          if (['done', 'completed_with_errors', 'failed'].includes(job.status) && id && id !== 'new') {
+            try {
+              const refreshed = await getPraise(id);
+              setPraise(refreshed);
+            } catch {
+              /* ignore */
+            }
+          }
+        })
+        .catch(() => undefined);
+    }, 1500);
+    return () => window.clearInterval(t);
+  }, [driveImportJob?.id, driveImportJob?.status, id]);
+
+  const runDriveScan = useCallback(async () => {
+    const url = driveUrl.trim();
+    if (!url) {
+      setError('Cole um link do Google Drive');
+      return;
+    }
+    setError(null);
+    setDriveSkipped([]);
+    setDriveImportJob(null);
+    driveScanAbortRef.current?.abort();
+    const ac = new AbortController();
+    driveScanAbortRef.current = ac;
+    setDriveBusy(true);
+    setDriveFiles([]);
+    setDriveScan({
+      phase: 'scanning',
+      processed: 0,
+      total: 0,
+      folderName: 'Google Drive',
+      error: null,
+    });
+    try {
+      if (driveConnected === false) {
+        window.location.href = getDriveConnectUrl(window.location.href);
+        return;
+      }
+      const scan = await startDriveScan(url);
+      if (ac.signal.aborted) return;
+      setDriveSkipped(scan.skipped || []);
+      const mapped = await mapDriveFilesAsync(
+        scan.files,
+        materialKinds,
+        (processed, total) => setDriveScan((s) => ({ ...s, processed, total, phase: 'scanning' })),
+        ac.signal
+      );
+      setDriveFiles(mapped);
+      setDriveConnected(true);
+      setDriveScan({
+        phase: 'done',
+        processed: mapped.length,
+        total: mapped.length,
+        folderName: 'Google Drive',
+        error: null,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      const message = err instanceof Error ? err.message : 'Falha ao ler o Google Drive';
+      if (/not connected/i.test(message) || /drive_not_connected/i.test(message)) {
+        setDriveConnected(false);
+        window.location.href = getDriveConnectUrl(window.location.href);
+        return;
+      }
+      setDriveScan({
+        phase: 'error',
+        processed: 0,
+        total: 0,
+        folderName: 'Google Drive',
+        error: message,
+      });
+      setError(message);
+    } finally {
+      setDriveBusy(false);
+    }
+  }, [driveUrl, driveConnected, materialKinds]);
 
   const runFolderScan = useCallback(async (files: File[]) => {
     if (files.length === 0) {
@@ -435,12 +577,14 @@ export function PraiseDetailPage() {
         if (bulkFiles.length > 0) {
           created = await bulkUploadMaterials(
             created.id,
-            bulkFiles.map((f) => ({
-              file: f.file,
-              material_kind: f.material_kind,
-              type: f.type,
-              file_path_legacy: f.relPath,
-            }))
+            bulkFiles
+              .filter((f): f is BulkFileItem & { file: File } => Boolean(f.file))
+              .map((f) => ({
+                file: f.file,
+                material_kind: f.material_kind,
+                type: f.type,
+                file_path_legacy: f.relPath,
+              }))
           );
         }
         navigate(`/praise/${created.id}`, { replace: true });
@@ -867,6 +1011,7 @@ export function PraiseDetailPage() {
                   files={bulkFiles}
                   materialKindOptions={materialKindOptions}
                   onKindChange={handleBulkKindChange}
+                  onRemove={handleBulkRemove}
                   editable
                 />
                 <p className="bulk-scan-hint">
@@ -1038,6 +1183,7 @@ export function PraiseDetailPage() {
                     files={bulkFiles}
                     materialKindOptions={materialKindOptions}
                     onKindChange={handleBulkKindChange}
+                    onRemove={handleBulkRemove}
                   />
 
                   <div className="edit-actions">
@@ -1052,12 +1198,14 @@ export function PraiseDetailPage() {
                         try {
                           const updated = await bulkUploadMaterials(
                             id,
-                            bulkFiles.map(f => ({
-                              file: f.file,
-                              material_kind: f.material_kind,
-                              type: f.type,
-                              file_path_legacy: f.relPath,
-                            }))
+                            bulkFiles
+                              .filter((f): f is BulkFileItem & { file: File } => Boolean(f.file))
+                              .map(f => ({
+                                file: f.file,
+                                material_kind: f.material_kind,
+                                type: f.type,
+                                file_path_legacy: f.relPath,
+                              }))
                           );
                           setPraise(updated);
                           setBulkFiles([]);
@@ -1073,6 +1221,160 @@ export function PraiseDetailPage() {
                     </button>
                   </div>
                 </>
+              )}
+            </div>
+
+            <div className="materials-panel materials-admin-bulk">
+              <h3 className="materials-panel-title">Importar do Google Drive</h3>
+              <p className="materials-panel-help">
+                Cole o link de uma pasta ou arquivo do Drive. Documentos nativos do Google (Docs/Sheets) são pulados com aviso.
+                Após revisar as categorias, a importação roda em segundo plano com relatório de falhas.
+              </p>
+              {driveConnected === false && (
+                <p className="materials-panel-help">
+                  É preciso autorizar o Coldigom a ler seu Drive (somente leitura).
+                  {' '}
+                  <button
+                    type="button"
+                    className="linkish"
+                    onClick={() => {
+                      window.location.href = getDriveConnectUrl(window.location.href);
+                    }}
+                  >
+                    Conectar Google Drive
+                  </button>
+                </p>
+              )}
+              <div className="drive-url-row">
+                <input
+                  type="url"
+                  className="edit-input"
+                  placeholder="https://drive.google.com/drive/folders/…"
+                  value={driveUrl}
+                  disabled={driveBusy}
+                  onChange={(e) => setDriveUrl(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={driveBusy || !driveUrl.trim()}
+                  onClick={() => void runDriveScan()}
+                >
+                  {driveBusy ? 'Lendo…' : 'Mapear pasta'}
+                </button>
+              </div>
+              <BulkFolderScanStatus
+                scan={driveScan}
+                files={driveFiles}
+                onRetry={() => void runDriveScan()}
+              />
+              {driveSkipped.length > 0 && (
+                <div className="drive-skipped">
+                  <strong>{driveSkipped.length} item(ns) pulado(s)</strong>
+                  <ul>
+                    {driveSkipped.slice(0, 8).map((s) => (
+                      <li key={`${s.path}-${s.reason}`}>
+                        {s.path}: {s.reason}
+                      </li>
+                    ))}
+                    {driveSkipped.length > 8 && (
+                      <li>… e mais {driveSkipped.length - 8}</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+              {driveScan.phase === 'done' && driveFiles.length > 0 && (
+                <>
+                  <BulkFilePreviewList
+                    files={driveFiles}
+                    materialKindOptions={materialKindOptions}
+                    onKindChange={handleDriveKindChange}
+                    onRemove={handleDriveRemove}
+                  />
+                  <div className="edit-actions">
+                    <button
+                      type="button"
+                      className="auth-btn"
+                      disabled={
+                        !id ||
+                        driveBusy ||
+                        driveFiles.some((f) => !f.material_kind) ||
+                        Boolean(driveImportJob && !['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status))
+                      }
+                      onClick={async () => {
+                        if (!id) return;
+                        setDriveBusy(true);
+                        setError(null);
+                        try {
+                          const job = await startDriveImport(
+                            id,
+                            driveFiles
+                              .filter((f) => f.driveFileId)
+                              .map((f) => ({
+                                drive_file_id: f.driveFileId!,
+                                material_kind: f.material_kind,
+                                type: f.type,
+                                file_path_legacy: f.relPath,
+                              }))
+                          );
+                          setDriveImportJob(job);
+                          setDriveFiles([]);
+                          setDriveScan(INITIAL_BULK_SCAN);
+                        } catch (err) {
+                          const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
+                          if (/not connected/i.test(message)) {
+                            window.location.href = getDriveConnectUrl(window.location.href);
+                            return;
+                          }
+                          setError(message);
+                        } finally {
+                          setDriveBusy(false);
+                        }
+                      }}
+                    >
+                      Importar {driveFiles.length} arquivo(s) do Drive
+                    </button>
+                  </div>
+                </>
+              )}
+              {driveImportJob && (
+                <div className="drive-job-status">
+                  <p>
+                    Importação: {driveImportJob.done_count}/{driveImportJob.total_count} ok
+                    {driveImportJob.failed_count > 0
+                      ? ` · ${driveImportJob.failed_count} falha(s)`
+                      : ''}
+                    {' · '}
+                    <span className="pill">{driveImportJob.status}</span>
+                  </p>
+                  {driveImportJob.items?.filter((i) => i.status === 'failed').slice(0, 10).map((i) => (
+                    <div key={i.id} className="drive-job-error">
+                      {i.file_path_legacy || i.drive_file_id}: {i.error || 'erro'}
+                    </div>
+                  ))}
+                  {driveImportJob.failed_count > 0 &&
+                    ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
+                      <button
+                        type="button"
+                        className="auth-btn"
+                        disabled={driveBusy}
+                        onClick={async () => {
+                          setDriveBusy(true);
+                          try {
+                            await retryFailedImportItems(driveImportJob.id);
+                            const job = await getImportJob(driveImportJob.id);
+                            setDriveImportJob(job);
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : 'Falha ao retentar');
+                          } finally {
+                            setDriveBusy(false);
+                          }
+                        }}
+                      >
+                        Tentar de novo os que falharam
+                      </button>
+                    )}
+                </div>
               )}
             </div>
           </div>

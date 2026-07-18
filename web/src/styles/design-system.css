@@ -168,6 +168,7 @@
 }
 
 html {
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -182,12 +183,13 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-base);
   min-height: 100vh;
+  accent-color: var(--c-accent-500);
 }
 
-/* Selection */
+/* Selection — solid accent so Ctrl+A stays readable on any field bg */
 ::selection {
-  background: rgba(201, 169, 110, 0.25);
-  color: var(--text-primary);
+  background: var(--c-accent-500);
+  color: var(--c-neutral-950);
 }
 
 /* Scrollbar */

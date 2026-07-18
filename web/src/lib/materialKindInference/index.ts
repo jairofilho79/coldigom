@@ -197,6 +197,8 @@ function pickBest(scored: ScoredCandidate[]): ScoredCandidate | null {
   const second = scored[1];
 
   if (second && best.score - second.score <= AMBIGUITY_DELTA && best.kindId !== second.kindId) {
+    // "sax soprano" vs "soprano" (voz) empata no score — preferir alias mais específico
+    if (best.aliasLen > second.aliasLen) return best;
     return null;
   }
 

@@ -204,21 +204,19 @@ async function collectFile(
   });
 }
 
-/** Stream file bytes from Drive (alt=media). */
+/** Download file bytes from Drive (alt=media). Buffer so R2 always gets known length. */
 export async function downloadDriveFile(
   accessToken: string,
   fileId: string
-): Promise<{ body: ReadableStream; contentType?: string; contentLength?: number }> {
+): Promise<{ bytes: ArrayBuffer; contentType?: string }> {
   const q = new URLSearchParams({ alt: 'media', supportsAllDrives: 'true' });
   const res = await driveFetch(accessToken, `files/${encodeURIComponent(fileId)}?${q}`);
-  if (!res.ok || !res.body) {
+  if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`Drive download failed (${res.status}): ${text}`);
   }
-  const lenHeader = res.headers.get('content-length');
   return {
-    body: res.body,
+    bytes: await res.arrayBuffer(),
     contentType: res.headers.get('content-type') || undefined,
-    contentLength: lenHeader ? Number(lenHeader) : undefined,
   };
 }

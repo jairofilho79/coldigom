@@ -54,6 +54,16 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
 
 const BULK_LIST_PREVIEW = 25;
 
+function drivePreviewUrl(driveFileId: string): string {
+  return `https://drive.google.com/file/d/${driveFileId}/view`;
+}
+
+function openLocalFilePreview(file: File): void {
+  const url = URL.createObjectURL(file);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 function BulkFilePreviewList({
   files,
   materialKindOptions,
@@ -73,6 +83,7 @@ function BulkFilePreviewList({
     <div className="bulk-list">
       {files.slice(0, BULK_LIST_PREVIEW).map((it, idx) => {
         const size = it.sizeBytes ?? it.file?.size;
+        const canPreview = Boolean(it.driveFileId || it.file);
         return (
           <div key={`${it.driveFileId || ''}-${it.relPath}-${idx}`} className="bulk-row">
             <div className="bulk-main">
@@ -98,15 +109,39 @@ function BulkFilePreviewList({
                 {materialKindOptions.find((o) => o.value === it.material_kind)?.label ?? '—'}
               </span>
             )}
-            {editable && onRemove ? (
-              <button
-                type="button"
-                className="bulk-remove"
-                aria-label="Remover da importação"
-                onClick={() => onRemove(idx)}
-              >
-                Remover
-              </button>
+            {canPreview || (editable && onRemove) ? (
+              <div className="bulk-actions">
+                {it.driveFileId ? (
+                  <a
+                    className="bulk-remove"
+                    href={drivePreviewUrl(it.driveFileId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Ver ${it.relPath} no Google Drive`}
+                  >
+                    Ver
+                  </a>
+                ) : it.file ? (
+                  <button
+                    type="button"
+                    className="bulk-remove"
+                    aria-label={`Ver ${it.relPath}`}
+                    onClick={() => openLocalFilePreview(it.file!)}
+                  >
+                    Ver
+                  </button>
+                ) : null}
+                {editable && onRemove ? (
+                  <button
+                    type="button"
+                    className="bulk-remove"
+                    aria-label="Remover da importação"
+                    onClick={() => onRemove(idx)}
+                  >
+                    Remover
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
         );
@@ -264,7 +299,16 @@ export function PraiseDetailPage() {
   useEffect(() => {
     if (!driveImportJob?.id) return;
     const terminal = ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status);
-    if (terminal) return;
+    if (terminal) {
+      const failed = driveImportJob.items?.filter((i) => i.status === 'failed') ?? [];
+      if (failed.length > 0) {
+        console.error('[Drive import] falhas técnicas', failed.map((i) => ({
+          path: i.file_path_legacy || i.drive_file_id,
+          error: i.error,
+        })));
+      }
+      return;
+    }
     const t = window.setInterval(() => {
       void getImportJob(driveImportJob.id)
         .then(async (job) => {
@@ -281,7 +325,7 @@ export function PraiseDetailPage() {
         .catch(() => undefined);
     }, 1500);
     return () => window.clearInterval(t);
-  }, [driveImportJob?.id, driveImportJob?.status, id]);
+  }, [driveImportJob?.id, driveImportJob?.status, id, driveImportJob?.items]);
 
   const runDriveScan = useCallback(async () => {
     const url = driveUrl.trim();
@@ -1339,40 +1383,71 @@ export function PraiseDetailPage() {
               )}
               {driveImportJob && (
                 <div className="drive-job-status">
-                  <p>
-                    Importação: {driveImportJob.done_count}/{driveImportJob.total_count} ok
-                    {driveImportJob.failed_count > 0
-                      ? ` · ${driveImportJob.failed_count} falha(s)`
-                      : ''}
-                    {' · '}
-                    <span className="pill">{driveImportJob.status}</span>
+                  <p className="drive-job-summary">
+                    <span>
+                      {driveImportJob.done_count}/{driveImportJob.total_count} importados
+                      {driveImportJob.failed_count > 0
+                        ? ` · ${driveImportJob.failed_count} com erro`
+                        : ''}
+                    </span>
+                    <span
+                      className={`drive-job-pill drive-job-pill--${
+                        driveImportJob.status === 'done'
+                          ? 'ok'
+                          : driveImportJob.status === 'completed_with_errors' ||
+                              driveImportJob.status === 'failed'
+                            ? 'err'
+                            : 'run'
+                      }`}
+                    >
+                      {driveImportJob.status === 'done'
+                        ? 'Concluída'
+                        : driveImportJob.status === 'completed_with_errors'
+                          ? 'Concluída com erros'
+                          : driveImportJob.status === 'failed'
+                            ? 'Falhou'
+                            : driveImportJob.status === 'running'
+                              ? 'Em andamento'
+                              : 'Na fila'}
+                    </span>
                   </p>
-                  {driveImportJob.items?.filter((i) => i.status === 'failed').slice(0, 10).map((i) => (
-                    <div key={i.id} className="drive-job-error">
-                      {i.file_path_legacy || i.drive_file_id}: {i.error || 'erro'}
-                    </div>
-                  ))}
                   {driveImportJob.failed_count > 0 &&
                     ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
-                      <button
-                        type="button"
-                        className="auth-btn"
-                        disabled={driveBusy}
-                        onClick={async () => {
-                          setDriveBusy(true);
-                          try {
-                            await retryFailedImportItems(driveImportJob.id);
-                            const job = await getImportJob(driveImportJob.id);
-                            setDriveImportJob(job);
-                          } catch (err) {
-                            setError(err instanceof Error ? err.message : 'Falha ao retentar');
-                          } finally {
-                            setDriveBusy(false);
-                          }
-                        }}
-                      >
-                        Tentar de novo os que falharam
-                      </button>
+                      <>
+                        <p className="drive-job-support">
+                          Não foi possível importar alguns arquivos. Tente de novo ou contate o suporte.
+                        </p>
+                        <ul className="drive-job-failed-list">
+                          {driveImportJob.items
+                            ?.filter((i) => i.status === 'failed')
+                            .slice(0, 10)
+                            .map((i) => (
+                              <li key={i.id}>{i.file_path_legacy || i.drive_file_id}</li>
+                            ))}
+                        </ul>
+                        <button
+                          type="button"
+                          className="auth-btn"
+                          disabled={driveBusy}
+                          onClick={async () => {
+                            setDriveBusy(true);
+                            try {
+                              await retryFailedImportItems(driveImportJob.id);
+                              const job = await getImportJob(driveImportJob.id);
+                              setDriveImportJob(job);
+                            } catch (err) {
+                              console.error('[Drive import] retry failed', err);
+                              setError(
+                                'Não foi possível tentar de novo. Contate o suporte se o problema continuar.'
+                              );
+                            } finally {
+                              setDriveBusy(false);
+                            }
+                          }}
+                        >
+                          Tentar de novo os que falharam
+                        </button>
+                      </>
                     )}
                 </div>
               )}

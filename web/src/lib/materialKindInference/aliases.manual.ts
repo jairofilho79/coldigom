@@ -61,8 +61,18 @@ export const MANUAL_ALIASES: Record<string, readonly string[]> = {
   // Instruments
   '6d35011f-b98b-436f-b4f7-92c3cff413c5': ['alto sax', 'alto saxophone', 'sax alto', 'saxofone alto'],
   '68915148-9029-4c2b-bb35-c89338240f0a': ['tenor sax', 'tenor saxophone', 'sax tenor', 'saxofone tenor'],
-  'e1f16ebc-20af-4d12-b95f-80f3608df128': ['soprano sax', 'soprano saxophone', 'sax soprano'],
-  '40f562c0-c506-4044-a598-cccea7500fc4': ['baritone sax', 'baritone saxophone', 'sax baritono'],
+  'e1f16ebc-20af-4d12-b95f-80f3608df128': [
+    'soprano sax',
+    'soprano saxophone',
+    'sax soprano',
+    'saxofone soprano',
+  ],
+  '40f562c0-c506-4044-a598-cccea7500fc4': [
+    'baritone sax',
+    'baritone saxophone',
+    'sax baritono',
+    'saxofone baritono',
+  ],
   'a3f9d722-b43c-4639-beb0-48a75757ab00': ['sax', 'saxophone', 'saxofone'],
   '09d5120b-2dd2-4408-8982-68bee197ce6a': ['piano', 'pno'],
   '38d1bb43-0959-435d-b845-754ebec83a87': ['guitar', 'violao', 'violão', 'guitarra'],

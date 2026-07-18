@@ -45,6 +45,29 @@ const DEFAULT_NEW_MAT: NewMaterialForm = {
   file: null,
 };
 
+function preserveScroll(el: HTMLElement | null | undefined, run: () => void) {
+  const before = el?.getBoundingClientRect().top;
+  const y = window.scrollY;
+  run();
+  // ponytail: double rAF waits for React commit + layout
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (el && before != null) {
+        window.scrollBy(0, el.getBoundingClientRect().top - before);
+      } else {
+        window.scrollTo({ top: y });
+      }
+    });
+  });
+}
+
+function driveItemLabel(status: string): string {
+  if (status === 'done') return 'Ok';
+  if (status === 'failed') return 'Falha';
+  if (status === 'running') return 'Importando…';
+  return 'Na fila';
+}
+
 function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   if (!mat.material_kind) return false;
   if (mat.type === 'youtube') return mat.url.trim().length > 0;
@@ -184,6 +207,7 @@ export function PraiseDetailPage() {
   const [driveImportJob, setDriveImportJob] = useState<ImportJobSummary | null>(null);
   const [driveBusy, setDriveBusy] = useState(false);
   const driveScanAbortRef = useRef<AbortController | null>(null);
+  const drivePanelRef = useRef<HTMLDivElement | null>(null);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
@@ -316,7 +340,7 @@ export function PraiseDetailPage() {
           if (['done', 'completed_with_errors', 'failed'].includes(job.status) && id && id !== 'new') {
             try {
               const refreshed = await getPraise(id);
-              setPraise(refreshed);
+              preserveScroll(drivePanelRef.current, () => setPraise(refreshed));
             } catch {
               /* ignore */
             }
@@ -1268,7 +1292,7 @@ export function PraiseDetailPage() {
               )}
             </div>
 
-            <div className="materials-panel materials-admin-bulk">
+            <div className="materials-panel materials-admin-bulk" ref={drivePanelRef}>
               <h3 className="materials-panel-title">Importar do Google Drive</h3>
               <p className="materials-panel-help">
                 Cole o link de uma pasta ou arquivo do Drive. Documentos nativos do Google (Docs/Sheets) são pulados com aviso.
@@ -1350,7 +1374,7 @@ export function PraiseDetailPage() {
                         setDriveBusy(true);
                         setError(null);
                         try {
-                          const job = await startDriveImport(
+                          const started = await startDriveImport(
                             id,
                             driveFiles
                               .filter((f) => f.driveFileId)
@@ -1361,9 +1385,12 @@ export function PraiseDetailPage() {
                                 file_path_legacy: f.relPath,
                               }))
                           );
-                          setDriveImportJob(job);
-                          setDriveFiles([]);
-                          setDriveScan(INITIAL_BULK_SCAN);
+                          const job = await getImportJob(started.id);
+                          preserveScroll(drivePanelRef.current, () => {
+                            setDriveImportJob(job);
+                            setDriveFiles([]);
+                            setDriveScan(INITIAL_BULK_SCAN);
+                          });
                         } catch (err) {
                           const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
                           if (/not connected/i.test(message)) {
@@ -1383,6 +1410,12 @@ export function PraiseDetailPage() {
               )}
               {driveImportJob && (
                 <div className="drive-job-status">
+                  {!['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
+                    <p className="drive-job-stay">
+                      Não saia desta tela enquanto acompanha o progresso. Fechar a aba não cancela a
+                      importação no servidor, mas você deixa de ver o andamento.
+                    </p>
+                  )}
                   <p className="drive-job-summary">
                     <span>
                       {driveImportJob.done_count}/{driveImportJob.total_count} importados
@@ -1411,20 +1444,70 @@ export function PraiseDetailPage() {
                               : 'Na fila'}
                     </span>
                   </p>
+                  <div
+                    className="bulk-scan-progress drive-job-overall"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={driveImportJob.total_count}
+                    aria-valuenow={driveImportJob.done_count + driveImportJob.failed_count}
+                  >
+                    <div
+                      className="bulk-scan-progress-bar"
+                      style={{
+                        width: `${
+                          driveImportJob.total_count
+                            ? Math.round(
+                                ((driveImportJob.done_count + driveImportJob.failed_count) /
+                                  driveImportJob.total_count) *
+                                  100
+                              )
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  {driveImportJob.items && driveImportJob.items.length > 0 && (
+                    <ul className="drive-job-items">
+                      {driveImportJob.items.map((item) => (
+                        <li
+                          key={item.id}
+                          className={`drive-job-item drive-job-item--${item.status}`}
+                        >
+                          <div className="drive-job-item-head">
+                            <span className="drive-job-item-name">
+                              {item.file_path_legacy || item.drive_file_id}
+                            </span>
+                            <span className="drive-job-item-label">{driveItemLabel(item.status)}</span>
+                          </div>
+                          <div
+                            className={`bulk-scan-progress${
+                              item.status === 'running' ? ' drive-job-item-progress--run' : ''
+                            }`}
+                          >
+                            <div
+                              className={`bulk-scan-progress-bar${
+                                item.status === 'failed' ? ' drive-job-item-bar--err' : ''
+                              }${item.status === 'done' ? ' drive-job-item-bar--ok' : ''}`}
+                              style={{
+                                width:
+                                  item.status === 'done' || item.status === 'failed'
+                                    ? '100%'
+                                    : item.status === 'running'
+                                      ? '70%'
+                                      : '0%',
+                              }}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {driveImportJob.failed_count > 0 &&
                     ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
                       <>
                         <p className="drive-job-support">
                           Não foi possível importar alguns arquivos. Tente de novo ou contate o suporte.
                         </p>
-                        <ul className="drive-job-failed-list">
-                          {driveImportJob.items
-                            ?.filter((i) => i.status === 'failed')
-                            .slice(0, 10)
-                            .map((i) => (
-                              <li key={i.id}>{i.file_path_legacy || i.drive_file_id}</li>
-                            ))}
-                        </ul>
                         <button
                           type="button"
                           className="auth-btn"
@@ -1434,7 +1517,7 @@ export function PraiseDetailPage() {
                             try {
                               await retryFailedImportItems(driveImportJob.id);
                               const job = await getImportJob(driveImportJob.id);
-                              setDriveImportJob(job);
+                              preserveScroll(drivePanelRef.current, () => setDriveImportJob(job));
                             } catch (err) {
                               console.error('[Drive import] retry failed', err);
                               setError(

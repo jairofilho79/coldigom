@@ -84,7 +84,7 @@ export async function processImportItem(
     const r2_key = `assets/praises/${item.praise_id}/${materialId}.${item.type}`;
     const storageKey = `storage/${r2_key}`;
 
-    await env.ASSETS.put(storageKey, downloaded.bytes, {
+    await env.ASSETS.put(storageKey, new Uint8Array(downloaded.bytes), {
       httpMetadata: { contentType: downloaded.contentType },
     });
 

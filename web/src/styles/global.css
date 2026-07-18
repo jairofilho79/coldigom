@@ -1717,20 +1717,90 @@ a.bulk-remove {
   background: var(--bg-elevated);
 }
 
-.drive-job-support {
-  margin: var(--space-2) 0 0;
+.drive-job-stay {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md, 8px);
+  background: rgba(201, 169, 110, 0.1);
+  color: var(--c-accent-300);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.drive-job-overall {
+  margin-top: var(--space-3);
+}
+
+.drive-job-items {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-anchor: none;
+}
+
+.drive-job-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 0.35rem;
+}
+
+.drive-job-item-name {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.drive-job-item-label {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.drive-job-item--done .drive-job-item-label {
+  color: var(--c-success-300, #86efac);
+}
+
+.drive-job-item--failed .drive-job-item-label {
+  color: var(--c-accent-300);
+}
+
+.drive-job-item--running .drive-job-item-label {
   color: var(--text-secondary);
 }
 
-.drive-job-failed-list {
-  margin: var(--space-2) 0 var(--space-3);
-  padding-left: 1.2rem;
-  color: var(--text-tertiary);
-  font-size: var(--text-xs);
+.drive-job-item-bar--ok {
+  background: rgba(34, 197, 94, 0.75);
 }
 
-.drive-job-failed-list li {
-  margin-top: var(--space-1);
+.drive-job-item-bar--err {
+  background: rgba(201, 169, 110, 0.65);
+}
+
+.drive-job-item-progress--run .bulk-scan-progress-bar {
+  animation: drive-job-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes drive-job-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.drive-job-support {
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--text-secondary);
 }
 
 button.linkish {
@@ -2376,14 +2446,16 @@ button.linkish {
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .brand-header-top {
-    justify-content: flex-start;
-    align-items: flex-start;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
   }
 
   .brand-header-auth {
     position: static;
     margin-top: var(--space-2);
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .brand-title {

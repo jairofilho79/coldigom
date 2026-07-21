@@ -346,8 +346,16 @@ describe('PraiseDetailPage Component', () => {
       (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
     });
 
-    it('exibe botão Agrupar Louvor no modo edição e agrupa por praiseId', async () => {
+    async function enterEditMode() {
       const user = userEvent.setup();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+      });
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+      return user;
+    }
+
+    it('exibe botão Agrupar Louvor no modo edição e agrupa por praiseId', async () => {
       const targetId = '1c12786e-4d32-4e95-a136-d85266008e11';
       (groupPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
         ...mockPraiseDetail,
@@ -358,11 +366,7 @@ describe('PraiseDetailPage Component', () => {
       });
 
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
-      });
-      await user.click(screen.getByRole('button', { name: 'Editar' }));
+      const user = await enterEditMode();
 
       expect(screen.getByRole('button', { name: 'Agrupar Louvor' })).toBeTruthy();
       await user.click(screen.getByRole('button', { name: 'Agrupar Louvor' }));
@@ -414,8 +418,19 @@ describe('PraiseDetailPage Component', () => {
       );
     });
 
+    it('não exibe Materiais (admin) fora do modo edição', async () => {
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+      });
+
+      expect(screen.queryByText('Materiais (admin)')).toBeNull();
+    });
+
     it('exibe seções de adicionar material e importação em lote', async () => {
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByText('Materiais (admin)')).toBeTruthy();
@@ -427,6 +442,7 @@ describe('PraiseDetailPage Component', () => {
 
     it('usa PDF como tipo padrão e mostra seletor de arquivo', async () => {
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
@@ -438,8 +454,8 @@ describe('PraiseDetailPage Component', () => {
     });
 
     it('ao selecionar YouTube exibe campo de link em vez de arquivo', async () => {
-      const user = userEvent.setup();
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
@@ -452,8 +468,8 @@ describe('PraiseDetailPage Component', () => {
     });
 
     it('ao selecionar Cifra exibe placeholder e desabilita adicionar', async () => {
-      const user = userEvent.setup();
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByLabelText('Tipo do material')).toBeTruthy();
@@ -471,6 +487,7 @@ describe('PraiseDetailPage Component', () => {
 
     it('não exibe painel Materiais cadastrados', async () => {
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByText('Materiais (admin)')).toBeTruthy();
@@ -492,13 +509,8 @@ describe('PraiseDetailPage Component', () => {
     });
 
     it('exibe edição inline de categoria em Áudio e Partituras no modo edição', async () => {
-      const user = userEvent.setup();
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
-      });
-      await user.click(screen.getByRole('button', { name: 'Editar' }));
+      await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByText('Partituras')).toBeTruthy();
@@ -511,7 +523,6 @@ describe('PraiseDetailPage Component', () => {
     });
 
     it('exibe placeholder de edição em Acordes no modo edição', async () => {
-      const user = userEvent.setup();
       const praiseWithChords = {
         ...mockPraiseDetail,
         materials: [
@@ -531,11 +542,7 @@ describe('PraiseDetailPage Component', () => {
       (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithChords);
 
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
-      });
-      await user.click(screen.getByRole('button', { name: 'Editar' }));
+      await enterEditMode();
 
       await waitFor(() => {
         expect(screen.getByText('Edição de categoria — em breve')).toBeTruthy();

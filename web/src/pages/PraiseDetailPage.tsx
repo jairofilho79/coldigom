@@ -1388,7 +1388,7 @@ export function PraiseDetailPage() {
         </section>
       )}
 
-      {userName && !isCreate && praise && (
+      {userName && isEditing && !isCreate && praise && (
         <section className="detail-section animate-fade-in-up">
           <h2 className="detail-section-title">
             <span className="detail-section-icon">🧩</span>

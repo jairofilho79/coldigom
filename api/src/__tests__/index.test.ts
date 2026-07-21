@@ -53,9 +53,9 @@ const mockMaterials = [
 ];
 
 const mockTags = [
-  { id: 'tag1', name: 'Coletânea' },
-  { id: 'tag2', name: 'Avulsos' },
-  { id: 'tag3', name: 'GLTM' },
+  { id: 'tag1', name: 'Coletânea', parent_id: null },
+  { id: 'tag2', name: 'Avulsos', parent_id: null },
+  { id: 'tag3', name: 'GLTM', parent_id: null },
 ];
 
 const mockMaterialKindLabels = [
@@ -73,16 +73,35 @@ function resolveMockAll(query: string, responses: { all?: { results: unknown[] }
     }
     return { results: mockMaterialKindLabels };
   }
-  if (query.includes('FROM tags')) {
+  if (query.includes('FROM tags') && !query.includes('parent_id') && query.includes('GROUP BY')) {
+    return { results: (responses.tags ?? mockTags).map((t) => ({ ...t, count: 1 })) };
+  }
+  if (query.includes('FROM tags') && !query.includes('praise_tags') && !query.includes('id IN')) {
     return { results: responses.tags ?? mockTags };
   }
   return responses.all || { results: [] };
 }
 
 // Mock D1Database
-const createMockD1 = (responses: any) => ({
+const createMockD1 = (responses: any = {}) => ({
   prepare: vi.fn((query: string) => ({
-    bind: vi.fn().mockReturnThis(),
+    bind: vi.fn((...args: unknown[]) => ({
+      all: vi.fn().mockImplementation(async () => {
+        if (query.includes('FROM tags WHERE parent_id')) {
+          const tags = (responses.tags ?? mockTags) as typeof mockTags;
+          return { results: tags.filter((t) => t.parent_id === args[0]) };
+        }
+        return resolveMockAll(query, responses);
+      }),
+      first: vi.fn().mockImplementation(async () => {
+        if (query.includes('FROM tags WHERE parent_id')) {
+          const tags = (responses.tags ?? mockTags) as typeof mockTags;
+          return tags.find((t) => t.parent_id === args[0]) ?? null;
+        }
+        return responses.first || null;
+      }),
+      run: vi.fn().mockResolvedValue({}),
+    })),
     all: vi.fn().mockImplementation(async () => resolveMockAll(query, responses)),
     first: vi.fn().mockResolvedValue(responses.first || null),
   })),
@@ -139,7 +158,10 @@ function createStatefulMockD1() {
           }
         }),
         first: vi.fn(async () => {
-          if (query.includes('SELECT id FROM tags')) {
+          if (query.includes('FROM tags WHERE parent_id')) {
+            return mockTags.find((t) => t.parent_id === args[0]) ?? null;
+          }
+          if (query.includes('SELECT id FROM tags') || query.includes('FROM tags WHERE id')) {
             return mockTags.find((t) => t.id === args[0]) ?? null;
           }
           if (query.includes('FROM praises p') && query.includes('WHERE p.id')) {
@@ -151,12 +173,24 @@ function createStatefulMockD1() {
           return null;
         }),
         all: vi.fn(async () => {
+          if (query.includes('FROM tags WHERE parent_id')) {
+            return { results: mockTags.filter((t) => t.parent_id === args[0]) };
+          }
           if (query.includes('FROM praise_materials')) {
             return { results: [] };
           }
-          if (query.includes('FROM tags WHERE id IN')) {
+          if (query.includes('id IN') && query.includes('tags')) {
             const ids = args as string[];
-            return { results: mockTags.filter((t) => ids.includes(t.id)) };
+            return {
+              results: mockTags
+                .filter((t) => ids.includes(t.id))
+                .map((t) => ({
+                  ...t,
+                  parent_name: t.parent_id
+                    ? mockTags.find((p) => p.id === t.parent_id)?.name ?? null
+                    : null,
+                })),
+            };
           }
           return resolveMockAll(query, {});
         }),
@@ -1069,6 +1103,121 @@ describe('API Routes', () => {
     });
   });
 
+  describe('POST /api/tags', () => {
+    const envBase = {
+      AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      WEB_ORIGIN: TEST_WEB_ORIGIN,
+    };
+
+    function createTagsMockD1(extraTags: typeof mockTags = []) {
+      const tags = [...mockTags, ...extraTags];
+      return {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn((...args: unknown[]) => ({
+            run: vi.fn(async () => {
+              if (query.includes('INSERT INTO tags')) {
+                tags.push({
+                  id: args[0] as string,
+                  name: args[1] as string,
+                  parent_id: (args[2] as string | null) ?? null,
+                });
+              }
+            }),
+            first: vi.fn(async () => {
+              if (query.includes('FROM tags WHERE parent_id')) {
+                return tags.find((t) => t.parent_id === args[0]) ?? null;
+              }
+              if (query.includes('SELECT id, parent_id FROM tags') || query.includes('SELECT id, parent_id')) {
+                const t = tags.find((x) => x.id === args[0]);
+                return t ? { id: t.id, parent_id: t.parent_id } : null;
+              }
+              if (query.includes('SELECT name FROM tags')) {
+                const t = tags.find((x) => x.id === args[0]);
+                return t ? { name: t.name } : null;
+              }
+              if (query.includes('FROM tags')) {
+                return tags.find((t) => t.id === args[0]) ?? null;
+              }
+              return null;
+            }),
+            all: vi.fn(async () => ({ results: tags })),
+          })),
+        })),
+      };
+    }
+
+    it('creates a subtag under a root', async () => {
+      const mockDB = createTagsMockD1();
+      const res = await app.request(
+        '/api/tags',
+        await authRequestInit({ name: '4.2026', parent_id: 'tag1' }),
+        { DB: mockDB, ASSETS: createMockR2(), ...envBase }
+      );
+      expect(res.status).toBe(201);
+      const json = await res.json();
+      expect(json.data.name).toBe('4.2026');
+      expect(json.data.parent_id).toBe('tag1');
+      expect(json.data.parent_name).toBe('Coletânea');
+    });
+
+    it('rejects nested subtag (parent already has parent)', async () => {
+      const mockDB = createTagsMockD1([
+        { id: 'child1', name: '2025', parent_id: 'tag1' },
+      ]);
+      const res = await app.request(
+        '/api/tags',
+        await authRequestInit({ name: 'nested', parent_id: 'child1' }),
+        { DB: mockDB, ASSETS: createMockR2(), ...envBase }
+      );
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain('one level');
+    });
+  });
+
+  describe('POST /api/praises/:id/tags leaf-only', () => {
+    const envBase = {
+      AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      WEB_ORIGIN: TEST_WEB_ORIGIN,
+    };
+
+    it('rejects attaching a parent that has children', async () => {
+      const tags = [
+        ...mockTags,
+        { id: 'child1', name: '4.2026', parent_id: 'tag1' },
+      ];
+      const mockDB = {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn((...args: unknown[]) => ({
+            run: vi.fn(),
+            first: vi.fn(async () => {
+              if (query.includes('SELECT id FROM praises')) {
+                return { id: mockPraises[0].id };
+              }
+              if (query.includes('FROM tags WHERE parent_id')) {
+                return tags.find((t) => t.parent_id === args[0]) ?? null;
+              }
+              if (query.includes('FROM tags')) {
+                return tags.find((t) => t.id === args[0]) ?? null;
+              }
+              return null;
+            }),
+            all: vi.fn(async () => ({ results: [] })),
+          })),
+        })),
+      };
+
+      const res = await app.request(
+        `/api/praises/${mockPraises[0].id}/tags`,
+        await authRequestInit({ tag_id: 'tag1' }),
+        { DB: mockDB, ASSETS: createMockR2(), ...envBase }
+      );
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error).toContain('subtag');
+    });
+  });
+
   describe('POST /api/praises/:keeperId/merge', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
@@ -1172,6 +1321,9 @@ describe('API Routes', () => {
               if (query.includes('SELECT id FROM praises WHERE id')) {
                 return praises.has(args[0] as string) ? { id: args[0] } : null;
               }
+              if (query.includes('FROM tags WHERE parent_id')) {
+                return mockTags.find((t) => t.parent_id === args[0]) ?? null;
+              }
               if (query.includes('SELECT id FROM tags WHERE id')) {
                 return mockTags.find((t) => t.id === args[0]) ?? null;
               }
@@ -1209,9 +1361,18 @@ describe('API Routes', () => {
                   results: [...materials.values()].filter((m) => (m as { praise_id: string }).praise_id === pid),
                 };
               }
-              if (query.includes('FROM tags WHERE id IN')) {
+              if (query.includes('id IN') && query.includes('tags')) {
                 const ids = args as string[];
-                return { results: mockTags.filter((t) => ids.includes(t.id)) };
+                return {
+                  results: mockTags
+                    .filter((t) => ids.includes(t.id))
+                    .map((t) => ({
+                      ...t,
+                      parent_name: t.parent_id
+                        ? mockTags.find((p) => p.id === t.parent_id)?.name ?? null
+                        : null,
+                    })),
+                };
               }
               return resolveMockAll(query, {});
             }),
@@ -1349,7 +1510,7 @@ describe('buildWhereClause', () => {
   // Test the buildWhereClause function logic directly
   function buildWhereClause(params: {
     search?: string;
-    tags?: string[];
+    tagGroups?: string[][];
     rhythm?: string[];
     tonality?: string[];
     category?: string[];
@@ -1366,9 +1527,11 @@ describe('buildWhereClause', () => {
       bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     }
 
-    if (params.tags && params.tags.length > 0) {
-      conditions.push(`pt.tag_id IN (${params.tags.map(() => '?').join(',')})`);
-      bindings.push(...params.tags);
+    if (params.tagGroups && params.tagGroups.length > 0) {
+      for (const group of params.tagGroups) {
+        conditions.push(`p.id IN (SELECT praise_id FROM praise_tags WHERE tag_id IN (${group.map(() => '?').join(',')}))`);
+        bindings.push(...group);
+      }
     }
 
     if (params.rhythm && params.rhythm.length > 0) {
@@ -1435,14 +1598,14 @@ describe('buildWhereClause', () => {
   });
 
   it('should build single tag clause correctly', () => {
-    const result = buildWhereClause({ tags: ['tag1'] });
-    expect(result.clause).toContain('pt.tag_id IN (?)');
+    const result = buildWhereClause({ tagGroups: [['tag1']] });
+    expect(result.clause).toContain('tag_id IN (?)');
     expect(result.bindings).toEqual(['tag1']);
   });
 
   it('should build multiple tags clause correctly', () => {
-    const result = buildWhereClause({ tags: ['tag1', 'tag2', 'tag3'] });
-    expect(result.clause).toContain('pt.tag_id IN (?,?,?)');
+    const result = buildWhereClause({ tagGroups: [['tag1'], ['tag2'], ['tag3']] });
+    expect(result.clause).toContain('tag_id IN (?)');
     expect(result.bindings).toEqual(['tag1', 'tag2', 'tag3']);
   });
 
@@ -1493,14 +1656,14 @@ describe('buildWhereClause', () => {
   it('should build combined clauses correctly', () => {
     const result = buildWhereClause({
       search: 'test',
-      tags: ['tag1'],
+      tagGroups: [['tag1']],
       rhythm: ['Avulsos'],
       numberMin: 1,
       numberMax: 10,
     });
     expect(result.clause).toContain('WHERE');
     expect(result.clause).toContain('p.name LIKE ?');
-    expect(result.clause).toContain('pt.tag_id IN (?)');
+    expect(result.clause).toContain('tag_id IN (?)');
     expect(result.clause).toContain('p.rhythm IN (?)');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) >= ?');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) <= ?');

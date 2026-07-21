@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, getMaterialKinds, getTags, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
+import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, API_BASE_URL, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
@@ -21,6 +21,15 @@ import {
   type BulkFileItem,
 } from '../lib/materialKindInference/scanFolder';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
+
+function tagLabel(tag: Tag, catalog?: Tag[]): string {
+  if (tag.parent_name) return `${tag.parent_name} · ${tag.name}`;
+  if (tag.parent_id && catalog) {
+    const parent = catalog.find((t) => t.id === tag.parent_id);
+    if (parent) return `${parent.name} · ${tag.name}`;
+  }
+  return tag.name;
+}
 
 const MATERIAL_TYPE_OPTIONS = [
   { value: 'youtube', label: 'YouTube' },
@@ -179,6 +188,7 @@ function BulkFilePreviewList({
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const isCreate = id === 'new';
   const { user, ready: authReady, logout } = useAuth();
   const userName = authReady ? (user?.name || user?.email || null) : null;
@@ -212,6 +222,9 @@ export function PraiseDetailPage() {
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
   const [idCopied, setIdCopied] = useState(false);
+  const [showGroupInput, setShowGroupInput] = useState(false);
+  const [groupTargetId, setGroupTargetId] = useState('');
+  const [groupingBusy, setGroupingBusy] = useState(false);
   const [edit, setEdit] = useState({
     name: '',
     number: '',
@@ -221,6 +234,9 @@ export function PraiseDetailPage() {
     category: '',
     lyrics: '',
   });
+  const [newSubtagParentId, setNewSubtagParentId] = useState('');
+  const [newSubtagName, setNewSubtagName] = useState('');
+  const [subtagBusy, setSubtagBusy] = useState(false);
 
   useEffect(() => {
     const fetchPraise = async () => {
@@ -319,6 +335,14 @@ export function PraiseDetailPage() {
       setError('Não foi possível conectar o Google Drive. Tente novamente.');
     }
   }, []);
+
+  useEffect(() => {
+    const jobId = (location.state as { driveImportJobId?: string } | null)?.driveImportJobId;
+    if (!jobId || isCreate) return;
+    void getImportJob(jobId)
+      .then((job) => setDriveImportJob(job))
+      .catch(() => undefined);
+  }, [location.state, isCreate]);
 
   useEffect(() => {
     if (!driveImportJob?.id) return;
@@ -510,13 +534,23 @@ export function PraiseDetailPage() {
     if (!isCreate) return praise?.tags || [];
     return catalogTags.filter((t) => pendingTagIds.includes(t.id));
   }, [isCreate, praise?.tags, catalogTags, pendingTagIds]);
-  const availableTags = useMemo(
-    () => catalogTags.filter((t) => !assignedTagIds.has(t.id)),
-    [catalogTags, assignedTagIds]
+  const availableTags = useMemo(() => {
+    const childParentIds = new Set(
+      catalogTags.filter((t) => t.parent_id).map((t) => t.parent_id as string)
+    );
+    return catalogTags.filter((t) => !assignedTagIds.has(t.id) && !childParentIds.has(t.id));
+  }, [catalogTags, assignedTagIds]);
+  const rootTags = useMemo(
+    () => catalogTags.filter((t) => !t.parent_id),
+    [catalogTags]
   );
   const tagSelectOptions = useMemo(
-    () => availableTags.map((t) => ({ value: t.id, label: t.name })),
-    [availableTags]
+    () => availableTags.map((t) => ({ value: t.id, label: tagLabel(t, catalogTags) })),
+    [availableTags, catalogTags]
+  );
+  const rootSelectOptions = useMemo(
+    () => rootTags.map((t) => ({ value: t.id, label: t.name })),
+    [rootTags]
   );
   const materialGroups = useMemo(
     () => groupMaterialsByType(praise?.materials ?? []),
@@ -632,6 +666,10 @@ export function PraiseDetailPage() {
           setError('Nome é obrigatório');
           return;
         }
+        if (bulkFiles.some((f) => !f.material_kind) || driveFiles.some((f) => !f.material_kind)) {
+          setError('Defina a categoria de todos os arquivos antes de criar');
+          return;
+        }
         let created = await createPraise({
           name: edit.name.trim(),
           number: edit.number || null,
@@ -655,11 +693,31 @@ export function PraiseDetailPage() {
               }))
           );
         }
-        navigate(`/praise/${created.id}`, { replace: true });
+        let driveImportJobId: string | undefined;
+        const driveItems = driveFiles.filter((f) => f.driveFileId);
+        if (driveItems.length > 0) {
+          const started = await startDriveImport(
+            created.id,
+            driveItems.map((f) => ({
+              drive_file_id: f.driveFileId!,
+              material_kind: f.material_kind,
+              type: f.type,
+              file_path_legacy: f.relPath,
+            }))
+          );
+          driveImportJobId = started.id;
+          setDriveImportJob(started);
+        }
+        navigate(`/praise/${created.id}`, {
+          replace: true,
+          state: driveImportJobId ? { driveImportJobId } : undefined,
+        });
         setPraise(created);
         setIsEditing(false);
         setBulkFiles([]);
         setBulkScan(INITIAL_BULK_SCAN);
+        setDriveFiles([]);
+        setDriveScan(INITIAL_BULK_SCAN);
         setPendingTagIds([]);
       } else if (id) {
         const updated = await updatePraise(id, {
@@ -810,16 +868,18 @@ export function PraiseDetailPage() {
               <input value={edit.category} onChange={(e) => setEdit(s => ({ ...s, category: e.target.value }))} />
             </div>
 
-            <div className="edit-actions">
-              <button
-                type="button"
-                className="auth-btn"
-                disabled={savingMetadata || (isCreate && !userName)}
-                onClick={() => void saveMetadata()}
-              >
-                {savingMetadata ? 'Salvando…' : isCreate ? 'Criar louvor' : 'Salvar'}
-              </button>
-            </div>
+            {!isCreate ? (
+              <div className="edit-actions">
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={savingMetadata}
+                  onClick={() => void saveMetadata()}
+                >
+                  {savingMetadata ? 'Salvando…' : 'Salvar'}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : praise ? (
           <>
@@ -884,11 +944,11 @@ export function PraiseDetailPage() {
             <span className="detail-tags-label">Tags</span>
             {displayTags.map(tag => (
               <span key={tag.id} className="detail-tag detail-tag--editable">
-                {tag.name}
+                {tagLabel(tag, catalogTags)}
                 <button
                   type="button"
                   className="detail-tag-remove"
-                  aria-label={`Remover tag ${tag.name}`}
+                  aria-label={`Remover tag ${tagLabel(tag, catalogTags)}`}
                   disabled={tagsBusy}
                   onClick={async () => {
                     if (isCreate) {
@@ -956,16 +1016,149 @@ export function PraiseDetailPage() {
                 ? <span className="detail-tags-hint muted">Todas as tags do catálogo já estão associadas.</span>
                 : null
             )}
+            {rootTags.length > 0 ? (
+              <div className="detail-tag-add detail-tag-add--subtag">
+                <span className="detail-tags-hint muted">Nova subtag</span>
+                <SearchableSelect
+                  value={newSubtagParentId}
+                  onChange={setNewSubtagParentId}
+                  options={rootSelectOptions}
+                  placeholder="Tag pai…"
+                  searchPlaceholder="Buscar pai…"
+                  disabled={subtagBusy || tagsBusy}
+                  aria-label="Tag pai da subtag"
+                />
+                <input
+                  type="text"
+                  value={newSubtagName}
+                  onChange={(e) => setNewSubtagName(e.target.value)}
+                  placeholder="ex.: 4.2026"
+                  disabled={subtagBusy || tagsBusy}
+                  aria-label="Nome da subtag"
+                />
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={!newSubtagParentId || !newSubtagName.trim() || subtagBusy || tagsBusy || (!isCreate && !id)}
+                  onClick={async () => {
+                    if (!newSubtagParentId || !newSubtagName.trim()) return;
+                    setSubtagBusy(true);
+                    setError(null);
+                    try {
+                      const created = await createTag({
+                        name: newSubtagName.trim(),
+                        parent_id: newSubtagParentId,
+                      });
+                      setCatalogTags((prev) => [...prev, created]);
+                      if (isCreate) {
+                        setPendingTagIds((ids) => (ids.includes(created.id) ? ids : [...ids, created.id]));
+                      } else if (id) {
+                        const updated = await addPraiseTag(id, created.id);
+                        setPraise(updated);
+                      }
+                      setNewSubtagName('');
+                      setNewSubtagParentId('');
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Falha ao criar subtag');
+                    } finally {
+                      setSubtagBusy(false);
+                    }
+                  }}
+                >
+                  {subtagBusy ? 'Criando…' : 'Criar e associar'}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : (
           praise && praise.tags && praise.tags.length > 0 && (
             <div className="detail-tags">
               {praise.tags.map(tag => (
-                <span key={tag.id} className="detail-tag">{tag.name}</span>
+                <span key={tag.id} className="detail-tag">{tagLabel(tag)}</span>
               ))}
             </div>
           )
         )}
+
+        {isEditing && userName && !isCreate && id ? (
+          <div className="praise-group-edit">
+            {!showGroupInput ? (
+              <button
+                type="button"
+                className="auth-btn"
+                onClick={() => setShowGroupInput(true)}
+              >
+                Agrupar Louvor
+              </button>
+            ) : (
+              <div className="praise-group-form">
+                <input
+                  type="text"
+                  value={groupTargetId}
+                  onChange={(e) => setGroupTargetId(e.target.value)}
+                  placeholder="praiseId do louvor a agrupar"
+                  aria-label="praiseId do louvor a agrupar"
+                  disabled={groupingBusy}
+                />
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={!groupTargetId.trim() || groupingBusy}
+                  onClick={async () => {
+                    setGroupingBusy(true);
+                    setError(null);
+                    try {
+                      const updated = await groupPraise(id, groupTargetId.trim());
+                      setPraise(updated);
+                      setGroupTargetId('');
+                      setShowGroupInput(false);
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Falha ao agrupar louvor');
+                    } finally {
+                      setGroupingBusy(false);
+                    }
+                  }}
+                >
+                  {groupingBusy ? 'Agrupando…' : 'Confirmar'}
+                </button>
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={groupingBusy}
+                  onClick={() => {
+                    setShowGroupInput(false);
+                    setGroupTargetId('');
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {praise && praise.group_members && praise.group_members.length > 0 ? (
+          <div className="praise-group-card">
+            <div className="praise-group-card-title">Louvores agrupados</div>
+            <ul className="praise-group-list">
+              {praise.group_members.map((member) => (
+                <li key={member.id}>
+                  <a href={`/praise/${member.id}`} target="_blank" rel="noopener noreferrer">
+                    {member.tags.length > 0 ? (
+                      <span className="col-tags-list">
+                        {member.tags.map((tag) => (
+                          <span key={tag.id} className="detail-tag">{tagLabel(tag)}</span>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="muted">{member.id.slice(0, 8)}…</span>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </header>
 
       <section className="detail-section animate-fade-in-up">
@@ -1048,45 +1241,136 @@ export function PraiseDetailPage() {
             Materiais (após salvar)
           </h2>
           <p className="materials-panel-help">
-            Salve o louvor para adicionar materiais individuais. Você pode já selecionar uma pasta abaixo;
-            os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
+            Salve o louvor para adicionar materiais individuais. Você pode já selecionar uma pasta local
+            ou mapear o Google Drive abaixo; os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
           </p>
-          <div className="materials-panel materials-admin-bulk">
-            <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
-            <StyledFileInput
-              label="Escolher pasta"
-              directory
-              disabled={bulkScan.phase === 'scanning'}
-              selectedName={
-                bulkScan.folderName
-                  ? `${bulkScan.folderName} (${bulkScan.total || bulkFiles.length} arquivo(s))`
-                  : bulkFiles.length > 0
-                    ? `${bulkFiles.length} arquivo(s)`
-                    : null
-              }
-              onChange={(files) => {
-                void runFolderScan(files);
-              }}
-            />
-            <BulkFolderScanStatus
-              scan={bulkScan}
-              files={bulkFiles}
-              onRetry={() => folderInputRetryRef.current?.()}
-            />
-            {bulkScan.phase === 'done' && bulkFiles.length > 0 && (
-              <>
-                <BulkFilePreviewList
-                  files={bulkFiles}
-                  materialKindOptions={materialKindOptions}
-                  onKindChange={handleBulkKindChange}
-                  onRemove={handleBulkRemove}
-                  editable
-                />
-                <p className="bulk-scan-hint">
-                  Os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
+          <div className="materials-admin">
+            <div className="materials-panel materials-admin-bulk">
+              <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
+              <StyledFileInput
+                label="Escolher pasta"
+                directory
+                disabled={bulkScan.phase === 'scanning'}
+                selectedName={
+                  bulkScan.folderName
+                    ? `${bulkScan.folderName} (${bulkScan.total || bulkFiles.length} arquivo(s))`
+                    : bulkFiles.length > 0
+                      ? `${bulkFiles.length} arquivo(s)`
+                      : null
+                }
+                onChange={(files) => {
+                  void runFolderScan(files);
+                }}
+              />
+              <BulkFolderScanStatus
+                scan={bulkScan}
+                files={bulkFiles}
+                onRetry={() => folderInputRetryRef.current?.()}
+              />
+              {bulkScan.phase === 'done' && bulkFiles.length > 0 && (
+                <>
+                  <BulkFilePreviewList
+                    files={bulkFiles}
+                    materialKindOptions={materialKindOptions}
+                    onKindChange={handleBulkKindChange}
+                    onRemove={handleBulkRemove}
+                    editable
+                  />
+                  <p className="bulk-scan-hint">
+                    Os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="materials-panel materials-admin-bulk" ref={drivePanelRef}>
+              <h3 className="materials-panel-title">Importar do Google Drive</h3>
+              <p className="materials-panel-help">
+                Cole o link de uma pasta ou arquivo do Drive. Documentos nativos do Google (Docs/Sheets) são pulados com aviso.
+              </p>
+              {driveConnected === false && (
+                <p className="materials-panel-help">
+                  É preciso autorizar o Coldigom a ler seu Drive (somente leitura).
+                  {' '}
+                  <button
+                    type="button"
+                    className="linkish"
+                    onClick={() => {
+                      window.location.href = getDriveConnectUrl(window.location.href);
+                    }}
+                  >
+                    Conectar Google Drive
+                  </button>
                 </p>
-              </>
-            )}
+              )}
+              <div className="drive-url-row">
+                <input
+                  type="url"
+                  className="edit-input"
+                  placeholder="https://drive.google.com/drive/folders/…"
+                  value={driveUrl}
+                  disabled={driveBusy}
+                  onChange={(e) => setDriveUrl(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="auth-btn"
+                  disabled={driveBusy || !driveUrl.trim()}
+                  onClick={() => void runDriveScan()}
+                >
+                  {driveBusy ? 'Lendo…' : 'Mapear pasta'}
+                </button>
+              </div>
+              <BulkFolderScanStatus
+                scan={driveScan}
+                files={driveFiles}
+                onRetry={() => void runDriveScan()}
+              />
+              {driveSkipped.length > 0 && (
+                <div className="drive-skipped">
+                  <strong>{driveSkipped.length} item(ns) pulado(s)</strong>
+                  <ul>
+                    {driveSkipped.slice(0, 8).map((s) => (
+                      <li key={`${s.path}-${s.reason}`}>
+                        {s.path}: {s.reason}
+                      </li>
+                    ))}
+                    {driveSkipped.length > 8 && (
+                      <li>… e mais {driveSkipped.length - 8}</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+              {driveScan.phase === 'done' && driveFiles.length > 0 && (
+                <>
+                  <BulkFilePreviewList
+                    files={driveFiles}
+                    materialKindOptions={materialKindOptions}
+                    onKindChange={handleDriveKindChange}
+                    onRemove={handleDriveRemove}
+                  />
+                  <p className="bulk-scan-hint">
+                    Os arquivos serão importados ao clicar em &quot;Criar louvor&quot;.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="detail-section-actions">
+            <button
+              type="button"
+              className="auth-btn"
+              disabled={
+                savingMetadata ||
+                !userName ||
+                bulkFiles.some((f) => !f.material_kind) ||
+                driveFiles.some((f) => !f.material_kind)
+              }
+              onClick={() => void saveMetadata()}
+            >
+              {savingMetadata ? 'Salvando…' : 'Criar louvor'}
+            </button>
           </div>
         </section>
       )}

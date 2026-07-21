@@ -44,7 +44,35 @@ interface PraiseResult {
   tonality: string;
   category: string;
   lyrics: string;
+  group_id: string | null;
   tag_ids: string | null;
+}
+
+type TagRow = {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  parent_name?: string | null;
+};
+
+const TAG_LABEL_SQL = `CASE WHEN tp.name IS NOT NULL THEN tp.name || ' · ' || t.name ELSE t.name END`;
+
+async function resolveTagFilterGroups(
+  db: D1Database,
+  tagIds: string[]
+): Promise<string[][]> {
+  const groups: string[][] = [];
+  for (const id of tagIds) {
+    const children = await db.prepare('SELECT id FROM tags WHERE parent_id = ?').bind(id).all();
+    const childIds = ((children.results as { id: string }[]) ?? []).map((r) => r.id);
+    groups.push(childIds.length > 0 ? childIds : [id]);
+  }
+  return groups;
+}
+
+async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {
+  const row = await db.prepare('SELECT id FROM tags WHERE parent_id = ? LIMIT 1').bind(tagId).first();
+  return Boolean(row);
 }
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
@@ -365,7 +393,7 @@ function buildFtsMatchQuery(search: string): string {
 function buildWhereClause(params: {
   search?: string;
   useFts?: boolean;
-  tags?: string[];
+  tagGroups?: string[][];
   rhythm?: string[];
   tonality?: string[];
   category?: string[];
@@ -397,9 +425,13 @@ function buildWhereClause(params: {
     }
   }
 
-  if (params.tags && params.tags.length > 0) {
-    conditions.push(`pt.tag_id IN (${params.tags.map(() => '?').join(',')})`);
-    bindings.push(...params.tags);
+  if (params.tagGroups && params.tagGroups.length > 0) {
+    for (const group of params.tagGroups) {
+      conditions.push(
+        `p.id IN (SELECT praise_id FROM praise_tags WHERE tag_id IN (${group.map(() => '?').join(',')}))`
+      );
+      bindings.push(...group);
+    }
   }
 
   if (params.rhythm && params.rhythm.length > 0) {
@@ -468,10 +500,13 @@ app.get('/api/praises', async (c) => {
 
   for (let attempt = 0; attempt < 2; attempt++) {
   try {
+    const tagGroups =
+      tags && tags.length > 0 ? await resolveTagFilterGroups(c.env.DB, tags) : undefined;
+
     const { clause: whereClause, bindings: whereBindings } = buildWhereClause({
       search: search || undefined,
       useFts: useFtsAttempt,
-      tags,
+      tagGroups,
       rhythm,
       tonality,
       category,
@@ -480,66 +515,31 @@ app.get('/api/praises', async (c) => {
       numberMax,
     });
 
-    const hasTagFilter = tags && tags.length > 0;
-    const joinClause = hasTagFilter ? 'INNER JOIN praise_tags pt ON p.id = pt.praise_id' : 'LEFT JOIN praise_tags pt ON p.id = pt.praise_id';
-    const groupClause = hasTagFilter ? 'GROUP BY p.id HAVING COUNT(DISTINCT pt.tag_id) = ?' : 'GROUP BY p.id';
-
-    let query: string;
+    const orderClause = buildOrderClause(sort, order);
     const bindings: (string | number)[] = [...whereBindings];
 
-    if (hasTagFilter) {
-      bindings.push(tags!.length);
-    }
-
-    const orderClause = buildOrderClause(sort, order);
-
-    if (whereClause || hasTagFilter) {
-      query = `
-        SELECT 
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-          GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
-          GROUP_CONCAT(DISTINCT t.name) as tag_names
-        FROM praises p
-        ${joinClause}
-        LEFT JOIN tags t ON pt.tag_id = t.id
-        ${whereClause}
-        ${groupClause}
-        ${orderClause}
-        LIMIT ? OFFSET ?
-      `;
-      bindings.push(limit, offset);
-    } else {
-      query = `
-        SELECT 
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
-          GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
-          GROUP_CONCAT(DISTINCT t.name) as tag_names
-        FROM praises p
-        LEFT JOIN praise_tags pt ON p.id = pt.praise_id
-        LEFT JOIN tags t ON pt.tag_id = t.id
-        GROUP BY p.id
-        ${orderClause}
-        LIMIT ? OFFSET ?
-      `;
-      bindings.push(limit, offset);
-    }
+    const query = `
+      SELECT
+        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
+        GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
+        GROUP_CONCAT(DISTINCT ${TAG_LABEL_SQL}) as tag_names
+      FROM praises p
+      LEFT JOIN praise_tags pt ON p.id = pt.praise_id
+      LEFT JOIN tags t ON pt.tag_id = t.id
+      LEFT JOIN tags tp ON t.parent_id = tp.id
+      ${whereClause}
+      GROUP BY p.id
+      ${orderClause}
+      LIMIT ? OFFSET ?
+    `;
+    bindings.push(limit, offset);
 
     const result = await c.env.DB.prepare(query).bind(...bindings).all();
 
     let countQuery: string;
     let countBindings: (string | number)[] = [...whereBindings];
 
-    if (hasTagFilter) {
-      countQuery = `
-        SELECT COUNT(*) as total FROM (
-          SELECT p.id FROM praises p
-          ${joinClause}
-          ${whereClause}
-          ${groupClause}
-        )
-      `;
-      countBindings.push(tags!.length);
-    } else if (whereClause) {
+    if (whereClause) {
       countQuery = `SELECT COUNT(*) as total FROM praises p ${whereClause}`;
     } else {
       countQuery = `SELECT COUNT(*) as total FROM praises`;
@@ -585,23 +585,32 @@ app.get('/api/praises/filters', async (c) => {
       c.env.DB.prepare(`SELECT DISTINCT tonality FROM praises WHERE tonality IS NOT NULL AND tonality != '' ORDER BY tonality`).all(),
       c.env.DB.prepare(`SELECT DISTINCT category FROM praises WHERE category IS NOT NULL AND category != '' ORDER BY category`).all(),
       c.env.DB.prepare(`
-        SELECT t.id, t.name, COUNT(pt.praise_id) as count 
-        FROM tags t 
-        LEFT JOIN praise_tags pt ON t.id = pt.tag_id 
-        GROUP BY t.id 
+        SELECT t.id, t.name, t.parent_id, COUNT(pt.praise_id) as count
+        FROM tags t
+        LEFT JOIN praise_tags pt ON t.id = pt.tag_id
+        GROUP BY t.id
         ORDER BY t.name
       `).all(),
     ]);
+
+    const tagRows = (tagsResult.results as { id: string; name: string; parent_id: string | null; count: number }[]) ?? [];
+    const childCountByParent = new Map<string, number>();
+    for (const t of tagRows) {
+      if (t.parent_id) {
+        childCountByParent.set(t.parent_id, (childCountByParent.get(t.parent_id) ?? 0) + Number(t.count));
+      }
+    }
+    const tagsOut = tagRows.map((t) => {
+      const hasChildren = childCountByParent.has(t.id);
+      const count = hasChildren ? (childCountByParent.get(t.id) ?? 0) : Number(t.count);
+      return { id: t.id, name: t.name, parent_id: t.parent_id ?? null, count };
+    });
 
     return c.json({
       rhythms: (rhythmsResult.results as { rhythm: string }[]).map(r => r.rhythm),
       tonalities: (tonalitiesResult.results as { tonality: string }[]).map(r => r.tonality),
       categories: (categoriesResult.results as { category: string }[]).map(r => r.category),
-      tags: (tagsResult.results as { id: string; name: string; count: number }[]).map(r => ({
-        id: r.id,
-        name: r.name,
-        count: r.count,
-      })),
+      tags: tagsOut,
     });
   } catch (error) {
     console.error('Error fetching filters:', error);
@@ -644,7 +653,7 @@ app.get('/api/praises/:id', async (c) => {
     // Fetch praise with tags
     const praiseQuery = `
       SELECT 
-        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
+        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
         GROUP_CONCAT(pt.tag_id) as tag_ids
       FROM praises p
       LEFT JOIN praise_tags pt ON p.id = pt.praise_id
@@ -669,15 +678,56 @@ app.get('/api/praises/:id', async (c) => {
     `;
     const materialsResult = await c.env.DB.prepare(materialsQuery).bind(id).all();
 
-    // Fetch tag names
+    // Fetch tag names (with parent for display)
     const tagIds = praiseResult.tag_ids ? praiseResult.tag_ids.split(',') : [];
-    let tags: { id: string; name: string }[] = [];
+    let tags: TagRow[] = [];
     
     if (tagIds.length > 0) {
       const placeholders = tagIds.map(() => '?').join(',');
-      const tagsQuery = `SELECT id, name FROM tags WHERE id IN (${placeholders})`;
+      const tagsQuery = `
+        SELECT t.id, t.name, t.parent_id, tp.name as parent_name
+        FROM tags t
+        LEFT JOIN tags tp ON t.parent_id = tp.id
+        WHERE t.id IN (${placeholders})
+      `;
       const tagsResult = await c.env.DB.prepare(tagsQuery).bind(...tagIds).all();
-      tags = tagsResult.results as { id: string; name: string }[];
+      tags = (tagsResult.results as TagRow[]).map((t) => ({
+        id: t.id,
+        name: t.name,
+        parent_id: t.parent_id ?? null,
+        parent_name: t.parent_name ?? null,
+      }));
+    }
+
+    let group_members: { id: string; tags: TagRow[] }[] = [];
+    if (praiseResult.group_id) {
+      const membersResult = await c.env.DB.prepare(
+        `SELECT p.id,
+                GROUP_CONCAT(pt.tag_id) as tag_ids,
+                GROUP_CONCAT(${TAG_LABEL_SQL}) as tag_names
+         FROM praises p
+         LEFT JOIN praise_tags pt ON p.id = pt.praise_id
+         LEFT JOIN tags t ON pt.tag_id = t.id
+         LEFT JOIN tags tp ON t.parent_id = tp.id
+         WHERE p.group_id = ? AND p.id != ?
+         GROUP BY p.id
+         ORDER BY p.name, p.number`
+      ).bind(praiseResult.group_id, id).all();
+
+      group_members = (membersResult.results as { id: string; tag_ids: string | null; tag_names: string | null }[]).map(
+        (m) => {
+          const ids = m.tag_ids ? m.tag_ids.split(',') : [];
+          const names = m.tag_names ? m.tag_names.split(',') : [];
+          return {
+            id: m.id,
+            tags: ids.map((tid, i) => ({
+              id: tid,
+              name: names[i] || tid,
+              parent_id: null,
+            })),
+          };
+        }
+      );
     }
 
     const materialKindLabels = await loadMaterialKindLabels(c.env.DB);
@@ -693,6 +743,7 @@ app.get('/api/praises/:id', async (c) => {
         tag_ids: tagIds,
         tags,
         materials,
+        group_members,
       },
     });
   } catch (error) {
@@ -716,12 +767,72 @@ app.get('/api/materials/kinds', async (c) => {
 app.get('/api/tags', async (c) => {
   try {
     const result = await c.env.DB.prepare(
-      `SELECT id, name FROM tags ORDER BY name ASC`
+      `SELECT id, name, parent_id FROM tags ORDER BY name ASC`
     ).all();
-    return c.json({ data: result.results });
+    return c.json({
+      data: ((result.results as TagRow[]) ?? []).map((t) => ({
+        id: t.id,
+        name: t.name,
+        parent_id: t.parent_id ?? null,
+      })),
+    });
   } catch (error) {
     console.error('Error fetching tags:', error);
     return c.json({ error: 'Failed to fetch tags' }, 500);
+  }
+});
+
+// POST /api/tags - Create root tag or subtag (admin)
+app.post('/api/tags', requireAuth, async (c) => {
+  const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body || typeof body !== 'object') {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const name = body.name;
+  if (typeof name !== 'string' || !name.trim()) {
+    return c.json({ error: "Field 'name' is required" }, 400);
+  }
+
+  let parentId: string | null = null;
+  if ('parent_id' in body && body.parent_id != null && body.parent_id !== '') {
+    if (typeof body.parent_id !== 'string') {
+      return c.json({ error: "Field 'parent_id' must be a string" }, 400);
+    }
+    parentId = body.parent_id.trim();
+  }
+
+  try {
+    if (parentId) {
+      const parent = await c.env.DB.prepare(
+        'SELECT id, parent_id FROM tags WHERE id = ?'
+      ).bind(parentId).first<{ id: string; parent_id: string | null }>();
+      if (!parent) return c.json({ error: 'Parent tag not found' }, 400);
+      if (parent.parent_id) {
+        return c.json({ error: 'Subtags cannot have subtags (one level only)' }, 400);
+      }
+    }
+
+    const id = crypto.randomUUID();
+    await c.env.DB.prepare(
+      'INSERT INTO tags (id, name, parent_id) VALUES (?, ?, ?)'
+    ).bind(id, name.trim(), parentId).run();
+
+    const parentName = parentId
+      ? ((await c.env.DB.prepare('SELECT name FROM tags WHERE id = ?').bind(parentId).first()) as { name: string } | null)?.name
+      : null;
+
+    return c.json({
+      data: {
+        id,
+        name: name.trim(),
+        parent_id: parentId,
+        parent_name: parentName ?? null,
+      },
+    }, 201);
+  } catch (error) {
+    console.error('Error creating tag:', error);
+    return c.json({ error: 'Failed to create tag' }, 500);
   }
 });
 
@@ -788,6 +899,9 @@ app.post('/api/praises', requireAuth, async (c) => {
     for (const tagId of tagIds) {
       const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
       if (!tag) return c.json({ error: 'Tag not found' }, 400);
+      if (await tagHasChildren(c.env.DB, tagId)) {
+        return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
+      }
 
       await c.env.DB.prepare(
         'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
@@ -860,6 +974,52 @@ app.patch('/api/praises/:id', requireAuth, async (c) => {
   }
 });
 
+// POST /api/praises/:id/group - Link this praise into another's group (admin)
+app.post('/api/praises/:id/group', requireAuth, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => null) as { praise_id?: unknown } | null;
+  if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+  const targetId = body.praise_id;
+  if (typeof targetId !== 'string' || !targetId.trim()) {
+    return c.json({ error: "Field 'praise_id' is required" }, 400);
+  }
+  if (targetId === id) {
+    return c.json({ error: 'Cannot group a praise with itself' }, 400);
+  }
+
+  try {
+    const self = await c.env.DB.prepare('SELECT id, group_id FROM praises WHERE id = ?')
+      .bind(id)
+      .first<{ id: string; group_id: string | null }>();
+    if (!self) return c.json({ error: 'Praise not found' }, 404);
+
+    const other = await c.env.DB.prepare('SELECT id, group_id FROM praises WHERE id = ?')
+      .bind(targetId)
+      .first<{ id: string; group_id: string | null }>();
+    if (!other) return c.json({ error: 'Target praise not found' }, 404);
+
+    const gid = other.group_id ?? other.id;
+    await c.env.DB.prepare(
+      `UPDATE praises SET group_id = ?, updated_at = datetime('now') WHERE id IN (?, ?)`
+    )
+      .bind(gid, id, targetId)
+      .run();
+  } catch (error) {
+    console.error('Error grouping praises:', error);
+    return c.json({ error: 'Failed to group praises' }, 500);
+  }
+
+  try {
+    const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env as any);
+    const json = await res.json();
+    return c.json(json, res.status as ContentfulStatusCode);
+  } catch (error) {
+    console.error('Error re-fetching praise after group:', error);
+    return c.json({ ok: true });
+  }
+});
+
 // POST /api/praises/:id/tags - Attach a tag to a praise (admin)
 app.post('/api/praises/:id/tags', requireAuth, async (c) => {
   const praiseId = c.req.param('id');
@@ -877,6 +1037,9 @@ app.post('/api/praises/:id/tags', requireAuth, async (c) => {
 
     const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
     if (!tag) return c.json({ error: 'Tag not found' }, 404);
+    if (await tagHasChildren(c.env.DB, tagId)) {
+      return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
+    }
 
     await c.env.DB.prepare(
       'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
@@ -992,6 +1155,9 @@ app.post('/api/praises/:keeperId/merge', requireAuth, async (c) => {
     for (const tagId of tagIds) {
       const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
       if (!tag) return c.json({ error: 'Tag not found' }, 400);
+      if (await tagHasChildren(c.env.DB, tagId)) {
+        return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
+      }
     }
 
     for (const materialId of materialIdsToImport) {

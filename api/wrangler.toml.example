@@ -30,7 +30,7 @@ max_concurrency = 3
 #   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_JWT_SECRET
 # Use wrangler global 4.x (não npx wrangler).
 [vars]
-AUTH_BASE_URL = "https://coldigom-api.coletaneadigitalicm.workers.dev"
+AUTH_BASE_URL = "https://coldigom-api.jairofilho79.workers.dev"
 WEB_ORIGIN = "https://coldigom-web.pages.dev"
 AUTH_COOKIE_SAMESITE = "None"
 

@@ -1,3 +1,4 @@
+import { useMemo, useState, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import type { Praise } from '../types';
 
@@ -10,7 +11,31 @@ function parseTagNames(tagNames: string | null | undefined): string[] {
   return tagNames.split(',').map((t) => t.trim()).filter(Boolean);
 }
 
+type PraiseGroup = {
+  key: string;
+  members: Praise[];
+};
+
+function groupPraises(praises: Praise[]): PraiseGroup[] {
+  const order: string[] = [];
+  const map = new Map<string, Praise[]>();
+
+  for (const praise of praises) {
+    const key = praise.group_id || praise.id;
+    if (!map.has(key)) {
+      map.set(key, []);
+      order.push(key);
+    }
+    map.get(key)!.push(praise);
+  }
+
+  return order.map((key) => ({ key, members: map.get(key)! }));
+}
+
 export function ResultsTable({ praises }: ResultsTableProps) {
+  const groups = useMemo(() => groupPraises(praises), [praises]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
   if (praises.length === 0) {
     return (
       <div className="no-results">
@@ -35,29 +60,76 @@ export function ResultsTable({ praises }: ResultsTableProps) {
           </tr>
         </thead>
         <tbody>
-          {praises.map((praise) => {
-            const tags = parseTagNames(praise.tag_names);
+          {groups.map((group) => {
+            const primary = group.members[0];
+            const isMulti = group.members.length > 1;
+            const isOpen = !!expanded[group.key];
+            const tags = parseTagNames(primary.tag_names);
+
             return (
-              <tr key={praise.id}>
-                <td className="col-number">{praise.number || '—'}</td>
-                <td className="col-name">
-                  <Link to={`/praise/${praise.id}`}>{praise.name}</Link>
-                </td>
-                <td className="col-tags">
-                  {tags.length > 0 ? (
-                    <div className="col-tags-list">
-                      {tags.map((name) => (
-                        <span key={name} className="detail-tag">
-                          {name}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-                <td className="col-tonality">{praise.tonality || '—'}</td>
-              </tr>
+              <Fragment key={group.key}>
+                <tr
+                  className={isMulti ? 'results-group-row' : undefined}
+                  onClick={
+                    isMulti
+                      ? () => setExpanded((s) => ({ ...s, [group.key]: !s[group.key] }))
+                      : undefined
+                  }
+                  aria-expanded={isMulti ? isOpen : undefined}
+                >
+                  <td className="col-number">{primary.number || '—'}</td>
+                  <td className="col-name">
+                    {isMulti ? (
+                      <span className="results-group-name">
+                        {isOpen ? '▾' : '▸'} {primary.name}
+                      </span>
+                    ) : (
+                      <Link to={`/praise/${primary.id}`}>{primary.name}</Link>
+                    )}
+                  </td>
+                  <td className="col-tags">
+                    {isMulti ? (
+                      '—'
+                    ) : tags.length > 0 ? (
+                      <div className="col-tags-list">
+                        {tags.map((name) => (
+                          <span key={name} className="detail-tag">
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="col-tonality">{primary.tonality || '—'}</td>
+                </tr>
+                {isMulti && isOpen
+                  ? group.members.map((member) => {
+                      const memberTags = parseTagNames(member.tag_names);
+                      return (
+                        <tr key={member.id} className="results-group-child">
+                          <td className="col-number" />
+                          <td className="col-name" colSpan={3}>
+                            <Link to={`/praise/${member.id}`} className="results-group-member-link">
+                              {memberTags.length > 0 ? (
+                                <span className="col-tags-list">
+                                  {memberTags.map((name) => (
+                                    <span key={name} className="detail-tag">
+                                      {name}
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span className="muted">{member.id.slice(0, 8)}…</span>
+                              )}
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  : null}
+              </Fragment>
             );
           })}
         </tbody>

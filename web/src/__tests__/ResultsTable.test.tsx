@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ResultsTable } from '../components/ResultsTable';
 import { MemoryRouter } from 'react-router-dom';
 import type { Praise } from '../types';
@@ -15,6 +16,7 @@ describe('ResultsTable Component', () => {
       tonality: 'C',
       category: 'Louvor',
       lyrics: 'Letra do louvor 1',
+      group_id: null,
       tag_ids: 'tag1,tag2',
       tag_names: 'Coletânea,GLTM',
     },
@@ -27,6 +29,7 @@ describe('ResultsTable Component', () => {
       tonality: 'G',
       category: 'Adoração',
       lyrics: 'Letra do louvor 2',
+      group_id: null,
       tag_ids: 'tag1',
       tag_names: 'Coletânea',
     },
@@ -133,5 +136,37 @@ describe('ResultsTable Component', () => {
 
     expect(screen.getByText('Grande Deus')).toBeTruthy();
     expect(screen.queryByText('Santo Deus')).toBeNull();
+  });
+
+  it('should collapse grouped praises and expand tag subitems on click', async () => {
+    const user = userEvent.setup();
+    const grouped: Praise[] = [
+      {
+        ...mockPraises[0],
+        group_id: 'group-1',
+        tag_names: 'Coletânea',
+      },
+      {
+        ...mockPraises[1],
+        name: 'Grande Deus',
+        number: '001',
+        group_id: 'group-1',
+        tag_names: 'GLTM',
+      },
+    ];
+
+    renderWithRouter(<ResultsTable praises={grouped} />);
+
+    expect(screen.getByText(/Grande Deus/)).toBeTruthy();
+    expect(screen.queryByText('GLTM')).toBeNull();
+
+    await user.click(screen.getByText(/Grande Deus/));
+
+    expect(screen.getByText('Coletânea')).toBeTruthy();
+    expect(screen.getByText('GLTM')).toBeTruthy();
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute('href', '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    expect(links[1]).toHaveAttribute('href', '/praise/1c12786e-4d32-4e95-a136-d85266008e11');
   });
 });

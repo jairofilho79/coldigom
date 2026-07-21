@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getFilterOptions, getMaterialKinds } from '../services/api';
-import type { FilterOptions, MaterialKind, TagWithCount } from '../types';
+import type { FilterOptions, MaterialKind } from '../types';
 import { SortSelector } from './SortSelector';
 import { useFilters } from '../hooks/useFilters';
 
@@ -142,18 +142,41 @@ export function FilterBar() {
       <div className="filter-section">
         <div className="filter-section-label">Coleções</div>
         <div className="filter-tags-row">
-          {filterOptions.tags.map((tag: TagWithCount) => (
-            <button
-              key={tag.id}
-              type="button"
-              className={`tag-chip ${filters.tags.includes(tag.id) ? 'active' : ''}`}
-              onClick={() => toggleTag(tag.id)}
-              aria-pressed={filters.tags.includes(tag.id)}
-            >
-              {tag.name}
-              <span className="tag-chip-count">{tag.count}</span>
-            </button>
-          ))}
+          {(() => {
+            const roots = filterOptions.tags.filter((t) => !t.parent_id);
+            const childrenOf = (parentId: string) =>
+              filterOptions.tags.filter((t) => t.parent_id === parentId);
+            return roots.flatMap((root) => {
+              const children = childrenOf(root.id);
+              const chips = [
+                <button
+                  key={root.id}
+                  type="button"
+                  className={`tag-chip ${filters.tags.includes(root.id) ? 'active' : ''}`}
+                  onClick={() => toggleTag(root.id)}
+                  aria-pressed={filters.tags.includes(root.id)}
+                >
+                  {root.name}
+                  <span className="tag-chip-count">{root.count}</span>
+                </button>,
+              ];
+              for (const child of children) {
+                chips.push(
+                  <button
+                    key={child.id}
+                    type="button"
+                    className={`tag-chip tag-chip--child ${filters.tags.includes(child.id) ? 'active' : ''}`}
+                    onClick={() => toggleTag(child.id)}
+                    aria-pressed={filters.tags.includes(child.id)}
+                  >
+                    {root.name} · {child.name}
+                    <span className="tag-chip-count">{child.count}</span>
+                  </button>
+                );
+              }
+              return chips;
+            });
+          })()}
         </div>
       </div>
 

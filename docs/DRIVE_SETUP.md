@@ -32,7 +32,7 @@ Projeto OAuth que o Coldigom já usa: [Google Cloud Console](https://console.clo
 2. Confirmar **URI de redirecionamento autorizado** (exato):
 
 ```
-https://coldigom-api.coletaneadigitalicm.workers.dev/auth/callback
+https://coldigom-api.jairofilho79.workers.dev/auth/callback
 ```
 
 3. Origem JS (se listar): `https://coldigom-web.pages.dev`
@@ -72,7 +72,7 @@ npm run deploy
 cd "/Volumes/SSD 2TB SD/dev/coldigom/web"
 # merge/deploy da branch do PR, ou o fluxo Pages que você já usa
 npm run build
-# deploy Pages conforme o pipeline habitual do coldigom-web
+# deploy Pages: projeto coldigom-web (conta jairofilho79)
 ```
 
 Garantir que a SPA aponta para a API de produção (`VITE_API_URL` / env do Pages).
@@ -89,7 +89,7 @@ Garantir que a SPA aponta para a API de produção (`VITE_API_URL` / env do Page
 6. Ver progresso; se falhar algo → **Tentar de novo os que falharam**
 
 URL web: `https://coldigom-web.pages.dev`  
-URL API: `https://coldigom-api.coletaneadigitalicm.workers.dev`
+URL API: `https://coldigom-api.jairofilho79.workers.dev`
 
 ---
 

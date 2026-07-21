@@ -50,6 +50,9 @@ api/assets/
 ingestion.sql
 ingestion_no_tx.sql
 
+# Cloudflare migration artifacts (D1 backup, local secrets)
+migration/
+
 # Kilo CLI internal files
 .kilo/
 

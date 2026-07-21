@@ -9,6 +9,7 @@ export interface Praise {
   tonality: string;
   category: string;
   lyrics: string;
+  group_id: string | null;
   tag_ids: string | null;
   tag_names: string | null;
 }
@@ -30,11 +31,19 @@ export interface Material {
 export interface Tag {
   id: string;
   name: string;
+  parent_id: string | null;
+  parent_name?: string | null;
+}
+
+export interface PraiseGroupMember {
+  id: string;
+  tags: Tag[];
 }
 
 export interface PraiseDetail extends Praise {
   tags: Tag[];
   materials: Material[];
+  group_members: PraiseGroupMember[];
 }
 
 /** Display name for the default locale (pt-BR); resolved by the API from D1 translations. */

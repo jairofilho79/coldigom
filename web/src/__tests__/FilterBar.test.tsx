@@ -37,9 +37,9 @@ describe('FilterBar Component', () => {
     tonalities: ['C', 'G', 'D'],
     categories: ['Louvor', 'Adoração'],
     tags: [
-      { id: 'tag1', name: 'Coletânea', count: 10 },
-      { id: 'tag2', name: 'Avulsos', count: 5 },
-      { id: 'tag3', name: 'GLTM', count: 3 },
+      { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
+      { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
+      { id: 'tag3', name: 'GLTM', parent_id: null, count: 3 },
     ],
   };
 

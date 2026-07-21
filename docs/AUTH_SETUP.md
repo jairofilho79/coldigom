@@ -6,7 +6,7 @@ Use o comando global **`wrangler`** (4.x). Não use `npx wrangler` (resolve vers
 
 | Serviço | URL |
 |---------|-----|
-| API (Worker) | `https://coldigom-api.coletaneadigitalicm.workers.dev` |
+| API (Worker) | `https://coldigom-api.jairofilho79.workers.dev` |
 | Web (Pages) | `https://coldigom-web.pages.dev` |
 
 ## 1. Google Cloud Console
@@ -16,7 +16,7 @@ Use o comando global **`wrangler`** (4.x). Não use `npx wrangler` (resolve vers
 3. **Credenciais → Criar ID do cliente OAuth → Aplicativo da Web**:
    - **URI de redirecionamento autorizado** (exato):
      ```
-     https://coldigom-api.coletaneadigitalicm.workers.dev/auth/callback
+     https://coldigom-api.jairofilho79.workers.dev/auth/callback
      ```
    - **Origem JavaScript** (recomendado): `https://coldigom-web.pages.dev`
 4. Copie **Client ID** e **Client Secret**.
@@ -35,7 +35,7 @@ Variáveis públicas em `wrangler.toml` → bloco `[vars]`:
 
 ```toml
 [vars]
-AUTH_BASE_URL = "https://coldigom-api.coletaneadigitalicm.workers.dev"
+AUTH_BASE_URL = "https://coldigom-api.jairofilho79.workers.dev"
 WEB_ORIGIN = "https://coldigom-web.pages.dev"
 AUTH_COOKIE_SAMESITE = "None"
 ```
@@ -56,7 +56,7 @@ wrangler deploy
 ## 3. Verificação
 
 ```bash
-curl -s https://coldigom-api.coletaneadigitalicm.workers.dev/auth/status | jq
+curl -s https://coldigom-api.jairofilho79.workers.dev/auth/status | jq
 ```
 
 Esperado (exemplo):

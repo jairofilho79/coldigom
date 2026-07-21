@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS praises (
     tonality TEXT,                 -- Tom
     category TEXT,                 -- Categoria
     lyrics TEXT,                   -- Letra completa
+    group_id TEXT,                 -- Shared id for same song / different arrangements
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -43,11 +44,17 @@ CREATE TABLE IF NOT EXISTS praise_tags (
 );
 
 -- Table: tags
--- Lookup table for praise tags
+-- Lookup table for praise tags (one-level hierarchy: root or subtag)
 CREATE TABLE IF NOT EXISTS tags (
     id TEXT PRIMARY KEY,           -- UUID
-    name TEXT NOT NULL UNIQUE      -- Tag name (Coletânea, Avulsos, CIAs, GLTM, PES, Migrados, Diversos)
+    name TEXT NOT NULL,            -- Tag name
+    parent_id TEXT,                -- NULL = root; otherwise must reference a root tag
+    FOREIGN KEY (parent_id) REFERENCES tags(id) ON DELETE RESTRICT
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_root_name ON tags(name) WHERE parent_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_child_name ON tags(parent_id, name) WHERE parent_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tags_parent_id ON tags(parent_id);
 
 -- Table: material_kinds
 -- Lookup table for material types (Audio, Score, MIDI, Lyrics, Chord Chart, Vozes, Instrumentos, etc.)
@@ -75,6 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_praise_tags_praise_id ON praise_tags(praise_id);
 CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);
 CREATE INDEX IF NOT EXISTS idx_praises_number ON praises(number);
+CREATE INDEX IF NOT EXISTS idx_praises_group_id ON praises(group_id);
 
 -- Auth: rotating refresh tokens (opaque value hashed at rest; access JWT is short-lived in cookie)
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (

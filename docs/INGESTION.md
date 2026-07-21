@@ -64,7 +64,7 @@ Compara pastas com `metadata.yml` válido vs `SELECT COUNT(*) FROM praises` no D
 Após ingestão, abra um louvor na web e confirme PDF/MP3. Ou:
 
 ```bash
-curl -I "https://coldigom-api.coletaneadigitalicm.workers.dev/assets/assets/praises/<praise_id>/<material_id>.pdf"
+curl -I "https://coldigom-api.jairofilho79.workers.dev/assets/assets/praises/<praise_id>/<material_id>.pdf"
 ```
 
 ## Regras (PRD)

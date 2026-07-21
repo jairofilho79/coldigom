@@ -33,9 +33,12 @@ const keeper: PraiseDetail = {
   tonality: 'C',
   category: 'Louvor',
   lyrics: 'Letra A',
+  group_id: null,
   tag_ids: 'tag1',
-  tags: [{ id: 'tag1', name: 'Coletânea' }],
+  tag_names: 'Coletânea',
+  tags: [{ id: 'tag1', name: 'Coletânea', parent_id: null }],
   materials: [],
+  group_members: [],
 };
 
 const source: PraiseDetail = {
@@ -47,8 +50,10 @@ const source: PraiseDetail = {
   tonality: 'G',
   category: 'Adoração',
   lyrics: 'Letra B',
+  group_id: null,
   tag_ids: 'tag2',
-  tags: [{ id: 'tag2', name: 'Avulsos' }],
+  tag_names: 'Avulsos',
+  tags: [{ id: 'tag2', name: 'Avulsos', parent_id: null }],
   materials: [
     {
       id: 'mat-src',
@@ -61,6 +66,7 @@ const source: PraiseDetail = {
       source_material_id: null,
     },
   ],
+  group_members: [],
 };
 
 function renderMergeImport() {

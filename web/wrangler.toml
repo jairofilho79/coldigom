@@ -1,0 +1,4 @@
+# Pages deploy na conta jairofilho79 (evita herdar config errada ao rodar de web/)
+account_id = "246ee6c20c011ae98a226d48a7a38902"
+name = "coldigom-web"
+pages_build_output_dir = "dist"

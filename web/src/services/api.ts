@@ -141,6 +141,18 @@ export async function updatePraise(
   return response.data;
 }
 
+export async function groupPraise(id: string, targetPraiseId: string): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${id}/group`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ praise_id: targetPraiseId }),
+    }
+  );
+  return response.data;
+}
+
 export async function addPraiseTag(praiseId: string, tagId: string): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${praiseId}/tags`,
@@ -351,6 +363,18 @@ export async function mergePraises(keeperId: string, body: MergePraisesInput): P
 export async function getTags(): Promise<Tag[]> {
   const response = await fetchJson<ApiResponse<Tag[]>>(
     `${API_BASE_URL}/api/tags`
+  );
+  return response.data;
+}
+
+export async function createTag(body: { name: string; parent_id?: string | null }): Promise<Tag> {
+  const response = await fetchJson<ApiResponse<Tag>>(
+    `${API_BASE_URL}/api/tags`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }
   );
   return response.data;
 }

@@ -23,6 +23,7 @@ describe('API Service', () => {
         tonality: 'C',
         category: 'Louvor',
         lyrics: 'Letra do louvor 1',
+        group_id: null,
         tag_ids: 'tag1,tag2',
         tag_names: 'Coletânea,GLTM',
       },
@@ -35,6 +36,7 @@ describe('API Service', () => {
         tonality: 'G',
         category: 'Adoração',
         lyrics: 'Letra do louvor 2',
+        group_id: null,
         tag_ids: 'tag1',
         tag_names: 'Coletânea',
       },
@@ -259,8 +261,8 @@ describe('API Service', () => {
       tonalities: ['C', 'G'],
       categories: ['Louvor', 'Adoração'],
       tags: [
-        { id: 'tag1', name: 'Coletânea', count: 10 },
-        { id: 'tag2', name: 'Avulsos', count: 5 },
+        { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
+        { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
       ],
     };
 
@@ -301,11 +303,12 @@ describe('API Service', () => {
       tonality: 'C',
       category: 'Louvor',
       lyrics: 'Letra do louvor 1',
+      group_id: null,
       tag_ids: 'tag1,tag2',
       tag_names: 'Coletânea,Avulsos',
       tags: [
-        { id: 'tag1', name: 'Coletânea' },
-        { id: 'tag2', name: 'Avulsos' },
+        { id: 'tag1', name: 'Coletânea', parent_id: null },
+        { id: 'tag2', name: 'Avulsos', parent_id: null },
       ],
       materials: [
         {
@@ -319,6 +322,7 @@ describe('API Service', () => {
           source_material_id: null,
         },
       ],
+      group_members: [],
     };
 
     it('should return praise detail', async () => {
@@ -380,8 +384,8 @@ describe('API Service', () => {
 
   describe('getTags', () => {
     const mockTags: Tag[] = [
-      { id: 'tag1', name: 'Coletânea' },
-      { id: 'tag2', name: 'Avulsos' },
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag2', name: 'Avulsos', parent_id: null },
     ];
 
     it('should return tags', async () => {

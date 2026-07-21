@@ -68,6 +68,7 @@ describe('HomePage Component', () => {
       tonality: 'C',
       category: 'Louvor',
       lyrics: 'Letra do louvor 1',
+      group_id: null,
       tag_ids: 'tag1,tag2',
       tag_names: 'Coletânea,GLTM',
     },
@@ -80,6 +81,7 @@ describe('HomePage Component', () => {
       tonality: 'G',
       category: 'Adoração',
       lyrics: 'Letra do louvor 2',
+      group_id: null,
       tag_ids: 'tag1',
       tag_names: 'Coletânea',
     },
@@ -103,8 +105,8 @@ describe('HomePage Component', () => {
       tonalities: ['C', 'G'],
       categories: ['Louvor', 'Adoração'],
       tags: [
-        { id: 'tag1', name: 'Coletânea', count: 10 },
-        { id: 'tag2', name: 'Avulsos', count: 5 },
+        { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
+        { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
       ],
     });
     (getMaterialKinds as any).mockResolvedValue([

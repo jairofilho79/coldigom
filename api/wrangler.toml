@@ -1,5 +1,5 @@
 name = "coldigom-api"
-account_id = "ae6f9337c75828a1c114e9ec10119d0f"
+account_id = "246ee6c20c011ae98a226d48a7a38902"
 main = "dist/index.js"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
@@ -8,7 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"              # Variable name in code (c.env.DB)
 database_name = "coldigom" # Name in Cloudflare dashboard
-database_id = "975818ec-73e0-40ca-b110-be9204e13d91"  # Created D1 database
+database_id = "7186c208-a639-469e-810c-8e7401c16b33"  # D1 coldigom (conta jairofilho79)
 
 # R2 Bucket binding
 [[r2_buckets]]
@@ -28,7 +28,7 @@ max_concurrency = 3
 
 # OAuth / sessão (não-secret). Secrets via `wrangler secret put` (usar wrangler global 4.x, não npx)
 [vars]
-AUTH_BASE_URL = "https://coldigom-api.coletaneadigitalicm.workers.dev"
+AUTH_BASE_URL = "https://coldigom-api.jairofilho79.workers.dev"
 WEB_ORIGIN = "https://coldigom-web.pages.dev"
 AUTH_COOKIE_SAMESITE = "None"
 

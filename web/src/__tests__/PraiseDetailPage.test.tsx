@@ -24,12 +24,13 @@ vi.mock('../services/api', async (importOriginal) => {
     createPraise: vi.fn(),
     updatePraise: vi.fn(),
     getTags: vi.fn().mockResolvedValue([
-      { id: 'tag1', name: 'Coletânea' },
-      { id: 'tag2', name: 'Avulsos' },
-      { id: 'tag3', name: 'GLTM' },
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag2', name: 'Avulsos', parent_id: null },
+      { id: 'tag3', name: 'GLTM', parent_id: null },
     ]),
     addPraiseTag: vi.fn(),
     removePraiseTag: vi.fn(),
+    groupPraise: vi.fn(),
     createMaterial: vi.fn(),
     updateMaterial: vi.fn(),
     deleteMaterial: vi.fn(),
@@ -38,7 +39,7 @@ vi.mock('../services/api', async (importOriginal) => {
   };
 });
 
-import { getPraise, getMe, createPraise } from '../services/api';
+import { getPraise, getMe, createPraise, groupPraise } from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
 
@@ -52,10 +53,12 @@ describe('PraiseDetailPage Component', () => {
     tonality: 'C',
     category: 'Louvor',
     lyrics: 'Esta é a letra do louvor',
+    group_id: null,
     tag_ids: 'tag1,tag2',
+    tag_names: 'Coletânea,Avulsos',
     tags: [
-      { id: 'tag1', name: 'Coletânea' },
-      { id: 'tag2', name: 'Avulsos' },
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag2', name: 'Avulsos', parent_id: null },
     ],
     materials: [
       {
@@ -79,6 +82,7 @@ describe('PraiseDetailPage Component', () => {
         source_material_id: null,
       },
     ],
+    group_members: [],
   };
 
   beforeEach(() => {
@@ -298,6 +302,7 @@ describe('PraiseDetailPage Component', () => {
       expect(getPraise).not.toHaveBeenCalled();
       expect(screen.getByRole('button', { name: 'Criar louvor' })).toBeTruthy();
       expect(screen.getByText('Materiais (após salvar)')).toBeTruthy();
+      expect(screen.getByText('Importar do Google Drive')).toBeTruthy();
       expect(screen.queryByText('Materiais (admin)')).toBeNull();
       expect(screen.queryByRole('link', { name: 'Baixar em ZIP' })).toBeNull();
     });
@@ -339,6 +344,47 @@ describe('PraiseDetailPage Component', () => {
     beforeEach(() => {
       (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
       (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+    });
+
+    it('exibe botão Agrupar Louvor no modo edição e agrupa por praiseId', async () => {
+      const user = userEvent.setup();
+      const targetId = '1c12786e-4d32-4e95-a136-d85266008e11';
+      (groupPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        group_id: targetId,
+        group_members: [
+          { id: targetId, tags: [{ id: 'tag3', name: 'GLTM' }] },
+        ],
+      });
+
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+      });
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      expect(screen.getByRole('button', { name: 'Agrupar Louvor' })).toBeTruthy();
+      await user.click(screen.getByRole('button', { name: 'Agrupar Louvor' }));
+
+      const input = screen.getByLabelText('praiseId do louvor a agrupar');
+      await user.type(input, targetId);
+      await user.click(screen.getByRole('button', { name: 'Confirmar' }));
+
+      await waitFor(() => {
+        expect(groupPraise).toHaveBeenCalledWith(
+          '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+          targetId
+        );
+      });
+
+      expect(screen.getByText('Louvores agrupados')).toBeTruthy();
+      expect(screen.getByText('GLTM')).toBeTruthy();
+      expect(screen.getByRole('link', { name: /GLTM/ })).toHaveAttribute(
+        'href',
+        `/praise/${targetId}`
+      );
+      expect(screen.getByRole('link', { name: /GLTM/ })).toHaveAttribute('target', '_blank');
     });
 
     it('exibe botão Mesclar quando logado', async () => {

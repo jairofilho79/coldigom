@@ -367,7 +367,7 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.getByRole('button', { name: 'Agrupar Louvor' })).toBeTruthy();
       await user.click(screen.getByRole('button', { name: 'Agrupar Louvor' }));
 
-      const input = screen.getByLabelText('praiseId do louvor a agrupar');
+      const input = screen.getByLabelText('ID do louvor a agrupar');
       await user.type(input, targetId);
       await user.click(screen.getByRole('button', { name: 'Confirmar' }));
 
@@ -479,8 +479,26 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.queryByRole('heading', { name: 'Materiais cadastrados' })).toBeNull();
     });
 
-    it('exibe edição inline de categoria em Áudio e Partituras', async () => {
+    it('não exibe edição/remoção de material fora do modo edição', async () => {
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByText('Partituras')).toBeTruthy();
+        expect(screen.getByLabelText('Áudio')).toBeTruthy();
+      });
+
+      expect(screen.queryAllByLabelText('Categoria do material')).toHaveLength(0);
+      expect(screen.queryAllByRole('button', { name: 'Remover' })).toHaveLength(0);
+    });
+
+    it('exibe edição inline de categoria em Áudio e Partituras no modo edição', async () => {
+      const user = userEvent.setup();
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+      });
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
 
       await waitFor(() => {
         expect(screen.getByText('Partituras')).toBeTruthy();
@@ -492,7 +510,8 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.getAllByRole('button', { name: 'Remover' }).length).toBeGreaterThanOrEqual(2);
     });
 
-    it('exibe placeholder de edição em Acordes quando logado', async () => {
+    it('exibe placeholder de edição em Acordes no modo edição', async () => {
+      const user = userEvent.setup();
       const praiseWithChords = {
         ...mockPraiseDetail,
         materials: [
@@ -512,6 +531,11 @@ describe('PraiseDetailPage Component', () => {
       (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithChords);
 
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+      });
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
 
       await waitFor(() => {
         expect(screen.getByText('Edição de categoria — em breve')).toBeTruthy();

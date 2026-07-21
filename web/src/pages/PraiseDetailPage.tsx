@@ -563,7 +563,7 @@ export function PraiseDetailPage() {
   const audioMaterials = materialGroups.find((g) => g.type === 'mp3')?.items ?? [];
   const pdfMaterials = materialGroups.find((g) => g.type === 'pdf')?.items ?? [];
   const chordMaterials = materialGroups.find((g) => g.type === 'chord')?.items ?? [];
-  const canEditMaterialsInline = Boolean(userName && !isCreate);
+  const canEditMaterialsInline = Boolean(userName && isEditing && !isCreate);
 
   const handleMaterialKindChange = async (materialId: string, material_kind: string) => {
     setSavingMaterials(true);
@@ -890,6 +890,10 @@ export function PraiseDetailPage() {
           </>
         ) : null}
 
+        {isEditing && (userName || !isCreate) ? (
+          <hr className="detail-section-divider" />
+        ) : null}
+
         {!isEditing && praise && (
           <div className="detail-meta-row">
             <div className="detail-meta-item detail-meta-item--id">
@@ -1017,56 +1021,59 @@ export function PraiseDetailPage() {
                 : null
             )}
             {rootTags.length > 0 ? (
-              <div className="detail-tag-add detail-tag-add--subtag">
-                <span className="detail-tags-hint muted">Nova subtag</span>
-                <SearchableSelect
-                  value={newSubtagParentId}
-                  onChange={setNewSubtagParentId}
-                  options={rootSelectOptions}
-                  placeholder="Tag pai…"
-                  searchPlaceholder="Buscar pai…"
-                  disabled={subtagBusy || tagsBusy}
-                  aria-label="Tag pai da subtag"
-                />
-                <input
-                  type="text"
-                  value={newSubtagName}
-                  onChange={(e) => setNewSubtagName(e.target.value)}
-                  placeholder="ex.: 4.2026"
-                  disabled={subtagBusy || tagsBusy}
-                  aria-label="Nome da subtag"
-                />
-                <button
-                  type="button"
-                  className="auth-btn"
-                  disabled={!newSubtagParentId || !newSubtagName.trim() || subtagBusy || tagsBusy || (!isCreate && !id)}
-                  onClick={async () => {
-                    if (!newSubtagParentId || !newSubtagName.trim()) return;
-                    setSubtagBusy(true);
-                    setError(null);
-                    try {
-                      const created = await createTag({
-                        name: newSubtagName.trim(),
-                        parent_id: newSubtagParentId,
-                      });
-                      setCatalogTags((prev) => [...prev, created]);
-                      if (isCreate) {
-                        setPendingTagIds((ids) => (ids.includes(created.id) ? ids : [...ids, created.id]));
-                      } else if (id) {
-                        const updated = await addPraiseTag(id, created.id);
-                        setPraise(updated);
+              <div className="detail-subtag-block">
+                <span className="detail-tags-label">Nova subtag</span>
+                <div className="detail-tag-add">
+                  <SearchableSelect
+                    value={newSubtagParentId}
+                    onChange={setNewSubtagParentId}
+                    options={rootSelectOptions}
+                    placeholder="Tag pai…"
+                    searchPlaceholder="Buscar pai…"
+                    disabled={subtagBusy || tagsBusy}
+                    aria-label="Tag pai da subtag"
+                  />
+                  <input
+                    type="text"
+                    className="edit-input detail-subtag-name-input"
+                    value={newSubtagName}
+                    onChange={(e) => setNewSubtagName(e.target.value)}
+                    placeholder="ex.: 4.2026"
+                    disabled={subtagBusy || tagsBusy}
+                    aria-label="Nome da subtag"
+                  />
+                  <button
+                    type="button"
+                    className="auth-btn"
+                    disabled={!newSubtagParentId || !newSubtagName.trim() || subtagBusy || tagsBusy || (!isCreate && !id)}
+                    onClick={async () => {
+                      if (!newSubtagParentId || !newSubtagName.trim()) return;
+                      setSubtagBusy(true);
+                      setError(null);
+                      try {
+                        const created = await createTag({
+                          name: newSubtagName.trim(),
+                          parent_id: newSubtagParentId,
+                        });
+                        setCatalogTags((prev) => [...prev, created]);
+                        if (isCreate) {
+                          setPendingTagIds((ids) => (ids.includes(created.id) ? ids : [...ids, created.id]));
+                        } else if (id) {
+                          const updated = await addPraiseTag(id, created.id);
+                          setPraise(updated);
+                        }
+                        setNewSubtagName('');
+                        setNewSubtagParentId('');
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : 'Falha ao criar subtag');
+                      } finally {
+                        setSubtagBusy(false);
                       }
-                      setNewSubtagName('');
-                      setNewSubtagParentId('');
-                    } catch (err) {
-                      setError(err instanceof Error ? err.message : 'Falha ao criar subtag');
-                    } finally {
-                      setSubtagBusy(false);
-                    }
-                  }}
-                >
-                  {subtagBusy ? 'Criando…' : 'Criar e associar'}
-                </button>
+                    }}
+                  >
+                    {subtagBusy ? 'Criando…' : 'Criar e associar'}
+                  </button>
+                </div>
               </div>
             ) : null}
           </div>
@@ -1080,8 +1087,13 @@ export function PraiseDetailPage() {
           )
         )}
 
+        {isEditing && userName ? (
+          <hr className="detail-section-divider" />
+        ) : null}
+
         {isEditing && userName && !isCreate && id ? (
           <div className="praise-group-edit">
+            <span className="detail-tags-label">Agrupar louvor</span>
             {!showGroupInput ? (
               <button
                 type="button"
@@ -1094,10 +1106,11 @@ export function PraiseDetailPage() {
               <div className="praise-group-form">
                 <input
                   type="text"
+                  className="edit-input"
                   value={groupTargetId}
                   onChange={(e) => setGroupTargetId(e.target.value)}
-                  placeholder="praiseId do louvor a agrupar"
-                  aria-label="praiseId do louvor a agrupar"
+                  placeholder="ID do louvor a agrupar"
+                  aria-label="ID do louvor a agrupar"
                   disabled={groupingBusy}
                 />
                 <button

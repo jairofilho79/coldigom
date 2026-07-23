@@ -549,6 +549,129 @@ describe('API Routes', () => {
     });
   });
 
+  describe('GET /api/plpcg/praises', () => {
+    const plpcgListRow = {
+      id: mockPraises[0].id,
+      name: mockPraises[0].name,
+      number: mockPraises[0].number,
+      author: mockPraises[0].author,
+      rhythm: mockPraises[0].rhythm,
+      tonality: mockPraises[0].tonality,
+      category: mockPraises[0].category,
+      group_id: null,
+      tag_ids: 'tag1',
+      tag_names: 'Coletânea',
+      has_lyrics: 1,
+    };
+
+    const slimMaterials = [
+      {
+        id: 'mat1',
+        praise_id: mockPraises[0].id,
+        material_kind: 'kind1',
+        type: 'pdf',
+        r2_key: 'assets/praises/x/mat1.pdf',
+        url: null,
+      },
+    ];
+
+    function createPlpcgMockDB(opts: {
+      listRows?: typeof plpcgListRow[];
+      materials?: typeof slimMaterials;
+      fail?: boolean;
+    } = {}) {
+      const listRows = opts.listRows ?? [plpcgListRow];
+      const materials = opts.materials ?? slimMaterials;
+      return {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn().mockReturnThis(),
+          all: vi.fn().mockImplementation(async () => {
+            if (opts.fail) throw new Error('DB Error');
+            if (query.includes('COALESCE(t.label')) {
+              return { results: mockMaterialKindLabels };
+            }
+            if (query.includes('FROM praise_materials')) {
+              return { results: materials };
+            }
+            if (query.includes('has_lyrics') || query.includes('GROUP BY p.id')) {
+              return { results: listRows };
+            }
+            return { results: [] };
+          }),
+          first: vi.fn().mockImplementation(async () => {
+            if (opts.fail) throw new Error('DB Error');
+            return { total: listRows.length };
+          }),
+        })),
+      };
+    }
+
+    it('should omit lyrics and include slim materials with lyrics stub', async () => {
+      const mockDB = createPlpcgMockDB();
+      const res = await app.request('/api/plpcg/praises', {}, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+      });
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data).toHaveLength(1);
+      expect(json.data[0]).not.toHaveProperty('lyrics');
+      expect(json.data[0]).not.toHaveProperty('has_lyrics');
+      expect(json.data[0].materials).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+          }),
+          expect.objectContaining({ type: 'lyrics', material_kind_name: 'Letra' }),
+        ])
+      );
+      expect(json.data[0].materials[0]).not.toHaveProperty('file_path_legacy');
+    });
+
+    it('should use has_lyrics in SQL and not select p.lyrics', async () => {
+      const mockDB = createPlpcgMockDB();
+      const res = await app.request('/api/plpcg/praises', {}, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = (mockDB.prepare as ReturnType<typeof vi.fn>).mock.calls.find(
+        ([q]: [string]) => q.includes('GROUP BY p.id')
+      )?.[0] as string;
+      expect(listQuery).toContain('has_lyrics');
+      expect(listQuery).not.toContain('p.lyrics,');
+      expect(listQuery).not.toContain(', p.lyrics');
+    });
+
+    it('should accept q= search parameter', async () => {
+      const mockDB = createPlpcgMockDB();
+      const res = await app.request('/api/plpcg/praises?q=deus&limit=2', {}, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+      });
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.data).toHaveLength(1);
+      expect(json.pagination.limit).toBe(2);
+    });
+
+    it('should return 500 on database error', async () => {
+      const mockDB = createPlpcgMockDB({ fail: true });
+      const res = await app.request('/api/plpcg/praises', {}, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+      });
+
+      expect(res.status).toBe(500);
+      const json = await res.json();
+      expect(json.error).toBe('Failed to fetch praises');
+    });
+  });
+
   describe('GET /api/praises/filters', () => {
     it('should return filter options', async () => {
       const mockDB = {

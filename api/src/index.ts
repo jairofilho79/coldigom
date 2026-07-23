@@ -22,6 +22,7 @@ import {
   handleDriveImportQueueBatch,
   type DriveImportQueueMessage,
 } from './driveImport';
+import { listPlpcgPraises, parsePlpcgListQuery, type PlpcgListDeps } from './plpcgPraises';
 
 type Env = {
   DB: D1Database;
@@ -575,6 +576,24 @@ app.get('/api/praises', async (c) => {
   }
 
   return c.json({ error: 'Failed to fetch praises' }, 500);
+});
+
+// GET /api/plpcg/praises - Lightweight list for PLPCG (no lyrics text; slim materials)
+app.get('/api/plpcg/praises', async (c) => {
+  try {
+    const query = parsePlpcgListQuery(c);
+    const result = await listPlpcgPraises(c.env.DB, query, {
+      buildWhereClause,
+      buildOrderClause: buildOrderClause as PlpcgListDeps['buildOrderClause'],
+      validSortFields: VALID_SORT_FIELDS,
+      resolveTagFilterGroups,
+      tagLabelSql: TAG_LABEL_SQL,
+    });
+    return c.json(result);
+  } catch (error) {
+    console.error('Error fetching PLPCG praises:', error);
+    return c.json({ error: 'Failed to fetch praises' }, 500);
+  }
 });
 
 // GET /api/praises/filters - Get filter options

@@ -146,8 +146,8 @@ export async function buildGoogleAuthorizeRedirect(params: {
   baseUrl: string;
   clientId: string;
   redirectTo: string;
+  db: D1Database;
   cookieSameSite?: 'Lax' | 'Strict' | 'None';
-  /** Default login identity; `drive` requests drive.readonly + offline refresh token */
   purpose?: 'login' | 'drive';
 }): Promise<{
   location: string;
@@ -175,16 +175,16 @@ export async function buildGoogleAuthorizeRedirect(params: {
     url.searchParams.set('prompt', 'select_account');
   }
 
-  const sameSite = params.cookieSameSite ?? 'Lax';
-  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
-  const setCookies = [
-    buildSetCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, codeVerifier, { maxAgeSeconds: 600, sameSite, secure }),
-    buildSetCookie(params.requestUrl, STATE_COOKIE, state, { maxAgeSeconds: 600, sameSite, secure }),
-    buildSetCookie(params.requestUrl, REDIRECT_COOKIE, params.redirectTo, { maxAgeSeconds: 600, sameSite, secure }),
-    buildSetCookie(params.requestUrl, OAUTH_PURPOSE_COOKIE, purpose, { maxAgeSeconds: 600, sameSite, secure }),
-  ];
+  const expiresAt = Math.floor(Date.now() / 1000) + 600;
+  await params.db
+    .prepare(
+      `INSERT OR REPLACE INTO oauth_pending (state, code_verifier, redirect_to, purpose, expires_at) VALUES (?, ?, ?, ?, ?)`
+    )
+    .bind(state, codeVerifier, params.redirectTo, purpose, expiresAt)
+    .run();
 
-  return { location: url.toString(), setCookies };
+  // No Set-Cookie: Safari/Pages proxy breaks multi-cookie OAuth handoff.
+  return { location: url.toString(), setCookies: [] };
 }
 
 async function exchangeCodeForTokens(params: {
@@ -337,7 +337,10 @@ export async function rotateRefreshSession(params: {
   jwtSecret: string;
   rawRefresh: string;
   cookieSameSite?: 'Lax' | 'Strict' | 'None';
-}): Promise<{ setCookies: string[]; user: AuthUser } | { error: 'invalid' | 'reuse' }> {
+}): Promise<
+  | { setCookies: string[]; user: AuthUser; accessToken: string; refreshToken: string }
+  | { error: 'invalid' | 'reuse' }
+> {
   const hash = await hashRefreshTokenHex(params.rawRefresh);
   const row = await params.db
     .prepare(
@@ -413,7 +416,44 @@ export async function rotateRefreshSession(params: {
   ];
 
   const fullUser = await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: accessJwt });
-  return { setCookies, user: fullUser };
+  return { setCookies, user: fullUser, accessToken: accessJwt, refreshToken: newRawRefresh };
+}
+
+export async function createAuthExchangeCode(params: {
+  db: D1Database;
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}): Promise<string> {
+  const code = randomString(32);
+  const expiresAt = Math.floor(Date.now() / 1000) + 120;
+  await params.db
+    .prepare(
+      `INSERT INTO auth_exchange_codes (code, access_token, refresh_token, user_json, expires_at) VALUES (?, ?, ?, ?, ?)`
+    )
+    .bind(code, params.accessToken, params.refreshToken, JSON.stringify(params.user), expiresAt)
+    .run();
+  return code;
+}
+
+export async function consumeAuthExchangeCode(
+  db: D1Database,
+  code: string
+): Promise<{ accessToken: string; refreshToken: string; user: AuthUser } | null> {
+  const now = Math.floor(Date.now() / 1000);
+  const row = await db
+    .prepare(
+      `SELECT access_token, refresh_token, user_json, used_at FROM auth_exchange_codes WHERE code = ? AND expires_at > ?`
+    )
+    .bind(code, now)
+    .first<{ access_token: string; refresh_token: string; user_json: string; used_at: number | null }>();
+  if (!row || row.used_at) return null;
+  await db.prepare(`UPDATE auth_exchange_codes SET used_at = ? WHERE code = ?`).bind(now, code).run();
+  return {
+    accessToken: row.access_token,
+    refreshToken: row.refresh_token,
+    user: JSON.parse(row.user_json) as AuthUser,
+  };
 }
 
 export async function handleOAuthCallback(params: {
@@ -431,19 +471,39 @@ export async function handleOAuthCallback(params: {
   user: AuthUser;
   purpose: 'login' | 'drive';
   googleRefreshToken?: string;
+  exchangeCode?: string;
 }> {
   const code = params.requestUrl.searchParams.get('code');
   const state = params.requestUrl.searchParams.get('state');
   if (!code || !state) throw new Error('Missing code/state');
 
-  const cookieState = getCookie(params.request, STATE_COOKIE);
-  const verifier = getCookie(params.request, PKCE_VERIFIER_COOKIE);
-  const redirectTo = getCookie(params.request, REDIRECT_COOKIE) || '/';
-  const purposeRaw = getCookie(params.request, OAUTH_PURPOSE_COOKIE);
-  const purpose: 'login' | 'drive' = purposeRaw === 'drive' ? 'drive' : 'login';
+  const now = Math.floor(Date.now() / 1000);
+  const pending = await params.db
+    .prepare(
+      `SELECT code_verifier, redirect_to, purpose FROM oauth_pending WHERE state = ? AND expires_at > ?`
+    )
+    .bind(state, now)
+    .first<{ code_verifier: string; redirect_to: string; purpose: string }>();
 
-  if (!cookieState || cookieState !== state) throw new Error('Invalid state');
-  if (!verifier) throw new Error('Missing PKCE verifier');
+  let verifier: string;
+  let redirectTo: string;
+  let purpose: 'login' | 'drive';
+
+  if (pending) {
+    verifier = pending.code_verifier;
+    redirectTo = pending.redirect_to;
+    purpose = pending.purpose === 'drive' ? 'drive' : 'login';
+    await params.db.prepare(`DELETE FROM oauth_pending WHERE state = ?`).bind(state).run();
+  } else {
+    // Legacy cookie-based OAuth (fallback)
+    const cookieState = getCookie(params.request, STATE_COOKIE);
+    verifier = getCookie(params.request, PKCE_VERIFIER_COOKIE) || '';
+    redirectTo = getCookie(params.request, REDIRECT_COOKIE) || '/';
+    const purposeRaw = getCookie(params.request, OAUTH_PURPOSE_COOKIE);
+    purpose = purposeRaw === 'drive' ? 'drive' : 'login';
+    if (!cookieState || cookieState !== state) throw new Error('Invalid state');
+    if (!verifier) throw new Error('Missing PKCE verifier');
+  }
 
   const tokenResponse = await exchangeCodeForTokens({
     baseUrl: params.baseUrl,
@@ -468,7 +528,7 @@ export async function handleOAuthCallback(params: {
   const opts = { sameSite, secure };
 
   if (purpose === 'drive') {
-    const sessionUser = await resolveUserFromCookies({
+    const sessionUser = await resolveUserFromRequest({
       request: params.request,
       jwtSecret: params.jwtSecret,
     });
@@ -505,23 +565,50 @@ export async function handleOAuthCallback(params: {
   const jti = crypto.randomUUID();
   const accessJwt = await signAccessJwt({ jwtSecret: params.jwtSecret, user, jti });
 
-  const setCookies = [
-    buildSetCookie(params.requestUrl, ACCESS_COOKIE, accessJwt, {
-      maxAgeSeconds: ACCESS_TTL_SEC,
-      ...opts,
-    }),
-    buildSetCookie(params.requestUrl, REFRESH_COOKIE, rawRefresh, {
-      maxAgeSeconds: REFRESH_TTL_SEC,
-      ...opts,
-    }),
-    clearCookie(params.requestUrl, LEGACY_SESSION_COOKIE, opts),
-    clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, opts),
-    clearCookie(params.requestUrl, STATE_COOKIE, opts),
-    clearCookie(params.requestUrl, REDIRECT_COOKIE, opts),
-    clearCookie(params.requestUrl, OAUTH_PURPOSE_COOKIE, opts),
-  ];
+  const exchangeCode = pending
+    ? await createAuthExchangeCode({
+        db: params.db,
+        accessToken: accessJwt,
+        refreshToken: rawRefresh,
+        user,
+      })
+    : undefined;
 
-  return { redirectTo, setCookies, user, purpose: 'login' };
+  const setCookies = exchangeCode
+    ? []
+    : [
+        buildSetCookie(params.requestUrl, ACCESS_COOKIE, accessJwt, {
+          maxAgeSeconds: ACCESS_TTL_SEC,
+          ...opts,
+        }),
+        buildSetCookie(params.requestUrl, REFRESH_COOKIE, rawRefresh, {
+          maxAgeSeconds: REFRESH_TTL_SEC,
+          ...opts,
+        }),
+        clearCookie(params.requestUrl, LEGACY_SESSION_COOKIE, opts),
+        clearCookie(params.requestUrl, PKCE_VERIFIER_COOKIE, opts),
+        clearCookie(params.requestUrl, STATE_COOKIE, opts),
+        clearCookie(params.requestUrl, REDIRECT_COOKIE, opts),
+        clearCookie(params.requestUrl, OAUTH_PURPOSE_COOKIE, opts),
+      ];
+
+  return { redirectTo, setCookies, user, purpose: 'login', exchangeCode };
+}
+
+/** Resolve user from Authorization Bearer or auth cookies. */
+export async function resolveUserFromRequest(params: {
+  request: Request;
+  jwtSecret: string;
+}): Promise<AuthUser | null> {
+  const auth = params.request.headers.get('authorization');
+  if (auth?.startsWith('Bearer ')) {
+    try {
+      return await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: auth.slice(7).trim() });
+    } catch {
+      /* fall through */
+    }
+  }
+  return resolveUserFromCookies(params);
 }
 
 /** Resolve user from access cookie, legacy session cookie, or null */
@@ -562,8 +649,9 @@ export async function buildLogoutCookies(params: {
   request: Request;
   requestUrl: URL;
   db: D1Database;
+  rawRefreshOverride?: string;
 }): Promise<string[]> {
-  const rawRefresh = getCookie(params.request, REFRESH_COOKIE);
+  const rawRefresh = params.rawRefreshOverride || getCookie(params.request, REFRESH_COOKIE);
   if (rawRefresh) {
     const hash = await hashRefreshTokenHex(rawRefresh);
     const row = await params.db

@@ -1,23 +1,101 @@
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
+import type { RawChordproDetail, RawChordproSummary } from '../types/rawChordpro';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== null
+    ? String(import.meta.env.VITE_API_URL)
+    : 'http://localhost:8787';
+
+const ACCESS_KEY = 'coldigom_access';
+const REFRESH_KEY = 'coldigom_refresh';
+
+function getStoredAccessToken(): string | null {
+  try {
+    return sessionStorage.getItem(ACCESS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function getStoredRefreshToken(): string | null {
+  try {
+    return sessionStorage.getItem(REFRESH_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthTokens(accessToken: string, refreshToken: string): void {
+  sessionStorage.setItem(ACCESS_KEY, accessToken);
+  sessionStorage.setItem(REFRESH_KEY, refreshToken);
+}
+
+export function clearAuthTokens(): void {
+  sessionStorage.removeItem(ACCESS_KEY);
+  sessionStorage.removeItem(REFRESH_KEY);
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getStoredAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export function getLoginRedirectPath(): string {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+export function getLoginUrl(): string {
+  return `${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(getLoginRedirectPath())}`;
+}
 
 function isAuthPathNoRefresh(url: string): boolean {
-  return /\/auth\/(login|callback|refresh)(?:\?|$)/.test(url);
+  return /\/auth\/(login|callback|refresh|exchange-code)(?:\?|$)/.test(url);
 }
 
 let refreshInFlight: Promise<boolean> | null = null;
 
-/** Rotates refresh cookie + issues new access cookie. Returns true if session renewed. */
+/** Exchange one-time OAuth code for tokens (Safari-safe, no cookies). */
+export async function exchangeAuthCode(code: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/exchange-code`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ code }),
+      credentials: 'include',
+    });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { accessToken: string; refreshToken: string };
+    setAuthTokens(data.accessToken, data.refreshToken);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Rotates refresh token and issues new access token. Returns true if session renewed. */
 export async function refreshSession(): Promise<boolean> {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = (async () => {
     try {
+      const refreshToken = getStoredRefreshToken();
       const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
         credentials: 'include',
       });
-      return res.ok;
+      if (!res.ok) {
+        clearAuthTokens();
+        return false;
+      }
+      const data = (await res.json()) as { accessToken?: string; refreshToken?: string };
+      if (data.accessToken && data.refreshToken) {
+        setAuthTokens(data.accessToken, data.refreshToken);
+      }
+      return true;
+    } catch {
+      clearAuthTokens();
+      return false;
     } finally {
       refreshInFlight = null;
     }
@@ -26,7 +104,11 @@ export async function refreshSession(): Promise<boolean> {
 }
 
 async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = false): Promise<T> {
-  const response = await fetch(url, { credentials: 'include', ...init });
+  const headers = {
+    ...authHeaders(),
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  const response = await fetch(url, { credentials: 'include', ...init, headers });
   if (response.status === 401 && !isAfterRefresh && !isAuthPathNoRefresh(url)) {
     const renewed = await refreshSession();
     if (renewed) {
@@ -387,9 +469,74 @@ export async function getMe(): Promise<AuthUser | null> {
 }
 
 export async function logout(): Promise<void> {
-  await fetchJson<{ ok: true }>(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+  const refreshToken = getStoredRefreshToken();
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
+      credentials: 'include',
+    });
+  } finally {
+    clearAuthTokens();
+  }
 }
 
 export function getAssetUrl(r2Key: string): string {
-  return `${API_BASE_URL}/${r2Key}`;
+  const key = r2Key.replace(/^\//, '');
+  return API_BASE_URL ? `${API_BASE_URL}/${key}` : `/${key}`;
+}
+
+export interface ListRawChordprosParams {
+  validated?: 'all' | 'true' | 'false';
+  q?: string;
+  debug_batch?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listRawChordpros(
+  params: ListRawChordprosParams = {}
+): Promise<{ data: RawChordproSummary[]; pagination: PaginationInfo }> {
+  const urlParams = new URLSearchParams();
+  if (params.validated && params.validated !== 'all') urlParams.set('validated', params.validated);
+  if (params.q) urlParams.set('q', params.q);
+  if (params.debug_batch) urlParams.set('debug_batch', params.debug_batch);
+  urlParams.set('limit', String(params.limit ?? 50));
+  urlParams.set('offset', String(params.offset ?? 0));
+
+  const response = await fetchJson<ApiResponse<RawChordproSummary[]>>(
+    `${API_BASE_URL}/api/raw-chordpros?${urlParams}`
+  );
+  return {
+    data: response.data,
+    pagination: response.pagination ?? {
+      page: 1,
+      limit: params.limit ?? 50,
+      total: response.data.length,
+      totalPages: 1,
+    },
+  };
+}
+
+export async function getRawChordpro(id: string): Promise<RawChordproDetail> {
+  const response = await fetchJson<ApiResponse<RawChordproDetail>>(
+    `${API_BASE_URL}/api/raw-chordpros/${id}`
+  );
+  return response.data;
+}
+
+export async function patchRawChordpro(
+  id: string,
+  body: { content?: string; validated?: boolean }
+): Promise<RawChordproDetail> {
+  const response = await fetchJson<ApiResponse<RawChordproDetail>>(
+    `${API_BASE_URL}/api/raw-chordpros/${id}`,
+    {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  return response.data;
 }

@@ -28,9 +28,13 @@ max_concurrency = 3
 
 # OAuth / sessão (não-secret). Secrets via `wrangler secret put` (usar wrangler global 4.x, não npx)
 [vars]
-AUTH_BASE_URL = "https://coldigom-api.jairofilho79.workers.dev"
+AUTH_BASE_URL = "https://coldigom-web.pages.dev"
 WEB_ORIGIN = "https://coldigom-web.pages.dev"
-AUTH_COOKIE_SAMESITE = "None"
+AUTH_COOKIE_SAMESITE = "Lax"
+
+# Workers AI (fallback ChordPro — binding usado por rotas internas futuras)
+[ai]
+binding = "AI"
 
 # Dev configuration (local development)
 [dev]

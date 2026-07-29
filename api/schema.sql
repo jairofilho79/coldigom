@@ -101,6 +101,29 @@ CREATE INDEX IF NOT EXISTS idx_auth_refresh_token_hash ON auth_refresh_tokens(to
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_user_sub ON auth_refresh_tokens(user_sub);
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_expires ON auth_refresh_tokens(expires_at);
 
+-- OAuth PKCE state (no cookies — Safari/Pages proxy)
+CREATE TABLE IF NOT EXISTS oauth_pending (
+    state TEXT PRIMARY KEY,
+    code_verifier TEXT NOT NULL,
+    redirect_to TEXT NOT NULL,
+    purpose TEXT NOT NULL DEFAULT 'login',
+    expires_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_pending_expires ON oauth_pending(expires_at);
+
+-- One-time code to hand tokens to SPA after OAuth redirect
+CREATE TABLE IF NOT EXISTS auth_exchange_codes (
+    code TEXT PRIMARY KEY,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    user_json TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_exchange_expires ON auth_exchange_codes(expires_at);
+
 -- Google Drive import
 CREATE TABLE IF NOT EXISTS google_drive_credentials (
     user_sub TEXT PRIMARY KEY,
@@ -170,6 +193,26 @@ CREATE TABLE IF NOT EXISTS import_job_items (
 
 CREATE INDEX IF NOT EXISTS idx_import_job_items_job ON import_job_items(job_id);
 CREATE INDEX IF NOT EXISTS idx_import_job_items_status ON import_job_items(job_id, status);
+
+CREATE TABLE IF NOT EXISTS raw_chordpros (
+    id TEXT PRIMARY KEY,
+    source_pdf_material_id TEXT NOT NULL,
+    praise_id TEXT,
+    praise_name TEXT,
+    kind_label TEXT,
+    source_filename TEXT NOT NULL,
+    title TEXT,
+    subtitle TEXT,
+    content TEXT NOT NULL,
+    validated INTEGER NOT NULL DEFAULT 0,
+    debug_batch TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_raw_chordpros_validated ON raw_chordpros(validated);
+CREATE INDEX IF NOT EXISTS idx_raw_chordpros_pdf ON raw_chordpros(source_pdf_material_id);
+CREATE INDEX IF NOT EXISTS idx_raw_chordpros_debug_batch ON raw_chordpros(debug_batch);
 
 -- Full-text search virtual table for lyrics and name
 CREATE VIRTUAL TABLE IF NOT EXISTS praises_fts USING fts5(

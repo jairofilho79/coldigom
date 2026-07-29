@@ -5,7 +5,8 @@ import {
   handleOAuthCallback,
   buildGoogleAuthorizeRedirect,
   getCookie,
-  resolveUserFromCookies,
+  resolveUserFromRequest,
+  consumeAuthExchangeCode,
   buildLogoutCookies,
   rotateRefreshSession,
   clearAllAuthCookieHeaders,
@@ -115,7 +116,7 @@ app.use('/*', async (c, next) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return next();
   try {
-    const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
+    const user = await resolveUserFromRequest({ request: c.req.raw, jwtSecret });
     if (user) {
       c.set('user', user);
       console.log(JSON.stringify({ msg: 'auth.soft.ok', method: c.req.method, path: c.req.path, sub: user.sub }));
@@ -166,15 +167,63 @@ function withAuthFlag(
   }
 }
 
+function withAuthExchangeRedirect(redirectTo: string, exchangeCode: string): string {
+  try {
+    const url = new URL(redirectTo);
+    url.searchParams.set('auth', 'exchange');
+    url.searchParams.set('code', exchangeCode);
+    return url.toString();
+  } catch {
+    try {
+      const url = new URL(redirectTo, 'http://local');
+      url.searchParams.set('auth', 'exchange');
+      url.searchParams.set('code', exchangeCode);
+      return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+      return redirectTo;
+    }
+  }
+}
+
 function nowSec(): number {
   return Math.floor(Date.now() / 1000);
+}
+
+function isTrustedWebOrigin(origin: string, webOrigin: string): boolean {
+  if (origin === webOrigin) return true;
+  try {
+    const web = new URL(webOrigin);
+    const o = new URL(origin);
+    if (o.protocol !== web.protocol) return false;
+    if (o.hostname === web.hostname) return true;
+    return o.hostname.endsWith(`.${web.hostname}`);
+  } catch {
+    return false;
+  }
+}
+
+/** Keep post-login redirect on the canonical site (path only), never a preview deployment URL. */
+function sanitizePostLoginRedirect(raw: string | undefined, webOrigin: string | undefined): string {
+  if (!raw || raw === '/') return '/';
+  if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  try {
+    const u = new URL(raw);
+    const path = `${u.pathname}${u.search}${u.hash}` || '/';
+    if (!webOrigin) return path;
+    const web = new URL(webOrigin);
+    const host = u.hostname;
+    if (host === web.hostname || host.endsWith(`.${web.hostname}`)) return path;
+  } catch {
+    /* fall through */
+  }
+  return '/';
 }
 
 function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) => string | undefined }; json: (b: object, s: number) => Response }): Response | null {
   const web = c.env.WEB_ORIGIN;
   if (!web) return null;
   const origin = c.req.header('origin');
-  if (!origin || origin !== web) {
+  if (!origin || !isTrustedWebOrigin(origin, web)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
   return null;
@@ -188,7 +237,7 @@ async function requireAuth(c: any, next: any) {
   if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
 
   try {
-    const user = c.get('user') ?? (await resolveUserFromCookies({ request: c.req.raw, jwtSecret }));
+    const user = c.get('user') ?? (await resolveUserFromRequest({ request: c.req.raw, jwtSecret }));
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     c.set('user', user);
     return await next();
@@ -218,12 +267,13 @@ app.get('/auth/login', async (c) => {
   if (!clientId) return c.json({ error: 'Google OAuth not configured' }, 500);
 
   const baseUrl = getBaseUrl(c);
-  const redirectTo = c.req.query('redirect') || '/';
+  const redirectTo = sanitizePostLoginRedirect(c.req.query('redirect'), c.env.WEB_ORIGIN);
   const { location, setCookies } = await buildGoogleAuthorizeRedirect({
     requestUrl: new URL(c.req.url),
     baseUrl,
     clientId,
     redirectTo,
+    db: c.env.DB,
     cookieSameSite: getAuthCookieSameSite(c),
     purpose: 'login',
   });
@@ -238,7 +288,7 @@ app.get('/auth/drive/connect', async (c) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!clientId || !jwtSecret) return c.json({ error: 'Google OAuth not configured' }, 500);
 
-  const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
+  const user = await resolveUserFromRequest({ request: c.req.raw, jwtSecret });
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const baseUrl = getBaseUrl(c);
@@ -248,6 +298,7 @@ app.get('/auth/drive/connect', async (c) => {
     baseUrl,
     clientId,
     redirectTo,
+    db: c.env.DB,
     cookieSameSite: getAuthCookieSameSite(c),
     purpose: 'drive',
   });
@@ -284,6 +335,9 @@ app.get('/auth/callback', async (c) => {
       return c.redirect(withAuthFlag(result.redirectTo, 'drive_connected'));
     }
     result.setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
+    if (result.exchangeCode) {
+      return c.redirect(withAuthExchangeRedirect(result.redirectTo, result.exchangeCode));
+    }
     return c.redirect(withAuthFlag(result.redirectTo, 'success'));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -300,13 +354,32 @@ app.get('/auth/callback', async (c) => {
   }
 });
 
+app.post('/auth/exchange-code', async (c) => {
+  const blocked = assertTrustedMutationOrigin(c);
+  if (blocked) return blocked;
+
+  const body = (await c.req.json<{ code?: string }>().catch(() => ({}))) as { code?: string };
+  if (!body.code) return c.json({ error: 'Missing code' }, 400);
+
+  const result = await consumeAuthExchangeCode(c.env.DB, body.code);
+  if (!result) return c.json({ error: 'Invalid or expired code' }, 401);
+
+  return c.json({
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    user: result.user,
+  });
+});
+
 app.post('/auth/logout', async (c) => {
   const blocked = assertTrustedMutationOrigin(c);
   if (blocked) return blocked;
+  const body = (await c.req.json<{ refreshToken?: string }>().catch(() => ({}))) as { refreshToken?: string };
   const cookies = await buildLogoutCookies({
     request: c.req.raw,
     requestUrl: new URL(c.req.url),
     db: c.env.DB,
+    rawRefreshOverride: body.refreshToken,
   });
   cookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
   return c.json({ ok: true });
@@ -318,7 +391,8 @@ app.post('/auth/refresh', async (c) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
 
-  const rawRefresh = getCookie(c.req.raw, getRefreshCookieName());
+  const body = (await c.req.json<{ refreshToken?: string }>().catch(() => ({}))) as { refreshToken?: string };
+  const rawRefresh = body.refreshToken || getCookie(c.req.raw, getRefreshCookieName());
   if (!rawRefresh) {
     clearAllAuthCookieHeaders(new URL(c.req.url)).forEach(v => c.header('Set-Cookie', v, { append: true }));
     return c.json({ error: 'Unauthorized' }, 401);
@@ -345,14 +419,19 @@ app.post('/auth/refresh', async (c) => {
   }
 
   result.setCookies.forEach(v => c.header('Set-Cookie', v, { append: true }));
-  return c.json({ ok: true, user: result.user });
+  return c.json({
+    ok: true,
+    user: result.user,
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+  });
 });
 
 app.get('/auth/me', async (c) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return c.json({ user: null });
   try {
-    const user = await resolveUserFromCookies({ request: c.req.raw, jwtSecret });
+    const user = await resolveUserFromRequest({ request: c.req.raw, jwtSecret });
     return c.json({ user });
   } catch {
     return c.json({ user: null });
@@ -780,6 +859,172 @@ app.get('/api/materials/kinds', async (c) => {
     console.error('Error fetching material kinds:', error);
     return c.json({ error: 'Failed to fetch material kinds' }, 500);
   }
+});
+
+type RawChordproRow = {
+  id: string;
+  source_pdf_material_id: string;
+  praise_id: string | null;
+  praise_name: string | null;
+  kind_label: string | null;
+  source_filename: string;
+  title: string | null;
+  subtitle: string | null;
+  content: string;
+  validated: number;
+  debug_batch: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function mapRawChordpro(row: RawChordproRow, includeContent: boolean) {
+  const pdf_r2_key =
+    row.praise_id && row.source_pdf_material_id
+      ? `assets/praises/${row.praise_id}/${row.source_pdf_material_id}.pdf`
+      : null;
+  const base = {
+    id: row.id,
+    source_pdf_material_id: row.source_pdf_material_id,
+    praise_id: row.praise_id,
+    praise_name: row.praise_name,
+    kind_label: row.kind_label,
+    source_filename: row.source_filename,
+    title: row.title,
+    subtitle: row.subtitle,
+    validated: row.validated === 1,
+    debug_batch: row.debug_batch ?? null,
+    pdf_r2_key,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+  return includeContent ? { ...base, content: row.content } : base;
+}
+
+app.get('/api/raw-chordpros', async (c) => {
+  try {
+    const validated = c.req.query('validated') || 'all';
+    const q = (c.req.query('q') || '').trim();
+    const debugBatch = (c.req.query('debug_batch') || '').trim();
+    const limit = Math.min(Math.max(parseInt(c.req.query('limit') || '50', 10) || 50, 1), 200);
+    const offset = Math.max(parseInt(c.req.query('offset') || '0', 10) || 0, 0);
+
+    const where: string[] = [];
+    const bindings: unknown[] = [];
+
+    if (validated === 'true') where.push('validated = 1');
+    else if (validated === 'false') where.push('validated = 0');
+
+    // Default list stays clean: hide disposable debug batches unless explicitly requested
+    if (debugBatch) {
+      where.push('debug_batch = ?');
+      bindings.push(debugBatch);
+    } else {
+      where.push('debug_batch IS NULL');
+    }
+
+    if (q) {
+      where.push('(title LIKE ? OR subtitle LIKE ? OR praise_name LIKE ?)');
+      const like = `%${q}%`;
+      bindings.push(like, like, like);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+    const countRow = await c.env.DB.prepare(
+      `SELECT COUNT(*) AS total FROM raw_chordpros ${whereSql}`
+    )
+      .bind(...bindings)
+      .first<{ total: number }>();
+
+    const result = await c.env.DB.prepare(
+      `SELECT id, source_pdf_material_id, praise_id, praise_name, kind_label,
+              source_filename, title, subtitle, validated, debug_batch, created_at, updated_at
+       FROM raw_chordpros ${whereSql}
+       ORDER BY praise_name ASC, source_filename ASC
+       LIMIT ? OFFSET ?`
+    )
+      .bind(...bindings, limit, offset)
+      .all();
+
+    const rows = (result.results as Omit<RawChordproRow, 'content'>[]) ?? [];
+    const total = countRow?.total ?? 0;
+
+    return c.json({
+      data: rows.map((row) => mapRawChordpro({ ...row, content: '' }, false)),
+      pagination: {
+        total,
+        limit,
+        offset,
+        page: Math.floor(offset / limit) + 1,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    });
+  } catch (error) {
+    console.error('Error listing raw chordpros:', error);
+    return c.json({ error: 'Failed to list raw chordpros' }, 500);
+  }
+});
+
+app.get('/api/raw-chordpros/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const row = await c.env.DB.prepare(
+      `SELECT id, source_pdf_material_id, praise_id, praise_name, kind_label,
+              source_filename, title, subtitle, content, validated, debug_batch, created_at, updated_at
+       FROM raw_chordpros WHERE id = ?`
+    )
+      .bind(id)
+      .first<RawChordproRow>();
+
+    if (!row) return c.json({ error: 'Not found' }, 404);
+    return c.json({ data: mapRawChordpro(row, true) });
+  } catch (error) {
+    console.error('Error fetching raw chordpro:', error);
+    return c.json({ error: 'Failed to fetch raw chordpro' }, 500);
+  }
+});
+
+app.patch('/api/raw-chordpros/:id', requireAuth, async (c) => {
+  const id = c.req.param('id');
+  const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!body || typeof body !== 'object') {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const existing = await c.env.DB.prepare('SELECT id FROM raw_chordpros WHERE id = ?')
+    .bind(id)
+    .first<{ id: string }>();
+  if (!existing) return c.json({ error: 'Not found' }, 404);
+
+  const sets: string[] = ["updated_at = datetime('now')"];
+  const bindings: unknown[] = [];
+
+  if ('content' in body) {
+    if (typeof body.content !== 'string') return c.json({ error: 'content must be a string' }, 400);
+    sets.push('content = ?');
+    bindings.push(body.content);
+  }
+  if ('validated' in body) {
+    if (typeof body.validated !== 'boolean') return c.json({ error: 'validated must be a boolean' }, 400);
+    sets.push('validated = ?');
+    bindings.push(body.validated ? 1 : 0);
+  }
+  if (sets.length === 1) return c.json({ error: 'No updatable fields provided' }, 400);
+
+  bindings.push(id);
+  await c.env.DB.prepare(`UPDATE raw_chordpros SET ${sets.join(', ')} WHERE id = ?`)
+    .bind(...bindings)
+    .run();
+
+  const row = await c.env.DB.prepare(
+    `SELECT id, source_pdf_material_id, praise_id, praise_name, kind_label,
+            source_filename, title, subtitle, content, validated, debug_batch, created_at, updated_at
+     FROM raw_chordpros WHERE id = ?`
+  )
+    .bind(id)
+    .first<RawChordproRow>();
+
+  return c.json({ data: mapRawChordpro(row!, true) });
 });
 
 // GET /api/tags - List all tags

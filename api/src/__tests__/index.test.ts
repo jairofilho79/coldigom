@@ -962,6 +962,44 @@ describe('API Routes', () => {
     });
   });
 
+  describe('GET /api/raw-chordpros', () => {
+    const mockRawRow = {
+      id: 'raw-1', source_pdf_material_id: 'pdf-1', praise_id: 'praise-1',
+      praise_name: 'Test', kind_label: 'Cifra I', source_filename: '00-test.chordpro',
+      title: 'Test Song', subtitle: '123', content: '{title: Test}\n[A]x',
+      validated: 0, debug_batch: null, created_at: '2026-01-01', updated_at: '2026-01-01',
+    };
+    function createRawMockD1() {
+      const rows = [mockRawRow];
+      return {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn(() => ({
+            all: vi.fn(async () => query.includes('COUNT') ? { results: [{ total: 1 }] } : { results: rows.map(({ content: _c, ...r }) => r) }),
+            first: vi.fn(async () => query.includes('COUNT') ? { total: 1 } : mockRawRow),
+            run: vi.fn(async () => ({})),
+          })),
+        })),
+      };
+    }
+    it('should list raw chordpros', async () => {
+      const res = await app.request('/api/raw-chordpros', {}, { DB: createRawMockD1(), ASSETS: createMockR2() });
+      expect(res.status).toBe(200);
+      const json = await res.json() as { data: { pdf_r2_key: string }[] };
+      expect(json.data[0].pdf_r2_key).toBe('assets/praises/praise-1/pdf-1.pdf');
+    });
+  });
+
+  describe('PATCH /api/raw-chordpros/:id', () => {
+    it('should require auth', async () => {
+      const res = await app.request('/api/raw-chordpros/raw-1', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json', origin: TEST_WEB_ORIGIN },
+        body: JSON.stringify({ validated: true }),
+      }, { DB: createMockD1(), ASSETS: createMockR2(), AUTH_JWT_SECRET: TEST_JWT_SECRET, WEB_ORIGIN: TEST_WEB_ORIGIN });
+      expect(res.status).toBe(401);
+    });
+  });
+
   describe('GET /api/tags', () => {
     it('should return tags', async () => {
       const mockDB = createMockD1({

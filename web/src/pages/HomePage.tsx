@@ -5,12 +5,12 @@ import { ResultsTable } from '../components/ResultsTable';
 import { Pagination } from '../components/Pagination';
 import { FilterBar } from '../components/FilterBar';
 import { useAuth } from '../context/AuthContext';
-import { searchPraises, API_BASE_URL } from '../services/api';
+import { searchPraises, getLoginUrl } from '../services/api';
 import { useFilters } from '../hooks/useFilters';
 import type { Praise, PaginationInfo } from '../types';
 
 export function HomePage() {
-  const { user, ready: authReady, logout } = useAuth();
+  const { user, ready: authReady, logout, authError } = useAuth();
   const { filters, setFilters } = useFilters();
 
   const [praises, setPraises] = useState<Praise[]>([]);
@@ -76,24 +76,27 @@ export function HomePage() {
                 <span className="auth-user">
                   {user.name || user.email}
                 </span>
-                <Link to="/praise/new" className="auth-btn">
-                  Novo louvor
-                </Link>
+                <Link to="/praise/new" className="auth-btn">Novo louvor</Link>
+                <Link to="/raw-chordPro" className="auth-btn">Raw ChordPro</Link>
                 <button type="button" className="auth-btn" onClick={() => void logout()}>
                   Sair
                 </button>
               </>
             ) : (
-              <a
-                className="auth-btn"
-                href={`${API_BASE_URL}/auth/login?redirect=${encodeURIComponent(window.location.href)}`}
-              >
-                Entrar com o Google
-              </a>
+              <>
+                <Link to="/raw-chordPro" className="auth-btn">Raw ChordPro</Link>
+                <a className="auth-btn" href={getLoginUrl()}>Entrar com o Google</a>
+              </>
             )}
           </div>
         </div>
       </header>
+
+      {authError && !user ? (
+        <div className="error-state" role="alert">
+          <div className="error-state-desc">{authError}</div>
+        </div>
+      ) : null}
 
       <SearchBar onSearch={handleSearch} initialValue={filters.query} />
       <FilterBar />

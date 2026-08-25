@@ -1,0 +1,16 @@
+{
+  "praise_id": "39e89957-6792-4042-8522-091e09612721",
+  "praise_name": "No Getsêmani",
+  "material_id": "241244e8-622b-471d-b523-b7da74896920",
+  "material_kind": "5a9d9ced-a5e3-4848-adac-f02a14b56038",
+  "kind_label": "Cifra II",
+  "pdf_path": "storage/assets/praises/39e89957-6792-4042-8522-091e09612721/241244e8-622b-471d-b523-b7da74896920.pdf",
+  "chord_material_ids": [
+    "8bb73446-75ea-402e-8478-89de1f42e6af"
+  ],
+  "songs": 2,
+  "outputs": [
+    "00-470-no-getsemani.chordpro",
+    "01-472-vinde-cantai-e-entoai-louvores-a-jesus.chordpro"
+  ]
+}

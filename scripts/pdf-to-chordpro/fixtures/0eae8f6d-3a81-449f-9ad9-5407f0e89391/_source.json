@@ -1,0 +1,17 @@
+{
+  "praise_id": "c24cb986-e6a1-4eb3-bbd3-6e3c473fee12",
+  "praise_name": "Existem segredos na tua palavra",
+  "material_id": "0eae8f6d-3a81-449f-9ad9-5407f0e89391",
+  "material_kind": "5a9d9ced-a5e3-4848-adac-f02a14b56038",
+  "kind_label": "Cifra II",
+  "pdf_path": "storage/assets/praises/c24cb986-e6a1-4eb3-bbd3-6e3c473fee12/0eae8f6d-3a81-449f-9ad9-5407f0e89391.pdf",
+  "chord_material_ids": [
+    "e2a0c3cb-7644-45d3-b526-0f855e0aa889"
+  ],
+  "songs": 3,
+  "outputs": [
+    "00-159-servo-do-senhor-eu-sou-g.chordpro",
+    "01-160-existem-segredos-na-tua-palavra.chordpro",
+    "02-161-tu-es-pra-mim-um-vaso-escolhido.chordpro"
+  ]
+}

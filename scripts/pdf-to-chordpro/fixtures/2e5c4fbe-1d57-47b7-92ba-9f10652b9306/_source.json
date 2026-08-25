@@ -1,0 +1,17 @@
+{
+  "praise_id": "593b0444-5954-4642-b46d-7dff28357cd1",
+  "praise_name": "Como Cristo Ensinou",
+  "material_id": "2e5c4fbe-1d57-47b7-92ba-9f10652b9306",
+  "material_kind": "5a9d9ced-a5e3-4848-adac-f02a14b56038",
+  "kind_label": "Cifra II",
+  "pdf_path": "storage/assets/praises/593b0444-5954-4642-b46d-7dff28357cd1/2e5c4fbe-1d57-47b7-92ba-9f10652b9306.pdf",
+  "chord_material_ids": [
+    "f9334e65-7d44-4064-a5dc-1d0cd616929d"
+  ],
+  "songs": 3,
+  "outputs": [
+    "00-428-vem-o-cristo-encher-meu-calice.chordpro",
+    "01-429-esopaodavida.chordpro",
+    "02-430-como-cristo-ensinou.chordpro"
+  ]
+}

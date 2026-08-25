@@ -1,0 +1,16 @@
+{
+  "praise_id": "2c412d31-7a3e-4fe4-a16f-a0a9a98aee6e",
+  "praise_name": "A terra semeamos",
+  "material_id": "3366d977-daee-4045-893d-dfdca2997d1e",
+  "material_kind": "27e39659-b4a0-4ef2-87f4-546fe292298d",
+  "kind_label": "Cifra I",
+  "pdf_path": "storage/assets/praises/2c412d31-7a3e-4fe4-a16f-a0a9a98aee6e/3366d977-daee-4045-893d-dfdca2997d1e.pdf",
+  "chord_material_ids": [
+    "50574a3a-5d3e-4aaf-a2e1-6d908bcc7f4c"
+  ],
+  "songs": 2,
+  "outputs": [
+    "00-716-enquanto-o-salvador-teu-livro-ler.chordpro",
+    "01-718-guia-cristo-minha-nau.chordpro"
+  ]
+}

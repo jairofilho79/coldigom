@@ -1,0 +1,16 @@
+{
+  "praise_id": "40ed3a53-8305-4676-ad4d-cf04c7250c02",
+  "praise_name": "Nem sempre entendemos",
+  "material_id": "35e0bb9b-69a4-4671-9453-380fc35e375a",
+  "material_kind": "5a9d9ced-a5e3-4848-adac-f02a14b56038",
+  "kind_label": "Cifra II",
+  "pdf_path": "storage/assets/praises/40ed3a53-8305-4676-ad4d-cf04c7250c02/35e0bb9b-69a4-4671-9453-380fc35e375a.pdf",
+  "chord_material_ids": [
+    "bfc0192e-123f-4ec5-ab68-78861563e1c3"
+  ],
+  "songs": 2,
+  "outputs": [
+    "00-299-ha-momentos-que-as-palavras-nao.chordpro",
+    "01-300-quando-parece-que-tudo.chordpro"
+  ]
+}

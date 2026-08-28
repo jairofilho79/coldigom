@@ -319,6 +319,81 @@ describe('API Routes', () => {
       expect(json.data[0].name).toBe('Grande Deus');
     });
 
+    it('should search praises by YouTube watch URL', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
+        first: vi.fn().mockResolvedValue({ total: 1 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        '/api/praises?q=https://www.youtube.com/watch?v=iU0Km8CV6-E',
+        {},
+        { DB: mockDB, ASSETS: mockR2 }
+      );
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain("praise_materials");
+      expect(listQuery).toContain("type = 'youtube'");
+      expect(listQuery).toContain('url LIKE ?');
+      expect(listQuery).not.toContain('praises_fts');
+      const bindCall = prepare.mock.calls
+        .map((_, i) => prepare.mock.results[i]?.value)
+        .find((stmt) => stmt?.bind?.mock?.calls?.some((args: unknown[]) => args.includes('%iU0Km8CV6-E%')));
+      expect(bindCall).toBeTruthy();
+    });
+
+    it('should search praises by youtu.be URL and playlist watch URL', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
+        first: vi.fn().mockResolvedValue({ total: 1 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      for (const q of [
+        'https://youtu.be/iU0Km8CV6-E',
+        'https://www.youtube.com/watch?v=iU0Km8CV6-E&list=PLidOZq9zaXedqPRH_URsb4-sT3Trm83Ft',
+      ]) {
+        prepare.mockClear();
+        const res = await app.request(`/api/praises?q=${encodeURIComponent(q)}`, {}, {
+          DB: mockDB,
+          ASSETS: mockR2,
+        });
+        expect(res.status).toBe(200);
+        const listQuery = prepare.mock.calls.find(([sql]) => sql.includes('GROUP BY p.id'))?.[0] as string;
+        expect(listQuery).toContain("type = 'youtube'");
+        const binds = prepare.mock.results.flatMap((r) =>
+          (r.value.bind.mock.calls as unknown[][]).flat()
+        );
+        expect(binds).toContain('%iU0Km8CV6-E%');
+      }
+    });
+
+    it('should keep text search on FTS path for normal queries', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
+        first: vi.fn().mockResolvedValue({ total: 1 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?q=Grande', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain('praises_fts');
+      expect(listQuery).not.toContain("type = 'youtube'");
+    });
+
     it('should handle pagination parameters', async () => {
       const mockDB = createMockD1({
         all: { results: [mockPraises[1]] },
@@ -355,6 +430,73 @@ describe('API Routes', () => {
       
       const json = await res.json();
       expect(json.data).toHaveLength(2);
+    });
+
+    it('should rank search matches by number then title then lyrics', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: mockPraises }),
+        first: vi.fn().mockResolvedValue({ total: 2 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?q=A%20Ti%20Senhor', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain('WHEN TRIM(p.number) = ? THEN 0');
+      expect(listQuery).toContain('WHEN LOWER(TRIM(p.name)) = LOWER(?) THEN 2');
+      expect(listQuery).toContain('ELSE 5 END ASC');
+      expect(listQuery).toContain('p.name COLLATE NOCASE ASC');
+      expect(listQuery).not.toMatch(/ORDER BY CASE WHEN p\.number IS NULL/);
+    });
+
+    it('should use natural number order for digit-only search', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: mockPraises }),
+        first: vi.fn().mockResolvedValue({ total: 2 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?q=5', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listCall = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'));
+      const listQuery = listCall?.[0] as string;
+      expect(listQuery).toContain('INSTR(CAST(CAST(p.number AS INTEGER) AS TEXT), ?) > 0');
+      expect(listQuery).toContain('CASE WHEN CAST(p.number AS INTEGER) = ? THEN 0 ELSE 1 END ASC');
+      expect(listQuery).toContain('CAST(p.number AS INTEGER) ASC');
+      expect(listQuery).not.toContain('praises_fts MATCH');
+    });
+
+    it('should exact-match number when query has leading zeros', async () => {
+      const prepare = vi.fn((query: string) => ({
+        bind: vi.fn().mockReturnThis(),
+        all: vi.fn().mockResolvedValue({ results: mockPraises }),
+        first: vi.fn().mockResolvedValue({ total: 1 }),
+      }));
+      const mockDB = { prepare };
+      const mockR2 = createMockR2();
+
+      const res = await app.request('/api/praises?q=005', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+
+      expect(res.status).toBe(200);
+      const listQuery = prepare.mock.calls.find(([q]) => q.includes('GROUP BY p.id'))?.[0] as string;
+      expect(listQuery).toContain('CAST(p.number AS INTEGER) = ?');
+      expect(listQuery).not.toContain('INSTR(');
+      expect(listQuery).not.toContain('praises_fts MATCH');
     });
 
     it('should build valid COLLATE NOCASE order for tonality sort', async () => {

@@ -30,7 +30,11 @@ type WhereParams = {
 
 export type PlpcgListDeps = {
   buildWhereClause: (params: WhereParams) => { clause: string; bindings: (string | number)[] };
-  buildOrderClause: (sort: string, order: 'ASC' | 'DESC') => string;
+  buildOrderClause: (
+    sort: string,
+    order: 'ASC' | 'DESC',
+    search?: string
+  ) => { clause: string; bindings: (string | number)[] };
   validSortFields: readonly string[];
   resolveTagFilterGroups: (db: D1Database, tagIds: string[]) => Promise<string[][]>;
   tagLabelSql: string;
@@ -135,8 +139,12 @@ export async function listPlpcgPraises(
         numberMax: query.numberMax,
       });
 
-      const orderClause = deps.buildOrderClause(sort, query.order);
-      const bindings: (string | number)[] = [...whereBindings];
+      const { clause: orderClause, bindings: orderBindings } = deps.buildOrderClause(
+        sort,
+        query.order,
+        query.search || undefined
+      );
+      const bindings: (string | number)[] = [...whereBindings, ...orderBindings];
 
       const listSql = `
       SELECT

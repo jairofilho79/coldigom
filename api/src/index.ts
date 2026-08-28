@@ -443,20 +443,136 @@ type SortField = typeof VALID_SORT_FIELDS[number];
 
 const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality', 'category'];
 
-/** NULL/empty values always sort last, regardless of ASC/DESC. */
-function buildOrderClause(sort: SortField, order: 'ASC' | 'DESC'): string {
+/** Secondary sort: NULL/empty values always last, regardless of ASC/DESC. */
+function buildSecondaryOrder(sort: SortField, order: 'ASC' | 'DESC'): string {
   if (sort === 'created_at') {
-    return `ORDER BY p.created_at ${order}`;
+    return `p.created_at ${order}`;
   }
 
   const emptyLast = `CASE WHEN p.${sort} IS NULL OR p.${sort} = '' THEN 1 ELSE 0 END ASC`;
 
   if (sort === 'number') {
-    return `ORDER BY ${emptyLast}, CAST(p.number AS INTEGER) ${order}`;
+    return `${emptyLast}, CAST(p.number AS INTEGER) ${order}`;
   }
 
   const collate = NOCASE_FIELDS.includes(sort) ? ' COLLATE NOCASE' : '';
-  return `ORDER BY ${emptyLast}, p.${sort}${collate} ${order}`;
+  return `${emptyLast}, p.${sort}${collate} ${order}`;
+}
+
+/**
+ * Pure digit query: `5`/`25` = contains (natural order); `005`/`025` = exact only.
+ * Leading zero = exact; no FTS/bm25.
+ */
+function parseNumericSearch(
+  search: string
+): { exact: boolean; digits: string; value: number } | null {
+  const q = search.trim();
+  if (!/^\d+$/.test(q)) return null;
+  return {
+    exact: q.length > 1 && q.startsWith('0'),
+    digits: q,
+    value: Number.parseInt(q, 10),
+  };
+}
+
+const YT_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+/** Extract YouTube video ID from a URL (watch, youtu.be, embed, shorts). Not bare IDs. */
+function extractYouTubeVideoId(input: string): string | null {
+  const raw = input.trim();
+  if (!raw) return null;
+
+  let candidate = raw;
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(candidate)) {
+    const hostish = candidate.replace(/^\/+/, '').toLowerCase();
+    if (
+      !hostish.startsWith('youtube.com/') &&
+      !hostish.startsWith('www.youtube.com/') &&
+      !hostish.startsWith('m.youtube.com/') &&
+      !hostish.startsWith('music.youtube.com/') &&
+      !hostish.startsWith('youtu.be/')
+    ) {
+      return null;
+    }
+    candidate = `https://${candidate.replace(/^\/+/, '')}`;
+  }
+
+  try {
+    const u = new URL(candidate);
+    const host = u.hostname.replace(/^www\./, '').toLowerCase();
+    let id: string | null = null;
+    if (host === 'youtu.be') {
+      id = u.pathname.split('/').filter(Boolean)[0] || null;
+    } else if (
+      host === 'youtube.com' ||
+      host === 'm.youtube.com' ||
+      host === 'music.youtube.com'
+    ) {
+      const v = u.searchParams.get('v');
+      if (v) {
+        id = v;
+      } else {
+        const parts = u.pathname.split('/').filter(Boolean);
+        const idxEmbed = parts.indexOf('embed');
+        if (idxEmbed >= 0 && parts[idxEmbed + 1]) id = parts[idxEmbed + 1];
+        const idxShorts = parts.indexOf('shorts');
+        if (!id && idxShorts >= 0 && parts[idxShorts + 1]) id = parts[idxShorts + 1];
+      }
+    }
+    if (!id) return null;
+    id = id.split('?')[0] || null;
+    return id && YT_VIDEO_ID_RE.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * With `q`: rank by match similarity (number → title → lyrics), not by collection number.
+ * Digit-only `q`: natural number order (exact first, then CAST ASC).
+ * YouTube URL `q`: name only.
+ * Without `q`: keep the user's sort field.
+ */
+function buildOrderClause(
+  sort: SortField,
+  order: 'ASC' | 'DESC',
+  search?: string
+): { clause: string; bindings: (string | number)[] } {
+  const q = search?.trim();
+  if (!q) {
+    return { clause: `ORDER BY ${buildSecondaryOrder(sort, order)}`, bindings: [] };
+  }
+
+  if (extractYouTubeVideoId(q)) {
+    return { clause: `ORDER BY p.name COLLATE NOCASE ASC`, bindings: [] };
+  }
+
+  const numeric = parseNumericSearch(q);
+  if (numeric) {
+    return {
+      clause: `ORDER BY CASE WHEN CAST(p.number AS INTEGER) = ? THEN 0 ELSE 1 END ASC, CAST(p.number AS INTEGER) ASC, p.name COLLATE NOCASE ASC`,
+      bindings: [numeric.value],
+    };
+  }
+
+  const terms = q
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const titleTermsPred =
+    terms.length > 0
+      ? terms.map(() => `p.name LIKE ? COLLATE NOCASE`).join(' AND ')
+      : `p.name LIKE ? COLLATE NOCASE`;
+  const titleTermBindings =
+    terms.length > 0 ? terms.map((t) => `%${t}%`) : [`%${q}%`];
+
+  // 0 exact number, 1 number contains, 2 exact title, 3 title starts with,
+  // 4 all query terms in title, 5 lyrics/other — then name (not collection #).
+  return {
+    clause: `ORDER BY CASE WHEN TRIM(p.number) = ? THEN 0 WHEN p.number LIKE ? THEN 1 WHEN LOWER(TRIM(p.name)) = LOWER(?) THEN 2 WHEN p.name LIKE ? COLLATE NOCASE THEN 3 WHEN (${titleTermsPred}) THEN 4 ELSE 5 END ASC, p.name COLLATE NOCASE ASC`,
+    bindings: [q, `%${q}%`, q, `${q}%`, ...titleTermBindings],
+  };
 }
 
 /** Build FTS5 MATCH string (prefix terms, ANDed). */
@@ -485,23 +601,47 @@ function buildWhereClause(params: {
   const bindings: (string | number)[] = [];
 
   if (params.search) {
-    const pattern = `%${params.search}%`;
-    if (params.useFts) {
-      const ftsQuery = buildFtsMatchQuery(params.search);
-      if (ftsQuery) {
-        conditions.push(
-          `(p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?) OR p.id LIKE ?)`
-        );
-        bindings.push(ftsQuery, pattern);
-      } else {
-        conditions.push(`p.id LIKE ?`);
-        bindings.push(pattern);
-      }
-    } else {
+    const youtubeId = extractYouTubeVideoId(params.search);
+    if (youtubeId) {
       conditions.push(
-        `(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ?)`
+        `p.id IN (SELECT praise_id FROM praise_materials WHERE type = 'youtube' AND url LIKE ?)`
       );
-      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+      bindings.push(`%${youtubeId}%`);
+    } else {
+      const numeric = parseNumericSearch(params.search);
+      if (numeric) {
+        if (numeric.exact) {
+          conditions.push(
+            `p.number IS NOT NULL AND TRIM(p.number) != '' AND CAST(p.number AS INTEGER) = ?`
+          );
+          bindings.push(numeric.value);
+        } else {
+          // Match on integer digit string so "5" hits "005" and "15", not lyrics noise.
+          conditions.push(
+            `p.number IS NOT NULL AND TRIM(p.number) != '' AND INSTR(CAST(CAST(p.number AS INTEGER) AS TEXT), ?) > 0`
+          );
+          bindings.push(numeric.digits);
+        }
+      } else {
+        const pattern = `%${params.search}%`;
+        if (params.useFts) {
+          const ftsQuery = buildFtsMatchQuery(params.search);
+          if (ftsQuery) {
+            conditions.push(
+              `(p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?) OR p.id LIKE ? OR p.number LIKE ?)`
+            );
+            bindings.push(ftsQuery, pattern, pattern);
+          } else {
+            conditions.push(`(p.id LIKE ? OR p.number LIKE ?)`);
+            bindings.push(pattern, pattern);
+          }
+        } else {
+          conditions.push(
+            `(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ? OR p.number LIKE ?)`
+          );
+          bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+        }
+      }
     }
   }
 
@@ -595,8 +735,12 @@ app.get('/api/praises', async (c) => {
       numberMax,
     });
 
-    const orderClause = buildOrderClause(sort, order);
-    const bindings: (string | number)[] = [...whereBindings];
+    const { clause: orderClause, bindings: orderBindings } = buildOrderClause(
+      sort,
+      order,
+      search || undefined
+    );
+    const bindings: (string | number)[] = [...whereBindings, ...orderBindings];
 
     const query = `
       SELECT
@@ -663,7 +807,8 @@ app.get('/api/plpcg/praises', async (c) => {
     const query = parsePlpcgListQuery(c);
     const result = await listPlpcgPraises(c.env.DB, query, {
       buildWhereClause,
-      buildOrderClause: buildOrderClause as PlpcgListDeps['buildOrderClause'],
+      buildOrderClause: (sort, order, search) =>
+        buildOrderClause(sort as SortField, order, search),
       validSortFields: VALID_SORT_FIELDS,
       resolveTagFilterGroups,
       tagLabelSql: TAG_LABEL_SQL,

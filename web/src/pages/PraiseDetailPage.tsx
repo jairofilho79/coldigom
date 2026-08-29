@@ -1910,18 +1910,18 @@ export function PraiseDetailPage() {
           <div className="material-grid">
             {chordMaterials.map(m => (
               <div key={m.id} className="material-card-wrap">
-                <a
-                  href={m.r2_key ? getAssetUrl(m.r2_key) : undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="material-link"
+                <Link
+                  to={`/praise/${praise!.id}/cifra/${m.id}`}
+                  className={`material-link${m.has_content === false ? ' material-link--empty' : ''}`}
                 >
                   <span className="material-link-icon">🎸</span>
                   <div>
                     <div className="material-link-text">{m.material_kind_name || 'Acordes'}</div>
-                    <div className="material-link-meta">Arquivo de acordes</div>
+                    <div className="material-link-meta">
+                      {m.has_content === false ? 'Sem conteúdo' : 'Cifra'}
+                    </div>
                   </div>
-                </a>
+                </Link>
                 {canEditMaterialsInline ? (
                   <div className="materials-placeholder materials-placeholder--inline">
                     Edição de categoria — em breve

@@ -2984,3 +2984,7 @@ button.linkish {
   background: var(--bg-surface);
 }
 .cp-note { font-size: var(--text-sm); margin: var(--space-1) 0; }
+
+/* Cifra sem arquivo publicado: o card continua clicável — é a porta do editor
+   quando a criação chegar — mas não promete conteúdo que não existe. */
+.material-link--empty .material-link-meta { opacity: 0.65; font-style: italic; }

@@ -26,6 +26,8 @@ export interface Material {
   source_material_id: string | null;
   merged_from_praise_id?: string | null;
   merged_from_praise_name?: string | null;
+  /** Só em materiais type:'chord' — se o .chord existe de verdade no R2. */
+  has_content?: boolean;
 }
 
 export interface Tag {

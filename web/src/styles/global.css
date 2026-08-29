@@ -2814,35 +2814,7 @@ button.linkish {
   }
 }
 
-.raw-chordpro-page { max-width: 720px; }
-.raw-chordpro-back { display: inline-block; margin-bottom: var(--space-2); font-size: var(--text-sm); color: var(--accent-gold); text-decoration: none; }
-.raw-chordpro-back:hover { text-decoration: underline; }
-.raw-chordpro-toolbar { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); }
-.raw-chordpro-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.raw-chordpro-filter-btn { padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-secondary); font-size: var(--text-sm); cursor: pointer; }
-.raw-chordpro-filter-btn.is-active { border-color: var(--c-accent-500); color: var(--text-primary); background: rgba(201, 169, 110, 0.12); }
-.raw-chordpro-search { display: flex; gap: var(--space-2); }
-.raw-chordpro-search input { flex: 1; min-width: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); }
-.raw-chordpro-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.raw-chordpro-list-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-surface); text-decoration: none; color: inherit; }
-.raw-chordpro-list-item:hover { border-color: var(--c-accent-500); }
-.raw-chordpro-list-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.raw-chordpro-list-title { font-weight: 600; }
-.raw-chordpro-list-sub { font-size: var(--text-sm); }
-.raw-chordpro-badge { flex-shrink: 0; font-size: var(--text-xs); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-weight: 600; }
-.raw-chordpro-badge.validated { background: rgba(72, 160, 96, 0.2); color: #6fcf97; }
-.raw-chordpro-badge.pending { background: rgba(201, 169, 110, 0.15); color: var(--c-accent-400); }
-.raw-chordpro-badge.auto-ok { background: rgba(72, 160, 96, 0.2); color: #6fcf97; }
-.raw-chordpro-badge.auto-fail { background: rgba(200, 80, 80, 0.2); color: #f07178; }
-.raw-chordpro-detail-header { margin-bottom: var(--space-5); }
-.raw-chordpro-detail-title { font-family: var(--font-display); font-size: var(--text-2xl); margin: var(--space-2) 0; }
-.raw-chordpro-stack-section { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6); }
-.raw-chordpro-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.raw-chordpro-section-head h2 { font-size: var(--text-lg); margin: 0; }
-.raw-chordpro-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .auth-btn.is-validated { border-color: #6fcf97; color: #6fcf97; }
-.raw-chordpro-editor { min-height: 40vh; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.raw-chordpro-preview-wrap { padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-surface); min-height: 30vh; }
 .chordpro-preview-title { font-family: var(--font-display); font-size: var(--text-xl); margin: 0 0 var(--space-3); }
 .chordpro-preview-meta { display: grid; gap: var(--space-1); margin: 0 0 var(--space-4); font-size: var(--text-sm); }
 .chordpro-preview-meta-row { display: flex; gap: var(--space-2); }
@@ -2852,6 +2824,4 @@ button.linkish {
 .chordpro-chord { display: inline-block; font-weight: 700; color: var(--c-accent-400); font-size: 0.85em; margin-right: 0.1em; }
 .chordpro-preview-comment { font-size: var(--text-sm); color: var(--text-tertiary); font-style: italic; margin: 0 0 var(--space-2); }
 .chordpro-preview-blank { height: var(--space-2); }
-.raw-chordpro-pdf-frame { min-height: 50vh; }
-.raw-chordpro-login-hint { font-size: var(--text-sm); margin-bottom: var(--space-4); }
 .pagination-bar { display: flex; gap: var(--space-3); justify-content: center; margin: var(--space-6) 0; }

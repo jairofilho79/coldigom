@@ -2825,3 +2825,65 @@ button.linkish {
 .chordpro-preview-comment { font-size: var(--text-sm); color: var(--text-tertiary); font-style: italic; margin: 0 0 var(--space-2); }
 .chordpro-preview-blank { height: var(--space-2); }
 .pagination-bar { display: flex; gap: var(--space-3); justify-content: center; margin: var(--space-6) 0; }
+
+/* ── Viewer de ChordPro ─────────────────────────────────────────────── */
+/* Acorde e barra usam a mesma tinta, como no hinário impresso: o red_marks.py
+   do pipeline acha os dois com a mesma máscara de vermelho. Distinguem-se por
+   posição — rótulo acima da linha, barra na linha da letra — não por cor.
+   O vermelho difere entre as paletas porque o mesmo tom não tem o mesmo
+   contraste sobre os dois fundos. */
+.cp-scope[data-cp-theme='dark'] {
+  --cp-bg: #0f0e13;
+  --cp-text: #e7e5e4;
+  --cp-dim: #a8a29e;
+  --cp-ink: #ff6b5e;
+  --cp-rule: #2b2a33;
+}
+.cp-scope[data-cp-theme='light'] {
+  --cp-bg: #faf6ee;
+  --cp-text: #2b2622;
+  --cp-dim: #7a726a;
+  --cp-ink: #d81f11;
+  --cp-rule: #e3dbcd;
+}
+
+.cp-scope {
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border: 1px solid var(--cp-rule);
+}
+
+.cp-body {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.cp-stanza { margin-bottom: var(--space-4); }
+.cp-stanza:last-child { margin-bottom: 0; }
+.cp-line { display: flex; flex-wrap: wrap; align-items: flex-end; }
+
+/* Célula com acorde nunca quebra por dentro: é isso que mantém o alinhamento
+   acorde↔sílaba em tela estreita. */
+.cp-cell { display: flex; flex-direction: column; white-space: pre; }
+/* Célula sem acorde não tem rótulo para alinhar, então pode quebrar. */
+.cp-cell--free { white-space: pre-wrap; }
+
+.cp-chord {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 1.4em;
+  color: var(--cp-ink);
+}
+/* min-height evita que a célula do caso "Sinai[C#m7]" (texto vazio) colapse
+   para altura zero e engula a barra. */
+.cp-text { min-height: 1.45em; border-left: 2px solid transparent; }
+.cp-cell--bar > .cp-text { border-left-color: var(--cp-ink); }
+
+.cp-comment {
+  color: var(--cp-dim);
+  font-style: italic;
+  margin: var(--space-2) 0;
+}

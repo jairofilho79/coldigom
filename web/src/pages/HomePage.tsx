@@ -5,12 +5,13 @@ import { ResultsTable } from '../components/ResultsTable';
 import { Pagination } from '../components/Pagination';
 import { FilterBar } from '../components/FilterBar';
 import { useAuth } from '../context/AuthContext';
-import { searchPraises, getLoginUrl } from '../services/api';
+import { searchPraises } from '../services/api';
 import { useFilters } from '../hooks/useFilters';
+import { AuthControl } from '../components/AuthControl';
 import type { Praise, PaginationInfo } from '../types';
 
 export function HomePage() {
-  const { user, ready: authReady, logout, authError } = useAuth();
+  const { user, authError } = useAuth();
   const { filters, setFilters } = useFilters();
 
   const [praises, setPraises] = useState<Praise[]>([]);
@@ -66,26 +67,9 @@ export function HomePage() {
             <p className="brand-subtitle">Coletânea Digital de Objetos Musicais</p>
           </div>
           <div className="brand-header-auth">
-            {!authReady ? (
-              <span className="auth-user muted">Sessão…</span>
-            ) : user ? (
-              <>
-                {user.picture ? (
-                  <img className="auth-avatar" src={user.picture} alt="" width={24} height={24} />
-                ) : null}
-                <span className="auth-user">
-                  {user.name || user.email}
-                </span>
-                <Link to="/praise/new" className="auth-btn">Novo louvor</Link>
-                <button type="button" className="auth-btn" onClick={() => void logout()}>
-                  Sair
-                </button>
-              </>
-            ) : (
-              <>
-                <a className="auth-btn" href={getLoginUrl()}>Entrar com o Google</a>
-              </>
-            )}
+            <AuthControl>
+              <Link to="/praise/new" className="auth-btn">Novo louvor</Link>
+            </AuthControl>
           </div>
         </div>
       </header>

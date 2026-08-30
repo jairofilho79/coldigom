@@ -29,7 +29,8 @@ max_concurrency = 3
 # OAuth / sessão (não-secret). Secrets via `wrangler secret put` (usar wrangler global 4.x, não npx)
 [vars]
 AUTH_BASE_URL = "https://coldigom-web.pages.dev"
-WEB_ORIGIN = "https://coldigom-web.pages.dev"
+# CSV: coldigom SPA + PLPCG (*plpcg.com cobre plpcg.com, v2.plpcg.com, 120826.plpcg.com, etc.)
+WEB_ORIGIN = "https://coldigom-web.pages.dev,https://*plpcg.com,https://plpcg-v2.pages.dev,https://plpcjf.org,https://plpcg-120826.pages.dev"
 AUTH_COOKIE_SAMESITE = "Lax"
 
 # Workers AI (fallback ChordPro — binding usado por rotas internas futuras)

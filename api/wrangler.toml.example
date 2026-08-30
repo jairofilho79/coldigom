@@ -31,7 +31,8 @@ max_concurrency = 3
 # Use wrangler global 4.x (não npx wrangler).
 [vars]
 AUTH_BASE_URL = "https://coldigom-api.jairofilho79.workers.dev"
-WEB_ORIGIN = "https://coldigom-web.pages.dev"
+# Comma-separated allowed SPA origins. Use https://*example.com for any subdomain + apex.
+WEB_ORIGIN = "https://coldigom-web.pages.dev,https://*plpcg.com"
 AUTH_COOKIE_SAMESITE = "None"
 
 [dev]

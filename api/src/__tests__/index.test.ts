@@ -219,6 +219,8 @@ const createMockR2 = (object: any = null) => {
       const slice = defaultBytes.slice(offset, offset + length);
       return { ...object, body: slice };
     }),
+    put: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
   };
 };
 
@@ -812,6 +814,54 @@ describe('API Routes', () => {
       const json = await res.json();
       expect(json.error).toBe('Failed to fetch praises');
     });
+
+    it('should allow CORS from listed PLPCG origin', async () => {
+      const mockDB = createPlpcgMockDB();
+      const res = await app.request('/api/plpcg/praises', {
+        headers: { origin: 'https://v2.plpcg.com' },
+      }, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+        WEB_ORIGIN: 'https://coldigom-web.pages.dev,https://*plpcg.com',
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('access-control-allow-origin')).toBe('https://v2.plpcg.com');
+    });
+
+    it('should omit CORS header for untrusted origin', async () => {
+      const mockDB = createPlpcgMockDB();
+      const res = await app.request('/api/plpcg/praises', {
+        headers: { origin: 'https://evil.example' },
+      }, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+        WEB_ORIGIN: 'https://coldigom-web.pages.dev,https://*plpcg.com',
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('access-control-allow-origin')).toBeNull();
+    });
+  });
+
+  describe('CORS origin patterns', () => {
+    const webOrigin = 'https://coldigom-web.pages.dev,https://*plpcg.com';
+
+    async function corsHeader(origin: string): Promise<string | null> {
+      const res = await app.request('/auth/status', { headers: { origin } }, { WEB_ORIGIN: webOrigin });
+      return res.headers.get('access-control-allow-origin');
+    }
+
+    it('should allow apex and subdomains via *plpcg.com', async () => {
+      await expect(corsHeader('https://plpcg.com')).resolves.toBe('https://plpcg.com');
+      await expect(corsHeader('https://v2.plpcg.com')).resolves.toBe('https://v2.plpcg.com');
+      await expect(corsHeader('https://120826.plpcg.com')).resolves.toBe('https://120826.plpcg.com');
+    });
+
+    it('should reject lookalike domains', async () => {
+      await expect(corsHeader('https://evilplpcg.com')).resolves.toBeNull();
+      await expect(corsHeader('https://plpcg.com.evil.com')).resolves.toBeNull();
+    });
   });
 
   describe('GET /api/praises/filters', () => {
@@ -901,6 +951,70 @@ describe('API Routes', () => {
       expect(json.data.materials).toHaveLength(2);
       expect(json.data.materials[0].material_kind_name).toBe('Partitura');
       expect(json.data.materials[1].material_kind_name).toBe('Áudio');
+    });
+
+    function praiseWithChords(headImpl: (key: string) => Promise<unknown>) {
+      const mockPraise = { ...mockPraises[0], tag_ids: null };
+      const materials = [
+        {
+          id: 'ch1', praise_id: mockPraise.id, material_kind: 'kind1', type: 'chord',
+          r2_key: `assets/praises/${mockPraise.id}/ch1.chord`,
+          file_path_legacy: '', source_material_id: 'mat1',
+        },
+        {
+          id: 'ch2', praise_id: mockPraise.id, material_kind: 'kind1', type: 'chord',
+          r2_key: `assets/praises/${mockPraise.id}/ch2.chord`,
+          file_path_legacy: '', source_material_id: 'mat1',
+        },
+        mockMaterials[0],
+      ];
+      const DB = {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn().mockReturnThis(),
+          all: vi.fn().mockImplementation(async () => {
+            if (query.includes('COALESCE(t.label')) return { results: mockMaterialKindLabels };
+            if (query.includes('FROM tags')) return { results: [] };
+            if (query.includes('praise_materials')) return { results: materials };
+            return { results: [] };
+          }),
+          first: vi.fn().mockResolvedValue(mockPraise),
+        })),
+      };
+      const head = vi.fn(headImpl);
+      return { mockPraise, DB, ASSETS: { ...createMockR2(), head }, head };
+    }
+
+    it('marca has_content nos materiais de cifra conforme o R2', async () => {
+      const { mockPraise, DB, ASSETS } = praiseWithChords(async (key: string) =>
+        key.endsWith('ch1.chord') ? { size: 611 } : null
+      );
+
+      const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { DB, ASSETS });
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      const cifras = json.data.materials.filter((m: any) => m.type === 'chord');
+      expect(cifras.find((m: any) => m.id === 'ch1').has_content).toBe(true);
+      expect(cifras.find((m: any) => m.id === 'ch2').has_content).toBe(false);
+    });
+
+    it('consulta o R2 com o prefixo storage/ e só para cifras', async () => {
+      const { mockPraise, DB, ASSETS, head } = praiseWithChords(async () => null);
+
+      await app.request(`/api/praises/${mockPraise.id}`, {}, { DB, ASSETS });
+
+      expect(head).toHaveBeenCalledTimes(2);
+      for (const call of head.mock.calls) {
+        expect(String(call[0])).toMatch(/^storage\/assets\/.*\.chord$/);
+      }
+    });
+
+    it('não devolve has_content em material que não é cifra', async () => {
+      const { mockPraise, DB, ASSETS } = praiseWithChords(async () => null);
+      const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { DB, ASSETS });
+      const json = await res.json();
+      const pdf = json.data.materials.find((m: any) => m.type === 'pdf');
+      expect(pdf.has_content).toBeUndefined();
     });
 
     it('should return 404 when praise not found', async () => {
@@ -1104,40 +1218,144 @@ describe('API Routes', () => {
     });
   });
 
-  describe('GET /api/raw-chordpros', () => {
-    const mockRawRow = {
-      id: 'raw-1', source_pdf_material_id: 'pdf-1', praise_id: 'praise-1',
-      praise_name: 'Test', kind_label: 'Cifra I', source_filename: '00-test.chordpro',
-      title: 'Test Song', subtitle: '123', content: '{title: Test}\n[A]x',
-      validated: 0, debug_batch: null, created_at: '2026-01-01', updated_at: '2026-01-01',
-    };
-    function createRawMockD1() {
-      const rows = [mockRawRow];
+  describe('PUT /api/materials/:materialId/content', () => {
+    async function putInit(body: string, contentType = 'text/plain; charset=utf-8'): Promise<RequestInit> {
+      const jwt = await new SignJWT({ email: 'admin@test.com', name: 'Admin', jti: 'j3' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setSubject('sub-admin')
+        .setIssuedAt()
+        .setExpirationTime('2h')
+        .sign(new TextEncoder().encode(TEST_JWT_SECRET));
       return {
-        prepare: vi.fn((query: string) => ({
+        method: 'PUT',
+        headers: {
+          'content-type': contentType,
+          origin: TEST_WEB_ORIGIN,
+          authorization: `Bearer ${jwt}`,
+        },
+        body,
+      };
+    }
+
+    it('should replace chord content in R2', async () => {
+      const praiseId = '1b2b33ab-4dff-4014-8582-dcb9a92efbc8';
+      const chordId = 'chord-mat-1';
+      const r2Key = `assets/praises/${praiseId}/${chordId}.chord`;
+      const mockDB = {
+        prepare: vi.fn(() => ({
           bind: vi.fn(() => ({
-            all: vi.fn(async () => query.includes('COUNT') ? { results: [{ total: 1 }] } : { results: rows.map(({ content: _c, ...r }) => r) }),
-            first: vi.fn(async () => query.includes('COUNT') ? { total: 1 } : mockRawRow),
-            run: vi.fn(async () => ({})),
+            first: vi.fn(async () => ({
+              id: chordId,
+              praise_id: praiseId,
+              type: 'chord',
+              r2_key: r2Key,
+            })),
           })),
         })),
       };
-    }
-    it('should list raw chordpros', async () => {
-      const res = await app.request('/api/raw-chordpros', {}, { DB: createRawMockD1(), ASSETS: createMockR2() });
+      const mockR2 = createMockR2();
+      const content = '{title: Test}\n[C]hello';
+      const res = await app.request(
+        `/api/materials/${chordId}/content`,
+        await putInit(content),
+        {
+          DB: mockDB,
+          ASSETS: mockR2,
+          AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          WEB_ORIGIN: TEST_WEB_ORIGIN,
+        }
+      );
       expect(res.status).toBe(200);
-      const json = await res.json() as { data: { pdf_r2_key: string }[] };
-      expect(json.data[0].pdf_r2_key).toBe('assets/praises/praise-1/pdf-1.pdf');
+      const json = await res.json() as { ok: boolean; material_id: string; praise_id: string; r2_key: string };
+      expect(json.ok).toBe(true);
+      expect(json.material_id).toBe(chordId);
+      expect(json.praise_id).toBe(praiseId);
+      expect(json.r2_key).toBe(r2Key);
+      expect(mockR2.put).toHaveBeenCalledWith(
+        `storage/${r2Key}`,
+        content,
+        expect.objectContaining({
+          httpMetadata: expect.objectContaining({ contentType: 'text/plain; charset=utf-8' }),
+        })
+      );
     });
-  });
 
-  describe('PATCH /api/raw-chordpros/:id', () => {
+    it('should reject non-chord materials', async () => {
+      const mockDB = {
+        prepare: vi.fn(() => ({
+          bind: vi.fn(() => ({
+            first: vi.fn(async () => ({
+              id: 'mat1',
+              praise_id: 'p1',
+              type: 'pdf',
+              r2_key: 'assets/praises/p1/mat1.pdf',
+            })),
+          })),
+        })),
+      };
+      const res = await app.request(
+        '/api/materials/mat1/content',
+        await putInit('{title: X}'),
+        {
+          DB: mockDB,
+          ASSETS: createMockR2(),
+          AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          WEB_ORIGIN: TEST_WEB_ORIGIN,
+        }
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it('should accept COLDIGOM_UPLOAD_TOKEN without Origin', async () => {
+      const praiseId = '1b2b33ab-4dff-4014-8582-dcb9a92efbc8';
+      const chordId = 'chord-mat-1';
+      const r2Key = `assets/praises/${praiseId}/${chordId}.chord`;
+      const mockDB = {
+        prepare: vi.fn(() => ({
+          bind: vi.fn(() => ({
+            first: vi.fn(async () => ({
+              id: chordId,
+              praise_id: praiseId,
+              type: 'chord',
+              r2_key: r2Key,
+            })),
+          })),
+        })),
+      };
+      const mockR2 = createMockR2();
+      const uploadToken = 'test-upload-token-abc';
+      const res = await app.request(`/api/materials/${chordId}/content`, {
+        method: 'PUT',
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          authorization: `Bearer ${uploadToken}`,
+        },
+        body: '{title: ViaToken}',
+      }, {
+        DB: mockDB,
+        ASSETS: mockR2,
+        AUTH_JWT_SECRET: TEST_JWT_SECRET,
+        WEB_ORIGIN: TEST_WEB_ORIGIN,
+        COLDIGOM_UPLOAD_TOKEN: uploadToken,
+      });
+      expect(res.status).toBe(200);
+      expect(mockR2.put).toHaveBeenCalled();
+    });
+
     it('should require auth', async () => {
-      const res = await app.request('/api/raw-chordpros/raw-1', {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json', origin: TEST_WEB_ORIGIN },
-        body: JSON.stringify({ validated: true }),
-      }, { DB: createMockD1(), ASSETS: createMockR2(), AUTH_JWT_SECRET: TEST_JWT_SECRET, WEB_ORIGIN: TEST_WEB_ORIGIN });
+      const res = await app.request('/api/materials/chord-mat-1/content', {
+        method: 'PUT',
+        headers: {
+          'content-type': 'text/plain',
+          origin: TEST_WEB_ORIGIN,
+        },
+        body: '{title: X}',
+      }, {
+        DB: createMockD1(),
+        ASSETS: createMockR2(),
+        AUTH_JWT_SECRET: TEST_JWT_SECRET,
+        WEB_ORIGIN: TEST_WEB_ORIGIN,
+      });
       expect(res.status).toBe(401);
     });
   });
@@ -1221,6 +1439,9 @@ describe('API Routes', () => {
       
       expect(res.status).toBe(200);
       expect(res.headers.get('Content-Type')).toBe('audio/mpeg');
+      expect(res.headers.get('Cross-Origin-Resource-Policy')).toBe(
+        'cross-origin',
+      );
     });
 
     it('should return correct content type for midi', async () => {
@@ -1248,7 +1469,7 @@ describe('API Routes', () => {
       });
       
       expect(res.status).toBe(200);
-      expect(res.headers.get('Content-Type')).toBe('text/plain');
+      expect(res.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
     });
 
     it('should return octet-stream for unknown extension', async () => {

@@ -38,3 +38,13 @@ export async function hasDriveCredentials(db: D1Database, userSub: string): Prom
     .first<{ ok: number }>();
   return Boolean(row);
 }
+
+export async function deleteDriveCredentials(db: D1Database, userSub: string): Promise<void> {
+  await db.prepare(`DELETE FROM google_drive_credentials WHERE user_sub = ?`).bind(userSub).run();
+}
+
+/** Stale/revoked refresh after secret rotation → clear row so UI reconnects. */
+export function isInvalidDriveGrant(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /invalid_grant/i.test(msg);
+}

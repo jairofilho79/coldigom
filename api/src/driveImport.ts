@@ -1,5 +1,5 @@
 import { downloadDriveFile, getDriveAccessToken } from './driveApi';
-import { getDriveRefreshToken } from './driveCredentials';
+import { deleteDriveCredentials, getDriveRefreshToken, isInvalidDriveGrant } from './driveCredentials';
 
 export type DriveImportQueueMessage =
   | { type: 'scan'; scanId: string }
@@ -30,11 +30,19 @@ async function accessTokenForUser(env: DriveImportEnv, userSub: string): Promise
     jwtSecret: env.AUTH_JWT_SECRET,
   });
   if (!refresh) throw new Error('Drive not connected');
-  return getDriveAccessToken({
-    clientId: env.GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
-    refreshToken: refresh,
-  });
+  try {
+    return await getDriveAccessToken({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      refreshToken: refresh,
+    });
+  } catch (err) {
+    if (isInvalidDriveGrant(err)) {
+      await deleteDriveCredentials(env.DB, userSub);
+      throw new Error('Drive not connected');
+    }
+    throw err;
+  }
 }
 
 export async function processImportItem(

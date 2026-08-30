@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ChordProEditor } from '../ChordProEditor';
+import { lineToText } from '../../../lib/chordpro/edit';
 import { parse } from '../../../lib/chordpro/parse';
 import { validateSong } from '../../../lib/chordpro/validate';
 import type { Song } from '../../../lib/chordpro/types';
@@ -117,6 +118,16 @@ describe('estrutura', () => {
     expect(onChange.mock.calls.at(-1)![0].stanzas[0].lines).toHaveLength(1);
   });
 
+  it('remover a linha aberta fecha a edição, para o rascunho não cair na linha vizinha', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    await userEvent.type(screen.getByRole('textbox', { name: /linha/i }), ' e mais');
+    await userEvent.click(screen.getAllByRole('button', { name: /remover linha/i })[0]);
+    // Sem isto, o campo reapareceria sobre a linha que era a 1 com o rascunho antigo,
+    // e "Confirmar" gravaria no endereço errado — as linhas se reindexaram.
+    expect(screen.queryByRole('textbox', { name: /linha/i })).toBeNull();
+  });
+
   it('separa estrofe', async () => {
     const { onChange } = renderEditor();
     await userEvent.click(screen.getAllByRole('button', { name: /separar estrofe/i })[1]);
@@ -155,5 +166,35 @@ describe('erros de acorde', () => {
   it('anotação não é marcada como erro', () => {
     const { container } = renderEditor('[*2x]\nletra [C]aqui\n');
     expect(container.querySelector('.cp-line-row--invalid')).toBeNull();
+  });
+});
+
+describe('o espaçamento sobrevive à confirmação', () => {
+  it('confirmar sem editar devolve a linha byte a byte', async () => {
+    const { onChange } = renderEditor();
+    await userEvent.click(screen.getByText(/A linda/));
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    // O caminho real do dado ao confirmar é lineToText → normalizeLine → replaceLine.
+    // Os três espaços de "[E]   A linda" são dado do acervo: nenhum trecho pode encolhê-los.
+    const novo = onChange.mock.calls.at(-1)![0];
+    expect(lineToText(novo, { stanza: 0, line: 1 })).toBe('[E]   A linda [A]flor');
+    expect(novo.stanzas[0].lines[1].cells[0].text).toBe('   A linda ');
+  });
+});
+
+describe('é controlado', () => {
+  it('não guarda o Song: um song novo por prop troca o que está na tela', () => {
+    const antes = parse('Linha antiga [C]aqui\n');
+    const depois = parse('Linha nova [G]ali\n');
+    const { rerender } = render(
+      <ChordProEditor song={antes} onChange={vi.fn()} issues={validateSong(antes)} />
+    );
+    expect(screen.getByText(/Linha antiga/)).toBeInTheDocument();
+
+    rerender(<ChordProEditor song={depois} onChange={vi.fn()} issues={validateSong(depois)} />);
+    // Um editor que guardasse o Song em estado interno continuaria mostrando o antigo.
+    expect(screen.queryByText(/Linha antiga/)).toBeNull();
+    expect(screen.getByText(/Linha nova/)).toBeInTheDocument();
   });
 });

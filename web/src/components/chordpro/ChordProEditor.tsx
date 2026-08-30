@@ -97,6 +97,19 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
     setDraft('');
   }
 
+  /**
+   * Toda mutação estrutural reindexa as linhas: inserir, remover ou separar estrofe
+   * faz o `editing` que valia antes apontar para OUTRA linha. Se a edição continuasse
+   * aberta, o campo reapareceria sobre a linha vizinha com o rascunho antigo e
+   * "Confirmar" gravaria no lugar errado. Fechar a edição junto com a mutação é o que
+   * impede isso — o endereço só é confiável enquanto o Song não muda de forma.
+   */
+  function mutarEstrutura(novo: Song) {
+    setEditing(null);
+    setDraft('');
+    onChange(novo);
+  }
+
   /** Insere o símbolo na posição do cursor. Sem linha aberta, não há onde inserir. */
   function inserirSimbolo(simbolo: string) {
     if (!editing) return;
@@ -196,21 +209,21 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
                     <button
                       type="button"
                       aria-label="Inserir linha abaixo"
-                      onClick={() => onChange(insertLineAfter(song, at))}
+                      onClick={() => mutarEstrutura(insertLineAfter(song, at))}
                     >
                       +
                     </button>
                     <button
                       type="button"
                       aria-label="Remover linha"
-                      onClick={() => onChange(removeLine(song, at))}
+                      onClick={() => mutarEstrutura(removeLine(song, at))}
                     >
                       −
                     </button>
                     <button
                       type="button"
                       aria-label="Separar estrofe aqui"
-                      onClick={() => onChange(splitStanzaAt(song, at))}
+                      onClick={() => mutarEstrutura(splitStanzaAt(song, at))}
                     >
                       ¶
                     </button>

@@ -26,6 +26,12 @@ export interface Material {
   source_material_id: string | null;
   merged_from_praise_id?: string | null;
   merged_from_praise_name?: string | null;
+  /** Só em materiais type:'chord' — se o .chord existe de verdade no R2. */
+  has_content?: boolean;
+  /** Passou por revisão humana. O lote gerado por pipeline entra como false. */
+  is_reviewed?: boolean;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
 }
 
 export interface Tag {

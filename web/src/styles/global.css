@@ -2814,35 +2814,7 @@ button.linkish {
   }
 }
 
-.raw-chordpro-page { max-width: 720px; }
-.raw-chordpro-back { display: inline-block; margin-bottom: var(--space-2); font-size: var(--text-sm); color: var(--accent-gold); text-decoration: none; }
-.raw-chordpro-back:hover { text-decoration: underline; }
-.raw-chordpro-toolbar { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); }
-.raw-chordpro-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.raw-chordpro-filter-btn { padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-secondary); font-size: var(--text-sm); cursor: pointer; }
-.raw-chordpro-filter-btn.is-active { border-color: var(--c-accent-500); color: var(--text-primary); background: rgba(201, 169, 110, 0.12); }
-.raw-chordpro-search { display: flex; gap: var(--space-2); }
-.raw-chordpro-search input { flex: 1; min-width: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); }
-.raw-chordpro-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.raw-chordpro-list-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-surface); text-decoration: none; color: inherit; }
-.raw-chordpro-list-item:hover { border-color: var(--c-accent-500); }
-.raw-chordpro-list-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.raw-chordpro-list-title { font-weight: 600; }
-.raw-chordpro-list-sub { font-size: var(--text-sm); }
-.raw-chordpro-badge { flex-shrink: 0; font-size: var(--text-xs); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-weight: 600; }
-.raw-chordpro-badge.validated { background: rgba(72, 160, 96, 0.2); color: #6fcf97; }
-.raw-chordpro-badge.pending { background: rgba(201, 169, 110, 0.15); color: var(--c-accent-400); }
-.raw-chordpro-badge.auto-ok { background: rgba(72, 160, 96, 0.2); color: #6fcf97; }
-.raw-chordpro-badge.auto-fail { background: rgba(200, 80, 80, 0.2); color: #f07178; }
-.raw-chordpro-detail-header { margin-bottom: var(--space-5); }
-.raw-chordpro-detail-title { font-family: var(--font-display); font-size: var(--text-2xl); margin: var(--space-2) 0; }
-.raw-chordpro-stack-section { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6); }
-.raw-chordpro-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.raw-chordpro-section-head h2 { font-size: var(--text-lg); margin: 0; }
-.raw-chordpro-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .auth-btn.is-validated { border-color: #6fcf97; color: #6fcf97; }
-.raw-chordpro-editor { min-height: 40vh; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.raw-chordpro-preview-wrap { padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-surface); min-height: 30vh; }
 .chordpro-preview-title { font-family: var(--font-display); font-size: var(--text-xl); margin: 0 0 var(--space-3); }
 .chordpro-preview-meta { display: grid; gap: var(--space-1); margin: 0 0 var(--space-4); font-size: var(--text-sm); }
 .chordpro-preview-meta-row { display: flex; gap: var(--space-2); }
@@ -2852,6 +2824,246 @@ button.linkish {
 .chordpro-chord { display: inline-block; font-weight: 700; color: var(--c-accent-400); font-size: 0.85em; margin-right: 0.1em; }
 .chordpro-preview-comment { font-size: var(--text-sm); color: var(--text-tertiary); font-style: italic; margin: 0 0 var(--space-2); }
 .chordpro-preview-blank { height: var(--space-2); }
-.raw-chordpro-pdf-frame { min-height: 50vh; }
-.raw-chordpro-login-hint { font-size: var(--text-sm); margin-bottom: var(--space-4); }
 .pagination-bar { display: flex; gap: var(--space-3); justify-content: center; margin: var(--space-6) 0; }
+
+/* ── Viewer de ChordPro ─────────────────────────────────────────────── */
+/* Acorde e barra usam a mesma tinta, como no hinário impresso: o red_marks.py
+   do pipeline acha os dois com a mesma máscara de vermelho. Distinguem-se por
+   posição — rótulo acima da linha, barra na linha da letra — não por cor.
+   O vermelho difere entre as paletas porque o mesmo tom não tem o mesmo
+   contraste sobre os dois fundos. */
+.cp-scope[data-cp-theme='dark'] {
+  --cp-bg: #0f0e13;
+  --cp-text: #e7e5e4;
+  --cp-dim: #a8a29e;
+  --cp-ink: #ff6b5e;
+  --cp-rule: #2b2a33;
+}
+.cp-scope[data-cp-theme='light'] {
+  --cp-bg: #faf6ee;
+  --cp-text: #2b2622;
+  --cp-dim: #7a726a;
+  --cp-ink: #d81f11;
+  --cp-rule: #e3dbcd;
+}
+
+.cp-scope {
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border: 1px solid var(--cp-rule);
+}
+
+.cp-body {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.cp-stanza { margin-bottom: var(--space-4); }
+.cp-stanza:last-child { margin-bottom: 0; }
+.cp-line { display: flex; flex-wrap: wrap; align-items: flex-end; }
+
+/* Célula com acorde nunca quebra por dentro: é isso que mantém o alinhamento
+   acorde↔sílaba em tela estreita. */
+.cp-cell { display: flex; flex-direction: column; white-space: pre; }
+/* Célula sem acorde não tem rótulo para alinhar, então pode quebrar. */
+.cp-cell--free { white-space: pre-wrap; }
+
+.cp-chord {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 1.4em;
+  color: var(--cp-ink);
+}
+/* min-height evita que a célula do caso "Sinai[C#m7]" (texto vazio) colapse
+   para altura zero e engula a barra. */
+.cp-text { min-height: 1.45em; border-left: 2px solid transparent; }
+.cp-cell--bar > .cp-text { border-left-color: var(--cp-ink); }
+
+.cp-comment {
+  color: var(--cp-dim);
+  font-style: italic;
+  margin: var(--space-2) 0;
+}
+
+/* ── Página da cifra ────────────────────────────────────────────────── */
+.cp-page { max-width: 860px; }
+.cp-back {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--accent-gold);
+  text-decoration: none;
+}
+.cp-back:hover { text-decoration: underline; }
+
+.cp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.cp-title { font-family: var(--font-display, Georgia, serif); font-size: var(--text-2xl); margin: 0; }
+.cp-number { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1); }
+.cp-artist { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1); }
+.cp-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.cp-chip {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+.cp-theme-btn,
+.cp-retry {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.cp-theme-btn:hover,
+.cp-retry:hover { border-color: var(--c-accent-500); color: var(--text-primary); }
+
+/* Marca de revisão humana. O switch fica no cabeçalho da cifra: é decisão
+   sobre o que se está lendo, não detalhe de registro. */
+.cp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cp-review { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.cp-review-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.cp-review-switch:hover:not(:disabled) {
+  border-color: var(--c-accent-500);
+  color: var(--text-primary);
+}
+.cp-review-switch:disabled { opacity: 0.6; cursor: progress; }
+.cp-review-switch:focus-visible { outline: 2px solid var(--c-accent-500); outline-offset: 2px; }
+
+.cp-review-track {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--border-subtle);
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.cp-review-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.15s ease;
+}
+.cp-review-switch.is-on {
+  border-color: color-mix(in srgb, var(--color-success, #2d6a4f) 45%, var(--border-subtle));
+  color: var(--text-primary);
+}
+.cp-review-switch.is-on .cp-review-track { background: var(--color-success, #2d6a4f); }
+.cp-review-switch.is-on .cp-review-thumb { transform: translateX(16px); }
+
+.cp-review-meta { font-size: var(--text-xs); color: var(--text-secondary); }
+.cp-review-error { font-size: var(--text-xs); color: var(--c-danger-500, #c41e2a); }
+
+.cp-review-badge {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.cp-review-badge.is-on {
+  border-color: color-mix(in srgb, var(--color-success, #2d6a4f) 35%, var(--border-subtle));
+  color: var(--color-success, #2d6a4f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-review-track,
+  .cp-review-thumb { transition: none; }
+}
+
+.cp-state {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  margin-bottom: var(--space-4);
+}
+.cp-state-title { font-weight: 600; margin-bottom: var(--space-1); }
+.cp-state-desc { font-size: var(--text-sm); color: var(--text-secondary); }
+.cp-source-link,
+.cp-retry { display: inline-block; margin-top: var(--space-3); }
+.cp-source-link { color: var(--accent-gold); font-size: var(--text-sm); }
+
+.cp-panel { margin-top: var(--space-5); }
+.cp-panel-title { font-size: var(--text-lg); margin-bottom: var(--space-3); }
+.cp-panel-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+@media (max-width: 640px) { .cp-panel-cols { grid-template-columns: 1fr; } }
+.cp-panel-col {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+.cp-panel-col--wide { margin-top: var(--space-3); }
+.cp-panel-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+.cp-panel-row {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+}
+.cp-panel-row dt { flex: 0 0 8.5rem; color: var(--text-secondary); }
+.cp-panel-row dd { margin: 0; min-width: 0; word-break: break-word; }
+.cp-panel-row a { color: var(--accent-gold); }
+
+.cp-notes {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--c-accent-500);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+.cp-note { font-size: var(--text-sm); margin: var(--space-1) 0; }
+
+/* Cifra sem arquivo publicado: o card continua clicável — é a porta do editor
+   quando a criação chegar — mas não promete conteúdo que não existe. */
+.material-link--empty .material-link-meta { opacity: 0.65; font-style: italic; }

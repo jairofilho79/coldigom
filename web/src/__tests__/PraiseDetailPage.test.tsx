@@ -575,4 +575,46 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.getAllByText('Acordes').length).toBeGreaterThan(0);
     });
   });
+
+  function praiseWithChord(has_content: boolean | undefined) {
+    return {
+      ...mockPraiseDetail,
+      materials: [
+        {
+          id: 'mat3',
+          praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+          material_kind: 'kind3',
+          material_kind_name: 'Cifra I',
+          type: 'chord',
+          r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat3.chord',
+          file_path_legacy: 'path/to/file.chord',
+          source_material_id: null,
+          ...(has_content === undefined ? {} : { has_content }),
+        },
+      ],
+    };
+  }
+
+  it('o card de cifra linka para a página dedicada, não para o arquivo cru', async () => {
+    (getPraise as any).mockResolvedValue(praiseWithChord(true));
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+    const link = await screen.findByRole('link', { name: /Cifra I/ });
+    expect(link).toHaveAttribute(
+      'href',
+      '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/cifra/mat3'
+    );
+  });
+
+  it('cifra sem conteúdo aparece marcada e continua clicável', async () => {
+    (getPraise as any).mockResolvedValue(praiseWithChord(false));
+    renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+    const link = await screen.findByRole('link', { name: /Cifra I/ });
+    expect(link).toHaveAttribute(
+      'href',
+      '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/cifra/mat3'
+    );
+    expect(screen.getByText(/sem conte\u00fado/i)).toBeInTheDocument();
+  });
 });

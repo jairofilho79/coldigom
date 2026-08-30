@@ -77,14 +77,12 @@ export function HomePage() {
                   {user.name || user.email}
                 </span>
                 <Link to="/praise/new" className="auth-btn">Novo louvor</Link>
-                <Link to="/raw-chordPro" className="auth-btn">Raw ChordPro</Link>
                 <button type="button" className="auth-btn" onClick={() => void logout()}>
                   Sair
                 </button>
               </>
             ) : (
               <>
-                <Link to="/raw-chordPro" className="auth-btn">Raw ChordPro</Link>
                 <a className="auth-btn" href={getLoginUrl()}>Entrar com o Google</a>
               </>
             )}

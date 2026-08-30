@@ -1,5 +1,4 @@
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
-import type { RawChordproDetail, RawChordproSummary } from '../types/rawChordpro';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== null
@@ -275,6 +274,7 @@ export async function updateMaterial(materialId: string, updates: {
   material_kind?: string;
   type?: string;
   url?: string | null;
+  is_reviewed?: boolean;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,
@@ -487,56 +487,3 @@ export function getAssetUrl(r2Key: string): string {
   return API_BASE_URL ? `${API_BASE_URL}/${key}` : `/${key}`;
 }
 
-export interface ListRawChordprosParams {
-  validated?: 'all' | 'true' | 'false';
-  q?: string;
-  debug_batch?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export async function listRawChordpros(
-  params: ListRawChordprosParams = {}
-): Promise<{ data: RawChordproSummary[]; pagination: PaginationInfo }> {
-  const urlParams = new URLSearchParams();
-  if (params.validated && params.validated !== 'all') urlParams.set('validated', params.validated);
-  if (params.q) urlParams.set('q', params.q);
-  if (params.debug_batch) urlParams.set('debug_batch', params.debug_batch);
-  urlParams.set('limit', String(params.limit ?? 50));
-  urlParams.set('offset', String(params.offset ?? 0));
-
-  const response = await fetchJson<ApiResponse<RawChordproSummary[]>>(
-    `${API_BASE_URL}/api/raw-chordpros?${urlParams}`
-  );
-  return {
-    data: response.data,
-    pagination: response.pagination ?? {
-      page: 1,
-      limit: params.limit ?? 50,
-      total: response.data.length,
-      totalPages: 1,
-    },
-  };
-}
-
-export async function getRawChordpro(id: string): Promise<RawChordproDetail> {
-  const response = await fetchJson<ApiResponse<RawChordproDetail>>(
-    `${API_BASE_URL}/api/raw-chordpros/${id}`
-  );
-  return response.data;
-}
-
-export async function patchRawChordpro(
-  id: string,
-  body: { content?: string; validated?: boolean }
-): Promise<RawChordproDetail> {
-  const response = await fetchJson<ApiResponse<RawChordproDetail>>(
-    `${API_BASE_URL}/api/raw-chordpros/${id}`,
-    {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    }
-  );
-  return response.data;
-}

@@ -35,6 +35,7 @@ type Env = {
   WEB_ORIGIN?: string;
   AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
   DRIVE_IMPORT?: Queue<DriveImportQueueMessage>;
+  COLDIGOM_UPLOAD_TOKEN?: string;
 };
 
 interface PraiseResult {
@@ -79,16 +80,78 @@ async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
-// CORS: with credentials, never use '*'. If WEB_ORIGIN is set, only that origin is allowed.
+function parseWebOrigins(webOrigin: string | undefined): string[] {
+  if (!webOrigin) return [];
+  return webOrigin.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function primaryWebOrigin(webOrigin: string | undefined): string | undefined {
+  return parseWebOrigins(webOrigin)[0];
+}
+
+function parseOriginEntry(entry: string): { protocol?: string; hostname: string; wildcard: boolean } | null {
+  const trimmed = entry.trim();
+  if (!trimmed) return null;
+
+  if (!trimmed.includes('://')) {
+    const wildcard = trimmed.startsWith('*');
+    return { hostname: wildcard ? trimmed.slice(1) : trimmed, wildcard };
+  }
+
+  try {
+    const url = new URL(trimmed);
+    const wildcard = url.hostname.startsWith('*');
+    return {
+      protocol: url.protocol,
+      hostname: wildcard ? url.hostname.slice(1) : url.hostname,
+      wildcard,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function hostnameMatchesBaseDomain(hostname: string, baseDomain: string): boolean {
+  return hostname === baseDomain || hostname.endsWith(`.${baseDomain}`);
+}
+
+function isTrustedWebOrigin(origin: string, entry: string): boolean {
+  if (origin === entry) return true;
+
+  const parsed = parseOriginEntry(entry);
+  if (!parsed) return false;
+
+  try {
+    const o = new URL(origin);
+    if (parsed.protocol && o.protocol !== parsed.protocol) return false;
+
+    if (parsed.wildcard) {
+      return hostnameMatchesBaseDomain(o.hostname, parsed.hostname);
+    }
+
+    return hostnameMatchesBaseDomain(o.hostname, parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isOriginAllowed(origin: string | undefined, webOrigin: string | undefined): boolean {
+  if (!webOrigin) return true;
+  if (!origin) return false;
+  return parseWebOrigins(webOrigin).some((entry) => isTrustedWebOrigin(origin, entry));
+}
+
+function corsAllowOrigin(origin: string | undefined, webOrigin: string | undefined): string {
+  if (!webOrigin) return origin || '*';
+  if (!origin || !isOriginAllowed(origin, webOrigin)) return '';
+  return origin;
+}
+
+// CORS: with credentials, never use '*'. If WEB_ORIGIN is set, only listed origins are allowed.
 app.use('/*', async (c, next) => {
   const origin = c.req.header('origin');
-  const allowOrigin = c.env.WEB_ORIGIN
-    ? origin === c.env.WEB_ORIGIN
-      ? c.env.WEB_ORIGIN
-      : ''
-    : origin || '*';
   return cors({
-    origin: allowOrigin,
+    origin: corsAllowOrigin(origin, c.env.WEB_ORIGIN),
     credentials: true,
     allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -189,19 +252,6 @@ function nowSec(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-function isTrustedWebOrigin(origin: string, webOrigin: string): boolean {
-  if (origin === webOrigin) return true;
-  try {
-    const web = new URL(webOrigin);
-    const o = new URL(origin);
-    if (o.protocol !== web.protocol) return false;
-    if (o.hostname === web.hostname) return true;
-    return o.hostname.endsWith(`.${web.hostname}`);
-  } catch {
-    return false;
-  }
-}
-
 /** Keep post-login redirect on the canonical site (path only), never a preview deployment URL. */
 function sanitizePostLoginRedirect(raw: string | undefined, webOrigin: string | undefined): string {
   if (!raw || raw === '/') return '/';
@@ -209,10 +259,11 @@ function sanitizePostLoginRedirect(raw: string | undefined, webOrigin: string | 
   try {
     const u = new URL(raw);
     const path = `${u.pathname}${u.search}${u.hash}` || '/';
-    if (!webOrigin) return path;
-    const web = new URL(webOrigin);
-    const host = u.hostname;
-    if (host === web.hostname || host.endsWith(`.${web.hostname}`)) return path;
+    const origins = parseWebOrigins(webOrigin);
+    if (origins.length === 0) return path;
+    for (const entry of origins) {
+      if (isTrustedWebOrigin(u.origin, entry)) return path;
+    }
   } catch {
     /* fall through */
   }
@@ -223,7 +274,7 @@ function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) =
   const web = c.env.WEB_ORIGIN;
   if (!web) return null;
   const origin = c.req.header('origin');
-  if (!origin || !isTrustedWebOrigin(origin, web)) {
+  if (!isOriginAllowed(origin, web)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
   return null;
@@ -244,6 +295,22 @@ async function requireAuth(c: any, next: any) {
   } catch {
     return c.json({ error: 'Unauthorized' }, 401);
   }
+}
+
+function bearerToken(c: { req: { header: (n: string) => string | undefined } }): string {
+  const h = c.req.header('authorization') || '';
+  return h.startsWith('Bearer ') ? h.slice(7) : '';
+}
+
+/** Review-app upload token (no Origin) or admin JWT. */
+async function requireUploadOrAuth(c: any, next: any) {
+  const uploadToken = c.env.COLDIGOM_UPLOAD_TOKEN?.trim();
+  const token = bearerToken(c);
+  if (uploadToken) {
+    if (token === uploadToken) return await next();
+    if (token) return c.json({ error: 'Invalid upload token' }, 401);
+  }
+  return requireAuth(c, next);
 }
 
 // --- Auth routes ---
@@ -292,7 +359,7 @@ app.get('/auth/drive/connect', async (c) => {
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const baseUrl = getBaseUrl(c);
-  const redirectTo = c.req.query('redirect') || c.env.WEB_ORIGIN || '/';
+  const redirectTo = c.req.query('redirect') || primaryWebOrigin(c.env.WEB_ORIGIN) || '/';
   const { location, setCookies } = await buildGoogleAuthorizeRedirect({
     requestUrl: new URL(c.req.url),
     baseUrl,
@@ -914,6 +981,7 @@ app.get('/api/praises/:id', async (c) => {
       SELECT 
         pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.file_path_legacy,
         pm.source_material_id, pm.merged_from_praise_id, pm.url,
+        pm.is_reviewed, pm.reviewed_at, pm.reviewed_by,
         mp.name AS merged_from_praise_name
       FROM praise_materials pm
       LEFT JOIN praises mp ON mp.id = pm.merged_from_praise_id
@@ -975,10 +1043,21 @@ app.get('/api/praises/:id', async (c) => {
 
     const materialKindLabels = await loadMaterialKindLabels(c.env.DB);
 
-    const materials = (materialsResult.results as any[]).map(m => ({
-      ...m,
-      material_kind_name: labelFor(materialKindLabels, m.material_kind),
-    }));
+    // O r2_key está preenchido em 100% dos registros de cifra, inclusive nos que
+    // nunca tiveram arquivo publicado — só o R2 sabe quais existem de verdade.
+    // Sem isto, o card de cifra na UI prometeria conteúdo que não existe.
+    const materials = await Promise.all(
+      (materialsResult.results as any[]).map(async m => {
+        const base = {
+          ...m,
+          material_kind_name: labelFor(materialKindLabels, m.material_kind),
+        };
+        if (m.type !== 'chord') return base;
+        const key = m.r2_key ? `storage/${String(m.r2_key).replace(/^\//, '')}` : null;
+        const object = key ? await c.env.ASSETS.head(key) : null;
+        return { ...base, has_content: object !== null };
+      })
+    );
 
     return c.json({
       data: {
@@ -1004,172 +1083,6 @@ app.get('/api/materials/kinds', async (c) => {
     console.error('Error fetching material kinds:', error);
     return c.json({ error: 'Failed to fetch material kinds' }, 500);
   }
-});
-
-type RawChordproRow = {
-  id: string;
-  source_pdf_material_id: string;
-  praise_id: string | null;
-  praise_name: string | null;
-  kind_label: string | null;
-  source_filename: string;
-  title: string | null;
-  subtitle: string | null;
-  content: string;
-  validated: number;
-  debug_batch: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-function mapRawChordpro(row: RawChordproRow, includeContent: boolean) {
-  const pdf_r2_key =
-    row.praise_id && row.source_pdf_material_id
-      ? `assets/praises/${row.praise_id}/${row.source_pdf_material_id}.pdf`
-      : null;
-  const base = {
-    id: row.id,
-    source_pdf_material_id: row.source_pdf_material_id,
-    praise_id: row.praise_id,
-    praise_name: row.praise_name,
-    kind_label: row.kind_label,
-    source_filename: row.source_filename,
-    title: row.title,
-    subtitle: row.subtitle,
-    validated: row.validated === 1,
-    debug_batch: row.debug_batch ?? null,
-    pdf_r2_key,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  };
-  return includeContent ? { ...base, content: row.content } : base;
-}
-
-app.get('/api/raw-chordpros', async (c) => {
-  try {
-    const validated = c.req.query('validated') || 'all';
-    const q = (c.req.query('q') || '').trim();
-    const debugBatch = (c.req.query('debug_batch') || '').trim();
-    const limit = Math.min(Math.max(parseInt(c.req.query('limit') || '50', 10) || 50, 1), 200);
-    const offset = Math.max(parseInt(c.req.query('offset') || '0', 10) || 0, 0);
-
-    const where: string[] = [];
-    const bindings: unknown[] = [];
-
-    if (validated === 'true') where.push('validated = 1');
-    else if (validated === 'false') where.push('validated = 0');
-
-    // Default list stays clean: hide disposable debug batches unless explicitly requested
-    if (debugBatch) {
-      where.push('debug_batch = ?');
-      bindings.push(debugBatch);
-    } else {
-      where.push('debug_batch IS NULL');
-    }
-
-    if (q) {
-      where.push('(title LIKE ? OR subtitle LIKE ? OR praise_name LIKE ?)');
-      const like = `%${q}%`;
-      bindings.push(like, like, like);
-    }
-
-    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-    const countRow = await c.env.DB.prepare(
-      `SELECT COUNT(*) AS total FROM raw_chordpros ${whereSql}`
-    )
-      .bind(...bindings)
-      .first<{ total: number }>();
-
-    const result = await c.env.DB.prepare(
-      `SELECT id, source_pdf_material_id, praise_id, praise_name, kind_label,
-              source_filename, title, subtitle, validated, debug_batch, created_at, updated_at
-       FROM raw_chordpros ${whereSql}
-       ORDER BY praise_name ASC, source_filename ASC
-       LIMIT ? OFFSET ?`
-    )
-      .bind(...bindings, limit, offset)
-      .all();
-
-    const rows = (result.results as Omit<RawChordproRow, 'content'>[]) ?? [];
-    const total = countRow?.total ?? 0;
-
-    return c.json({
-      data: rows.map((row) => mapRawChordpro({ ...row, content: '' }, false)),
-      pagination: {
-        total,
-        limit,
-        offset,
-        page: Math.floor(offset / limit) + 1,
-        totalPages: Math.max(1, Math.ceil(total / limit)),
-      },
-    });
-  } catch (error) {
-    console.error('Error listing raw chordpros:', error);
-    return c.json({ error: 'Failed to list raw chordpros' }, 500);
-  }
-});
-
-app.get('/api/raw-chordpros/:id', async (c) => {
-  try {
-    const id = c.req.param('id');
-    const row = await c.env.DB.prepare(
-      `SELECT id, source_pdf_material_id, praise_id, praise_name, kind_label,
-              source_filename, title, subtitle, content, validated, debug_batch, created_at, updated_at
-       FROM raw_chordpros WHERE id = ?`
-    )
-      .bind(id)
-      .first<RawChordproRow>();
-
-    if (!row) return c.json({ error: 'Not found' }, 404);
-    return c.json({ data: mapRawChordpro(row, true) });
-  } catch (error) {
-    console.error('Error fetching raw chordpro:', error);
-    return c.json({ error: 'Failed to fetch raw chordpro' }, 500);
-  }
-});
-
-app.patch('/api/raw-chordpros/:id', requireAuth, async (c) => {
-  const id = c.req.param('id');
-  const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body || typeof body !== 'object') {
-    return c.json({ error: 'Invalid JSON body' }, 400);
-  }
-
-  const existing = await c.env.DB.prepare('SELECT id FROM raw_chordpros WHERE id = ?')
-    .bind(id)
-    .first<{ id: string }>();
-  if (!existing) return c.json({ error: 'Not found' }, 404);
-
-  const sets: string[] = ["updated_at = datetime('now')"];
-  const bindings: unknown[] = [];
-
-  if ('content' in body) {
-    if (typeof body.content !== 'string') return c.json({ error: 'content must be a string' }, 400);
-    sets.push('content = ?');
-    bindings.push(body.content);
-  }
-  if ('validated' in body) {
-    if (typeof body.validated !== 'boolean') return c.json({ error: 'validated must be a boolean' }, 400);
-    sets.push('validated = ?');
-    bindings.push(body.validated ? 1 : 0);
-  }
-  if (sets.length === 1) return c.json({ error: 'No updatable fields provided' }, 400);
-
-  bindings.push(id);
-  await c.env.DB.prepare(`UPDATE raw_chordpros SET ${sets.join(', ')} WHERE id = ?`)
-    .bind(...bindings)
-    .run();
-
-  const row = await c.env.DB.prepare(
-    `SELECT id, source_pdf_material_id, praise_id, praise_name, kind_label,
-            source_filename, title, subtitle, content, validated, debug_batch, created_at, updated_at
-     FROM raw_chordpros WHERE id = ?`
-  )
-    .bind(id)
-    .first<RawChordproRow>();
-
-  return c.json({ data: mapRawChordpro(row!, true) });
 });
 
 // GET /api/tags - List all tags
@@ -2054,6 +1967,45 @@ app.post('/api/import-jobs/:id/retry-failed', requireAuth, async (c) => {
   return c.json({ data: { retried: ids.length } });
 });
 
+// PUT /api/materials/:materialId/content — replace chord body in R2 (review-app upload)
+app.put('/api/materials/:materialId/content', requireUploadOrAuth, async (c) => {
+  const materialId = c.req.param('materialId');
+  const rawContentType = c.req.header('content-type') || 'text/plain; charset=utf-8';
+
+  let body: string;
+  try {
+    body = await c.req.text();
+  } catch {
+    return c.json({ error: 'Invalid body' }, 400);
+  }
+
+  try {
+    const row = await c.env.DB.prepare(
+      `SELECT id, praise_id, type, r2_key FROM praise_materials WHERE id = ?`
+    )
+      .bind(materialId)
+      .first() as { id: string; praise_id: string; type: string; r2_key: string | null } | null;
+
+    if (!row) return c.json({ error: 'Material not found' }, 404);
+    if (row.type !== 'chord') return c.json({ error: 'Material is not a chord' }, 400);
+    if (!row.r2_key) return c.json({ error: 'Material has no r2_key' }, 400);
+
+    await c.env.ASSETS.put(`storage/${row.r2_key}`, body, {
+      httpMetadata: { contentType: rawContentType.trim() || 'text/plain; charset=utf-8' },
+    });
+
+    return c.json({
+      ok: true,
+      material_id: row.id,
+      praise_id: row.praise_id,
+      r2_key: row.r2_key,
+    });
+  } catch (error) {
+    console.error('Error uploading chord content:', error);
+    return c.json({ error: 'Failed to upload content' }, 500);
+  }
+});
+
 // PATCH /api/materials/:materialId - Update a material (admin)
 app.patch('/api/materials/:materialId', requireAuth, async (c) => {
   const materialId = c.req.param('materialId');
@@ -2061,7 +2013,7 @@ app.patch('/api/materials/:materialId', requireAuth, async (c) => {
   if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
 
   const sets: string[] = [];
-  const bindings: (string | null)[] = [];
+  const bindings: (string | number | null)[] = [];
 
   if ('material_kind' in body) {
     if (body.material_kind !== null && typeof body.material_kind !== 'string') {
@@ -2090,6 +2042,21 @@ app.patch('/api/materials/:materialId', requireAuth, async (c) => {
     if (trimmed && trimmed.length > 0) {
       sets.push(`r2_key = NULL`);
     }
+  }
+
+  if ('is_reviewed' in body) {
+    if (typeof body.is_reviewed !== 'boolean') {
+      return c.json({ error: "Field 'is_reviewed' must be a boolean" }, 400);
+    }
+    // quem marcou e quando andam junto com a marca: sem isso, "revisado" não
+    // diz de quem foi o olho que passou ali
+    sets.push(`is_reviewed = ?`);
+    bindings.push(body.is_reviewed ? 1 : 0);
+    sets.push(`reviewed_at = ?`);
+    bindings.push(body.is_reviewed ? new Date().toISOString() : null);
+    sets.push(`reviewed_by = ?`);
+    const actor = (c.get('user') as AuthUser | undefined) ?? undefined;
+    bindings.push(body.is_reviewed ? (actor?.email ?? actor?.name ?? actor?.sub ?? null) : null);
   }
 
   if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
@@ -2229,7 +2196,9 @@ app.get('/assets/*', async (c) => {
     mp3: 'audio/mpeg',
     mid: 'audio/midi',
     midi: 'audio/midi',
-    chord: 'text/plain',
+    // charset explícito: as cifras têm acentos ("Comigo Habita, Ó Deus") e sem
+    // isto o navegador adivinha a codificação ao abrir o arquivo direto.
+    chord: 'text/plain; charset=utf-8',
   };
   
   const contentType = contentTypes[ext || ''] || 'application/octet-stream';

@@ -29,6 +29,9 @@ CREATE TABLE IF NOT EXISTS praise_materials (
     source_material_id TEXT,       -- For derivative materials (auto-relationship, no FK constraint)
     merged_from_praise_id TEXT,    -- Source praise id when material was moved in a merge (duplicate removed)
     url TEXT,                      -- External link (YouTube, Google Drive, Spotify, etc.)
+    is_reviewed INTEGER NOT NULL DEFAULT 0,  -- Passou por revisão humana
+    reviewed_at TEXT,              -- Quando foi marcado como revisado
+    reviewed_by TEXT,              -- Quem marcou
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
 );

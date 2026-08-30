@@ -3103,3 +3103,11 @@ button.linkish {
   font-size: var(--text-sm);
   color: var(--text-secondary);
 }
+
+/* Anotação do acervo ([*2x], [*Coro]): é instrução de execução, não acorde.
+   Não leva a tinta vermelha, que significa "toque este acorde aqui". */
+.cp-cell--annotation > .cp-chord {
+  color: var(--cp-dim);
+  font-style: italic;
+  font-weight: 600;
+}

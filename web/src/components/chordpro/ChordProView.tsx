@@ -1,9 +1,14 @@
+import { parseChordToken } from '../../lib/chordpro/chord';
 import type { Cell, Song } from '../../lib/chordpro/types';
 
 function cellClassName(cell: Cell): string {
   const classes = ['cp-cell'];
   // Célula sem acorde não tem rótulo para alinhar, então pode quebrar linha.
   if (cell.chord === null) classes.push('cp-cell--free');
+  // [*2x] e [*Coro] são anotação do acervo, não acorde — não levam a tinta de acorde.
+  if (cell.chord !== null && parseChordToken(cell.chord).kind === 'annotation') {
+    classes.push('cp-cell--annotation');
+  }
   if (cell.attached) classes.push('cp-cell--bar');
   return classes.join(' ');
 }

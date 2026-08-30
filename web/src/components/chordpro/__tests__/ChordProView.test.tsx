@@ -42,6 +42,27 @@ describe('ChordProView', () => {
   });
 });
 
+describe('anotação não é acorde', () => {
+  it('marca a célula de [*2x] com --annotation e não com --bar', () => {
+    const { container } = renderSource('[*2x]');
+    const cell = container.querySelector('.cp-cell')!;
+    expect(cell.className).toContain('cp-cell--annotation');
+    expect(cell.className).not.toContain('cp-cell--bar');
+    expect(cell.querySelector('.cp-chord')!.textContent).toBe('*2x');
+  });
+
+  it('acorde de verdade não ganha --annotation', () => {
+    const { container } = renderSource('ha[Cm]bi');
+    const cells = container.querySelectorAll('.cp-cell');
+    expect(cells[1].className).not.toContain('cp-cell--annotation');
+  });
+
+  it('[*Coro] também', () => {
+    const { container } = renderSource('[*Coro]');
+    expect(container.querySelector('.cp-cell')!.className).toContain('cp-cell--annotation');
+  });
+});
+
 describe('espaçamento sobrevive até o DOM', () => {
   it('mantém os espaços literais no nó de texto', () => {
     const { container } = renderSource('[E]   A linda [A]flor');

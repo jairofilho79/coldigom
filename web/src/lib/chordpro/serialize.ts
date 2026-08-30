@@ -2,8 +2,15 @@ import type { Cell, Song } from './types';
 
 const HEADER_ORDER = ['title', 'subtitle', 'key', 'rhythm', 'artist'] as const;
 
+/** Colchete no texto tem de voltar escapado, senão o reparse o lê como acorde. */
+function escapeText(text: string): string {
+  return text.replace(/([[\]])/g, '\\$1');
+}
+
 function serializeCells(cells: Cell[]): string {
-  return cells.map((c) => (c.chord === null ? '' : `[${c.chord}]`) + c.text).join('');
+  return cells
+    .map((c) => (c.chord === null ? '' : `[${c.chord}]`) + escapeText(c.text))
+    .join('');
 }
 
 /**

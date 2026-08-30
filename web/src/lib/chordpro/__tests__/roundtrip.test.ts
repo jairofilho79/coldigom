@@ -24,4 +24,21 @@ describe('round-trip parse → serialize → parse', () => {
     const song = parse('ha[Cm]bi\nDeus é Amor [C]\n');
     expect(parse(serialize(song)).stanzas[0].lines).toEqual(song.stanzas[0].lines);
   });
+
+  it('preserva colchete literal escapado', () => {
+    const once = parse('um \\[dois\\] tres\n');
+    expect(once.stanzas[0].lines[0]).toEqual({
+      kind: 'cells',
+      cells: [{ chord: null, attached: false, text: 'um [dois] tres' }],
+    });
+    expect(serialize(once)).toContain('um \\[dois\\] tres');
+    expect(parse(serialize(once))).toEqual(once);
+  });
+
+  it('colchete literal não vira acorde na volta', () => {
+    const song = parse('um \\[dois\\] tres\n');
+    const linha = parse(serialize(song)).stanzas[0].lines[0];
+    if (linha.kind !== 'cells') throw new Error('esperava linha de células');
+    expect(linha.cells.map((c) => c.chord)).toEqual([null]);
+  });
 });

@@ -387,7 +387,19 @@ export function ChordProPage() {
 
       {draft ? (
         <div className="cp-scope" data-cp-theme={theme}>
-          <ChordProEditor song={draft} onChange={setDraft} issues={issues} />
+          <ChordProEditor
+            song={draft}
+            onChange={(newSong) => {
+              setDraft(newSong);
+              // Limpar erro obsoleto quando usuário retorna a editar após uma recusa.
+              // Se `salvar()` rejeitou por conteúdo vazio ou validação, a mensagem fica
+              // em tela até que o botão "Cancelar edição" a apague — a menos que desfaça
+              // e volte a digitar, caso em que o `saveError` precisa sumir para não
+              // desmentir o "Salvar" habilitado que aparece junto.
+              setSaveError(null);
+            }}
+            issues={issues}
+          />
           <div className="cp-edit-actions">
             <button
               type="button"
@@ -437,7 +449,13 @@ export function ChordProPage() {
             ) : issues.length > 0 ? (
               <span className="cp-edit-issues">{resumoDeIssues(issues.length)}</span>
             ) : null}
-            {saveError ? <span className="cp-review-error">{saveError}</span> : null}
+            {/* role="status" + aria-live="polite" comunicam ao leitor de tela que a
+                mensagem é dinâmica e chegou sem interação (não é validação de envio). */}
+            {saveError ? (
+              <span className="cp-review-error" role="status" aria-live="polite">
+                {saveError}
+              </span>
+            ) : null}
           </div>
         </div>
       ) : song && song.hasLyrics ? (

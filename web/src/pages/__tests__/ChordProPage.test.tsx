@@ -6,6 +6,8 @@ import { ChordProPage } from '../ChordProPage';
 import { AuthProvider } from '../../context/AuthContext';
 import * as AuthContext from '../../context/AuthContext';
 import * as api from '../../services/api';
+import { parse } from '../../lib/chordpro/parse';
+import { serialize } from '../../lib/chordpro/serialize';
 import type { PraiseDetail } from '../../types';
 
 const praise = {
@@ -214,9 +216,11 @@ describe('modo de edição', () => {
     expect(put[0]).toContain('/api/materials/m1/content');
     expect(String(put[1]!.body)).toContain('[A]letra');
     expect(String(put[1]!.body)).toContain('{key: A}');
-    // contrato com o endpoint: corpo em texto puro, não JSON
+    // contrato com o endpoint: o corpo é o ChordPro verbatim, byte a byte. O endpoint
+    // grava o que recebe no R2 — um JSON.stringify por engano escreveria aspas e "\n"
+    // literais dentro do .chord, e o parser leria o arquivo inteiro como uma linha de letra.
     expect(put[1]!.headers).toMatchObject({ 'content-type': 'text/plain; charset=utf-8' });
-    expect(typeof put[1]!.body).toBe('string');
+    expect(put[1]!.body).toBe(serialize(parse('{title: X}\n{key: A}\n\n[A]letra')));
   });
 
   it('depois de salvar, a leitura mostra o que foi gravado, não o texto antigo', async () => {

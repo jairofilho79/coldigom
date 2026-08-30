@@ -12,8 +12,7 @@ function mapStanzas(song: Song, fn: (stanzas: Stanza[]) => Stanza[]): Song {
 /** Texto editável de uma linha — o par de replaceLine. */
 export function lineToText(song: Song, at: LineRef): string {
   const line = song.stanzas[at.stanza]?.lines[at.line];
-  if (!line) return '';
-  return line.kind === 'comment' ? `{comment: ${line.text}}` : serializeLine(line);
+  return line ? serializeLine(line) : '';
 }
 
 export function replaceLine(song: Song, at: LineRef, texto: string): Song {

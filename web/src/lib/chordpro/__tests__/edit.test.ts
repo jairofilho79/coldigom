@@ -73,6 +73,14 @@ describe('estrutura', () => {
     const depois = splitStanzaAt(song(), { stanza: 0, line: 0 });
     expect(depois.stanzas).toHaveLength(2);
   });
+
+  it('estrofe que só tem comentário não é descartada', () => {
+    const s = parse('{comment: Refrão}\n\nletra [C]aqui\n');
+    expect(s.stanzas).toHaveLength(2);
+    const depois = removeLine(s, { stanza: 1, line: 0 });
+    expect(depois.stanzas).toHaveLength(1);
+    expect(depois.stanzas[0].lines[0]).toEqual({ kind: 'comment', text: 'Refrão' });
+  });
 });
 
 describe('cabeçalho', () => {

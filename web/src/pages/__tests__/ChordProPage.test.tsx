@@ -1,7 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ChordProPage } from '../ChordProPage';
+import { AuthProvider } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { PraiseDetail } from '../../types';
 
@@ -43,13 +45,20 @@ const praise = {
   ],
 } as unknown as PraiseDetail;
 
-function renderPage() {
+/** A página lê a sessão para decidir entre o switch de revisão e o selo,
+ *  então o provider precisa existir também no teste. */
+function renderPage({ authenticated = false }: { authenticated?: boolean } = {}) {
+  vi.spyOn(api, 'getMe').mockResolvedValue(
+    authenticated ? ({ sub: 'u1', name: 'Revisor' } as never) : null
+  );
   return render(
-    <MemoryRouter initialEntries={['/praise/p1/cifra/m1']}>
-      <Routes>
-        <Route path="/praise/:praiseId/cifra/:materialId" element={<ChordProPage />} />
-      </Routes>
-    </MemoryRouter>
+    <AuthProvider>
+      <MemoryRouter initialEntries={['/praise/p1/cifra/m1']}>
+        <Routes>
+          <Route path="/praise/:praiseId/cifra/:materialId" element={<ChordProPage />} />
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>
   );
 }
 
@@ -110,5 +119,35 @@ describe('ChordProPage', () => {
     // 'Cifra I' aparece no chip do cabecalho e na linha Categoria do painel
     expect(screen.getAllByText('Cifra I').length).toBeGreaterThan(0);
     expect(screen.getByText('Let.: W. C. Martin')).toBeInTheDocument();
+  });
+
+  it('sem sessão, a revisão é só um selo — não dá para alterar', async () => {
+    stubFetch(() => new Response('{title: X}\n\n[A]letra', { status: 200 }));
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/não revisada/i)).toBeInTheDocument());
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
+
+  it('com sessão, o switch marca a cifra como revisada', async () => {
+    stubFetch(() => new Response('{title: X}\n\n[A]letra', { status: 200 }));
+    const revisada = {
+      ...praise,
+      materials: praise.materials.map((m) =>
+        m.id === 'm1' ? { ...m, is_reviewed: true, reviewed_by: 'Revisor' } : m
+      ),
+    } as PraiseDetail;
+    const update = vi.spyOn(api, 'updateMaterial').mockResolvedValue(revisada);
+
+    renderPage({ authenticated: true });
+    const sw = await screen.findByRole('switch');
+    expect(sw).toHaveAttribute('aria-checked', 'false');
+
+    await userEvent.click(sw);
+
+    expect(update).toHaveBeenCalledWith('m1', { is_reviewed: true });
+    await waitFor(() =>
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    );
+    expect(screen.getByText(/Revisor/)).toBeInTheDocument();
   });
 });

@@ -2933,6 +2933,85 @@ button.linkish {
 .cp-theme-btn:hover,
 .cp-retry:hover { border-color: var(--c-accent-500); color: var(--text-primary); }
 
+/* Marca de revisão humana. O switch fica no cabeçalho da cifra: é decisão
+   sobre o que se está lendo, não detalhe de registro. */
+.cp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cp-review { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+
+.cp-review-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.cp-review-switch:hover:not(:disabled) {
+  border-color: var(--c-accent-500);
+  color: var(--text-primary);
+}
+.cp-review-switch:disabled { opacity: 0.6; cursor: progress; }
+.cp-review-switch:focus-visible { outline: 2px solid var(--c-accent-500); outline-offset: 2px; }
+
+.cp-review-track {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--border-subtle);
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.cp-review-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.15s ease;
+}
+.cp-review-switch.is-on {
+  border-color: color-mix(in srgb, var(--color-success, #2d6a4f) 45%, var(--border-subtle));
+  color: var(--text-primary);
+}
+.cp-review-switch.is-on .cp-review-track { background: var(--color-success, #2d6a4f); }
+.cp-review-switch.is-on .cp-review-thumb { transform: translateX(16px); }
+
+.cp-review-meta { font-size: var(--text-xs); color: var(--text-secondary); }
+.cp-review-error { font-size: var(--text-xs); color: var(--c-danger-500, #c41e2a); }
+
+.cp-review-badge {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.cp-review-badge.is-on {
+  border-color: color-mix(in srgb, var(--color-success, #2d6a4f) 35%, var(--border-subtle));
+  color: var(--color-success, #2d6a4f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-review-track,
+  .cp-review-thumb { transition: none; }
+}
+
 .cp-state {
   padding: var(--space-4);
   border-radius: var(--radius-lg);

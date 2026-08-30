@@ -4,8 +4,75 @@ import { ChordProView } from '../components/chordpro/ChordProView';
 import { useMaterialContent } from '../hooks/useMaterialContent';
 import { useViewerTheme } from '../hooks/useViewerTheme';
 import { parse } from '../lib/chordpro/parse';
-import { getAssetUrl, getPraise } from '../services/api';
-import type { PraiseDetail } from '../types';
+import { getAssetUrl, getPraise, updateMaterial } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import type { Material, PraiseDetail } from '../types';
+
+/** Marca de revisão humana. Fica no cabeçalho porque é uma decisão sobre a
+ *  cifra que se está lendo — não um detalhe de registro no rodapé.
+ *  Sem sessão, vira só um selo: a informação interessa a quem lê, a ação não. */
+function ReviewSwitch({
+  material,
+  onToggle,
+}: {
+  material: Material;
+  onToggle: (next: boolean) => Promise<void>;
+}) {
+  const { isAuthenticated } = useAuth();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const checked = Boolean(material.is_reviewed);
+
+  if (!isAuthenticated) {
+    return (
+      <span className={`cp-review-badge${checked ? ' is-on' : ''}`}>
+        {checked ? '✓ revisada' : 'não revisada'}
+      </span>
+    );
+  }
+
+  const quem = material.reviewed_by ? ` por ${material.reviewed_by}` : '';
+  const quando = material.reviewed_at
+    ? new Date(material.reviewed_at).toLocaleDateString('pt-BR')
+    : '';
+
+  return (
+    <div className="cp-review">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label="Marcar cifra como revisada"
+        className={`cp-review-switch${checked ? ' is-on' : ''}`}
+        disabled={saving}
+        onClick={async () => {
+          setSaving(true);
+          setError(null);
+          try {
+            await onToggle(!checked);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Falha ao salvar');
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        <span className="cp-review-track" aria-hidden="true">
+          <span className="cp-review-thumb" />
+        </span>
+        <span className="cp-review-text">
+          {checked ? 'Revisada' : 'Marcar como revisada'}
+        </span>
+      </button>
+      {checked && (quem || quando) ? (
+        <span className="cp-review-meta">
+          {[quando, quem.trim()].filter(Boolean).join(' · ')}
+        </span>
+      ) : null}
+      {error ? <span className="cp-review-error">{error}</span> : null}
+    </div>
+  );
+}
 
 /** Linha do painel. Valor ausente vira "—" em vez de sumir: numa ferramenta de
  *  gestão, saber que o campo está vazio é informação. */
@@ -45,6 +112,13 @@ export function ChordProPage() {
   }, [praiseId]);
 
   const material = praise?.materials.find((m) => m.id === materialId) ?? null;
+
+  // a resposta do PATCH já traz o louvor inteiro; usar isso evita um refetch e
+  // mantém a tela coerente se outro campo mudou junto
+  const toggleReviewed = async (next: boolean) => {
+    if (!material) return;
+    setPraise(await updateMaterial(material.id, { is_reviewed: next }));
+  };
   const sourcePdf =
     praise?.materials.find((m) => m.id === material?.source_material_id) ?? null;
 
@@ -122,9 +196,12 @@ export function ChordProPage() {
             </div>
           ) : null}
         </div>
-        <button type="button" className="cp-theme-btn" onClick={toggle}>
-          {theme === 'dark' ? '☀ claro' : '☾ escuro'}
-        </button>
+        <div className="cp-header-actions">
+          <ReviewSwitch material={material} onToggle={toggleReviewed} />
+          <button type="button" className="cp-theme-btn" onClick={toggle}>
+            {theme === 'dark' ? '☀ claro' : '☾ escuro'}
+          </button>
+        </div>
       </header>
 
       {content.status === 'loading' ? (

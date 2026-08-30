@@ -981,6 +981,7 @@ app.get('/api/praises/:id', async (c) => {
       SELECT 
         pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.file_path_legacy,
         pm.source_material_id, pm.merged_from_praise_id, pm.url,
+        pm.is_reviewed, pm.reviewed_at, pm.reviewed_by,
         mp.name AS merged_from_praise_name
       FROM praise_materials pm
       LEFT JOIN praises mp ON mp.id = pm.merged_from_praise_id
@@ -2012,7 +2013,7 @@ app.patch('/api/materials/:materialId', requireAuth, async (c) => {
   if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
 
   const sets: string[] = [];
-  const bindings: (string | null)[] = [];
+  const bindings: (string | number | null)[] = [];
 
   if ('material_kind' in body) {
     if (body.material_kind !== null && typeof body.material_kind !== 'string') {
@@ -2041,6 +2042,21 @@ app.patch('/api/materials/:materialId', requireAuth, async (c) => {
     if (trimmed && trimmed.length > 0) {
       sets.push(`r2_key = NULL`);
     }
+  }
+
+  if ('is_reviewed' in body) {
+    if (typeof body.is_reviewed !== 'boolean') {
+      return c.json({ error: "Field 'is_reviewed' must be a boolean" }, 400);
+    }
+    // quem marcou e quando andam junto com a marca: sem isso, "revisado" não
+    // diz de quem foi o olho que passou ali
+    sets.push(`is_reviewed = ?`);
+    bindings.push(body.is_reviewed ? 1 : 0);
+    sets.push(`reviewed_at = ?`);
+    bindings.push(body.is_reviewed ? new Date().toISOString() : null);
+    sets.push(`reviewed_by = ?`);
+    const actor = (c.get('user') as AuthUser | undefined) ?? undefined;
+    bindings.push(body.is_reviewed ? (actor?.email ?? actor?.name ?? actor?.sub ?? null) : null);
   }
 
   if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);

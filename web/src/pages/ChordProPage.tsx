@@ -186,8 +186,14 @@ export function ChordProPage() {
       // `no-store` porque uma resposta de cache é exatamente o texto que já temos:
       // a checagem passaria sempre e a proteção viraria enfeite.
       const atual = await fetch(getAssetUrl(material.r2_key), { cache: 'no-store' });
-      const textoAtual = atual.ok ? await atual.text() : null;
-      if (textoAtual === null || textoAtual !== serverSource) {
+      if (!atual.ok) {
+        // Não é conflito: é não saber. Mandar recarregar aqui faria a pessoa jogar
+        // fora o rascunho por causa de um soluço do R2 — a perda que esta checagem
+        // existe para evitar.
+        setSaveError('Não foi possível verificar o arquivo no servidor. Tente salvar de novo.');
+        return;
+      }
+      if ((await atual.text()) !== serverSource) {
         setSaveError(
           'O arquivo mudou no servidor desde que você abriu. Recarregue antes de salvar.'
         );

@@ -214,6 +214,9 @@ describe('modo de edição', () => {
     expect(put[0]).toContain('/api/materials/m1/content');
     expect(String(put[1]!.body)).toContain('[A]letra');
     expect(String(put[1]!.body)).toContain('{key: A}');
+    // contrato com o endpoint: corpo em texto puro, não JSON
+    expect(put[1]!.headers).toMatchObject({ 'content-type': 'text/plain; charset=utf-8' });
+    expect(typeof put[1]!.body).toBe('string');
   });
 
   it('depois de salvar, a leitura mostra o que foi gravado, não o texto antigo', async () => {
@@ -294,6 +297,35 @@ describe('modo de edição', () => {
     expect(puts).toBe(0);
   });
 
+  it('releitura que falha não manda recarregar — recarregar jogaria o rascunho fora', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    let gets = 0;
+    let puts = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        puts += 1;
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }
+      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+      gets += 1;
+      // a checagem antes de gravar bate num soluço do R2: nada mudou, só não dá para saber
+      if (gets > 1) return new Response('', { status: 500 });
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    expect(await screen.findByText(/não foi possível verificar o arquivo/i)).toBeInTheDocument();
+    // não é conflito: nunca mandar recarregar num caso em que nada mudou
+    expect(screen.queryByText(/mudou no servidor/i)).not.toBeInTheDocument();
+    expect(puts).toBe(0);
+    // o rascunho continua na tela, intacto
+    expect(screen.getByLabelText('Tom')).toHaveValue('A');
+  });
+
   it('erro de gravação não tira a pessoa do editor', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
@@ -311,5 +343,27 @@ describe('modo de edição', () => {
     expect(await screen.findByText(/R2 fora do ar/)).toBeInTheDocument();
     // o trabalho continua na tela: o editor não fechou
     expect(screen.getByLabelText('Tom')).toHaveValue('A');
+  });
+
+  it('"cancelar edição" sai do editor e limpa a mensagem de erro', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        return new Response(JSON.stringify({ error: 'R2 fora do ar' }), { status: 500 });
+      }
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+    expect(await screen.findByText(/R2 fora do ar/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /cancelar edição/i }));
+
+    expect(screen.queryByLabelText('Tom')).not.toBeInTheDocument();
+    expect(screen.queryByText(/R2 fora do ar/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument();
   });
 });

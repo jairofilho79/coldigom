@@ -3111,3 +3111,101 @@ button.linkish {
   font-style: italic;
   font-weight: 600;
 }
+
+/* ChordProEditor: a cifra é editada na própria linha.
+   O espaçamento da cifra é dado, não estilo — dentro de um <input> um espaço e três
+   espaços parecem iguais, então a linha em edição ganha um preview logo abaixo do
+   campo, desenhado pelo mesmo ChordProView (que usa white-space: pre). É lá que a
+   diferença aparece enquanto se digita. */
+.cp-header-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+@media (max-width: 640px) {
+  .cp-header-fields { grid-template-columns: 1fr; }
+}
+.cp-header-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.cp-header-field-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+.cp-header-field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.cp-editor-body { margin-top: var(--space-4); }
+.cp-editor-stanza { margin-bottom: var(--space-4); }
+
+.cp-line-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+}
+.cp-line-row:hover { background: var(--bg-surface); }
+.cp-line-target { flex: 1 1 auto; min-width: 0; cursor: text; }
+.cp-line-edit { flex: 1 1 auto; min-width: 0; }
+
+/* Âmbar, não vermelho: vermelho já é a tinta do acorde no corpo da cifra. */
+.cp-line-row--invalid {
+  border-left-color: #ffb020;
+  background: rgba(255, 176, 32, 0.07);
+}
+.cp-line-issue {
+  flex: 0 1 auto;
+  align-self: center;
+  font-size: var(--text-xs);
+  color: #ffb020;
+}
+
+/* Três botões por linha, sempre visíveis, competiriam com a leitura da cifra —
+   aparecem sob o cursor e com foco dentro da linha (teclado). */
+.cp-line-actions { display: flex; gap: var(--space-1); opacity: 0; }
+.cp-line-row:hover .cp-line-actions,
+.cp-line-row:focus-within .cp-line-actions { opacity: 1; }
+.cp-line-actions button {
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.cp-line-input {
+  width: 100%;
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.cp-editing-preview {
+  margin-top: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 1px dotted var(--border-subtle);
+}
+.cp-line-edit-actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+.cp-line-edit-actions button {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.cp-line-edit-actions .cp-line-confirm { color: var(--text-primary); }

@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ChordProEditor } from '../components/chordpro/ChordProEditor';
 import { ChordProView } from '../components/chordpro/ChordProView';
 import { useMaterialContent } from '../hooks/useMaterialContent';
 import { useViewerTheme } from '../hooks/useViewerTheme';
 import { parse } from '../lib/chordpro/parse';
-import { getAssetUrl, getPraise, updateMaterial } from '../services/api';
+import { serialize } from '../lib/chordpro/serialize';
+import { validateSong } from '../lib/chordpro/validate';
+import type { Song } from '../lib/chordpro/types';
+import { getAssetUrl, getPraise, putMaterialContent, updateMaterial } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Material, PraiseDetail } from '../types';
+
+/** "1 acorde não reconhecido" / "2 acordes não reconhecidos". O revisor precisa
+ *  saber quantos são antes de decidir se force ou conserte. */
+function resumoDeIssues(n: number): string {
+  return n === 1 ? '1 acorde não reconhecido' : `${n} acordes não reconhecidos`;
+}
 
 /** Marca de revisão humana. Fica no cabeçalho porque é uma decisão sobre a
  *  cifra que se está lendo — não um detalhe de registro no rodapé.
@@ -91,6 +101,18 @@ export function ChordProPage() {
   const [loadingPraise, setLoadingPraise] = useState(true);
   const [praiseError, setPraiseError] = useState<string | null>(null);
   const { theme, toggle } = useViewerTheme();
+  const { isAuthenticated } = useAuth();
+
+  // `null` é modo leitura. O Song editado mora aqui porque o ChordProEditor é
+  // controlado — é esta página que sabe gravar.
+  const [draft, setDraft] = useState<Song | null>(null);
+  // O que gravamos com sucesso, carimbado com a chave a que pertence (mesmo truque
+  // do useMaterialContent). Sem isso, sair do editor mostraria de novo o texto
+  // antigo do GET; com isso, não é preciso refazer o GET só para ver o próprio
+  // trabalho — e um cache do R2/CDN não devolve a versão velha.
+  const [saved, setSaved] = useState<{ key: string; source: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!praiseId) return;
@@ -123,10 +145,68 @@ export function ChordProPage() {
     praise?.materials.find((m) => m.id === material?.source_material_id) ?? null;
 
   const { content, retry } = useMaterialContent(material?.r2_key ?? null);
+
+  // O texto exato que o servidor tem, até onde sabemos: o do GET, ou o da última
+  // gravação nossa. É contra ele que a checagem de concorrência compara, e é dele
+  // que sai o Song exibido — os dois não podem divergir.
+  const serverSource =
+    saved && saved.key === material?.r2_key
+      ? saved.source
+      : content.status === 'ready'
+        ? content.source
+        : null;
+
   const song = useMemo(
-    () => (content.status === 'ready' ? parse(content.source) : null),
-    [content]
+    () => (serverSource === null ? null : parse(serverSource)),
+    [serverSource]
   );
+
+  // Trocar de material fecha o editor: o rascunho pertencia ao arquivo anterior.
+  useEffect(() => {
+    setDraft(null);
+    setSaveError(null);
+  }, [material?.r2_key]);
+
+  const issues = useMemo(() => (draft ? validateSong(draft) : []), [draft]);
+
+  async function salvar(forcar: boolean) {
+    if (!draft || !material?.r2_key) return;
+    // Só o "salvar assim mesmo" ignora as issues; o "salvar" nunca grava acorde
+    // inválido, mesmo que algo o habilite por engano.
+    if (!forcar && issues.length > 0) return;
+
+    setSaving(true);
+    setSaveError(null);
+    try {
+      // O PUT não tem ETag: quem grava por último ganha, em silêncio. A defesa é
+      // reler o arquivo agora e comparar com o texto que abrimos — se mudou, alguém
+      // gravou no meio do caminho e sobrescrever apagaria o trabalho dessa pessoa.
+      // Vale inclusive com `forcar`: "salvar assim mesmo" contorna o validador de
+      // acordes, nunca esta proteção.
+      // `no-store` porque uma resposta de cache é exatamente o texto que já temos:
+      // a checagem passaria sempre e a proteção viraria enfeite.
+      const atual = await fetch(getAssetUrl(material.r2_key), { cache: 'no-store' });
+      const textoAtual = atual.ok ? await atual.text() : null;
+      if (textoAtual === null || textoAtual !== serverSource) {
+        setSaveError(
+          'O arquivo mudou no servidor desde que você abriu. Recarregue antes de salvar.'
+        );
+        return;
+      }
+
+      const novo = serialize(draft);
+      await putMaterialContent(material.id, novo);
+      // O que está no servidor agora é o que acabamos de gravar.
+      setSaved({ key: material.r2_key, source: novo });
+      setDraft(null);
+    } catch (err) {
+      // Erro vira mensagem ao lado dos botões e o editor continua aberto: sair
+      // daqui jogaria fora o trabalho da pessoa.
+      setSaveError(err instanceof Error ? err.message : 'Falha ao salvar');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (loadingPraise) {
     return (
@@ -198,6 +278,19 @@ export function ChordProPage() {
         </div>
         <div className="cp-header-actions">
           <ReviewSwitch material={material} onToggle={toggleReviewed} />
+          {/* Reusa o visual do botão de tema — é a mesma família de ação do cabeçalho. */}
+          {isAuthenticated && song && song.hasLyrics && !draft ? (
+            <button
+              type="button"
+              className="cp-theme-btn"
+              onClick={() => {
+                setSaveError(null);
+                setDraft(song);
+              }}
+            >
+              ✎ editar
+            </button>
+          ) : null}
           <button type="button" className="cp-theme-btn" onClick={toggle}>
             {theme === 'dark' ? '☀ claro' : '☾ escuro'}
           </button>
@@ -241,7 +334,48 @@ export function ChordProPage() {
         </div>
       ) : null}
 
-      {song && song.hasLyrics ? (
+      {draft ? (
+        <div className="cp-scope" data-cp-theme={theme}>
+          <ChordProEditor song={draft} onChange={setDraft} issues={issues} />
+          <div className="cp-edit-actions">
+            <button
+              type="button"
+              className="cp-edit-save"
+              disabled={issues.length > 0 || saving}
+              onClick={() => void salvar(false)}
+            >
+              Salvar
+            </button>
+            {issues.length > 0 ? (
+              <button
+                type="button"
+                className="cp-edit-force"
+                disabled={saving}
+                onClick={() => void salvar(true)}
+              >
+                Salvar assim mesmo
+              </button>
+            ) : null}
+            {/* "Cancelar edição" e não só "Cancelar": o editor já tem um Cancelar
+                por linha, e dois botões com o mesmo nome na tela confundem. */}
+            <button
+              type="button"
+              className="cp-edit-cancel"
+              disabled={saving}
+              onClick={() => {
+                setDraft(null);
+                setSaveError(null);
+              }}
+            >
+              Cancelar edição
+            </button>
+            {issues.length > 0 ? (
+              <span className="cp-edit-issues">{resumoDeIssues(issues.length)}</span>
+            ) : null}
+            {saveError ? <span className="cp-review-error">{saveError}</span> : null}
+          </div>
+        </div>
+      ) : song && song.hasLyrics ? (
         <div className="cp-scope" data-cp-theme={theme}>
           <ChordProView song={song} />
         </div>

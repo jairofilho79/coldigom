@@ -777,7 +777,11 @@ export function PraiseDetailPage() {
             // preservando a posição visual entre o nome e o "Sair". avatarSize preserva o
             // tamanho original do avatar aqui (28px); onAfterLogout fecha o modo de edição
             // ao sair, como o botão "Sair" original fazia.
-            <AuthControl avatarSize={28} onAfterLogout={() => setIsEditing(false)}>
+            <AuthControl
+              avatarSize={28}
+              onAfterLogout={() => setIsEditing(false)}
+              prefixo="Logado como"
+            >
               {isCreate ? (
                 <Link to="/" className="auth-btn">
                   Cancelar

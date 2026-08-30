@@ -349,6 +349,58 @@ describe('modo de edição', () => {
     expect(screen.getByLabelText('Tom')).toHaveValue('A');
   });
 
+  it('rascunho sem nenhuma linha de letra desabilita o salvar, com o motivo', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response('{title: X}\n\n[A]letra', { status: 200 }));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+
+    // "Remover linha" não pede confirmação e não tem desfazer: em uma cifra de uma
+    // linha, um clique deixa o Song sem células.
+    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+
+    expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
+    expect(screen.getByText(/ficaria sem nenhuma linha de letra/i)).toBeInTheDocument();
+  });
+
+  it('"salvar assim mesmo" não grava um arquivo sem linha de letra', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    let puts = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        puts += 1;
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }
+      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+      return new Response('{title: X}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+
+    // O forçar contorna o validador de acordes; apagar a cifra do acervo não é
+    // "acorde raro", e o R2 não tem versionamento para desfazer.
+    const forcar = screen.getByRole('button', { name: /salvar assim mesmo/i });
+    expect(forcar).toBeDisabled();
+    await userEvent.click(forcar);
+
+    expect(puts).toBe(0);
+  });
+
+  it('cifra sem letra ainda pode ser reaberta no editor — é o caminho de volta', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    // Exatamente o que uma gravação vazia deixa no R2: só o cabeçalho.
+    stubFetch(() => new Response('{title: X}\n\n', { status: 200 }));
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText(/ainda não foi publicada/i)).toBeInTheDocument());
+    // Sem este botão a pessoa fica trancada para fora do próprio arquivo.
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    expect(screen.getByLabelText('Título')).toHaveValue('X');
+  });
+
   it('"cancelar edição" sai do editor e limpa a mensagem de erro', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     vi.spyOn(api, 'getPraise').mockResolvedValue(praise);

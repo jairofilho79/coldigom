@@ -22,9 +22,39 @@ const CAMPOS: Array<[keyof SongHeader, string]> = [
   ['artist', 'Autoria'],
 ];
 
-/** Normaliza só os acordes da linha, deixando letra e espaçamento intactos. */
-function normalizeLine(texto: string): string {
-  return texto.replace(/\[([^\]]*)\]/g, (_m, dentro) => `[${normalizeChord(dentro)}]`);
+/**
+ * Normaliza só os acordes da linha, deixando letra e espaçamento intactos.
+ *
+ * Opera sobre as CÉLULAS que o parser já produziu, nunca sobre o texto cru. Quem sabe
+ * onde começa e termina um colchete é o `parseCells` — ele conhece `\[` escapado, `[]`
+ * vazio e colchete sem fechamento. Um regex de colchete aqui seria um segundo
+ * tokenizador com regras próprias: `/\[([^\]]*)\]/` casaria `[dois\]` e capturaria
+ * `Cm7b5\`, corrompendo texto literal. Célula com `chord === null` é texto e não é tocada.
+ */
+function normalizeCells(line: Line): Line {
+  if (line.kind !== 'cells') return line;
+  return {
+    kind: 'cells',
+    cells: line.cells.map((c) =>
+      c.chord === null ? c : { ...c, chord: normalizeChord(c.chord) }
+    ),
+  };
+}
+
+/** Aplica `normalizeCells` só na linha endereçada, devolvendo Song novo. */
+function normalizarLinha(song: Song, at: LineRef): Song {
+  const line = song.stanzas[at.stanza]?.lines[at.line];
+  if (!line) return song;
+  const nova = normalizeCells(line);
+  if (nova === line) return song;
+  return {
+    ...song,
+    stanzas: song.stanzas.map((s, si) =>
+      si !== at.stanza
+        ? s
+        : { lines: s.lines.map((l, li) => (li !== at.line ? l : nova)) }
+    ),
+  };
 }
 
 /** Chave estável de uma LineRef, para indexar as issues sem varrer a lista por linha. */
@@ -63,6 +93,9 @@ export type ChordProEditorProps = {
 export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) {
   const [editing, setEditing] = useState<LineRef | null>(null);
   const [draft, setDraft] = useState('');
+  // Motivo de uma confirmação recusada. Fica ao lado do campo, no mesmo lugar do
+  // erro de acorde, e some assim que a pessoa volta a digitar.
+  const [erroDeLinha, setErroDeLinha] = useState<string | null>(null);
   // Guardado para que o ChordHints saiba onde enfiar o "ø" — na posição do cursor.
   const campoRef = useRef<HTMLInputElement | null>(null);
 
@@ -83,18 +116,37 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
   function abrir(at: LineRef) {
     setEditing(at);
     setDraft(lineToText(song, at));
+    setErroDeLinha(null);
   }
 
+  /**
+   * Confirma a edição da linha — ou recusa, dizendo por quê.
+   *
+   * O que não vira linha de cifra não pode virar linha em branco em silêncio: `"   "`
+   * (só espaços), `"{title: Novo}"` e `"; nota"` são engolidos pelo parser de linha
+   * única (viram header, nota ou nada), e confirmar assim apagaria o que a pessoa
+   * escreveu — inclusive o caso provável de esvaziar o valor de um `{comment: ...}`.
+   * Nesses casos o campo continua aberto com o texto intacto: nada é perdido, e
+   * "Cancelar" continua ali para quem quiser desistir.
+   */
   function confirmar() {
     if (!editing) return;
-    onChange(replaceLine(song, editing, normalizeLine(draft)));
+    // Uma linha só: só há `stanzas[0].lines[0]` quando o texto formou células ou comentário.
+    const linhaNova = parse(draft).stanzas[0]?.lines[0];
+    if (!linhaNova) {
+      setErroDeLinha('Esse texto não forma uma linha de cifra.');
+      return;
+    }
+    onChange(normalizarLinha(replaceLine(song, editing, draft), editing));
     setEditing(null);
     setDraft('');
+    setErroDeLinha(null);
   }
 
   function cancelar() {
     setEditing(null);
     setDraft('');
+    setErroDeLinha(null);
   }
 
   /**
@@ -107,6 +159,7 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
   function mutarEstrutura(novo: Song) {
     setEditing(null);
     setDraft('');
+    setErroDeLinha(null);
     onChange(novo);
   }
 
@@ -166,7 +219,11 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
                         ref={campoRef}
                         value={draft}
                         autoFocus
-                        onChange={(e) => setDraft(e.target.value)}
+                        onChange={(e) => {
+                          setDraft(e.target.value);
+                          // Digitar é a resposta ao aviso: ele sai de cena junto.
+                          setErroDeLinha(null);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') confirmar();
                           if (e.key === 'Escape') cancelar();
@@ -203,7 +260,14 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
                     </div>
                   )}
 
-                  {issue ? <span className="cp-line-issue">{issue.reason}</span> : null}
+                  {/* Um lugar só para o aviso da linha: a recusa da confirmação fala
+                      da tecla que a pessoa acabou de apertar e tem precedência sobre
+                      o acorde não reconhecido, que continua lá depois. */}
+                  {emEdicao && erroDeLinha ? (
+                    <span className="cp-line-issue">{erroDeLinha}</span>
+                  ) : issue ? (
+                    <span className="cp-line-issue">{issue.reason}</span>
+                  ) : null}
 
                   <div className="cp-line-actions">
                     <button

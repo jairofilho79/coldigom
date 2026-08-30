@@ -3170,11 +3170,19 @@ button.linkish {
   color: #ffb020;
 }
 
-/* Três botões por linha, sempre visíveis, competiriam com a leitura da cifra —
-   aparecem sob o cursor e com foco dentro da linha (teclado). */
-.cp-line-actions { display: flex; gap: var(--space-1); opacity: 0; }
+/* Três botões por linha, um deles destrutivo ("Remover linha", sem confirmação e sem
+   desfazer). Com `opacity: 0` eles continuavam clicáveis sem estarem visíveis, e em
+   tela de toque — onde não existe hover — eram invisíveis o tempo todo: um toque
+   apagava uma linha da cifra sem que nada tivesse aparecido antes.
+   Escolha: 0.5 em repouso (perceptíveis, mas apagados o bastante para não competir
+   com a leitura) subindo para 1 sob o cursor ou com foco dentro da linha; e opacidade
+   cheia onde não há hover, porque ali "em repouso" é o único estado que existe. */
+.cp-line-actions { display: flex; gap: var(--space-1); opacity: 0.5; }
 .cp-line-row:hover .cp-line-actions,
 .cp-line-row:focus-within .cp-line-actions { opacity: 1; }
+@media (hover: none) {
+  .cp-line-actions { opacity: 1; }
+}
 .cp-line-actions button {
   padding: 0 var(--space-2);
   font-size: var(--text-sm);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ChordProEditor } from '../ChordProEditor';
@@ -78,6 +78,138 @@ describe('editar uma linha', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /linha/i }), 'lixo');
     await userEvent.click(screen.getByRole('button', { name: /cancelar/i }));
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('confirmar não engole o que foi digitado', () => {
+  /** Os três textos que o parser de linha única não transforma em linha de cifra.
+   *  Confirmar qualquer um deles gravava uma linha em branco, em silêncio. */
+  const engolidos: Array<[string, string]> = [
+    ['só espaços', '   '],
+    ['diretiva de cabeçalho', '{title: Novo}'],
+    ['nota do pipeline', '; nota'],
+  ];
+
+  for (const [nome, texto] of engolidos) {
+    it(`recusa ${nome} em vez de virar linha em branco`, async () => {
+      const { onChange } = renderEditor();
+      await userEvent.click(screen.getByText(/Confio em/));
+      const campo = screen.getByRole('textbox', { name: /linha/i });
+      await userEvent.clear(campo);
+      // "{" e "[" precisam ser dobrados: sozinhos abrem descritor de tecla no userEvent.
+      await userEvent.type(campo, texto.replace(/\{/g, '{{').replace(/\[/g, '[['));
+      await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+      expect(onChange).not.toHaveBeenCalled();
+      // O campo continua aberto com o texto intacto: nada foi perdido.
+      expect(screen.getByRole('textbox', { name: /linha/i })).toHaveValue(texto);
+      expect(screen.getByText(/não forma uma linha de cifra/i)).toBeInTheDocument();
+    });
+  }
+
+  it('esvaziar o valor de um {comment} não vira linha de células em silêncio', async () => {
+    const { onChange } = renderEditor('{comment: Refrão}\nletra [C]aqui\n');
+    await userEvent.click(screen.getByText('Refrão'));
+    await userEvent.clear(screen.getByRole('textbox', { name: /linha/i }));
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText(/não forma uma linha de cifra/i)).toBeInTheDocument();
+  });
+
+  it('voltar a digitar tira o aviso do caminho', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    const campo = screen.getByRole('textbox', { name: /linha/i });
+    await userEvent.clear(campo);
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+    expect(screen.getByText(/não forma uma linha de cifra/i)).toBeInTheDocument();
+
+    await userEvent.type(campo, 'a');
+    expect(screen.queryByText(/não forma uma linha de cifra/i)).toBeNull();
+  });
+
+  it('{comment} com valor continua confirmando', async () => {
+    const { onChange } = renderEditor('{comment: Refrão}\nletra [C]aqui\n');
+    await userEvent.click(screen.getByText('Refrão'));
+    const campo = screen.getByRole('textbox', { name: /linha/i });
+    await userEvent.clear(campo);
+    await userEvent.type(campo, '{{comment: Final}');
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    expect(onChange.mock.calls.at(-1)![0].stanzas[0].lines[0]).toEqual({
+      kind: 'comment',
+      text: 'Final',
+    });
+  });
+});
+
+describe('normalização é feita nas células, não no texto', () => {
+  it('colchete escapado é texto e não vira acorde normalizado', async () => {
+    const { onChange } = renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    const campo = screen.getByRole('textbox', { name: /linha/i });
+    await userEvent.clear(campo);
+    await userEvent.type(campo, '\\[[Cm7b5\\]');
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    const linha = onChange.mock.calls.at(-1)![0].stanzas[0].lines[0];
+    expect(linha.cells).toHaveLength(1);
+    expect(linha.cells[0].chord).toBeNull();
+    expect(linha.cells[0].text).toBe('[Cm7b5]');
+  });
+
+  it('`\\[` que abre e `]` solto que fecha continuam texto — o regex reescrevia', async () => {
+    const { onChange } = renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    const campo = screen.getByRole('textbox', { name: /linha/i });
+    await userEvent.clear(campo);
+    // Para o parseCells (o dono da regra) isto é texto literal "[Cdim] tal": `\[` é
+    // colchete escapado e `]` sozinho nunca é delimitador. Um regex `/\[([^\]]*)\]/`
+    // casa daqui até o `]` solto, captura "Cdim" e grava "[C°] tal" — corrompe letra.
+    await userEvent.type(campo, '\\[[Cdim] tal');
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    const linha = onChange.mock.calls.at(-1)![0].stanzas[0].lines[0];
+    expect(linha.cells[0].chord).toBeNull();
+    expect(linha.cells[0].text).toBe('[Cdim] tal');
+  });
+});
+
+describe('inserir símbolo do painel de dicas', () => {
+  it('cai na posição do cursor, devolve o foco e deixa o cursor depois do símbolo', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    const campo = screen.getByRole('textbox', { name: /linha/i }) as HTMLInputElement;
+    expect(campo).toHaveValue('Confio em [A]Deus');
+
+    // Cursor entre "Confio" e " em": a posição importa, senão o símbolo iria para o fim.
+    campo.focus();
+    campo.setSelectionRange(6, 6);
+
+    // O painel é irmão ACIMA da lista de linhas: abrir e clicar aqui tira o foco do
+    // campo. É exatamente isso que o queueMicrotask do editor existe para desfazer.
+    await userEvent.click(screen.getByRole('button', { name: /como escrever/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Inserir ø' }));
+
+    expect(campo).toHaveValue('Confioø em [A]Deus');
+    await waitFor(() => expect(campo).toHaveFocus());
+    expect(campo.selectionStart).toBe(7);
+    expect(campo.selectionEnd).toBe(7);
+  });
+
+  it('substitui a seleção, em vez de empurrá-la para o lado', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    const campo = screen.getByRole('textbox', { name: /linha/i }) as HTMLInputElement;
+
+    campo.focus();
+    campo.setSelectionRange(0, 6); // "Confio"
+    await userEvent.click(screen.getByRole('button', { name: /como escrever/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Inserir ø' }));
+
+    expect(campo).toHaveValue('ø em [A]Deus');
+    expect(campo.selectionStart).toBe(1);
   });
 });
 

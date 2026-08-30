@@ -18,6 +18,22 @@ function resumoDeIssues(n: number): string {
   return n === 1 ? '1 acorde não reconhecido' : `${n} acordes não reconhecidos`;
 }
 
+/** Motivo mostrado ao lado do Salvar quando gravar apagaria a cifra. */
+const SEM_LETRA = 'A cifra ficaria sem nenhuma linha de letra.';
+
+/**
+ * O rascunho tem alguma linha de letra?
+ *
+ * Remover a última linha deixa o Song sem células, e gravar isso escreve um arquivo
+ * que só tem cabeçalho — a cifra some do acervo, sem versionamento no R2 para
+ * desfazer. `song.hasLyrics` NÃO serve aqui: é calculado uma vez no parse e as
+ * operações de `edit.ts` o carregam adiante sem recalcular; quem pergunta pelo
+ * rascunho tem de olhar as estrofes de agora.
+ */
+function temLinhaDeLetra(song: Song): boolean {
+  return song.stanzas.some((s) => s.lines.some((l) => l.kind === 'cells'));
+}
+
 /** Marca de revisão humana. Fica no cabeçalho porque é uma decisão sobre a
  *  cifra que se está lendo — não um detalhe de registro no rodapé.
  *  Sem sessão, vira só um selo: a informação interessa a quem lê, a ação não. */
@@ -168,9 +184,14 @@ export function ChordProPage() {
   }, [material?.r2_key]);
 
   const issues = useMemo(() => (draft ? validateSong(draft) : []), [draft]);
+  const rascunhoVazio = draft !== null && !temLinhaDeLetra(draft);
 
   async function salvar(forcar: boolean) {
     if (!draft || !material?.r2_key) return;
+    // Vale inclusive com `forcar`: "salvar assim mesmo" existe porque a gramática pode
+    // não prever o próximo acorde legítimo do acervo — gravar um arquivo sem nenhuma
+    // linha de letra não é acorde raro, é apagar a cifra.
+    if (!temLinhaDeLetra(draft)) return;
     // Só o "salvar assim mesmo" ignora as issues; o "salvar" nunca grava acorde
     // inválido, mesmo que algo o habilite por engano.
     if (!forcar && issues.length > 0) return;
@@ -285,7 +306,11 @@ export function ChordProPage() {
         <div className="cp-header-actions">
           <ReviewSwitch material={material} onToggle={toggleReviewed} />
           {/* Reusa o visual do botão de tema — é a mesma família de ação do cabeçalho. */}
-          {isAuthenticated && song && song.hasLyrics && !draft ? (
+          {/* Sem `hasLyrics` na guarda de propósito: uma cifra que ficou sem letra
+              (arquivo só com cabeçalho, gravado por engano) precisa poder ser reaberta
+              para edição — era o único caminho de volta, e ele não existia. O banner
+              "ainda não foi publicada" continua aparecendo logo abaixo. */}
+          {isAuthenticated && song && !draft ? (
             <button
               type="button"
               className="cp-theme-btn"
@@ -347,16 +372,19 @@ export function ChordProPage() {
             <button
               type="button"
               className="cp-edit-save"
-              disabled={issues.length > 0 || saving}
+              disabled={issues.length > 0 || rascunhoVazio || saving}
               onClick={() => void salvar(false)}
             >
               Salvar
             </button>
-            {issues.length > 0 ? (
+            {/* O forçar aparece também com o rascunho vazio, e desabilitado: some-lo
+                deixaria a dúvida de que ele contornaria o bloqueio. Contorna o
+                validador de acordes, nunca a perda do conteúdo. */}
+            {issues.length > 0 || rascunhoVazio ? (
               <button
                 type="button"
                 className="cp-edit-force"
-                disabled={saving}
+                disabled={saving || rascunhoVazio}
                 onClick={() => void salvar(true)}
               >
                 Salvar assim mesmo
@@ -375,7 +403,11 @@ export function ChordProPage() {
             >
               Cancelar edição
             </button>
-            {issues.length > 0 ? (
+            {/* O motivo de o Salvar estar travado, no mesmo lugar do resumo de acordes.
+                A perda de conteúdo vem primeiro: é a que não tem desfazer. */}
+            {rascunhoVazio ? (
+              <span className="cp-edit-issues">{SEM_LETRA}</span>
+            ) : issues.length > 0 ? (
               <span className="cp-edit-issues">{resumoDeIssues(issues.length)}</span>
             ) : null}
             {saveError ? <span className="cp-review-error">{saveError}</span> : null}

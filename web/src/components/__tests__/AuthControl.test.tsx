@@ -36,6 +36,26 @@ describe('AuthControl', () => {
     expect(screen.queryByRole('link', { name: /entrar/i })).not.toBeInTheDocument();
   });
 
+  it('mostra o prefixo quando ele é passado, com o nome em <strong>', () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const { container } = render(<AuthControl prefixo="Logado como" />);
+
+    expect(container.querySelector('.auth-user')!.textContent).toBe('Logado como Jairo');
+    // `.auth-user strong` no global.css só existe porque o nome é o pedaço destacado.
+    expect(container.querySelector('.auth-user strong')!.textContent).toBe('Jairo');
+  });
+
+  it('sem prefixo, só o nome em texto simples — a HomePage nunca teve rótulo nem <strong>', () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const { container } = render(<AuthControl />);
+
+    expect(container.querySelector('.auth-user')!.textContent).toBe('Jairo');
+    expect(screen.queryByText(/logado como/i)).toBeNull();
+    // O <strong> pertence ao prefixo: sem rótulo não há o que distinguir do nome, e
+    // acrescentá-lo aqui mudaria a aparência de uma tela que não pediu mudança.
+    expect(container.querySelector('.auth-user strong')).toBeNull();
+  });
+
   it('cai para o email quando não há nome', () => {
     mockAuth({ email: 'j@x.com' });
     render(<AuthControl />);

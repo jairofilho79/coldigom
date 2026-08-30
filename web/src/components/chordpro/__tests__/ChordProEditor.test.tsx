@@ -307,8 +307,9 @@ describe('o espaçamento sobrevive à confirmação', () => {
     await userEvent.click(screen.getByText(/A linda/));
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 
-    // O caminho real do dado ao confirmar é lineToText → normalizeLine → replaceLine.
-    // Os três espaços de "[E]   A linda" são dado do acervo: nenhum trecho pode encolhê-los.
+    // O caminho real do dado ao confirmar é lineToText → replaceLine → normalizarLinha
+    // (que só troca `cell.chord`, nunca o texto). Os três espaços de "[E]   A linda"
+    // são dado do acervo: nenhum trecho pode encolhê-los.
     const novo = onChange.mock.calls.at(-1)![0];
     expect(lineToText(novo, { stanza: 0, line: 1 })).toBe('[E]   A linda [A]flor');
     expect(novo.stanzas[0].lines[1].cells[0].text).toBe('   A linda ');

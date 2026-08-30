@@ -21,17 +21,34 @@ function resumoDeIssues(n: number): string {
 /** Motivo mostrado ao lado do Salvar quando gravar apagaria a cifra. */
 const SEM_LETRA = 'A cifra ficaria sem nenhuma linha de letra.';
 
+/** Resposta ao clique no "Salvar assim mesmo" com o rascunho sem conteúdo. */
+const FORCAR_NAO_COBRE =
+  '"Salvar assim mesmo" contorna o validador de acordes, não a perda de conteúdo.';
+
 /**
- * O rascunho tem alguma linha de letra?
+ * O rascunho tem alguma linha de letra COM CONTEÚDO?
  *
- * Remover a última linha deixa o Song sem células, e gravar isso escreve um arquivo
- * que só tem cabeçalho — a cifra some do acervo, sem versionamento no R2 para
- * desfazer. `song.hasLyrics` NÃO serve aqui: é calculado uma vez no parse e as
- * operações de `edit.ts` o carregam adiante sem recalcular; quem pergunta pelo
- * rascunho tem de olhar as estrofes de agora.
+ * Existir uma linha `kind: 'cells'` não basta, e a diferença não é teórica: dois
+ * cliques na barra de ações — "+" e depois "−" na linha real — deixam o Song com uma
+ * única linha de células vazia, que serializa para `""`. Na releitura, linha vazia é
+ * separador de estrofe: o arquivo volta com `stanzas: []` e `hasLyrics: false`,
+ * indistinguível da perda total. Sem versionamento no R2 e sem validação de corpo no
+ * `PUT /api/materials/:id/content`, não há rede depois desta.
+ *
+ * Exigir uma célula com acorde ou com texto não recusa edição legítima: a linha vazia
+ * recém-inserida continua permitida enquanto houver conteúdo em qualquer outro lugar
+ * da cifra.
+ *
+ * `song.hasLyrics` NÃO serve aqui: é calculado uma vez no parse e as operações de
+ * `edit.ts` o carregam adiante sem recalcular; quem pergunta pelo rascunho tem de
+ * olhar as estrofes de agora.
  */
 function temLinhaDeLetra(song: Song): boolean {
-  return song.stanzas.some((s) => s.lines.some((l) => l.kind === 'cells'));
+  return song.stanzas.some((s) =>
+    s.lines.some(
+      (l) => l.kind === 'cells' && l.cells.some((c) => c.chord !== null || c.text !== '')
+    )
+  );
 }
 
 /** Marca de revisão humana. Fica no cabeçalho porque é uma decisão sobre a
@@ -191,7 +208,10 @@ export function ChordProPage() {
     // Vale inclusive com `forcar`: "salvar assim mesmo" existe porque a gramática pode
     // não prever o próximo acorde legítimo do acervo — gravar um arquivo sem nenhuma
     // linha de letra não é acorde raro, é apagar a cifra.
-    if (!temLinhaDeLetra(draft)) return;
+    if (!temLinhaDeLetra(draft)) {
+      setSaveError(FORCAR_NAO_COBRE);
+      return;
+    }
     // Só o "salvar assim mesmo" ignora as issues; o "salvar" nunca grava acorde
     // inválido, mesmo que algo o habilite por engano.
     if (!forcar && issues.length > 0) return;
@@ -377,14 +397,21 @@ export function ChordProPage() {
             >
               Salvar
             </button>
-            {/* O forçar aparece também com o rascunho vazio, e desabilitado: some-lo
-                deixaria a dúvida de que ele contornaria o bloqueio. Contorna o
-                validador de acordes, nunca a perda do conteúdo. */}
+            {/* O forçar aparece também com o rascunho vazio, e CLICÁVEL de propósito.
+                Duas razões, na mesma direção:
+                — quem clica recebe a recusa por escrito, em vez de um botão apagado
+                  que não explica por que não serve;
+                — o React não despacha clique em elemento de formulário desabilitado
+                  (lê `props.disabled` da fibra, não o atributo do DOM), então um botão
+                  desabilitado tornaria a guarda dentro de `salvar()` impossível de
+                  cobrir por teste — e guarda não coberta é guarda que some num
+                  refactor sem derrubar nada. O `disabled` do "Salvar" é o cinto; a
+                  guarda de `salvar()`, que barra os dois caminhos, é o suspensório. */}
             {issues.length > 0 || rascunhoVazio ? (
               <button
                 type="button"
                 className="cp-edit-force"
-                disabled={saving || rascunhoVazio}
+                disabled={saving}
                 onClick={() => void salvar(true)}
               >
                 Salvar assim mesmo

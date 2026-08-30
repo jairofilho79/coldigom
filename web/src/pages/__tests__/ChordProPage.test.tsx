@@ -84,6 +84,22 @@ function stubFetch(impl: () => Promise<Response> | Response) {
   vi.stubGlobal('fetch', vi.fn(impl));
 }
 
+/** Cifra servida no GET e um contador de PUTs — a única coisa que importa nos
+ *  testes de bloqueio é que nenhuma gravação chegue ao R2. */
+function stubSalvar(fonte: string) {
+  let puts = 0;
+  vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+  vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === 'PUT') {
+      puts += 1;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+    if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+    return new Response(fonte, { status: 200 });
+  }));
+  return { puts: () => puts };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -365,28 +381,50 @@ describe('modo de edição', () => {
 
   it('"salvar assim mesmo" não grava um arquivo sem linha de letra', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
-    let puts = 0;
-    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
-    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
-      if (init?.method === 'PUT') {
-        puts += 1;
-        return new Response(JSON.stringify({ ok: true }), { status: 200 });
-      }
-      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
-      return new Response('{title: X}\n\n[A]letra', { status: 200 });
-    }));
+    const { puts } = stubSalvar('{title: X}\n\n[A]letra');
 
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
     await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
 
-    // O forçar contorna o validador de acordes; apagar a cifra do acervo não é
-    // "acorde raro", e o R2 não tem versionamento para desfazer.
+    // Clique de verdade num botão HABILITADO: é este teste que cobre a guarda dentro
+    // de `salvar()`, e não o `disabled` de nenhum botão. (O React não despacha clique
+    // em elemento de formulário desabilitado — nem por fireEvent, porque ele lê
+    // `props.disabled` da fibra —, então um botão travado deixaria a guarda sem teste.)
     const forcar = screen.getByRole('button', { name: /salvar assim mesmo/i });
-    expect(forcar).toBeDisabled();
+    expect(forcar).toBeEnabled();
     await userEvent.click(forcar);
 
-    expect(puts).toBe(0);
+    // O forçar contorna o validador de acordes; apagar a cifra do acervo não é
+    // "acorde raro", e o R2 não tem versionamento para desfazer.
+    expect(await screen.findByText(/não a perda de conteúdo/i)).toBeInTheDocument();
+    expect(puts()).toBe(0);
+  });
+
+  it('inserir uma linha e remover a que tinha conteúdo não pode gravar', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const { puts } = stubSalvar('{title: X}\n\n[A]letra');
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+
+    // Dois cliques na barra de ações da linha real: "+" cria uma linha de células
+    // VAZIA abaixo, "−" apaga a que tinha o conteúdo. Sobra `[{chord: null, text: ''}]`
+    // — uma linha `kind: 'cells'`, que uma checagem só de `kind` daria por boa.
+    await userEvent.click(screen.getByRole('button', { name: /inserir linha abaixo/i }));
+    const remover = screen.getAllByRole('button', { name: /remover linha/i });
+    expect(remover).toHaveLength(2);
+    await userEvent.click(remover[0]);
+
+    // O que isso gravaria é `"{title: X}\n\n\n"`: na releitura a linha vazia é
+    // separador de estrofe, o arquivo volta com `stanzas: []` e `hasLyrics: false`.
+    // Indistinguível da perda total — e o editor sem linhas não teria nem o "+" para
+    // recriar uma, porque o "+" só existe dentro de uma linha.
+    expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
+    expect(screen.getByText(/ficaria sem nenhuma linha de letra/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /salvar assim mesmo/i }));
+    expect(puts()).toBe(0);
   });
 
   it('cifra sem letra ainda pode ser reaberta no editor — é o caminho de volta', async () => {

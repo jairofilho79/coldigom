@@ -29,3 +29,7 @@ export type Song = {
   /** false quando o parse não produziu nenhuma linha de letra (regra 8). */
   hasLyrics: boolean;
 };
+
+/** Endereço de uma linha dentro do Song. Validação e edição falam as mesmas
+ *  coordenadas; mora aqui para que edit.ts não precise depender de validate.ts. */
+export type LineRef = { stanza: number; line: number };

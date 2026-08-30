@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, getLoginUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
+import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
+import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
@@ -190,7 +191,7 @@ export function PraiseDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isCreate = id === 'new';
-  const { user, ready: authReady, logout } = useAuth();
+  const { user, ready: authReady } = useAuth();
   const userName = authReady ? (user?.name || user?.email || null) : null;
   const [praise, setPraise] = useState<PraiseDetail | null>(null);
   const [loading, setLoading] = useState(!isCreate);
@@ -771,11 +772,16 @@ export function PraiseDetailPage() {
           {!authReady ? (
             <div className="auth-user muted">Verificando sessão…</div>
           ) : userName ? (
-            <>
-              {user?.picture ? (
-                <img className="auth-avatar" src={user.picture} alt="" width={28} height={28} />
-              ) : null}
-              <div className="auth-user">Logado como <strong>{userName}</strong></div>
+            // Controle de sessão extraído para AuthControl; os botões de ação da página
+            // (Editar/Baixar em ZIP/Mesclar/Cancelar) não são parte dele e viajam como children,
+            // preservando a posição visual entre o nome e o "Sair". avatarSize preserva o
+            // tamanho original do avatar aqui (28px); onAfterLogout fecha o modo de edição
+            // ao sair, como o botão "Sair" original fazia.
+            <AuthControl
+              avatarSize={28}
+              onAfterLogout={() => setIsEditing(false)}
+              prefixo="Logado como"
+            >
               {isCreate ? (
                 <Link to="/" className="auth-btn">
                   Cancelar
@@ -801,19 +807,10 @@ export function PraiseDetailPage() {
                   </Link>
                 </>
               )}
-              <button
-                type="button"
-                className="auth-btn"
-                onClick={async () => {
-                  await logout();
-                  setIsEditing(false);
-                }}
-              >
-                Sair
-              </button>
-            </>
+            </AuthControl>
           ) : (
             <>
+              {/* Baixar em ZIP fica ao lado do controle de sessão, mas não é parte dele. */}
               {!isCreate && id ? (
                 <a
                   className="auth-btn"
@@ -823,12 +820,7 @@ export function PraiseDetailPage() {
                   Baixar em ZIP
                 </a>
               ) : null}
-              <a
-                className="auth-btn"
-                href={getLoginUrl()}
-              >
-                Entrar com Google
-              </a>
+              <AuthControl />
             </>
           )}
         </div>

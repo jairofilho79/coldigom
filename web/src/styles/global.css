@@ -3067,3 +3067,214 @@ button.linkish {
 /* Cifra sem arquivo publicado: o card continua clicável — é a porta do editor
    quando a criação chegar — mas não promete conteúdo que não existe. */
 .material-link--empty .material-link-meta { opacity: 0.65; font-style: italic; }
+
+/* ChordHints: manual de "como escrever os acordes" com o vocabulário
+   medido no acervo (7M, ø, (#5), [*2x]) — não teoria musical genérica. */
+.cp-hints {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+.cp-hints-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+}
+.cp-hints-body { padding: 0 var(--space-3) var(--space-3); }
+.cp-hints-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+.cp-hints-row { display: contents; }
+.cp-hints-list dt { margin: 0; font-family: var(--font-mono); color: var(--cp-ink); }
+.cp-hints-list dd { margin: 0; color: var(--text-secondary); }
+.cp-hints-insert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Anotação do acervo ([*2x], [*Coro]): é instrução de execução, não acorde.
+   Não leva a tinta vermelha, que significa "toque este acorde aqui". */
+.cp-cell--annotation > .cp-chord {
+  color: var(--cp-dim);
+  font-style: italic;
+  font-weight: 600;
+}
+
+/* ChordProEditor: a cifra é editada na própria linha.
+   O espaçamento da cifra é dado, não estilo — dentro de um <input> um espaço e três
+   espaços parecem iguais, então a linha em edição ganha um preview logo abaixo do
+   campo, desenhado pelo mesmo ChordProView (que usa white-space: pre). É lá que a
+   diferença aparece enquanto se digita. */
+.cp-header-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+@media (max-width: 640px) {
+  .cp-header-fields { grid-template-columns: 1fr; }
+}
+.cp-header-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.cp-header-field-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+.cp-header-field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.cp-editor-body { margin-top: var(--space-4); }
+.cp-editor-stanza { margin-bottom: var(--space-4); }
+
+.cp-line-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+}
+.cp-line-row:hover { background: var(--bg-surface); }
+.cp-line-target { flex: 1 1 auto; min-width: 0; cursor: text; }
+.cp-line-edit { flex: 1 1 auto; min-width: 0; }
+
+/* Âmbar, não vermelho: vermelho já é a tinta do acorde no corpo da cifra. */
+.cp-line-row--invalid {
+  border-left-color: #ffb020;
+  background: rgba(255, 176, 32, 0.07);
+}
+.cp-line-issue {
+  flex: 0 1 auto;
+  align-self: center;
+  font-size: var(--text-xs);
+  color: #ffb020;
+}
+
+/* Três botões por linha, um deles destrutivo ("Remover linha", sem confirmação e sem
+   desfazer). Com `opacity: 0` eles continuavam clicáveis sem estarem visíveis, e em
+   tela de toque — onde não existe hover — eram invisíveis o tempo todo: um toque
+   apagava uma linha da cifra sem que nada tivesse aparecido antes.
+   Escolha: 0.5 em repouso (perceptíveis, mas apagados o bastante para não competir
+   com a leitura) subindo para 1 sob o cursor ou com foco dentro da linha; e opacidade
+   cheia onde não há hover, porque ali "em repouso" é o único estado que existe. */
+.cp-line-actions { display: flex; gap: var(--space-1); opacity: 0.5; }
+.cp-line-row:hover .cp-line-actions,
+.cp-line-row:focus-within .cp-line-actions { opacity: 1; }
+@media (hover: none) {
+  .cp-line-actions { opacity: 1; }
+}
+.cp-line-actions button {
+  padding: 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.cp-line-input {
+  width: 100%;
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.cp-editing-preview {
+  margin-top: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 1px dotted var(--border-subtle);
+}
+.cp-line-edit-actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+.cp-line-edit-actions button {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.cp-line-edit-actions .cp-line-confirm { color: var(--text-primary); }
+
+/* Barra de ações do editor de cifra. Fica no fim do editor, separada por um filete:
+   é a fronteira entre mexer na cifra e decidir o que fazer com o que se mexeu. */
+.cp-edit-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+.cp-edit-actions button {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.cp-edit-actions button:hover:not(:disabled) {
+  border-color: var(--c-accent-500);
+  color: var(--text-primary);
+}
+
+/* A ação esperada: é a única com peso de texto e contorno de acento. */
+.cp-edit-save {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--c-accent-500) 45%, var(--border-subtle));
+}
+/* Desabilitado tem de parecer desabilitado: sem acento, sem cursor de clique. */
+.cp-edit-actions .cp-edit-save:disabled {
+  opacity: 0.45;
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+  cursor: not-allowed;
+}
+
+/* Exceção, não ação primária: âmbar (o mesmo de .cp-line-issue) e contorno tracejado,
+   para ler como "isto sai do caminho normal". */
+.cp-edit-force {
+  color: #ffb020;
+  border-style: dashed;
+  border-color: color-mix(in srgb, #ffb020 45%, var(--border-subtle));
+  background: transparent;
+}
+.cp-edit-actions .cp-edit-force:hover:not(:disabled) {
+  color: #ffb020;
+  border-color: #ffb020;
+}
+
+.cp-edit-cancel { color: var(--text-secondary); }
+
+/* O motivo de o salvar estar desabilitado vai para a direita, junto do erro de
+   gravação, longe dos botões que se clica sem ler. */
+.cp-edit-issues {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  color: #ffb020;
+}

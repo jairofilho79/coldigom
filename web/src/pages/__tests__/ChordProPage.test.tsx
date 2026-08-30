@@ -4,7 +4,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ChordProPage } from '../ChordProPage';
 import { AuthProvider } from '../../context/AuthContext';
+import * as AuthContext from '../../context/AuthContext';
 import * as api from '../../services/api';
+import { parse } from '../../lib/chordpro/parse';
+import { serialize } from '../../lib/chordpro/serialize';
 import type { PraiseDetail } from '../../types';
 
 const praise = {
@@ -62,9 +65,39 @@ function renderPage({ authenticated = false }: { authenticated?: boolean } = {})
   );
 }
 
+/** O AuthProvider real faria uma chamada de rede; aqui a sessão é decidida no teste.
+ *  Os testes antigos continuam sem chamar isto — o `vi.restoreAllMocks()` do
+ *  `afterEach` desfaz o spy entre um teste e outro. */
+function mockAuth(user: { name?: string; email?: string } | null) {
+  vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+    user,
+    ready: true,
+    isAuthenticated: Boolean(user),
+    logout: vi.fn(),
+    authError: null,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof AuthContext.useAuth>);
+}
+
 function stubFetch(impl: () => Promise<Response> | Response) {
   vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
   vi.stubGlobal('fetch', vi.fn(impl));
+}
+
+/** Cifra servida no GET e um contador de PUTs — a única coisa que importa nos
+ *  testes de bloqueio é que nenhuma gravação chegue ao R2. */
+function stubSalvar(fonte: string) {
+  let puts = 0;
+  vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+  vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === 'PUT') {
+      puts += 1;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+    if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+    return new Response(fonte, { status: 200 });
+  }));
+  return { puts: () => puts };
 }
 
 afterEach(() => {
@@ -149,5 +182,282 @@ describe('ChordProPage', () => {
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
     );
     expect(screen.getByText(/Revisor/)).toBeInTheDocument();
+  });
+});
+
+describe('modo de edição', () => {
+  it('sem sessão não há botão de editar', async () => {
+    mockAuth(null);
+    stubFetch(() => new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 }));
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'X' })).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument();
+  });
+
+  it('com sessão, editar abre o editor', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 }));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    expect(screen.getByLabelText('Tom')).toHaveValue('A');
+  });
+
+  it('acorde inválido desabilita o salvar e oferece o forçar', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response('{title: X}\n\nletra [Bmm]aqui', { status: 200 }));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+
+    expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /salvar assim mesmo/i })).toBeEnabled();
+    expect(screen.getByText(/1 acorde não reconhecido/i)).toBeInTheDocument();
+  });
+
+  it('salvar manda o ChordPro serializado para o endpoint', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const calls: Array<[string, RequestInit | undefined]> = [];
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      calls.push([String(url), init]);
+      if (init?.method === 'PUT') return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    await waitFor(() => expect(calls.some(([, i]) => i?.method === 'PUT')).toBe(true));
+    const put = calls.find(([, i]) => i?.method === 'PUT')!;
+    expect(put[0]).toContain('/api/materials/m1/content');
+    expect(String(put[1]!.body)).toContain('[A]letra');
+    expect(String(put[1]!.body)).toContain('{key: A}');
+    // contrato com o endpoint: o corpo é o ChordPro verbatim, byte a byte. O endpoint
+    // grava o que recebe no R2 — um JSON.stringify por engano escreveria aspas e "\n"
+    // literais dentro do .chord, e o parser leria o arquivo inteiro como uma linha de letra.
+    expect(put[1]!.headers).toMatchObject({ 'content-type': 'text/plain; charset=utf-8' });
+    expect(put[1]!.body).toBe(serialize(parse('{title: X}\n{key: A}\n\n[A]letra')));
+  });
+
+  it('depois de salvar, a leitura mostra o que foi gravado, não o texto antigo', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+      // o GET nunca muda: se a tela mostrasse a resposta dele, mostraria o tom antigo
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    const tom = screen.getByLabelText('Tom');
+    await userEvent.clear(tom);
+    await userEvent.type(tom, 'G');
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    // editor fechado e o cabeçalho já com o tom novo
+    await waitFor(() => expect(screen.queryByLabelText('Tom')).not.toBeInTheDocument());
+    expect(screen.getByText('Tom G')).toBeInTheDocument();
+  });
+
+  it('aborta quando o arquivo mudou no servidor desde o carregamento', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    let gets = 0;
+    let puts = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        puts += 1;
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }
+      // o AuthProvider de verdade também usa fetch (/auth/refresh); aqui só o
+      // arquivo da cifra conta, senão a contagem de GETs vira corrida
+      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+      gets += 1;
+      // o segundo GET (a checagem antes de gravar) devolve conteúdo diferente
+      return new Response(
+        gets === 1 ? '{title: X}\n\n[A]letra' : '{title: X}\n\n[A]OUTRA COISA',
+        { status: 200 }
+      );
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    expect(await screen.findByText(/mudou no servidor/i)).toBeInTheDocument();
+    // o que importa: nada foi gravado por cima do trabalho do outro
+    expect(puts).toBe(0);
+  });
+
+  it('"salvar assim mesmo" contorna o validador, nunca a proteção de concorrência', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    let gets = 0;
+    let puts = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        puts += 1;
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }
+      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+      gets += 1;
+      return new Response(
+        gets === 1 ? '{title: X}\n\nletra [Bmm]aqui' : '{title: X}\n\nOUTRA COISA',
+        { status: 200 }
+      );
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /salvar assim mesmo/i }));
+
+    expect(await screen.findByText(/mudou no servidor/i)).toBeInTheDocument();
+    expect(puts).toBe(0);
+  });
+
+  it('releitura que falha não manda recarregar — recarregar jogaria o rascunho fora', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    let gets = 0;
+    let puts = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        puts += 1;
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }
+      if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+      gets += 1;
+      // a checagem antes de gravar bate num soluço do R2: nada mudou, só não dá para saber
+      if (gets > 1) return new Response('', { status: 500 });
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    expect(await screen.findByText(/não foi possível verificar o arquivo/i)).toBeInTheDocument();
+    // não é conflito: nunca mandar recarregar num caso em que nada mudou
+    expect(screen.queryByText(/mudou no servidor/i)).not.toBeInTheDocument();
+    expect(puts).toBe(0);
+    // o rascunho continua na tela, intacto
+    expect(screen.getByLabelText('Tom')).toHaveValue('A');
+  });
+
+  it('erro de gravação não tira a pessoa do editor', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        return new Response(JSON.stringify({ error: 'R2 fora do ar' }), { status: 500 });
+      }
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    expect(await screen.findByText(/R2 fora do ar/)).toBeInTheDocument();
+    // o trabalho continua na tela: o editor não fechou
+    expect(screen.getByLabelText('Tom')).toHaveValue('A');
+  });
+
+  it('rascunho sem nenhuma linha de letra desabilita o salvar, com o motivo', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response('{title: X}\n\n[A]letra', { status: 200 }));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+
+    // "Remover linha" não pede confirmação e não tem desfazer: em uma cifra de uma
+    // linha, um clique deixa o Song sem células.
+    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+
+    expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
+    expect(screen.getByText(/ficaria sem nenhuma linha de letra/i)).toBeInTheDocument();
+  });
+
+  it('"salvar assim mesmo" não grava um arquivo sem linha de letra', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const { puts } = stubSalvar('{title: X}\n\n[A]letra');
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+
+    // Clique de verdade num botão HABILITADO: é este teste que cobre a guarda dentro
+    // de `salvar()`, e não o `disabled` de nenhum botão. (O React não despacha clique
+    // em elemento de formulário desabilitado — nem por fireEvent, porque ele lê
+    // `props.disabled` da fibra —, então um botão travado deixaria a guarda sem teste.)
+    const forcar = screen.getByRole('button', { name: /salvar assim mesmo/i });
+    expect(forcar).toBeEnabled();
+    await userEvent.click(forcar);
+
+    // O forçar contorna o validador de acordes; apagar a cifra do acervo não é
+    // "acorde raro", e o R2 não tem versionamento para desfazer.
+    expect(await screen.findByText(/não a perda de conteúdo/i)).toBeInTheDocument();
+    expect(puts()).toBe(0);
+  });
+
+  it('inserir uma linha e remover a que tinha conteúdo não pode gravar', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const { puts } = stubSalvar('{title: X}\n\n[A]letra');
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+
+    // Dois cliques na barra de ações da linha real: "+" cria uma linha de células
+    // VAZIA abaixo, "−" apaga a que tinha o conteúdo. Sobra `[{chord: null, text: ''}]`
+    // — uma linha `kind: 'cells'`, que uma checagem só de `kind` daria por boa.
+    await userEvent.click(screen.getByRole('button', { name: /inserir linha abaixo/i }));
+    const remover = screen.getAllByRole('button', { name: /remover linha/i });
+    expect(remover).toHaveLength(2);
+    await userEvent.click(remover[0]);
+
+    // O que isso gravaria é `"{title: X}\n\n\n"`: na releitura a linha vazia é
+    // separador de estrofe, o arquivo volta com `stanzas: []` e `hasLyrics: false`.
+    // Indistinguível da perda total — e o editor sem linhas não teria nem o "+" para
+    // recriar uma, porque o "+" só existe dentro de uma linha.
+    expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
+    expect(screen.getByText(/ficaria sem nenhuma linha de letra/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /salvar assim mesmo/i }));
+    expect(puts()).toBe(0);
+  });
+
+  it('cifra sem letra ainda pode ser reaberta no editor — é o caminho de volta', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    // Exatamente o que uma gravação vazia deixa no R2: só o cabeçalho.
+    stubFetch(() => new Response('{title: X}\n\n', { status: 200 }));
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText(/ainda não foi publicada/i)).toBeInTheDocument());
+    // Sem este botão a pessoa fica trancada para fora do próprio arquivo.
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    expect(screen.getByLabelText('Título')).toHaveValue('X');
+  });
+
+  it('"cancelar edição" sai do editor e limpa a mensagem de erro', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        return new Response(JSON.stringify({ error: 'R2 fora do ar' }), { status: 500 });
+      }
+      return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
+    }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+    expect(await screen.findByText(/R2 fora do ar/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /cancelar edição/i }));
+
+    expect(screen.queryByLabelText('Tom')).not.toBeInTheDocument();
+    expect(screen.queryByText(/R2 fora do ar/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument();
   });
 });

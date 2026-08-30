@@ -287,6 +287,29 @@ export async function updateMaterial(materialId: string, updates: {
   return response.data;
 }
 
+/**
+ * Grava o .chord revisado. O endpoint aceita corpo em texto puro e devolve
+ * { ok, material_id, praise_id, r2_key }.
+ *
+ * Vai por `fetchJson` como todo o resto: é ela que injeta o Bearer e o
+ * `credentials: 'include'`, e que renova a sessão num 401 — repetir `fetch` aqui
+ * significaria perder a gravação justo quando o access token acabou de expirar.
+ */
+export async function putMaterialContent(
+  materialId: string,
+  content: string
+): Promise<{ ok: boolean }> {
+  const response = await fetchJson<{ ok: boolean }>(
+    `${API_BASE_URL}/api/materials/${materialId}/content`,
+    {
+      method: 'PUT',
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
+      body: content,
+    }
+  );
+  return response;
+}
+
 export async function deleteMaterial(materialId: string): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,

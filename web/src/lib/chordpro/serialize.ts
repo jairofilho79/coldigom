@@ -1,9 +1,21 @@
-import type { Cell, Song } from './types';
+import type { Cell, Line, Song } from './types';
 
 const HEADER_ORDER = ['title', 'subtitle', 'key', 'rhythm', 'artist'] as const;
 
+/** Colchete no texto tem de voltar escapado, senão o reparse o lê como acorde. */
+function escapeText(text: string): string {
+  return text.replace(/([[\]])/g, '\\$1');
+}
+
 function serializeCells(cells: Cell[]): string {
-  return cells.map((c) => (c.chord === null ? '' : `[${c.chord}]`) + c.text).join('');
+  return cells
+    .map((c) => (c.chord === null ? '' : `[${c.chord}]`) + escapeText(c.text))
+    .join('');
+}
+
+/** Uma linha isolada como texto — é o que torna a linha editável. */
+export function serializeLine(line: Line): string {
+  return line.kind === 'comment' ? `{comment: ${line.text}}` : serializeCells(line.cells);
 }
 
 /**
@@ -29,7 +41,7 @@ export function serialize(song: Song): string {
   song.stanzas.forEach((stanza, i) => {
     if (i > 0) out.push('');
     for (const line of stanza.lines) {
-      out.push(line.kind === 'comment' ? `{comment: ${line.text}}` : serializeCells(line.cells));
+      out.push(serializeLine(line));
     }
   });
 

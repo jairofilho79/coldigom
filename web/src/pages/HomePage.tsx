@@ -20,30 +20,35 @@ export function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Sem isto, duas buscas em voo resolvem em ordem arbitrária e a última a
-    // chegar vence — mesmo sendo a mais antiga. Clicar dois filtros em
-    // sequência rápida deixava a tela mostrando o resultado do primeiro
-    // clique, e o erro de uma busca já superada pintava erro sobre resultado
-    // válido.
+    // Duas buscas em voo resolvem em ordem arbitrária e a última a chegar
+    // vence, mesmo sendo a mais antiga: clicar dois filtros em sequência
+    // rápida deixava a tela mostrando o resultado do primeiro clique.
+    //
+    // A flag protege o estado; o AbortController corta a requisição de fato,
+    // em vez de deixá-la trafegar até o fim para ser descartada.
     let cancelado = false;
+    const controle = new AbortController();
 
     const fetchPraises = async () => {
       setLoading(true);
       setError(null);
       try {
-        const result = await searchPraises({
-          query: filters.query,
-          page: filters.page,
-          tags: filters.tags,
-          rhythm: filters.rhythm,
-          tonality: filters.tonality,
-          category: filters.category,
-          materialKinds: filters.materialKinds,
-          numberMin: filters.numberMin,
-          numberMax: filters.numberMax,
-          sort: filters.sort,
-          order: filters.order,
-        });
+        const result = await searchPraises(
+          {
+            query: filters.query,
+            page: filters.page,
+            tags: filters.tags,
+            rhythm: filters.rhythm,
+            tonality: filters.tonality,
+            category: filters.category,
+            materialKinds: filters.materialKinds,
+            numberMin: filters.numberMin,
+            numberMax: filters.numberMax,
+            sort: filters.sort,
+            order: filters.order,
+          },
+          controle.signal
+        );
         if (cancelado) return;
         setPraises(result.data);
         setPagination(result.pagination);
@@ -59,6 +64,7 @@ export function HomePage() {
 
     return () => {
       cancelado = true;
+      controle.abort();
     };
   }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.category, filters.materialKinds, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
 

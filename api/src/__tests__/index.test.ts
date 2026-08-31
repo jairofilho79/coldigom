@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SignJWT } from 'jose';
 import { unzipSync } from 'fflate';
 import yaml from 'js-yaml';
@@ -322,7 +322,7 @@ describe('API Routes', () => {
     });
 
     it('should search praises by YouTube watch URL', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -349,7 +349,7 @@ describe('API Routes', () => {
     });
 
     it('should search praises by youtu.be URL and playlist watch URL', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -377,7 +377,7 @@ describe('API Routes', () => {
     });
 
     it('should keep text search on FTS path for normal queries', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -435,7 +435,7 @@ describe('API Routes', () => {
     });
 
     it('should rank search matches by number then title then lyrics', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -458,7 +458,7 @@ describe('API Routes', () => {
     });
 
     it('should use natural number order for digit-only search', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -481,7 +481,7 @@ describe('API Routes', () => {
     });
 
     it('should exact-match number when query has leading zeros', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -502,7 +502,7 @@ describe('API Routes', () => {
     });
 
     it('should build valid COLLATE NOCASE order for tonality sort', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -523,7 +523,7 @@ describe('API Routes', () => {
     });
 
     it('should put empty values last for desc sort too', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -543,7 +543,7 @@ describe('API Routes', () => {
     });
 
     it('should use numeric cast for number sort with empty last', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -1040,7 +1040,7 @@ describe('API Routes', () => {
     it('should handle praise without tags', async () => {
       const mockPraise = { ...mockPraises[0], tag_ids: null };
       const mockDB = {
-        prepare: vi.fn((query: string) => ({
+        prepare: vi.fn((_query: string) => ({
           bind: vi.fn().mockReturnThis(),
           all: vi.fn().mockResolvedValue({ results: [] }),
           first: vi.fn().mockResolvedValue(mockPraise),

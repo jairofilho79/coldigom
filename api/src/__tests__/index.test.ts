@@ -1237,6 +1237,83 @@ describe('API Routes', () => {
       };
     }
 
+    it('aceita o JWT do usuário logado mesmo com COLDIGOM_UPLOAD_TOKEN configurado', async () => {
+      // Regressão de produção: com o secret definido, o guard comparava o JWT do
+      // usuário com o token de upload e devolvia 401 antes de chegar no requireAuth.
+      // Estar logado era exatamente o que quebrava. O teste anterior passava porque
+      // omitia COLDIGOM_UPLOAD_TOKEN do env — a combinação real nunca era exercitada.
+      const praiseId = '1b2b33ab-4dff-4014-8582-dcb9a92efbc8';
+      const chordId = 'chord-mat-1';
+      const r2Key = `assets/praises/${praiseId}/${chordId}.chord`;
+      const mockDB = {
+        prepare: vi.fn(() => ({
+          bind: vi.fn().mockReturnThis(),
+          first: vi.fn().mockResolvedValue({ id: chordId, praise_id: praiseId, type: 'chord', r2_key: r2Key }),
+        })),
+      };
+      const mockR2 = createMockR2();
+
+      const res = await app.request(
+        `/api/materials/${chordId}/content`,
+        await putInit('{title: X}\n\n[A]letra\n'),
+        {
+          DB: mockDB,
+          ASSETS: mockR2,
+          AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          WEB_ORIGIN: TEST_WEB_ORIGIN,
+          COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
+        }
+      );
+
+      expect(res.status).toBe(200);
+      expect(mockR2.put).toHaveBeenCalled();
+    });
+
+    // Os dois jeitos de chegar neste endpoint falham de formas diferentes, e as duas
+    // recusas importam: o review-app chama SEM Origin (token de upload), o navegador
+    // chama COM Origin (JWT de sessão). Nenhum dos dois pode entrar com credencial errada.
+    it('recusa token de upload errado vindo do review-app (sem Origin)', async () => {
+      const res = await app.request(
+        `/api/materials/chord-mat-1/content`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'text/plain; charset=utf-8', authorization: 'Bearer token-errado' },
+          body: 'x',
+        },
+        {
+          DB: createMockD1(),
+          ASSETS: createMockR2(),
+          AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          WEB_ORIGIN: TEST_WEB_ORIGIN,
+          COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
+        }
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it('recusa Bearer inválido vindo do navegador (com Origin)', async () => {
+      const res = await app.request(
+        `/api/materials/chord-mat-1/content`,
+        {
+          method: 'PUT',
+          headers: {
+            'content-type': 'text/plain; charset=utf-8',
+            origin: TEST_WEB_ORIGIN,
+            authorization: 'Bearer jwt-invalido',
+          },
+          body: 'x',
+        },
+        {
+          DB: createMockD1(),
+          ASSETS: createMockR2(),
+          AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          WEB_ORIGIN: TEST_WEB_ORIGIN,
+          COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
+        }
+      );
+      expect(res.status).toBe(401);
+    });
+
     it('should replace chord content in R2', async () => {
       const praiseId = '1b2b33ab-4dff-4014-8582-dcb9a92efbc8';
       const chordId = 'chord-mat-1';

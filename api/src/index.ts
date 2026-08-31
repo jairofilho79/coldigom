@@ -306,10 +306,13 @@ function bearerToken(c: { req: { header: (n: string) => string | undefined } }):
 async function requireUploadOrAuth(c: any, next: any) {
   const uploadToken = c.env.COLDIGOM_UPLOAD_TOKEN?.trim();
   const token = bearerToken(c);
-  if (uploadToken) {
-    if (token === uploadToken) return await next();
-    if (token) return c.json({ error: 'Invalid upload token' }, 401);
-  }
+
+  // O token de upload é um atalho para o review-app, que roda sem sessão.
+  // Um Bearer que NÃO é ele não é erro: é o JWT de quem está logado no navegador,
+  // e precisa seguir para o requireAuth. Rejeitar aqui derrubava todo usuário
+  // logado com 401 — estar autenticado era exatamente o que quebrava.
+  if (uploadToken && token && token === uploadToken) return await next();
+
   return requireAuth(c, next);
 }
 

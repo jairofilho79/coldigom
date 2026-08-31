@@ -15,11 +15,12 @@ export default defineConfig({
       // S1 (2026-08-31): 52 / 44 / 58 / 54
       // S2 (2026-08-31): 53 / 46 / 61 / 55
       // S3 (2026-08-31): 55 / 48 / 63 / 57
+      // S4 (2026-08-31): 58 / 51 / 65 / 59
       thresholds: {
-        statements: 55,
-        branches: 48,
-        functions: 63,
-        lines: 57,
+        statements: 58,
+        branches: 51,
+        functions: 65,
+        lines: 59,
       },
     },
   },

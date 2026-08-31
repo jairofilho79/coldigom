@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_BYTES } from './uploadLimits';
 /** Google Drive API helpers (list + download). */
 
 export const DRIVE_READONLY_SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
@@ -215,8 +216,22 @@ export async function downloadDriveFile(
     const text = await res.text().catch(() => '');
     throw new Error(`Drive download failed (${res.status}): ${text}`);
   }
+
+  // O arquivo é bufferizado inteiro para o R2 receber comprimento conhecido, e
+  // não havia teto nenhum: um arquivo grande do Drive estourava a memória do
+  // Worker. Conferido antes de ler o corpo, quando o Drive informa o tamanho.
+  const declarado = Number(res.headers.get('content-length') ?? '');
+  if (Number.isFinite(declarado) && declarado > MAX_UPLOAD_BYTES) {
+    throw new Error(`Drive download failed (413): arquivo acima de ${MAX_UPLOAD_BYTES} bytes`);
+  }
+
+  const bytes = await res.arrayBuffer();
+  if (bytes.byteLength > MAX_UPLOAD_BYTES) {
+    throw new Error(`Drive download failed (413): arquivo acima de ${MAX_UPLOAD_BYTES} bytes`);
+  }
+
   return {
-    bytes: await res.arrayBuffer(),
+    bytes,
     contentType: res.headers.get('content-type') || undefined,
   };
 }

@@ -4,6 +4,7 @@ import { getDriveAccessToken, listDriveTree } from '../driveApi';
 import { getDriveRefreshToken, hasDriveCredentials } from '../driveCredentials';
 import { parseDriveUrl } from '../driveParse';
 import type { App } from '../env';
+import { isSafeMaterialType } from '../uploadLimits';
 import { nowSec, requireAuth } from '../middleware';
 
 /** Google Drive e jobs de importacao.
@@ -175,7 +176,8 @@ export function registerDriveRoutes(app: App): void {
     if (!connected) return c.json({ error: 'Drive not connected', code: 'drive_not_connected' }, 403);
 
     for (const item of items) {
-      if (!item?.drive_file_id || !item.material_kind || !item.type) {
+      // O type vira a extensão da chave do R2, igual ao upload direto.
+      if (!item?.drive_file_id || !item.material_kind || !isSafeMaterialType(item.type)) {
         return c.json({ error: 'Invalid item' }, 400);
       }
     }

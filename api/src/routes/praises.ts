@@ -5,6 +5,7 @@ import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -855,7 +856,9 @@ export function registerPraisesRoutes(app: App): void {
     const url = body.url;
 
     if (typeof material_kind !== 'string' || !material_kind) return c.json({ error: "Field 'material_kind' is required" }, 400);
-    if (typeof type !== 'string' || !type) return c.json({ error: "Field 'type' is required" }, 400);
+    if (!isSafeMaterialType(type)) {
+      return c.json({ error: "Field 'type' is required" }, 400);
+    }
 
     const hasUrl = typeof url === 'string' && url.trim().length > 0;
     const isYouTube = (u: string) => {
@@ -921,20 +924,48 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: 'Invalid items JSON' }, 400);
     }
 
+    if (items.length > MAX_UPLOAD_ITEMS) {
+      return c.json({ error: `Máximo de ${MAX_UPLOAD_ITEMS} arquivos por lote` }, 400);
+    }
+
+    // Valida o lote INTEIRO antes de escrever qualquer coisa. O laço antigo
+    // validava e gravava item a item: um lote com o segundo item inválido já
+    // tinha gravado o primeiro no R2 e no banco.
+    const validados: { item: (typeof items)[number]; file: File }[] = [];
+    for (const item of items) {
+      if (!item || typeof item !== 'object') return c.json({ error: 'Invalid item' }, 400);
+      if (typeof item.key !== 'string') return c.json({ error: "Item missing 'key'" }, 400);
+      if (typeof item.material_kind !== 'string' || !item.material_kind) {
+        return c.json({ error: "Item missing 'material_kind'" }, 400);
+      }
+      if (!isSafeMaterialType(item.type)) {
+        return c.json(
+          { error: `Tipo de material inválido: ${String(item.type).slice(0, 32)}` },
+          400
+        );
+      }
+
+      const fileEntry = form.get(item.key);
+      if (fileEntry === null || typeof fileEntry === 'string') {
+        return c.json({ error: `Missing file for key ${item.key}` }, 400);
+      }
+      // Remainder of FormData.get() is File (see Cloudflare FormData typings)
+      const file = fileEntry as File;
+
+      if (file.size > MAX_UPLOAD_BYTES) {
+        return c.json(
+          {
+            error: `Arquivo acima do limite de ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))} MB: ${file.name}`,
+          },
+          413
+        );
+      }
+
+      validados.push({ item, file });
+    }
+
     try {
-      for (const item of items) {
-        if (!item || typeof item !== 'object') return c.json({ error: 'Invalid item' }, 400);
-        if (typeof item.key !== 'string') return c.json({ error: "Item missing 'key'" }, 400);
-        if (typeof item.material_kind !== 'string' || !item.material_kind) return c.json({ error: "Item missing 'material_kind'" }, 400);
-        if (typeof item.type !== 'string' || !item.type) return c.json({ error: "Item missing 'type'" }, 400);
-
-        const fileEntry = form.get(item.key);
-        if (fileEntry === null || typeof fileEntry === 'string') {
-          return c.json({ error: `Missing file for key ${item.key}` }, 400);
-        }
-        // Remainder of FormData.get() is File (see Cloudflare FormData typings)
-        const file = fileEntry as File;
-
+      for (const { item, file } of validados) {
         const materialId = crypto.randomUUID();
         const r2_key = `assets/praises/${praiseId}/${materialId}.${item.type}`;
         const storageKey = `storage/${r2_key}`;

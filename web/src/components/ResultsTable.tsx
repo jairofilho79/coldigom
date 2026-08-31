@@ -75,14 +75,26 @@ export function ResultsTable({ praises }: ResultsTableProps) {
                       ? () => setExpanded((s) => ({ ...s, [group.key]: !s[group.key] }))
                       : undefined
                   }
-                  aria-expanded={isMulti ? isOpen : undefined}
                 >
                   <td className="col-number">{primary.number || '—'}</td>
                   <td className="col-name">
                     {isMulti ? (
-                      <span className="results-group-name">
+                      // Botão de verdade, e não um <tr onClick> com aria-expanded:
+                      // a linha não era focável nem respondia a teclado, então o
+                      // grupo só abria com mouse. O clique na linha continua
+                      // valendo para quem usa mouse; o stopPropagation evita que
+                      // o clique no botão alterne duas vezes.
+                      <button
+                        type="button"
+                        className="results-group-name"
+                        aria-expanded={isOpen}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpanded((s) => ({ ...s, [group.key]: !s[group.key] }));
+                        }}
+                      >
                         {isOpen ? '▾' : '▸'} {primary.name}
-                      </span>
+                      </button>
                     ) : (
                       <Link to={`/praise/${primary.id}`}>{primary.name}</Link>
                     )}

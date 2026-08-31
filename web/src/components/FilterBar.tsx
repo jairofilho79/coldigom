@@ -14,6 +14,13 @@ export function FilterBar() {
   const [erroOpcoes, setErroOpcoes] = useState(false);
   const [tentativa, setTentativa] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const gatilhosRef = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  /** Fecha e devolve o foco a quem abriu — senão o teclado fica órfão na página. */
+  const fecharDropdown = (key: string) => {
+    setOpenDropdown(null);
+    gatilhosRef.current[key]?.focus();
+  };
 
   // O .catch(console.error) engolia a falha e filterOptions ficava null para
   // sempre: a barra inteira virava um spinner sem fim, sem mensagem e sem
@@ -38,7 +45,11 @@ export function FilterBar() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const alvo = e.target as Element | null;
+      // Antes comparava com a barra inteira: clicar em outro controle DENTRO
+      // dela — o seletor de ordenação, por exemplo — deixava o menu aberto e os
+      // dois se sobrepunham.
+      if (!alvo?.closest('.filter-dropdown')) {
         setOpenDropdown(null);
       }
     };
@@ -61,34 +72,38 @@ export function FilterBar() {
   const renderStringDropdown = (key: 'category', label: string, options: string[]) => {
     const isOpen = openDropdown === key;
     const selectedCount = filters[key].length;
+    const rotuloGrupo = label;
 
     return (
       <div className="filter-dropdown" key={key}>
         <button
           type="button"
+          ref={(el) => { gatilhosRef.current[key] = el; }}
           className={`filter-dropdown-trigger ${selectedCount > 0 ? 'active' : ''}`}
           onClick={() => setOpenDropdown(isOpen ? null : key)}
+          onKeyDown={(e) => { if (e.key === 'Escape' && isOpen) fecharDropdown(key); }}
           aria-expanded={isOpen}
-          aria-haspopup="listbox"
         >
           {label}
           {selectedCount > 0 && <span className="filter-dropdown-badge">{selectedCount}</span>}
           <span className="arrow">▼</span>
         </button>
         {isOpen && (
-          <div className="filter-dropdown-menu" role="listbox">
+          <div
+            className="filter-dropdown-menu"
+            role="group"
+            aria-label={rotuloGrupo}
+            onKeyDown={(e) => { if (e.key === 'Escape') fecharDropdown(key); }}
+          >
             {options.map((opt) => (
               <label
                 key={opt}
                 className="filter-dropdown-item"
-                role="option"
-                aria-selected={filters[key].includes(opt)}
               >
                 <input
                   type="checkbox"
                   checked={filters[key].includes(opt)}
                   onChange={() => handleMultiSelect(key, opt)}
-                  tabIndex={-1}
                 />
                 {opt}
               </label>
@@ -103,34 +118,38 @@ export function FilterBar() {
     const key = 'materialKinds';
     const isOpen = openDropdown === key;
     const selectedCount = filters.materialKinds.length;
+    const rotuloGrupo = 'Materiais';
 
     return (
       <div className="filter-dropdown" key={key}>
         <button
           type="button"
+          ref={(el) => { gatilhosRef.current[key] = el; }}
           className={`filter-dropdown-trigger ${selectedCount > 0 ? 'active' : ''}`}
           onClick={() => setOpenDropdown(isOpen ? null : key)}
+          onKeyDown={(e) => { if (e.key === 'Escape' && isOpen) fecharDropdown(key); }}
           aria-expanded={isOpen}
-          aria-haspopup="listbox"
         >
           Materiais
           {selectedCount > 0 && <span className="filter-dropdown-badge">{selectedCount}</span>}
           <span className="arrow">▼</span>
         </button>
         {isOpen && (
-          <div className="filter-dropdown-menu" role="listbox">
+          <div
+            className="filter-dropdown-menu"
+            role="group"
+            aria-label={rotuloGrupo}
+            onKeyDown={(e) => { if (e.key === 'Escape') fecharDropdown(key); }}
+          >
             {materialKinds.map((kind) => (
               <label
                 key={kind.id}
                 className="filter-dropdown-item"
-                role="option"
-                aria-selected={filters.materialKinds.includes(kind.id)}
               >
                 <input
                   type="checkbox"
                   checked={filters.materialKinds.includes(kind.id)}
                   onChange={() => handleMultiSelect(key, kind.id)}
-                  tabIndex={-1}
                 />
                 {kind.name}
               </label>

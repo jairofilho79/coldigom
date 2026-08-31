@@ -52,6 +52,22 @@ export function SearchableSelect({
   const displayLabel = selected?.label ?? placeholder ?? '';
   const isPlaceholder = !value || !selected;
 
+  /** Índice, na lista original, do primeiro resultado habilitado para a busca dada. */
+  const primeiroResultado = (busca: string): number => {
+    const primeiro = filterOptionsByQuery(options, busca).find((o) => !o.disabled);
+    return primeiro ? options.findIndex((o) => o.value === primeiro.value) : -1;
+  };
+
+  /**
+   * Reposicionar o destaque é pergunta de dois momentos — abrir e digitar — e
+   * não de todo render. Por isso mora nos handlers, não num efeito.
+   */
+  const abrir = () => {
+    setQuery('');
+    setFocusedIndex(primeiroResultado(''));
+    setOpen(true);
+  };
+
   const close = useCallback(() => {
     setOpen(false);
     setQuery('');
@@ -78,12 +94,15 @@ export function SearchableSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open, close]);
 
+  /**
+   * O foco entra no campo de busca ao abrir. Depende só de `open`: antes este
+   * efeito também tinha `filteredWithIndex` nas dependências — um array
+   * recriado a cada render — então rodava depois de todo commit e arrancava o
+   * foco de volta para o campo sempre que o mouse passava numa opção.
+   */
   useEffect(() => {
-    if (!open) return;
-    searchRef.current?.focus();
-    const first = filteredWithIndex.find(({ opt }) => !opt.disabled);
-    setFocusedIndex(first?.index ?? -1);
-  }, [open, query, filteredWithIndex]);
+    if (open) searchRef.current?.focus();
+  }, [open]);
 
   const enabledIndices = getEnabledIndices(
     filteredWithIndex.map(({ opt }) => opt)
@@ -95,7 +114,7 @@ export function SearchableSelect({
     if (!open) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
-        setOpen(true);
+        abrir();
       }
       return;
     }
@@ -118,7 +137,7 @@ export function SearchableSelect({
       e.preventDefault();
       const prev = currentPos > 0 ? currentPos - 1 : enabledIndices.length - 1;
       setFocusedIndex(enabledIndices[prev]!);
-    } else if (e.key === 'Enter' && e.target !== searchRef.current) {
+    } else if (e.key === 'Enter') {
       e.preventDefault();
       const opt = options[focusedIndex];
       if (opt && !opt.disabled) selectOption(opt);
@@ -152,7 +171,11 @@ export function SearchableSelect({
         aria-controls={open ? listboxId : undefined}
         aria-labelledby={label ? `${selectId}-label` : undefined}
         aria-label={!label ? ariaLabel : undefined}
-        onClick={() => !disabled && setOpen((o) => !o)}
+        onClick={() => {
+          if (disabled) return;
+          if (open) close();
+          else abrir();
+        }}
         onKeyDown={handleKeyDown}
       >
         <span className="app-select-value">{displayLabel}</span>
@@ -172,14 +195,15 @@ export function SearchableSelect({
             placeholder={searchPlaceholder}
             value={query}
             aria-label={searchPlaceholder}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && focusedIndex >= 0) {
-                e.preventDefault();
-                const opt = options[focusedIndex];
-                if (opt && !opt.disabled) selectOption(opt);
-              }
+            onChange={(e) => {
+              const busca = e.target.value;
+              setQuery(busca);
+              setFocusedIndex(primeiroResultado(busca));
             }}
+            // Delega ao mesmo handler do gatilho: as setas eram tratadas só no
+            // botão, que perde o foco assim que o menu abre e o foco entra
+            // aqui. Navegar por teclado era impossível.
+            onKeyDown={handleKeyDown}
           />
           {filteredWithIndex.length === 0 ? (
             <div className="app-select-empty">Nenhum resultado</div>

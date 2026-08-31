@@ -741,12 +741,28 @@
   cursor: pointer;
 }
 
+/* Virou <button> para poder ser alcançado e operado por teclado; era um <span>
+   dentro de uma <tr onClick>, que só existia para o mouse. Os resets abaixo
+   mantêm a aparência de texto que ele sempre teve. */
 .results-group-name {
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   color: var(--text-primary);
   user-select: none;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.results-group-name:focus-visible {
+  outline: 2px solid var(--c-accent, currentColor);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 3px);
 }
 
 .results-group-child td {

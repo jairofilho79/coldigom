@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChordHints } from './ChordHints';
 import { ChordProView } from './ChordProView';
 import { normalizeChord } from '../../lib/chordpro/chord';
@@ -71,6 +71,59 @@ function songDeUmaLinha(line: Line): Song {
   return { header: {}, stanzas: [{ lines: [line] }], notes: [], hasLyrics: true };
 }
 
+/** Linha de células vazia — a mesma forma que o `insertLineAfter` cria. */
+function linhaVazia(): Line {
+  return { kind: 'cells', cells: [{ chord: null, attached: false, text: '' }] };
+}
+
+/**
+ * Acrescenta uma linha no fim da cifra.
+ *
+ * Com estrofes é o `insertLineAfter` depois da última linha. SEM nenhuma estrofe não
+ * há endereço para passar a ele — e é exatamente esse o estado de um arquivo só com
+ * cabeçalho (`{title: X}\n\n`, o que o pipeline grava quando não consegue extrair) e
+ * o que sobra de um "+" seguido de "−". Nesse estado o editor abria sem nenhum botão,
+ * porque o "+" só existe DENTRO de uma linha: não dava para criar a primeira, e como
+ * gravar exige uma linha de letra, nem o título dava para corrigir.
+ */
+function songComLinhaNoFim(song: Song): Song {
+  const ultima = song.stanzas.length - 1;
+  if (ultima < 0) return { ...song, stanzas: [{ lines: [linhaVazia()] }] };
+  return insertLineAfter(song, { stanza: ultima, line: song.stanzas[ultima].lines.length - 1 });
+}
+
+/**
+ * Endereço de cada linha na ordem da tela.
+ *
+ * A posição PLANA é a única que sobrevive a uma mutação estrutural: separar estrofe
+ * troca o `stanza` e o `line` da mesma linha, e remover a última linha de uma estrofe
+ * apaga a estrofe (`mapStanzas` filtra estrofe vazia) e reindexa as de baixo. É por
+ * ela que o foco reencontra a linha depois da mutação, e é ela que numera as linhas.
+ */
+function ordemPlana(song: Song): LineRef[] {
+  const refs: LineRef[] = [];
+  song.stanzas.forEach((stanza, si) =>
+    stanza.lines.forEach((_, li) => refs.push({ stanza: si, line: li }))
+  );
+  return refs;
+}
+
+/**
+ * Como a linha se chama para quem não a vê.
+ *
+ * O `aria-label` do alvo SUPRIME o conteúdo do `div`, então ele tem de carregar esse
+ * conteúdo: com um rótulo fixo, uma cifra de 40 linhas se anuncia quarenta vezes com
+ * a mesma frase e não há como saber qual se vai abrir sem abrir. O número é o da
+ * cifra inteira, não o da estrofe — senão "linha 1" volta a aparecer várias vezes.
+ */
+function nomeDaLinha(song: Song, at: LineRef, numero: number): string {
+  const texto = lineToText(song, at).trim();
+  return texto === '' ? `linha ${numero}, vazia` : `linha ${numero}: ${texto}`;
+}
+
+/** Qual botão da linha recebe o foco depois de uma mutação. */
+type PapelDeFoco = 'editar' | 'remover' | 'separar';
+
 export type ChordProEditorProps = {
   song: Song;
   onChange: (song: Song) => void;
@@ -98,6 +151,49 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
   const [erroDeLinha, setErroDeLinha] = useState<string | null>(null);
   // Guardado para que o ChordHints saiba onde enfiar o "ø" — na posição do cursor.
   const campoRef = useRef<HTMLInputElement | null>(null);
+  // Os botões de cada linha, indexados por `estrofe:linha:papel`, e o de adicionar no
+  // fim. É por aqui que o foco reencontra o caminho depois de uma mutação.
+  const alvosDeFoco = useRef(new Map<string, HTMLElement>());
+  const botaoAdicionar = useRef<HTMLButtonElement | null>(null);
+  // Para onde o foco vai depois da próxima mutação. Ref, e não estado: limpá-lo
+  // dentro do efeito seria `set-state-in-effect`, e este valor não pinta nada —
+  // só sobrevive de um render para o efeito seguinte.
+  const focoPendente = useRef<{ plana: number; papel: PapelDeFoco } | null>(null);
+
+  const ordem = useMemo(() => ordemPlana(song), [song]);
+
+  /**
+   * Devolve o foco depois de uma mutação estrutural.
+   *
+   * `useLayoutEffect` e não `useEffect`: o foco tem de estar no lugar antes da
+   * pintura, senão a tela pisca com o foco no `<body>`. Sem isto, separar estrofe
+   * ou remover linha desmontava o botão focado e obrigava a tabular desde o topo
+   * do documento para voltar ao ponto.
+   */
+  useLayoutEffect(() => {
+    const pendente = focoPendente.current;
+    if (!pendente) return;
+    focoPendente.current = null;
+
+    // A mutação reindexou tudo; a posição plana é o único endereço que sobrevive.
+    // Remover a última linha encolhe a lista: cai na que passou a ocupar o fim.
+    const ref = ordem[Math.min(pendente.plana, ordem.length - 1)];
+    const alvo = ref ? alvosDeFoco.current.get(`${chaveDe(ref)}:${pendente.papel}`) : null;
+    (alvo ?? botaoAdicionar.current)?.focus();
+  });
+  const planaDe = useMemo(() => {
+    const mapa = new Map<string, number>();
+    ordem.forEach((ref, i) => mapa.set(chaveDe(ref), i));
+    return mapa;
+  }, [ordem]);
+
+  /** Callback de `ref` que mantém o índice de alvos em dia — apaga ao desmontar. */
+  function registrarAlvo(chave: string) {
+    return (elemento: HTMLElement | null) => {
+      if (elemento) alvosDeFoco.current.set(chave, elemento);
+      else alvosDeFoco.current.delete(chave);
+    };
+  }
 
   const issuePorLinha = useMemo(() => {
     const mapa = new Map<string, ValidationIssue>();
@@ -155,11 +251,16 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
    * aberta, o campo reapareceria sobre a linha vizinha com o rascunho antigo e
    * "Confirmar" gravaria no lugar errado. Fechar a edição junto com a mutação é o que
    * impede isso — o endereço só é confiável enquanto o Song não muda de forma.
+   *
+   * `foco` diz para onde o foco vai depois — em posição plana, porque a mutação
+   * reindexa tudo. Fechar a edição já tirava o foco do lugar; deixá-lo cair no
+   * `<body>` é o que não pode acontecer.
    */
-  function mutarEstrutura(novo: Song) {
+  function mutarEstrutura(novo: Song, foco: { plana: number; papel: PapelDeFoco }) {
     setEditing(null);
     setDraft('');
     setErroDeLinha(null);
+    focoPendente.current = foco;
     onChange(novo);
   }
 
@@ -195,13 +296,15 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
         ))}
       </div>
 
-      <ChordHints onInsert={inserirSimbolo} />
+      <ChordHints onInsert={inserirSimbolo} podeInserir={editing !== null} />
 
       <div className="cp-editor-body">
         {song.stanzas.map((stanza, si) => (
           <div className="cp-editor-stanza" key={si}>
             {stanza.lines.map((line, li) => {
               const at: LineRef = { stanza: si, line: li };
+              const plana = planaDe.get(chaveDe(at)) ?? 0;
+              const nome = nomeDaLinha(song, at, plana + 1);
               const issue = issuePorLinha.get(chaveDe(at));
               const emEdicao = editing?.stanza === si && editing?.line === li;
               const classes = ['cp-line-row'];
@@ -247,7 +350,8 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
                       className="cp-line-target"
                       role="button"
                       tabIndex={0}
-                      aria-label="Editar esta linha"
+                      ref={registrarAlvo(`${chaveDe(at)}:editar`)}
+                      aria-label={`Editar ${nome}`}
                       onClick={() => abrir(at)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -262,32 +366,57 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
 
                   {/* Um lugar só para o aviso da linha: a recusa da confirmação fala
                       da tecla que a pessoa acabou de apertar e tem precedência sobre
-                      o acorde não reconhecido, que continua lá depois. */}
-                  {emEdicao && erroDeLinha ? (
-                    <span className="cp-line-issue">{erroDeLinha}</span>
+                      o acorde não reconhecido, que continua lá depois.
+
+                      Com a linha aberta o lugar vira região viva e fica no DOM mesmo
+                      vazio: a recusa chega sem que nada mais mude — o foco continua no
+                      campo e o valor continua o mesmo —, então quem usa leitor de tela
+                      concluiria que o Enter não fez nada. Um `aria-live` só funciona se
+                      o container já existia quando o texto apareceu. */}
+                  {emEdicao ? (
+                    <span className="cp-line-issue" role="status" aria-live="polite">
+                      {erroDeLinha ?? issue?.reason ?? ''}
+                    </span>
                   ) : issue ? (
                     <span className="cp-line-issue">{issue.reason}</span>
                   ) : null}
 
+                  {/* Os três nomes eram iguais em todas as linhas: "Remover linha"
+                      repetido N vezes não diz qual linha se vai remover. */}
                   <div className="cp-line-actions">
                     <button
                       type="button"
-                      aria-label="Inserir linha abaixo"
-                      onClick={() => mutarEstrutura(insertLineAfter(song, at))}
+                      aria-label={`Inserir linha abaixo da ${nome}`}
+                      onClick={() =>
+                        mutarEstrutura(insertLineAfter(song, at), {
+                          plana: plana + 1,
+                          papel: 'editar',
+                        })
+                      }
                     >
                       +
                     </button>
                     <button
                       type="button"
-                      aria-label="Remover linha"
-                      onClick={() => mutarEstrutura(removeLine(song, at))}
+                      ref={registrarAlvo(`${chaveDe(at)}:remover`)}
+                      aria-label={`Remover ${nome}`}
+                      onClick={() =>
+                        // A linha some: o foco vai para o mesmo botão da linha que
+                        // ocupar esta posição, ou da última, se era a última.
+                        mutarEstrutura(removeLine(song, at), { plana, papel: 'remover' })
+                      }
                     >
                       −
                     </button>
                     <button
                       type="button"
-                      aria-label="Separar estrofe aqui"
-                      onClick={() => mutarEstrutura(splitStanzaAt(song, at))}
+                      ref={registrarAlvo(`${chaveDe(at)}:separar`)}
+                      aria-label={`Separar estrofe aqui, antes da ${nome}`}
+                      onClick={() =>
+                        // A linha continua existindo na mesma posição plana, só que
+                        // numa estrofe nova — o foco a acompanha.
+                        mutarEstrutura(splitStanzaAt(song, at), { plana, papel: 'separar' })
+                      }
                     >
                       ¶
                     </button>
@@ -297,6 +426,24 @@ export function ChordProEditor({ song, onChange, issues }: ChordProEditorProps) 
             })}
           </div>
         ))}
+
+        {/* Fora de qualquer linha de propósito. O "+" da barra de ações só existe
+            DENTRO de uma linha, então uma cifra sem nenhuma — arquivo só com
+            cabeçalho, ou o que sobra de "+" seguido de "−" — não tinha como ganhar a
+            primeira, e o editor virava beco sem saída: "Salvar" travado por falta de
+            letra, "Salvar assim mesmo" recusando, e nem o título dava para corrigir.
+            Serve também para acrescentar linha no fim, que antes só se conseguia
+            inserindo depois da última linha existente. */}
+        <button
+          type="button"
+          className="cp-editor-add cp-theme-btn"
+          ref={botaoAdicionar}
+          onClick={() =>
+            mutarEstrutura(songComLinhaNoFim(song), { plana: ordem.length, papel: 'editar' })
+          }
+        >
+          + Adicionar linha no fim
+        </button>
       </div>
     </div>
   );

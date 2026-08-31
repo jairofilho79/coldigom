@@ -648,3 +648,43 @@ describe('marca de revisão', () => {
     expect(erro).toHaveAttribute('aria-live', 'polite');
   });
 });
+
+describe('cifra que ainda não existe no R2', () => {
+  it('dá para criar a cifra do zero, em vez de ficar trancado para fora', async () => {
+    // Sem arquivo, `song` é null e o botão de editar nem era renderizado: um
+    // registro de cifra sem `.chord` não tinha nenhum caminho na interface para
+    // virar cifra. A única saída era subir o arquivo por fora.
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const puts: string[] = [];
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') {
+          puts.push(String(init.body));
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        }
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        return new Response('', { status: 404 });
+      })
+    );
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/ainda não foi publicada/i)).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /adicionar linha/i }));
+    // A linha nasce vazia e fechada; abrir para editar é o passo seguinte.
+    await userEvent.click(screen.getByRole('button', { name: /Editar linha 1, vazia/i }));
+
+    const campo = screen.getByRole('textbox', { name: 'Texto da linha' });
+    // `[[` é o escape do userEvent para um colchete literal: `[C]` sozinho vira
+    // descritor de tecla e o acorde não chegaria ao campo.
+    await userEvent.type(campo, 'Louvado [[C]seja');
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+    await waitFor(() => expect(puts).toHaveLength(1));
+    expect(puts[0]).toContain('Louvado [C]seja');
+  });
+});

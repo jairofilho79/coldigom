@@ -52,6 +52,9 @@ function temLinhaDeLetra(song: Song): boolean {
   );
 }
 
+/** O ponto de partida de uma cifra que ainda não tem arquivo no R2. */
+const CIFRA_VAZIA: Song = { header: {}, stanzas: [], notes: [], hasLyrics: false };
+
 /** Marca de revisão humana. Fica no cabeçalho porque é uma decisão sobre a
  *  cifra que se está lendo — não um detalhe de registro no rodapé.
  *  Sem sessão, vira só um selo: a informação interessa a quem lê, a ação não. */
@@ -281,7 +284,19 @@ export function ChordProPage() {
         setSaveError(mensagemDeRede());
         return;
       }
-      if (!atual.ok) {
+      if (atual.status === 404) {
+        // Não existe arquivo. Se também não existia quando abrimos, é a criação da
+        // cifra — o caminho normal, e recusá-lo trancava para fora quem quisesse
+        // criar. Se existia, alguém apagou no meio: aí é conflito de verdade.
+        if (serverSource !== null) {
+          setSaveError(
+            'O arquivo foi removido no servidor desde que você abriu. ' +
+              'Copie o seu texto abaixo antes de recarregar.'
+          );
+          setTextoDoConflito(serialize(draft));
+          return;
+        }
+      } else if (!atual.ok) {
         // Não é conflito: é não saber. Mandar recarregar aqui faria a pessoa jogar
         // fora o rascunho por causa de um soluço do R2 — a perda que esta checagem
         // existe para evitar.
@@ -289,7 +304,7 @@ export function ChordProPage() {
         return;
       }
       const novo = serialize(draft);
-      const noServidor = await atual.text();
+      const noServidor = atual.status === 404 ? null : await atual.text();
       if (noServidor !== serverSource) {
         // Antes de acusar terceiro: pode ser a nossa própria gravação anterior, que
         // chegou ao servidor e cuja resposta se perdeu no caminho. Nesse caso a tela
@@ -396,13 +411,16 @@ export function ChordProPage() {
               (arquivo só com cabeçalho, gravado por engano) precisa poder ser reaberta
               para edição — era o único caminho de volta, e ele não existia. O banner
               "ainda não foi publicada" continua aparecendo logo abaixo. */}
-          {isAuthenticated && song && !draft ? (
+          {/* `content.status === 'absent'` entra aqui de propósito: sem arquivo no R2,
+              `song` é null e o botão não aparecia — um registro de cifra sem `.chord`
+              não tinha caminho nenhum na interface para virar cifra. */}
+          {isAuthenticated && (song || content.status === 'absent') && !draft ? (
             <button
               type="button"
               className="cp-theme-btn"
               onClick={() => {
                 setSaveError(null);
-                setDraft(song);
+                setDraft(song ?? CIFRA_VAZIA);
               }}
             >
               ✎ editar

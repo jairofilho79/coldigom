@@ -4,11 +4,13 @@ import { labelFor, loadMaterialKindLabels } from '../materialKindLabels';
 import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
+import { parseListNumbers } from '../queryParams';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
   buildOrderClause,
   buildWhereClause,
+  isFtsError,
   resolveTagFilterGroups,
   tagHasChildren,
   type PraiseResult,
@@ -20,9 +22,14 @@ import {
 export function registerPraisesRoutes(app: App): void {
   app.get('/api/praises', async (c) => {
     const search = c.req.query('q') || '';
-    const page = parseInt(c.req.query('page') || '1', 10);
-    const limit = parseInt(c.req.query('limit') || '20', 10);
-    const offset = (page - 1) * limit;
+    const numeros = parseListNumbers({
+      page: c.req.query('page'),
+      limit: c.req.query('limit'),
+      numberMin: c.req.query('numberMin'),
+      numberMax: c.req.query('numberMax'),
+    });
+    if (!numeros.ok) return c.json({ error: numeros.error }, 400);
+    const { page, limit, offset, numberMin, numberMax } = numeros;
 
     const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
     const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
@@ -31,8 +38,6 @@ export function registerPraisesRoutes(app: App): void {
     const materialKinds = c.req.query('materialKinds')
       ? c.req.query('materialKinds')!.split(',').filter(Boolean)
       : undefined;
-    const numberMin = c.req.query('numberMin') ? parseInt(c.req.query('numberMin')!, 10) : undefined;
-    const numberMax = c.req.query('numberMax') ? parseInt(c.req.query('numberMax')!, 10) : undefined;
 
     const sortParam = c.req.query('sort') as SortField | undefined;
     const sort = VALID_SORT_FIELDS.includes(sortParam!) ? sortParam! : 'number';
@@ -105,7 +110,7 @@ export function registerPraisesRoutes(app: App): void {
         },
       });
     } catch (error) {
-      if (useFtsAttempt && search) {
+      if (useFtsAttempt && search && isFtsError(error)) {
         useFtsAttempt = false;
         console.warn(
           JSON.stringify({
@@ -126,7 +131,9 @@ export function registerPraisesRoutes(app: App): void {
   // GET /api/plpcg/praises - Lightweight list for PLPCG (no lyrics text; slim materials)
   app.get('/api/plpcg/praises', async (c) => {
     try {
-      const query = parsePlpcgListQuery(c);
+      const parsed = parsePlpcgListQuery(c);
+      if (!parsed.ok) return c.json({ error: parsed.error }, 400);
+      const query = parsed.query;
       const result = await listPlpcgPraises(c.env.DB, query, {
         buildWhereClause,
         buildOrderClause: (sort, order, search) =>
@@ -149,27 +156,33 @@ export function registerPraisesRoutes(app: App): void {
         c.env.DB.prepare(`SELECT DISTINCT rhythm FROM praises WHERE rhythm IS NOT NULL AND rhythm != '' ORDER BY rhythm`).all(),
         c.env.DB.prepare(`SELECT DISTINCT tonality FROM praises WHERE tonality IS NOT NULL AND tonality != '' ORDER BY tonality`).all(),
         c.env.DB.prepare(`SELECT DISTINCT category FROM praises WHERE category IS NOT NULL AND category != '' ORDER BY category`).all(),
+        // Contagem de louvores DISTINTOS da tag e das suas subtags. Era
+        // derivada em JS somando as contagens dos filhos, o que contava duas
+        // vezes o louvor marcado com duas subtags do mesmo pai e descartava os
+        // louvores ligados diretamente ao pai.
         c.env.DB.prepare(`
-          SELECT t.id, t.name, t.parent_id, COUNT(pt.praise_id) as count
+          SELECT
+            t.id,
+            t.name,
+            t.parent_id,
+            (
+              SELECT COUNT(DISTINCT pt.praise_id)
+              FROM praise_tags pt
+              WHERE pt.tag_id = t.id
+                 OR pt.tag_id IN (SELECT filho.id FROM tags filho WHERE filho.parent_id = t.id)
+            ) AS count
           FROM tags t
-          LEFT JOIN praise_tags pt ON t.id = pt.tag_id
-          GROUP BY t.id
           ORDER BY t.name
         `).all(),
       ]);
 
       const tagRows = (tagsResult.results as { id: string; name: string; parent_id: string | null; count: number }[]) ?? [];
-      const childCountByParent = new Map<string, number>();
-      for (const t of tagRows) {
-        if (t.parent_id) {
-          childCountByParent.set(t.parent_id, (childCountByParent.get(t.parent_id) ?? 0) + Number(t.count));
-        }
-      }
-      const tagsOut = tagRows.map((t) => {
-        const hasChildren = childCountByParent.has(t.id);
-        const count = hasChildren ? (childCountByParent.get(t.id) ?? 0) : Number(t.count);
-        return { id: t.id, name: t.name, parent_id: t.parent_id ?? null, count };
-      });
+      const tagsOut = tagRows.map((t) => ({
+        id: t.id,
+        name: t.name,
+        parent_id: t.parent_id ?? null,
+        count: Number(t.count),
+      }));
 
       return c.json({
         rhythms: (rhythmsResult.results as { rhythm: string }[]).map(r => r.rhythm),

@@ -86,6 +86,11 @@ CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);
 CREATE INDEX IF NOT EXISTS idx_praises_number ON praises(number);
 CREATE INDEX IF NOT EXISTS idx_praises_group_id ON praises(group_id);
+-- Filtros e a tela de opções: /api/praises/filters faz três SELECT DISTINCT
+-- sobre estas colunas a cada carregamento, e eram varreduras completas.
+CREATE INDEX IF NOT EXISTS idx_praises_rhythm ON praises(rhythm);
+CREATE INDEX IF NOT EXISTS idx_praises_tonality ON praises(tonality);
+CREATE INDEX IF NOT EXISTS idx_praises_category ON praises(category);
 
 -- Auth: rotating refresh tokens (opaque value hashed at rest; access JWT is short-lived in cookie)
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (

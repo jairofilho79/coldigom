@@ -27,17 +27,48 @@ export type TagRow = {
 
 export const TAG_LABEL_SQL = `CASE WHEN tp.name IS NOT NULL THEN tp.name || ' · ' || t.name ELSE t.name END`;
 
+/**
+ * Para cada tag pedida, o grupo de tags que o filtro deve considerar: as
+ * subtags dela, ou ela mesma quando não tem subtag.
+ *
+ * Uma consulta só. Era uma por tag, em série — filtrar por cinco tags custava
+ * cinco viagens ao D1 antes da consulta principal.
+ */
 export async function resolveTagFilterGroups(
   db: D1Database,
   tagIds: string[]
 ): Promise<string[][]> {
-  const groups: string[][] = [];
-  for (const id of tagIds) {
-    const children = await db.prepare('SELECT id FROM tags WHERE parent_id = ?').bind(id).all();
-    const childIds = ((children.results as { id: string }[]) ?? []).map((r) => r.id);
-    groups.push(childIds.length > 0 ? childIds : [id]);
+  if (tagIds.length === 0) return [];
+
+  const placeholders = tagIds.map(() => '?').join(',');
+  const children = await db
+    .prepare(`SELECT id, parent_id FROM tags WHERE parent_id IN (${placeholders})`)
+    .bind(...tagIds)
+    .all();
+
+  const byParent = new Map<string, string[]>();
+  for (const row of ((children.results as { id: string; parent_id: string }[]) ?? [])) {
+    const lista = byParent.get(row.parent_id) ?? [];
+    lista.push(row.id);
+    byParent.set(row.parent_id, lista);
   }
-  return groups;
+
+  // A ordem dos grupos acompanha a ordem das tags pedidas: cada grupo vira uma
+  // condição AND separada, e trocar a ordem trocaria o significado do filtro.
+  return tagIds.map((id) => byParent.get(id) ?? [id]);
+}
+
+/**
+ * A falha é do índice de texto, ou é um erro de SQL de verdade?
+ *
+ * O laço de duas tentativas tratava QUALQUER exceção como "o FTS falhou, tenta
+ * sem ele". Um alias errado numa cláusula de filtro virava um warning
+ * api.praises.fts_fallback e depois um 500 genérico — a mensagem mentia sobre a
+ * causa e o diagnóstico ficava impossível.
+ */
+export function isFtsError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return /praises_fts|fts5|\bMATCH\b/i.test(msg);
 }
 
 export async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {
@@ -80,6 +111,20 @@ export function parseNumericSearch(
     digits: q,
     value: Number.parseInt(q, 10),
   };
+}
+
+/**
+ * Neutraliza os curingas do LIKE. No SQLite, '%' e '_' são curingas: buscar "%"
+ * virava LIKE '%%%' e casava com tudo. Toda cláusula que usa isto precisa
+ * declarar ESCAPE '\\'.
+ */
+export function escapeLikePattern(raw: string): string {
+  return raw.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
+/** `%termo%` já escapado, pronto para `LIKE ? ESCAPE '\\'`. */
+export function likeContains(raw: string): string {
+  return `%${escapeLikePattern(raw)}%`;
 }
 
 export const YT_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
@@ -169,16 +214,16 @@ export function buildOrderClause(
 
   const titleTermsPred =
     terms.length > 0
-      ? terms.map(() => `p.name LIKE ? COLLATE NOCASE`).join(' AND ')
-      : `p.name LIKE ? COLLATE NOCASE`;
+      ? terms.map(() => `p.name LIKE ? ESCAPE '\\' COLLATE NOCASE`).join(' AND ')
+      : `p.name LIKE ? ESCAPE '\\' COLLATE NOCASE`;
   const titleTermBindings =
-    terms.length > 0 ? terms.map((t) => `%${t}%`) : [`%${q}%`];
+    terms.length > 0 ? terms.map((t) => likeContains(t)) : [likeContains(q)];
 
   // 0 exact number, 1 number contains, 2 exact title, 3 title starts with,
   // 4 all query terms in title, 5 lyrics/other — then name (not collection #).
   return {
-    clause: `ORDER BY CASE WHEN TRIM(p.number) = ? THEN 0 WHEN p.number LIKE ? THEN 1 WHEN LOWER(TRIM(p.name)) = LOWER(?) THEN 2 WHEN p.name LIKE ? COLLATE NOCASE THEN 3 WHEN (${titleTermsPred}) THEN 4 ELSE 5 END ASC, p.name COLLATE NOCASE ASC`,
-    bindings: [q, `%${q}%`, q, `${q}%`, ...titleTermBindings],
+    clause: `ORDER BY CASE WHEN TRIM(p.number) = ? THEN 0 WHEN p.number LIKE ? ESCAPE '\\' THEN 1 WHEN LOWER(TRIM(p.name)) = LOWER(?) THEN 2 WHEN p.name LIKE ? ESCAPE '\\' COLLATE NOCASE THEN 3 WHEN (${titleTermsPred}) THEN 4 ELSE 5 END ASC, p.name COLLATE NOCASE ASC`,
+    bindings: [q, likeContains(q), q, `${escapeLikePattern(q)}%`, ...titleTermBindings],
   };
 }
 
@@ -192,6 +237,18 @@ export function buildFtsMatchQuery(search: string): string {
     .map(t => `"${t.replace(/"/g, '""')}"*`);
   return terms.length > 0 ? terms.join(' AND ') : '';
 }
+
+/** Campos varridos pela busca textual sem FTS. */
+const LIKE_TEXT_FIELDS = [
+  'name',
+  'lyrics',
+  'author',
+  'rhythm',
+  'tonality',
+  'category',
+  'id',
+  'number',
+] as const;
 
 export function buildWhereClause(params: {
   search?: string;
@@ -211,9 +268,9 @@ export function buildWhereClause(params: {
     const youtubeId = extractYouTubeVideoId(params.search);
     if (youtubeId) {
       conditions.push(
-        `p.id IN (SELECT praise_id FROM praise_materials WHERE type = 'youtube' AND url LIKE ?)`
+        `p.id IN (SELECT praise_id FROM praise_materials WHERE type = 'youtube' AND url LIKE ? ESCAPE '\\')`
       );
-      bindings.push(`%${youtubeId}%`);
+      bindings.push(likeContains(youtubeId));
     } else {
       const numeric = parseNumericSearch(params.search);
       if (numeric) {
@@ -230,23 +287,21 @@ export function buildWhereClause(params: {
           bindings.push(numeric.digits);
         }
       } else {
-        const pattern = `%${params.search}%`;
-        if (params.useFts) {
-          const ftsQuery = buildFtsMatchQuery(params.search);
-          if (ftsQuery) {
-            conditions.push(
-              `(p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?) OR p.id LIKE ? OR p.number LIKE ?)`
-            );
-            bindings.push(ftsQuery, pattern, pattern);
-          } else {
-            conditions.push(`(p.id LIKE ? OR p.number LIKE ?)`);
-            bindings.push(pattern, pattern);
-          }
-        } else {
+        const pattern = likeContains(params.search);
+        const ftsQuery = params.useFts ? buildFtsMatchQuery(params.search) : '';
+        if (ftsQuery) {
           conditions.push(
-            `(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ? OR p.number LIKE ?)`
+            `(p.rowid IN (SELECT rowid FROM praises_fts WHERE praises_fts MATCH ?) OR p.id LIKE ? ESCAPE '\\' OR p.number LIKE ? ESCAPE '\\')`
           );
-          bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+          bindings.push(ftsQuery, pattern, pattern);
+        } else {
+          // Também é o caminho de quando o FTS não aproveita nada da busca —
+          // "!!!" produz MATCH vazio. Antes caía para id/número só, abandonando
+          // nome e letra em silêncio.
+          conditions.push(
+            `(${LIKE_TEXT_FIELDS.map((f) => `p.${f} LIKE ? ESCAPE '\\'`).join(' OR ')})`
+          );
+          bindings.push(...LIKE_TEXT_FIELDS.map(() => pattern));
         }
       }
     }

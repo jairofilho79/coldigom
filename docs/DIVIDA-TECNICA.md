@@ -121,6 +121,10 @@ latente, sem repro no código de hoje.
   desenvolvimento e eles se acumulam até travar tudo. Contorno: `--pool=threads`
   ou `pkill -f vitest`. Mudar no `vitest.config.ts` afeta o CI também, então é
   decisão pendente do dono.
+- **A barra de filtros cresceu e não foi verificada em tela estreita** (setor
+  S9): o S6 acrescentou Ritmo, Tom, faixa de número e as marcas de filtro ativo
+  à `FilterBar`. O CSS ganhou uma media query para a faixa de número, mas o
+  conjunto não foi testado num aparelho real nem em viewport de celular.
 - **Higiene do repositório (setor S10)**: `ingestion.sql` e `ingestion_no_tx.sql`
   no diretório de trabalho, três cópias de `LOGO_COLORIDO*.svg`,
   `fix_ingestion.py` na raiz, `.DS_Store`.

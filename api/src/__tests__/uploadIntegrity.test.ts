@@ -47,11 +47,18 @@ async function sessao() {
 function ambiente() {
   const chaves: string[] = [];
   const db = {
-    prepare: vi.fn(() => ({
-      bind: vi.fn(() => ({
+    prepare: vi.fn((sql: string) => ({
+      bind: vi.fn((...args: unknown[]) => ({
         run: vi.fn(async () => ({})),
-        first: vi.fn(async () => null),
-        all: vi.fn(async () => ({ results: [] })),
+        first: vi.fn(async () => {
+          // o louvor e o catálogo existem: aqui o que está em teste é o limite
+          if (sql.includes('FROM praises WHERE id')) return { id: args[0] };
+          return null;
+        }),
+        all: vi.fn(async () => {
+          if (sql.includes('FROM material_kinds')) return { results: args.map((id) => ({ id })) };
+          return { results: [] };
+        }),
       })),
     })),
     batch: vi.fn(async () => []),

@@ -4,7 +4,7 @@ import { SearchBar } from '../components/SearchBar';
 import { ResultsTable } from '../components/ResultsTable';
 import { Pagination } from '../components/Pagination';
 import { FilterBar } from '../components/FilterBar';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { searchPraises } from '../services/api';
 import { useFilters } from '../hooks/useFilters';
 import { AuthControl } from '../components/AuthControl';

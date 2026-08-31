@@ -3,13 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   getPraise,
   getMaterialKinds,
+  getTags,
   mergePraises,
   deleteMaterial,
   updateMaterial,
   type MergePraisesInput,
 } from '../services/api';
 import { SearchableSelect } from '../components/SearchableSelect';
-import type { PraiseDetail, MaterialKind } from '../types';
+import type { PraiseDetail, MaterialKind, Tag } from '../types';
 
 type MetaField = 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics';
 
@@ -33,6 +34,16 @@ function fieldsEqual(a: string, b: string): boolean {
 
 type FieldChoice = 'keeper' | 'source';
 
+/** «Pai · Filho» quando a tag é subtag, para a lista dizer de onde ela vem. */
+function tagLabel(tag: Tag, catalog: Tag[]): string {
+  if (tag.parent_name) return `${tag.parent_name} · ${tag.name}`;
+  if (tag.parent_id) {
+    const parent = catalog.find((t) => t.id === tag.parent_id);
+    if (parent) return `${parent.name} · ${tag.name}`;
+  }
+  return tag.name;
+}
+
 export function PraiseMergeImportPage() {
   const { id: keeperId, sourceId } = useParams<{ id: string; sourceId: string }>();
   const navigate = useNavigate();
@@ -46,6 +57,25 @@ export function PraiseMergeImportPage() {
   const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(new Set());
   const [materialIdsToImport, setMaterialIdsToImport] = useState<Set<string>>(new Set());
   const [materialBusy, setMaterialBusy] = useState(false);
+  const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
+
+  // O catálogo inteiro é o único jeito de saber, no cliente, que uma tag tem
+  // filhos: o louvor traz `parent_id` da própria tag, não a lista de subtags.
+  // Falhar aqui não pode travar a mesclagem — sem catálogo a tela só perde o
+  // aviso e volta a ser o que era.
+  useEffect(() => {
+    let cancelado = false;
+    getTags()
+      .then((tags) => {
+        if (!cancelado) setCatalogTags(tags);
+      })
+      .catch(() => {
+        if (!cancelado) setCatalogTags([]);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!keeperId || !sourceId) return;
@@ -63,7 +93,10 @@ export function PraiseMergeImportPage() {
         setMaterialKinds(kinds);
         const choices: Partial<Record<MetaField, FieldChoice>> = {};
         for (const { key } of META_FIELDS) {
-          choices[key] = fieldsEqual(k[key], s[key]) ? 'keeper' : 'keeper';
+          // O keeper é o louvor que sobrevive: a mesclagem nunca troca um dado
+          // dele sozinha. Onde os valores divergem a tela mostra os dois lados
+          // e espera a escolha; até lá, o padrão é não mexer em nada.
+          choices[key] = 'keeper';
         }
         setFieldChoices(choices);
         const tagUnion = new Set<string>();
@@ -83,11 +116,42 @@ export function PraiseMergeImportPage() {
 
   const allTags = useMemo(() => {
     if (!keeper || !source) return [];
-    const map = new Map<string, string>();
-    keeper.tags.forEach((t) => map.set(t.id, t.name));
-    source.tags.forEach((t) => map.set(t.id, t.name));
-    return [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    const map = new Map<string, Tag>();
+    keeper.tags.forEach((t) => map.set(t.id, t));
+    source.tags.forEach((t) => map.set(t.id, t));
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [keeper, source]);
+
+  /** Ids de tags que agrupam subtags — o servidor recusa anexar qualquer uma. */
+  const tagIdsDeAgrupamento = useMemo(
+    () => new Set(catalogTags.filter((t) => t.parent_id).map((t) => t.parent_id as string)),
+    [catalogTags]
+  );
+
+  /** Tags que o louvor que sobrevive já tem: o servidor não as trata como associação nova. */
+  const tagIdsDoKeeper = useMemo(
+    () => new Set((keeper?.tags ?? []).map((t) => t.id)),
+    [keeper?.tags]
+  );
+
+  // Basta alguém criar uma subtag de «Coral» para toda mesclagem envolvendo
+  // esse louvor passar a morrer com um 400 no último clique, sem dizer qual
+  // tag é a culpada. Aqui a culpada aparece antes, com nome.
+  //
+  // Só bloqueia a tag de agrupamento que viria do louvor FONTE: o servidor
+  // aceita a que o keeper já tinha, porque ela não é associação nova — mesclar
+  // não pode ser a porta dos fundos para espalhar tag pai, mas também não pode
+  // impedir o louvor de continuar com a tag que já era dele.
+  const tagsQueBloqueiam = useMemo(
+    () =>
+      allTags.filter(
+        (t) =>
+          selectedTagIds.has(t.id) &&
+          tagIdsDeAgrupamento.has(t.id) &&
+          !tagIdsDoKeeper.has(t.id)
+      ),
+    [allTags, selectedTagIds, tagIdsDeAgrupamento, tagIdsDoKeeper]
+  );
 
   const resolvedMetadata = useMemo(() => {
     if (!keeper || !source) return null;
@@ -131,7 +195,12 @@ export function PraiseMergeImportPage() {
         tag_ids: [...selectedTagIds],
         material_ids_to_import: [...materialIdsToImport],
       });
-      navigate(`/praise/${keeperId}`, { replace: true, state: { mergeSuccess: true } });
+      // A tela do louvor lê este state para confirmar o que aconteceu — depois
+      // de uma operação irreversível, voltar em silêncio deixa a dúvida.
+      navigate(`/praise/${keeperId}`, {
+        replace: true,
+        state: { mergeSuccess: true, mergedPraiseName: source.name },
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao mesclar louvores');
     } finally {
@@ -251,31 +320,50 @@ export function PraiseMergeImportPage() {
 
       <section className="detail-section">
         <h2 className="detail-section-title">Tags</h2>
+        <p className="materials-panel-help">
+          As marcadas passam a ser exatamente as tags do louvor mesclado.
+        </p>
         <div className="merge-tags-list">
-          {allTags.map((tag) => (
-            <label key={tag.id} className="merge-tag-check">
-              <input
-                type="checkbox"
-                checked={selectedTagIds.has(tag.id)}
-                onChange={(e) => {
-                  setSelectedTagIds((prev) => {
-                    const next = new Set(prev);
-                    if (e.target.checked) next.add(tag.id);
-                    else next.delete(tag.id);
-                    return next;
-                  });
-                }}
-              />
-              {tag.name}
-            </label>
-          ))}
+          {allTags.map((tag) => {
+            const agrupamento = tagIdsDeAgrupamento.has(tag.id);
+            return (
+              <label key={tag.id} className="merge-tag-check">
+                <input
+                  type="checkbox"
+                  checked={selectedTagIds.has(tag.id)}
+                  onChange={(e) => {
+                    setSelectedTagIds((prev) => {
+                      const next = new Set(prev);
+                      if (e.target.checked) next.add(tag.id);
+                      else next.delete(tag.id);
+                      return next;
+                    });
+                  }}
+                />
+                {tagLabel(tag, catalogTags)}
+                {agrupamento ? <span className="pill">agrupamento</span> : null}
+              </label>
+            );
+          })}
           {allTags.length === 0 ? <p className="lyrics-empty">Nenhuma tag nos dois louvores.</p> : null}
         </div>
+        {tagsQueBloqueiam.length > 0 ? (
+          <div className="error-state" style={{ marginTop: '0.75rem' }}>
+            <div className="error-state-desc">
+              {tagsQueBloqueiam.length === 1
+                ? `A tag «${tagsQueBloqueiam[0].name}» agrupa subtags e não pode ser anexada: desmarque-a, ou marque uma subtag dela.`
+                : `As tags «${tagsQueBloqueiam.map((t) => t.name).join('», «')}» agrupam subtags e não podem ser anexadas: desmarque-as, ou marque subtags delas.`}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="detail-section">
         <h2 className="detail-section-title">Materiais do louvor atual</h2>
-        <p className="materials-panel-help">Remova duplicatas antes de finalizar, se necessário.</p>
+        <p className="materials-panel-help">
+          Remova duplicatas antes de finalizar, se necessário. A remoção aqui é imediata e não
+          depende de finalizar a mesclagem.
+        </p>
         {keeper.materials.length === 0 ? (
           <p className="lyrics-empty">Nenhum material.</p>
         ) : (
@@ -314,6 +402,12 @@ export function PraiseMergeImportPage() {
                     className="auth-btn"
                     disabled={materialBusy}
                     onClick={async () => {
+                      // Ao lado de checkboxes que só valem no finalize, um botão
+                      // que apaga o arquivo na hora precisa dizer isso com todas
+                      // as letras — não há como desfazer depois.
+                      const rotulo = m.material_kind_name || 'Material';
+                      const aviso = `O material «${rotulo}» será excluído permanentemente do louvor «${keeper.name}» agora, mesmo que você não finalize a mesclagem. Continuar?`;
+                      if (!window.confirm(aviso)) return;
                       setMaterialBusy(true);
                       try {
                         const updated = await deleteMaterial(m.id);
@@ -337,7 +431,8 @@ export function PraiseMergeImportPage() {
       <section className="detail-section">
         <h2 className="detail-section-title">Materiais a importar</h2>
         <p className="materials-panel-help">
-          Do louvor <strong>{source.name}</strong> — desmarque para não importar.
+          Do louvor <strong>{source.name}</strong> — desmarque para não importar. O que ficar
+          desmarcado é descartado junto com o louvor, ao finalizar; até lá, nada aqui é apagado.
         </p>
         {source.materials.length === 0 ? (
           <p className="lyrics-empty">Nenhum material no louvor mesclado.</p>
@@ -388,31 +483,12 @@ export function PraiseMergeImportPage() {
                     aria-label="Categoria do material"
                   />
                 </div>
-                <div className="materials-cell">
-                  <button
-                    type="button"
-                    className="auth-btn"
-                    disabled={materialBusy}
-                    onClick={async () => {
-                      setMaterialBusy(true);
-                      try {
-                        const updated = await deleteMaterial(m.id);
-                        setSource(updated);
-                        setMaterialIdsToImport((prev) => {
-                          const next = new Set(prev);
-                          next.delete(m.id);
-                          return next;
-                        });
-                      } catch (err) {
-                        setError(err instanceof Error ? err.message : 'Falha ao remover');
-                      } finally {
-                        setMaterialBusy(false);
-                      }
-                    }}
-                  >
-                    Remover
-                  </button>
-                </div>
+                {/* Aqui não há botão de excluir: a checkbox já diz tudo o que
+                    esta tela precisa dizer sobre o material — importar ou não —
+                    e o que não for importado some com o louvor no finalize. O
+                    botão que existia apagava o arquivo na hora, mesmo se a
+                    mesclagem nunca acontecesse, e era lido como "tirar da
+                    pré-visualização". */}
               </div>
             ))}
           </div>
@@ -423,7 +499,7 @@ export function PraiseMergeImportPage() {
         <button
           type="button"
           className="auth-btn"
-          disabled={saving || !resolvedMetadata?.name}
+          disabled={saving || !resolvedMetadata?.name || tagsQueBloqueiam.length > 0}
           onClick={() => void handleFinalize()}
         >
           {saving ? 'Finalizando…' : 'Finalizar mesclagem'}

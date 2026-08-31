@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials } from '../services/api';
+import { MAX_UPLOAD_ITEMS } from '../lib/uploadLimits';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
 // Mock fetch (API client always sends credentials: 'include')
@@ -237,24 +238,26 @@ describe('API Service', () => {
       await expect(searchPraises()).rejects.toThrow('Bad request');
     });
 
-    it('should fall back to HTTP status when error JSON has no message', async () => {
+    it('erro sem mensagem vira uma frase que o usuário entende', async () => {
+      // Antes o teste exigia literalmente "HTTP 503" — a mesma string que ia
+      // parar na caixa vermelha da tela, num app inteiramente em português.
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 503,
         json: () => Promise.resolve({}),
       });
 
-      await expect(searchPraises()).rejects.toThrow('HTTP 503');
+      await expect(searchPraises()).rejects.toThrow(/servidor teve um problema/i);
     });
 
-    it('should throw generic error when response parsing fails', async () => {
+    it('resposta que não é JSON também vira frase legível', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         json: () => Promise.reject(new Error('Parse error')),
       });
 
-      await expect(searchPraises()).rejects.toThrow('Request failed');
+      await expect(searchPraises()).rejects.toThrow(/requisição falhou/i);
     });
   });
 
@@ -351,7 +354,7 @@ describe('API Service', () => {
         json: () => Promise.resolve({ error: 'Praise not found' }),
       });
 
-      await expect(getPraise('non-existent')).rejects.toThrow('Praise not found');
+      await expect(getPraise('non-existent')).rejects.toThrow(/não existe mais/i);
     });
   });
 
@@ -419,6 +422,63 @@ describe('API Service', () => {
   // O Bearer da sessão é injetado pelo fetchJson em toda chamada. Antes isto era
   // garantido por acidente, pela igualdade exata do init nas asserções acima;
   // agora é explícito — inclusive o caso anônimo, que não pode vazar cabeçalho.
+  describe('bulkUploadMaterials', () => {
+    function arquivos(quantos: number) {
+      return Array.from({ length: quantos }, (_, i) => ({
+        file: new File(['x'], `f${i}.pdf`, { type: 'application/pdf' }),
+        material_kind: 'kind1',
+        type: 'pdf',
+      }));
+    }
+
+    function respostaOk() {
+      return {
+        ok: true,
+        json: async () => ({ data: { id: 'p1', materials: [] } }),
+      };
+    }
+
+    it('manda uma requisição só quando o lote cabe no limite da API', async () => {
+      mockFetch.mockResolvedValue(respostaOk());
+      await bulkUploadMaterials('p1', arquivos(3));
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('fatia o lote grande em requisições que a API aceita', async () => {
+      // Antes, os 300 arquivos viravam um FormData só: subiam inteiros pela rede
+      // e só então a API respondia "Máximo de 200 arquivos por lote".
+      mockFetch.mockResolvedValue(respostaOk());
+      await bulkUploadMaterials('p1', arquivos(MAX_UPLOAD_ITEMS + 50));
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('avisa quanta coisa já entrou quando uma fatia falha no meio', async () => {
+      mockFetch
+        .mockResolvedValueOnce(respostaOk())
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          json: async () => ({ error: 'Failed to bulk upload materials' }),
+        });
+
+      await expect(
+        bulkUploadMaterials('p1', arquivos(MAX_UPLOAD_ITEMS + 50))
+      ).rejects.toThrow(new RegExp(`${MAX_UPLOAD_ITEMS} de ${MAX_UPLOAD_ITEMS + 50}`));
+    });
+
+    it('relata o progresso por fatia', async () => {
+      mockFetch.mockResolvedValue(respostaOk());
+      const passos: Array<[number, number]> = [];
+      await bulkUploadMaterials('p1', arquivos(MAX_UPLOAD_ITEMS + 50), (enviados, total) =>
+        passos.push([enviados, total])
+      );
+      expect(passos).toEqual([
+        [MAX_UPLOAD_ITEMS, MAX_UPLOAD_ITEMS + 50],
+        [MAX_UPLOAD_ITEMS + 50, MAX_UPLOAD_ITEMS + 50],
+      ]);
+    });
+  });
+
   describe('Authorization header', () => {
     afterEach(() => {
       clearAuthTokens();

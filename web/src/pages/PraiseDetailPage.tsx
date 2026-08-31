@@ -1,20 +1,18 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
 import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
-import {
-  BulkFolderScanStatus,
-  InferenceBadge,
-  INITIAL_BULK_SCAN,
-  type BulkScanState,
-} from '../components/BulkFolderScanStatus';
+import { INITIAL_BULK_SCAN, type BulkScanState } from '../components/bulkScanState';
 import { Select } from '../components/Select';
+import { PainelImportacaoDrive } from '../components/PainelImportacaoDrive';
+import { PainelPastaLocal } from '../components/PainelPastaLocal';
+import { StatusImportacaoDrive } from '../components/StatusImportacaoDrive';
 import { SearchableSelect } from '../components/SearchableSelect';
-import { groupMaterialsByType } from '../lib/materials';
+import { groupMaterialsByType, materialDisplayName } from '../lib/materials';
 import {
   folderNameFromFiles,
   scanFolderFilesAsync,
@@ -22,6 +20,7 @@ import {
   type BulkFileItem,
 } from '../lib/materialKindInference/scanFolder';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
+import { problemaDoArquivo } from '../lib/uploadLimits';
 
 function tagLabel(tag: Tag, catalog?: Tag[]): string {
   if (tag.parent_name) return `${tag.parent_name} · ${tag.name}`;
@@ -31,6 +30,9 @@ function tagLabel(tag: Tag, catalog?: Tag[]): string {
   }
   return tag.name;
 }
+
+/** Tipos que ganham seção desenhada sob medida na tela. */
+const TIPOS_COM_SECAO_PROPRIA = new Set(['youtube', 'mp3', 'pdf', 'chord']);
 
 const MATERIAL_TYPE_OPTIONS = [
   { value: 'youtube', label: 'YouTube' },
@@ -71,12 +73,57 @@ function preserveScroll(el: HTMLElement | null | undefined, run: () => void) {
   });
 }
 
-function driveItemLabel(status: string): string {
-  if (status === 'done') return 'Ok';
-  if (status === 'failed') return 'Falha';
-  if (status === 'running') return 'Importando…';
-  return 'Na fila';
+/** Os campos editáveis, lidos do louvor. Semeia a cópia de edição. */
+function camposDe(p: PraiseDetail) {
+  return {
+    name: p.name || '',
+    number: p.number || '',
+    author: p.author || '',
+    rhythm: p.rhythm || '',
+    tonality: p.tonality || '',
+    category: p.category || '',
+    lyrics: p.lyrics || '',
+  };
 }
+
+const CHAVE_RASCUNHO = 'coldigom_rascunho_louvor';
+
+type Rascunho = {
+  rota: string;
+  edit: ReturnType<typeof camposDe>;
+  pendingTagIds: string[];
+  driveUrl: string;
+};
+
+/**
+ * Autorizar o Drive é navegação de página inteira: o componente remonta do zero
+ * na volta, e tudo que estava digitado — nome, número, autor, ritmo, tom,
+ * categoria, letra, tags escolhidas e o próprio link colado — voltava em branco.
+ *
+ * Acesso tolerante ao armazenamento: bloqueado, degrada em vez de derrubar a
+ * árvore inteira (mesma lição do S5). Arquivos locais não são recuperáveis por
+ * este caminho; a pasta precisa ser escolhida de novo, e a tela avisa.
+ */
+function salvarRascunho(r: Rascunho): void {
+  try {
+    sessionStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
+  } catch {
+    /* sem rascunho, o comportamento é o de antes */
+  }
+}
+
+function consumirRascunho(rota: string): Rascunho | null {
+  try {
+    const cru = sessionStorage.getItem(CHAVE_RASCUNHO);
+    if (!cru) return null;
+    sessionStorage.removeItem(CHAVE_RASCUNHO);
+    const r = JSON.parse(cru) as Rascunho;
+    return r?.rota === rota ? r : null;
+  } catch {
+    return null;
+  }
+}
+
 
 function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   if (!mat.material_kind) return false;
@@ -85,106 +132,6 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   return false;
 }
 
-const BULK_LIST_PREVIEW = 25;
-
-function drivePreviewUrl(driveFileId: string): string {
-  return `https://drive.google.com/file/d/${driveFileId}/view`;
-}
-
-function openLocalFilePreview(file: File): void {
-  const url = URL.createObjectURL(file);
-  window.open(url, '_blank', 'noopener,noreferrer');
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
-
-function BulkFilePreviewList({
-  files,
-  materialKindOptions,
-  onKindChange,
-  onRemove,
-  editable = true,
-}: {
-  files: BulkFileItem[];
-  materialKindOptions: Array<{ value: string; label: string }>;
-  onKindChange?: (index: number, material_kind: string) => void;
-  onRemove?: (index: number) => void;
-  editable?: boolean;
-}) {
-  if (files.length === 0) return null;
-
-  return (
-    <div className="bulk-list">
-      {files.slice(0, BULK_LIST_PREVIEW).map((it, idx) => {
-        const size = it.sizeBytes ?? it.file?.size;
-        const canPreview = Boolean(it.driveFileId || it.file);
-        return (
-          <div key={`${it.driveFileId || ''}-${it.relPath}-${idx}`} className="bulk-row">
-            <div className="bulk-main">
-              <div className="bulk-name">{it.relPath}</div>
-              <div className="bulk-meta">
-                <span className="pill">{it.type}</span>
-                <InferenceBadge inference={it.inference} />
-                {typeof size === 'number' ? (
-                  <span className="bulk-size">{Math.round(size / 1024)} KB</span>
-                ) : null}
-              </div>
-            </div>
-            {editable && onKindChange ? (
-              <SearchableSelect
-                compact
-                value={it.material_kind}
-                onChange={(v) => onKindChange(idx, v)}
-                options={materialKindOptions}
-                aria-label="Categoria do material"
-              />
-            ) : (
-              <span className="bulk-kind-readonly pill">
-                {materialKindOptions.find((o) => o.value === it.material_kind)?.label ?? '—'}
-              </span>
-            )}
-            {canPreview || (editable && onRemove) ? (
-              <div className="bulk-actions">
-                {it.driveFileId ? (
-                  <a
-                    className="bulk-remove"
-                    href={drivePreviewUrl(it.driveFileId)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Ver ${it.relPath} no Google Drive`}
-                  >
-                    Ver
-                  </a>
-                ) : it.file ? (
-                  <button
-                    type="button"
-                    className="bulk-remove"
-                    aria-label={`Ver ${it.relPath}`}
-                    onClick={() => openLocalFilePreview(it.file!)}
-                  >
-                    Ver
-                  </button>
-                ) : null}
-                {editable && onRemove ? (
-                  <button
-                    type="button"
-                    className="bulk-remove"
-                    aria-label="Remover da importação"
-                    onClick={() => onRemove(idx)}
-                  >
-                    Remover
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-      {files.length > BULK_LIST_PREVIEW && (
-        <div className="lyrics-empty">… e mais {files.length - BULK_LIST_PREVIEW} arquivo(s)</div>
-      )}
-    </div>
-  );
-}
 
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -199,9 +146,15 @@ export function PraiseDetailPage() {
   const [isEditing, setIsEditing] = useState(isCreate);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [savingMetadata, setSavingMetadata] = useState(false);
+  // Criar é uma sequência de três passos com efeito no servidor: cria o louvor,
+  // sobe os arquivos, dispara o import do Drive. Falhando qualquer passo depois do
+  // primeiro, o louvor já existe — guardamos qual para que uma nova tentativa
+  // retome de onde parou em vez de criar um louvor duplicado e vazio no acervo.
+  const [louvorCriado, setLouvorCriado] = useState<PraiseDetail | null>(null);
   const [savingLyrics, setSavingLyrics] = useState(false);
   const [savingMaterials, setSavingMaterials] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
+  const [categoriasErro, setCategoriasErro] = useState<string | null>(null);
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<BulkFileItem[]>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
@@ -217,12 +170,16 @@ export function PraiseDetailPage() {
   const [driveSkipped, setDriveSkipped] = useState<Array<{ path: string; reason: string }>>([]);
   const [driveImportJob, setDriveImportJob] = useState<ImportJobSummary | null>(null);
   const [driveBusy, setDriveBusy] = useState(false);
+  const [driveJobErro, setDriveJobErro] = useState<string | null>(null);
+  const [mergeAviso, setMergeAviso] = useState<string | null>(null);
+  const [rascunhoAviso, setRascunhoAviso] = useState<string | null>(null);
   const driveScanAbortRef = useRef<AbortController | null>(null);
   const drivePanelRef = useRef<HTMLDivElement | null>(null);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
   const [idCopied, setIdCopied] = useState(false);
+  const copiaTimeoutRef = useRef<number | null>(null);
   const [showGroupInput, setShowGroupInput] = useState(false);
   const [groupTargetId, setGroupTargetId] = useState('');
   const [groupingBusy, setGroupingBusy] = useState(false);
@@ -238,6 +195,38 @@ export function PraiseDetailPage() {
   const [newSubtagParentId, setNewSubtagParentId] = useState('');
   const [newSubtagName, setNewSubtagName] = useState('');
   const [subtagBusy, setSubtagBusy] = useState(false);
+  // "Criar e associar" são duas escritas: cria a tag no catálogo, depois liga ao
+  // louvor. Falhando a segunda, a tag já existe — e sem guardar qual, a tentativa
+  // seguinte criava outra de mesmo nome sob o mesmo pai. O catálogo é compartilhado,
+  // então as duas ficavam indistinguíveis no dropdown de todo mundo.
+  const [subtagCriada, setSubtagCriada] = useState<Tag | null>(null);
+
+  // Toda mutação (tag, material, metadados, letra, agrupamento) devolve o louvor
+  // inteiro, e cada uma chamava setPraise cru. As flags de "ocupado" são separadas,
+  // então duas escritas podiam estar em voo ao mesmo tempo — e vencia a que chegasse
+  // por último, ainda que fosse a mais antiga: um material apagado no servidor
+  // reaparecia na tela, e o clique seguinte nele dava "Material not found".
+  const seqEscritaRef = useRef(0);
+
+  /**
+   * Executa uma escrita e só aplica a resposta se nenhuma outra escrita tiver
+   * começado depois dela. Erros continuam subindo para quem chamou.
+   */
+  const executarEscrita = useCallback(
+    async (operacao: () => Promise<PraiseDetail>): Promise<void> => {
+      const seq = ++seqEscritaRef.current;
+      const atualizado = await operacao();
+      if (seq !== seqEscritaRef.current) return;
+      setPraise(atualizado);
+    },
+    []
+  );
+
+  /** Para escritas cuja resposta já veio por outro caminho: marca como a mais nova. */
+  const aplicarEscrita = useCallback((atualizado: PraiseDetail) => {
+    seqEscritaRef.current += 1;
+    setPraise(atualizado);
+  }, []);
 
   useEffect(() => {
     const fetchPraise = async () => {
@@ -251,15 +240,7 @@ export function PraiseDetailPage() {
           return;
         }
         setPraise(data);
-        setEdit({
-          name: data.name || '',
-          number: data.number || '',
-          author: data.author || '',
-          rhythm: data.rhythm || '',
-          tonality: data.tonality || '',
-          category: data.category || '',
-          lyrics: data.lyrics || '',
-        });
+        setEdit(camposDe(data));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load praise');
       } finally {
@@ -269,22 +250,6 @@ export function PraiseDetailPage() {
 
     fetchPraise();
   }, [id]);
-
-  useEffect(() => {
-    const fetchKinds = async () => {
-      try {
-        const kinds = await getMaterialKinds();
-        setMaterialKinds(kinds);
-        if (!newMat.material_kind && kinds.length > 0) {
-          setNewMat(s => ({ ...s, material_kind: kinds[0].id }));
-        }
-      } catch {
-        // ignore
-      }
-    };
-    fetchKinds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (!userName) return;
@@ -298,6 +263,28 @@ export function PraiseDetailPage() {
     };
     void fetchTagCatalog();
   }, [userName]);
+
+  /**
+   * Sem catálogo, o seletor de categoria fica sem opção, `canSubmitNewMaterial`
+   * nunca devolve true e o botão de adicionar material fica desabilitado para
+   * sempre. O catch era vazio: nada disso tinha explicação na tela.
+   */
+  const carregarCategorias = useCallback(async () => {
+    setCategoriasErro(null);
+    try {
+      const kinds = await getMaterialKinds();
+      setMaterialKinds(kinds);
+      if (kinds.length > 0) {
+        setNewMat((s) => (s.material_kind ? s : { ...s, material_kind: kinds[0].id }));
+      }
+    } catch {
+      setCategoriasErro('Não foi possível carregar as categorias de material.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void carregarCategorias();
+  }, [carregarCategorias]);
 
   const materialKindOptions = useMemo(
     () => materialKinds.map((k) => ({ value: k.id, label: k.name })),
@@ -328,53 +315,111 @@ export function PraiseDetailPage() {
   }, [userName]);
 
   useEffect(() => {
-    const auth = new URLSearchParams(window.location.search).get('auth');
+    const params = new URLSearchParams(location.search);
+    const auth = params.get('auth');
+    if (!auth) return;
+
     if (auth === 'drive_connected') {
       setDriveConnected(true);
       setError(null);
     } else if (auth === 'drive_error') {
       setError('Não foi possível conectar o Google Drive. Tente novamente.');
     }
-  }, []);
 
-  useEffect(() => {
-    const jobId = (location.state as { driveImportJobId?: string } | null)?.driveImportJobId;
-    if (!jobId || isCreate) return;
-    void getImportJob(jobId)
-      .then((job) => setDriveImportJob(job))
-      .catch(() => undefined);
-  }, [location.state, isCreate]);
-
-  useEffect(() => {
-    if (!driveImportJob?.id) return;
-    const terminal = ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status);
-    if (terminal) {
-      const failed = driveImportJob.items?.filter((i) => i.status === 'failed') ?? [];
-      if (failed.length > 0) {
-        console.error('[Drive import] falhas técnicas', failed.map((i) => ({
-          path: i.file_path_legacy || i.drive_file_id,
-          error: i.error,
-        })));
-      }
-      return;
+    const rascunho = consumirRascunho(location.pathname);
+    if (rascunho) {
+      setEdit(rascunho.edit);
+      setPendingTagIds(rascunho.pendingTagIds);
+      setDriveUrl(rascunho.driveUrl);
+      setIsEditing(true);
+      setRascunhoAviso(
+        'Recuperamos o que você tinha preenchido. Os arquivos da pasta local precisam ser escolhidos de novo.'
+      );
     }
+
+    // O parâmetro sai da URL: sem isso, um F5 reafirmava a conexão do Drive
+    // (mesmo se ela tivesse sido revogada) ou refixava o erro para sempre.
+    params.delete('auth');
+    const busca = params.toString();
+    navigate(`${location.pathname}${busca ? `?${busca}` : ''}`, { replace: true });
+  }, [location.search, location.pathname, navigate]);
+
+  useEffect(() => {
+    const state = location.state as {
+      driveImportJobId?: string;
+      mergeSuccess?: boolean;
+      mergedPraiseName?: string;
+    } | null;
+    if (!state) return;
+
+    if (state.mergeSuccess) {
+      setMergeAviso(
+        state.mergedPraiseName
+          ? `Mesclagem concluída — «${state.mergedPraiseName}» foi importado e excluído.`
+          : 'Mesclagem concluída.'
+      );
+    }
+    if (state.driveImportJobId && !isCreate) {
+      void getImportJob(state.driveImportJobId)
+        .then((job) => setDriveImportJob(job))
+        .catch(() => setDriveJobErro('Não foi possível acompanhar esta importação.'));
+    }
+
+    // Consumido: sem limpar, o aviso e o painel do job antigo voltavam num F5 ou
+    // no botão Voltar do navegador, porque o react-router preserva history.state.
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, isCreate, navigate]);
+
+  useEffect(() => {
+    if (!driveImportJob?.id || driveJobErro) return;
+    // O motivo de cada falha agora aparece na própria linha do item, então este
+    // efeito não precisa mais ler `items` — que vinha como array novo a cada
+    // resposta e, estando nas dependências, destruía e recriava o intervalo a
+    // cada consulta.
+    if (['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status)) return;
     const t = window.setInterval(() => {
       void getImportJob(driveImportJob.id)
         .then(async (job) => {
           setDriveImportJob(job);
           if (['done', 'completed_with_errors', 'failed'].includes(job.status) && id && id !== 'new') {
             try {
+              const seq = seqEscritaRef.current;
               const refreshed = await getPraise(id);
+              // Se uma escrita começou enquanto a releitura viajava, ela é mais nova.
+              if (seq !== seqEscritaRef.current) return;
               preserveScroll(drivePanelRef.current, () => setPraise(refreshed));
             } catch {
               /* ignore */
             }
           }
         })
-        .catch(() => undefined);
+        .catch(() => {
+          // Engolir o erro deixava o intervalo rodando para sempre — o job podia
+          // ter sumido (louvor apagado leva o job pela cascata, ou é de outra
+          // sessão) e a tela ficava em "Na fila" eternamente, consultando a API
+          // a cada 1,5 s até o usuário sair da página.
+          setDriveJobErro(
+            'Não foi possível acompanhar esta importação. Ela pode ter terminado; recarregue a página.'
+          );
+        });
     }, 1500);
     return () => window.clearInterval(t);
-  }, [driveImportJob?.id, driveImportJob?.status, id, driveImportJob?.items]);
+  }, [driveImportJob?.id, driveImportJob?.status, driveJobErro, id]);
+
+  // Ref, não dependência: o rascunho muda a cada tecla, e pô-lo nas dependências
+  // recriaria o callback do scan em todo render.
+  const rascunhoRef = useRef<Rascunho | null>(null);
+  rascunhoRef.current = {
+    rota: location.pathname,
+    edit,
+    pendingTagIds,
+    driveUrl,
+  };
+
+  const irAutorizarDrive = useCallback(() => {
+    if (rascunhoRef.current) salvarRascunho(rascunhoRef.current);
+    window.location.href = getDriveConnectUrl(window.location.href);
+  }, []);
 
   const runDriveScan = useCallback(async () => {
     const url = driveUrl.trim();
@@ -399,7 +444,7 @@ export function PraiseDetailPage() {
     });
     try {
       if (driveConnected === false) {
-        window.location.href = getDriveConnectUrl(window.location.href);
+        irAutorizarDrive();
         return;
       }
       const scan = await startDriveScan(url);
@@ -425,7 +470,7 @@ export function PraiseDetailPage() {
       const message = err instanceof Error ? err.message : 'Falha ao ler o Google Drive';
       if (/not connected/i.test(message) || /drive_not_connected/i.test(message)) {
         setDriveConnected(false);
-        window.location.href = getDriveConnectUrl(window.location.href);
+        irAutorizarDrive();
         return;
       }
       setDriveScan({
@@ -439,7 +484,7 @@ export function PraiseDetailPage() {
     } finally {
       setDriveBusy(false);
     }
-  }, [driveUrl, driveConnected, materialKinds]);
+  }, [driveUrl, driveConnected, materialKinds, irAutorizarDrive]);
 
   const runFolderScan = useCallback(async (files: File[]) => {
     if (files.length === 0) {
@@ -460,7 +505,9 @@ export function PraiseDetailPage() {
         processed: 0,
         total: files.length,
         folderName,
-        error: 'Catálogo de categorias ainda carregando. Aguarde um instante e clique em “Tentar novamente”.',
+        error: categoriasErro
+          ? `${categoriasErro} Sem elas não dá para classificar os arquivos.`
+          : 'Catálogo de categorias ainda carregando. Aguarde um instante e clique em “Tentar novamente”.',
       });
       return;
     }
@@ -506,7 +553,7 @@ export function PraiseDetailPage() {
         error: err instanceof Error ? err.message : 'Falha ao analisar a pasta',
       });
     }
-  }, [materialKinds]);
+  }, [materialKinds, categoriasErro]);
 
   useEffect(() => {
     folderInputRetryRef.current = () => {
@@ -525,6 +572,9 @@ export function PraiseDetailPage() {
   useEffect(() => {
     return () => {
       bulkScanAbortRef.current?.abort();
+      // O scan do Drive também fica em voo; só o local era abortado.
+      driveScanAbortRef.current?.abort();
+      if (copiaTimeoutRef.current) window.clearTimeout(copiaTimeoutRef.current);
     };
   }, []);
   const assignedTagIds = useMemo(
@@ -564,14 +614,22 @@ export function PraiseDetailPage() {
   const audioMaterials = materialGroups.find((g) => g.type === 'mp3')?.items ?? [];
   const pdfMaterials = materialGroups.find((g) => g.type === 'pdf')?.items ?? [];
   const chordMaterials = materialGroups.find((g) => g.type === 'chord')?.items ?? [];
+  // Todo o resto. Sem esta lista, material que a API aceitou (mid, gestures, txt,
+  // e qualquer extensão que a importação em lote infira) ficava invisível: gravado
+  // no banco e no R2, presente no ZIP, e sem nenhum caminho na tela para ser visto,
+  // recategorizado ou apagado — o usuário reimportava achando que tinha falhado.
+  const outrosGrupos = materialGroups.filter((g) => !TIPOS_COM_SECAO_PROPRIA.has(g.type));
   const canEditMaterialsInline = Boolean(userName && isEditing && !isCreate);
+  // Um único arquivo recusado derruba o lote inteiro no servidor. Barrar aqui evita
+  // a subida completa seguida de recusa, que era o que acontecia.
+  const bulkTemProblema = bulkFiles.some((f) => problemaDoArquivo(f) !== null);
+  const driveTemProblema = driveFiles.some((f) => problemaDoArquivo(f) !== null);
 
   const handleMaterialKindChange = async (materialId: string, material_kind: string) => {
     setSavingMaterials(true);
     setError(null);
     try {
-      const updated = await updateMaterial(materialId, { material_kind });
-      setPraise(updated);
+      await executarEscrita(() => updateMaterial(materialId, { material_kind }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao atualizar material');
     } finally {
@@ -580,11 +638,21 @@ export function PraiseDetailPage() {
   };
 
   const handleMaterialDelete = async (materialId: string) => {
+    // Um clique apagava o material e o arquivo no R2, sem volta. Mesma confirmação
+    // que a tela de mesclagem usa antes de excluir do louvor que sobrevive.
+    const alvo = praise?.materials.find((m) => m.id === materialId);
+    const nome = alvo ? materialDisplayName(alvo) : 'este material';
+    if (
+      !window.confirm(
+        `«${nome}» será excluído permanentemente, junto com o arquivo guardado. Continuar?`
+      )
+    ) {
+      return;
+    }
     setSavingMaterials(true);
     setError(null);
     try {
-      const updated = await deleteMaterial(materialId);
-      setPraise(updated);
+      await executarEscrita(() => deleteMaterial(materialId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao remover material');
     } finally {
@@ -661,26 +729,34 @@ export function PraiseDetailPage() {
   const saveMetadata = async () => {
     setSavingMetadata(true);
     setError(null);
+    // Lido de forma síncrona: o `setLouvorCriado` logo abaixo só chega ao estado no
+    // render seguinte, e o `catch` desta mesma execução precisa da resposta agora.
+    let louvorNoServidor = Boolean(louvorCriado);
     try {
+      if (!edit.name.trim()) {
+        setError('Nome é obrigatório');
+        return;
+      }
       if (isCreate) {
-        if (!edit.name.trim()) {
-          setError('Nome é obrigatório');
-          return;
-        }
         if (bulkFiles.some((f) => !f.material_kind) || driveFiles.some((f) => !f.material_kind)) {
           setError('Defina a categoria de todos os arquivos antes de criar');
           return;
         }
-        let created = await createPraise({
-          name: edit.name.trim(),
-          number: edit.number || null,
-          author: edit.author || null,
-          rhythm: edit.rhythm || null,
-          tonality: edit.tonality || null,
-          category: edit.category || null,
-          lyrics: edit.lyrics || null,
-          tag_ids: pendingTagIds,
-        });
+        let created = louvorCriado;
+        if (!created) {
+          created = await createPraise({
+            name: edit.name.trim(),
+            number: edit.number || null,
+            author: edit.author || null,
+            rhythm: edit.rhythm || null,
+            tonality: edit.tonality || null,
+            category: edit.category || null,
+            lyrics: edit.lyrics || null,
+            tag_ids: pendingTagIds,
+          });
+          setLouvorCriado(created);
+          louvorNoServidor = true;
+        }
         if (bulkFiles.length > 0) {
           created = await bulkUploadMaterials(
             created.id,
@@ -720,22 +796,93 @@ export function PraiseDetailPage() {
         setDriveFiles([]);
         setDriveScan(INITIAL_BULK_SCAN);
         setPendingTagIds([]);
+        setLouvorCriado(null);
       } else if (id) {
-        const updated = await updatePraise(id, {
-          name: edit.name,
-          number: edit.number,
-          author: edit.author,
-          rhythm: edit.rhythm,
-          tonality: edit.tonality,
-          category: edit.category,
-        });
-        setPraise(updated);
+        await executarEscrita(() =>
+          updatePraise(
+            id,
+            {
+              name: edit.name,
+              number: edit.number,
+              author: edit.author,
+              rhythm: edit.rhythm,
+              tonality: edit.tonality,
+              category: edit.category,
+            },
+            praise?.updated_at
+          )
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao salvar metadados');
+      const motivo = err instanceof Error ? err.message : 'Falha ao salvar metadados';
+      // Sem esta distinção o usuário lia só o erro do envio e concluía que nada
+      // tinha acontecido — quando na verdade o louvor já estava no acervo.
+      setError(
+        isCreate && louvorNoServidor
+          ? `${motivo} — o louvor já foi criado; tentar de novo só reenvia os arquivos.`
+          : motivo
+      );
     } finally {
       setSavingMetadata(false);
     }
+  };
+
+  const criarEAssociarSubtag = async () => {
+    if (!newSubtagParentId || !newSubtagName.trim()) return;
+    setSubtagBusy(true);
+    setError(null);
+    let tag = subtagCriada;
+    try {
+      if (!tag) {
+        tag = await createTag({
+          name: newSubtagName.trim(),
+          parent_id: newSubtagParentId,
+        });
+        setSubtagCriada(tag);
+        setCatalogTags((prev) => [...prev, tag as Tag]);
+      }
+      if (isCreate) {
+        const criada = tag;
+        setPendingTagIds((ids) => (ids.includes(criada.id) ? ids : [...ids, criada.id]));
+      } else if (id) {
+        await executarEscrita(() => addPraiseTag(id, (tag as Tag).id));
+      }
+      setNewSubtagName('');
+      setNewSubtagParentId('');
+      setSubtagCriada(null);
+    } catch (err) {
+      const motivo = err instanceof Error ? err.message : 'Falha ao criar subtag';
+      // Sem distinguir os passos, a mensagem culpava a criação por um erro que era
+      // da associação, e o usuário reagia recriando a tag.
+      setError(tag ? `${motivo} — a subtag já foi criada; falta associá-la.` : motivo);
+    } finally {
+      setSubtagBusy(false);
+    }
+  };
+
+  const tentarImportacoesQueFalharam = async () => {
+    if (!driveImportJob) return;
+    setDriveBusy(true);
+    try {
+      await retryFailedImportItems(driveImportJob.id);
+      const job = await getImportJob(driveImportJob.id);
+      preserveScroll(drivePanelRef.current, () => setDriveImportJob(job));
+    } catch (err) {
+      console.error('[Drive import] retry failed', err);
+      setError('Não foi possível tentar de novo. Contate o suporte se o problema continuar.');
+    } finally {
+      setDriveBusy(false);
+    }
+  };
+
+  const alternarEdicao = () => {
+    setIsEditing((editando) => {
+      // Reabrir tem que mostrar o que está gravado. Antes, `edit` era semeado uma
+      // única vez no fetch: o valor abandonado ao fechar continuava lá, invisível, e
+      // ia junto no próximo Salvar de qualquer outro campo.
+      if (!editando && praise) setEdit(camposDe(praise));
+      return !editando;
+    });
   };
 
   const saveLyrics = async () => {
@@ -743,8 +890,7 @@ export function PraiseDetailPage() {
     setSavingLyrics(true);
     setError(null);
     try {
-      const updated = await updatePraise(id, { lyrics: edit.lyrics });
-      setPraise(updated);
+      await executarEscrita(() => updatePraise(id, { lyrics: edit.lyrics }, praise?.updated_at));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar letra');
     } finally {
@@ -764,6 +910,31 @@ export function PraiseDetailPage() {
       {error ? (
         <div className="error-state" style={{ marginBottom: '1rem' }}>
           <div className="error-state-desc">{error}</div>
+        </div>
+      ) : null}
+
+      {mergeAviso ? (
+        <div className="detail-aviso" role="status">
+          {mergeAviso}
+        </div>
+      ) : null}
+
+      {rascunhoAviso ? (
+        <div className="detail-aviso" role="status">
+          {rascunhoAviso}
+        </div>
+      ) : null}
+
+      {categoriasErro && userName ? (
+        <div className="error-state" style={{ marginBottom: '1rem' }} role="status">
+          <div className="error-state-desc">{categoriasErro}</div>
+          <button
+            type="button"
+            className="auth-btn"
+            onClick={() => void carregarCategorias()}
+          >
+            Tentar carregar de novo
+          </button>
         </div>
       ) : null}
 
@@ -791,7 +962,7 @@ export function PraiseDetailPage() {
                   <button
                     type="button"
                     className="auth-btn"
-                    onClick={() => setIsEditing(v => !v)}
+                    onClick={alternarEdicao}
                   >
                     {isEditing ? 'Fechar edição' : 'Editar'}
                   </button>
@@ -899,7 +1070,8 @@ export function PraiseDetailPage() {
                   try {
                     await navigator.clipboard.writeText(praise.id);
                     setIdCopied(true);
-                    window.setTimeout(() => setIdCopied(false), 2000);
+                    if (copiaTimeoutRef.current) window.clearTimeout(copiaTimeoutRef.current);
+                    copiaTimeoutRef.current = window.setTimeout(() => setIdCopied(false), 2000);
                   } catch {
                     setError('Não foi possível copiar o ID');
                   }
@@ -955,8 +1127,7 @@ export function PraiseDetailPage() {
                     setTagsBusy(true);
                     setError(null);
                     try {
-                      const updated = await removePraiseTag(id, tag.id);
-                      setPraise(updated);
+                      await executarEscrita(() => removePraiseTag(id, tag.id));
                     } catch (err) {
                       setError(err instanceof Error ? err.message : 'Falha ao remover tag');
                     } finally {
@@ -994,8 +1165,7 @@ export function PraiseDetailPage() {
                     setTagsBusy(true);
                     setError(null);
                     try {
-                      const updated = await addPraiseTag(id, tagToAdd);
-                      setPraise(updated);
+                      await executarEscrita(() => addPraiseTag(id, tagToAdd));
                       setTagToAdd('');
                     } catch (err) {
                       setError(err instanceof Error ? err.message : 'Falha ao adicionar tag');
@@ -1038,32 +1208,13 @@ export function PraiseDetailPage() {
                     type="button"
                     className="auth-btn"
                     disabled={!newSubtagParentId || !newSubtagName.trim() || subtagBusy || tagsBusy || (!isCreate && !id)}
-                    onClick={async () => {
-                      if (!newSubtagParentId || !newSubtagName.trim()) return;
-                      setSubtagBusy(true);
-                      setError(null);
-                      try {
-                        const created = await createTag({
-                          name: newSubtagName.trim(),
-                          parent_id: newSubtagParentId,
-                        });
-                        setCatalogTags((prev) => [...prev, created]);
-                        if (isCreate) {
-                          setPendingTagIds((ids) => (ids.includes(created.id) ? ids : [...ids, created.id]));
-                        } else if (id) {
-                          const updated = await addPraiseTag(id, created.id);
-                          setPraise(updated);
-                        }
-                        setNewSubtagName('');
-                        setNewSubtagParentId('');
-                      } catch (err) {
-                        setError(err instanceof Error ? err.message : 'Falha ao criar subtag');
-                      } finally {
-                        setSubtagBusy(false);
-                      }
-                    }}
+                    onClick={() => void criarEAssociarSubtag()}
                   >
-                    {subtagBusy ? 'Criando…' : 'Criar e associar'}
+                    {subtagBusy
+                      ? 'Criando…'
+                      : subtagCriada
+                        ? 'Associar ao louvor'
+                        : 'Criar e associar'}
                   </button>
                 </div>
               </div>
@@ -1113,8 +1264,7 @@ export function PraiseDetailPage() {
                     setGroupingBusy(true);
                     setError(null);
                     try {
-                      const updated = await groupPraise(id, groupTargetId.trim());
-                      setPraise(updated);
+                      await executarEscrita(() => groupPraise(id, groupTargetId.trim()));
                       setGroupTargetId('');
                       setShowGroupInput(false);
                     } catch (err) {
@@ -1250,116 +1400,40 @@ export function PraiseDetailPage() {
             ou mapear o Google Drive abaixo; os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
           </p>
           <div className="materials-admin">
-            <div className="materials-panel materials-admin-bulk">
-              <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
-              <StyledFileInput
-                label="Escolher pasta"
-                directory
-                disabled={bulkScan.phase === 'scanning'}
-                selectedName={
-                  bulkScan.folderName
-                    ? `${bulkScan.folderName} (${bulkScan.total || bulkFiles.length} arquivo(s))`
-                    : bulkFiles.length > 0
-                      ? `${bulkFiles.length} arquivo(s)`
-                      : null
-                }
-                onChange={(files) => {
-                  void runFolderScan(files);
-                }}
-              />
-              <BulkFolderScanStatus
-                scan={bulkScan}
-                files={bulkFiles}
-                onRetry={() => folderInputRetryRef.current?.()}
-              />
-              {bulkScan.phase === 'done' && bulkFiles.length > 0 && (
-                <>
-                  <BulkFilePreviewList
-                    files={bulkFiles}
-                    materialKindOptions={materialKindOptions}
-                    onKindChange={handleBulkKindChange}
-                    onRemove={handleBulkRemove}
-                    editable
-                  />
-                  <p className="bulk-scan-hint">
-                    Os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className="materials-panel materials-admin-bulk" ref={drivePanelRef}>
-              <h3 className="materials-panel-title">Importar do Google Drive</h3>
-              <p className="materials-panel-help">
-                Cole o link de uma pasta ou arquivo do Drive. Documentos nativos do Google (Docs/Sheets) são pulados com aviso.
+            <PainelPastaLocal
+              scan={bulkScan}
+              arquivos={bulkFiles}
+              onEscolherPasta={(files) => void runFolderScan(files)}
+              onTentarDeNovo={() => folderInputRetryRef.current?.()}
+              materialKindOptions={materialKindOptions}
+              onKindChange={handleBulkKindChange}
+              onRemove={handleBulkRemove}
+            >
+              <p className="bulk-scan-hint">
+                Os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
               </p>
-              {driveConnected === false && (
-                <p className="materials-panel-help">
-                  É preciso autorizar o Coldigom a ler seu Drive (somente leitura).
-                  {' '}
-                  <button
-                    type="button"
-                    className="linkish"
-                    onClick={() => {
-                      window.location.href = getDriveConnectUrl(window.location.href);
-                    }}
-                  >
-                    Conectar Google Drive
-                  </button>
+            </PainelPastaLocal>
+
+            <PainelImportacaoDrive
+              painelRef={drivePanelRef}
+              conectado={driveConnected}
+              onConectar={irAutorizarDrive}
+              url={driveUrl}
+              onUrlChange={setDriveUrl}
+              ocupado={driveBusy}
+              onMapear={() => void runDriveScan()}
+              scan={driveScan}
+              arquivos={driveFiles}
+              pulados={driveSkipped}
+              materialKindOptions={materialKindOptions}
+              onKindChange={handleDriveKindChange}
+              onRemove={handleDriveRemove}
+              acaoDoLote={
+                <p className="bulk-scan-hint">
+                  Os arquivos serão importados ao clicar em &quot;Criar louvor&quot;.
                 </p>
-              )}
-              <div className="drive-url-row">
-                <input
-                  type="url"
-                  className="edit-input"
-                  placeholder="https://drive.google.com/drive/folders/…"
-                  value={driveUrl}
-                  disabled={driveBusy}
-                  onChange={(e) => setDriveUrl(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="auth-btn"
-                  disabled={driveBusy || !driveUrl.trim()}
-                  onClick={() => void runDriveScan()}
-                >
-                  {driveBusy ? 'Lendo…' : 'Mapear pasta'}
-                </button>
-              </div>
-              <BulkFolderScanStatus
-                scan={driveScan}
-                files={driveFiles}
-                onRetry={() => void runDriveScan()}
-              />
-              {driveSkipped.length > 0 && (
-                <div className="drive-skipped">
-                  <strong>{driveSkipped.length} item(ns) pulado(s)</strong>
-                  <ul>
-                    {driveSkipped.slice(0, 8).map((s) => (
-                      <li key={`${s.path}-${s.reason}`}>
-                        {s.path}: {s.reason}
-                      </li>
-                    ))}
-                    {driveSkipped.length > 8 && (
-                      <li>… e mais {driveSkipped.length - 8}</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-              {driveScan.phase === 'done' && driveFiles.length > 0 && (
-                <>
-                  <BulkFilePreviewList
-                    files={driveFiles}
-                    materialKindOptions={materialKindOptions}
-                    onKindChange={handleDriveKindChange}
-                    onRemove={handleDriveRemove}
-                  />
-                  <p className="bulk-scan-hint">
-                    Os arquivos serão importados ao clicar em &quot;Criar louvor&quot;.
-                  </p>
-                </>
-              )}
-            </div>
+              }
+            />
           </div>
 
           <div className="detail-section-actions">
@@ -1369,12 +1443,18 @@ export function PraiseDetailPage() {
               disabled={
                 savingMetadata ||
                 !userName ||
+                bulkTemProblema ||
+                driveTemProblema ||
                 bulkFiles.some((f) => !f.material_kind) ||
                 driveFiles.some((f) => !f.material_kind)
               }
               onClick={() => void saveMetadata()}
             >
-              {savingMetadata ? 'Salvando…' : 'Criar louvor'}
+              {savingMetadata
+                ? 'Salvando…'
+                : louvorCriado
+                  ? 'Tentar enviar os arquivos de novo'
+                  : 'Criar louvor'}
             </button>
           </div>
         </section>
@@ -1492,7 +1572,7 @@ export function PraiseDetailPage() {
                         } else {
                           return;
                         }
-                        setPraise(updated);
+                        aplicarEscrita(updated);
                         setNewMat({ ...DEFAULT_NEW_MAT, material_kind: newMat.material_kind });
                       } catch (err) {
                         setError(err instanceof Error ? err.message : 'Falha ao criar material');
@@ -1507,323 +1587,136 @@ export function PraiseDetailPage() {
               </div>
             </div>
 
-            <div className="materials-panel materials-admin-bulk">
-              <h3 className="materials-panel-title">Importação em lote (pasta)</h3>
-              <p className="materials-panel-help">
-                Envie vários arquivos de uma vez selecionando uma pasta no computador.
-                A categoria de cada arquivo é inferida pelo nome; revise itens marcados como Desconhecido antes de enviar.
-              </p>
-              <StyledFileInput
-                label="Escolher pasta"
-                directory
-                disabled={bulkScan.phase === 'scanning' || bulkUploading}
-                selectedName={
-                  bulkScan.folderName
-                    ? `${bulkScan.folderName} (${bulkScan.total || bulkFiles.length} arquivo(s))`
-                    : bulkFiles.length > 0
-                      ? `${bulkFiles.length} arquivo(s)`
-                      : null
-                }
-                onChange={(files) => {
-                  void runFolderScan(files);
-                }}
-              />
-              <BulkFolderScanStatus
-                scan={bulkScan}
-                files={bulkFiles}
-                onRetry={() => folderInputRetryRef.current?.()}
-              />
-
-              {bulkScan.phase === 'done' && bulkFiles.length > 0 && (
-                <>
-                  <BulkFilePreviewList
-                    files={bulkFiles}
-                    materialKindOptions={materialKindOptions}
-                    onKindChange={handleBulkKindChange}
-                    onRemove={handleBulkRemove}
-                  />
-
-                  <div className="edit-actions">
-                    <button
-                      type="button"
-                      className="auth-btn"
-                      disabled={!id || bulkUploading || bulkFiles.some(f => !f.material_kind)}
-                      onClick={async () => {
-                        if (!id) return;
-                        setBulkUploading(true);
-                        setError(null);
-                        try {
-                          const updated = await bulkUploadMaterials(
-                            id,
-                            bulkFiles
-                              .filter((f): f is BulkFileItem & { file: File } => Boolean(f.file))
-                              .map(f => ({
-                                file: f.file,
-                                material_kind: f.material_kind,
-                                type: f.type,
-                                file_path_legacy: f.relPath,
-                              }))
-                          );
-                          setPraise(updated);
-                          setBulkFiles([]);
-                          setBulkScan(INITIAL_BULK_SCAN);
-                        } catch (err) {
-                          setError(err instanceof Error ? err.message : 'Falha na importação em lote');
-                        } finally {
-                          setBulkUploading(false);
-                        }
-                      }}
-                    >
-                      {bulkUploading ? 'Enviando…' : `Enviar ${bulkFiles.length} arquivo(s)`}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="materials-panel materials-admin-bulk" ref={drivePanelRef}>
-              <h3 className="materials-panel-title">Importar do Google Drive</h3>
-              <p className="materials-panel-help">
-                Cole o link de uma pasta ou arquivo do Drive. Documentos nativos do Google (Docs/Sheets) são pulados com aviso.
-                Após revisar as categorias, a importação roda em segundo plano com relatório de falhas.
-              </p>
-              {driveConnected === false && (
+            <PainelPastaLocal
+              ajuda={
                 <p className="materials-panel-help">
-                  É preciso autorizar o Coldigom a ler seu Drive (somente leitura).
-                  {' '}
-                  <button
-                    type="button"
-                    className="linkish"
-                    onClick={() => {
-                      window.location.href = getDriveConnectUrl(window.location.href);
-                    }}
-                  >
-                    Conectar Google Drive
-                  </button>
+                  Envie vários arquivos de uma vez selecionando uma pasta no computador.
+                  A categoria de cada arquivo é inferida pelo nome; revise itens marcados como Desconhecido antes de enviar.
                 </p>
-              )}
-              <div className="drive-url-row">
-                <input
-                  type="url"
-                  className="edit-input"
-                  placeholder="https://drive.google.com/drive/folders/…"
-                  value={driveUrl}
-                  disabled={driveBusy}
-                  onChange={(e) => setDriveUrl(e.target.value)}
-                />
+              }
+              desabilitado={bulkUploading}
+              scan={bulkScan}
+              arquivos={bulkFiles}
+              onEscolherPasta={(files) => void runFolderScan(files)}
+              onTentarDeNovo={() => folderInputRetryRef.current?.()}
+              materialKindOptions={materialKindOptions}
+              onKindChange={handleBulkKindChange}
+              onRemove={handleBulkRemove}
+            >
+              <div className="edit-actions">
                 <button
                   type="button"
                   className="auth-btn"
-                  disabled={driveBusy || !driveUrl.trim()}
-                  onClick={() => void runDriveScan()}
+                  disabled={
+                    !id ||
+                    bulkUploading ||
+                    bulkTemProblema ||
+                    bulkFiles.some((f) => !f.material_kind)
+                  }
+                  onClick={async () => {
+                    if (!id) return;
+                    setBulkUploading(true);
+                    setError(null);
+                    try {
+                      const updated = await bulkUploadMaterials(
+                        id,
+                        bulkFiles
+                          .filter((f): f is BulkFileItem & { file: File } => Boolean(f.file))
+                          .map(f => ({
+                            file: f.file,
+                            material_kind: f.material_kind,
+                            type: f.type,
+                            file_path_legacy: f.relPath,
+                          }))
+                      );
+                      aplicarEscrita(updated);
+                      setBulkFiles([]);
+                      setBulkScan(INITIAL_BULK_SCAN);
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Falha na importação em lote');
+                    } finally {
+                      setBulkUploading(false);
+                    }
+                  }}
                 >
-                  {driveBusy ? 'Lendo…' : 'Mapear pasta'}
+                  {bulkUploading ? 'Enviando…' : `Enviar ${bulkFiles.length} arquivo(s)`}
                 </button>
               </div>
-              <BulkFolderScanStatus
-                scan={driveScan}
-                files={driveFiles}
-                onRetry={() => void runDriveScan()}
-              />
-              {driveSkipped.length > 0 && (
-                <div className="drive-skipped">
-                  <strong>{driveSkipped.length} item(ns) pulado(s)</strong>
-                  <ul>
-                    {driveSkipped.slice(0, 8).map((s) => (
-                      <li key={`${s.path}-${s.reason}`}>
-                        {s.path}: {s.reason}
-                      </li>
-                    ))}
-                    {driveSkipped.length > 8 && (
-                      <li>… e mais {driveSkipped.length - 8}</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-              {driveScan.phase === 'done' && driveFiles.length > 0 && (
-                <>
-                  <BulkFilePreviewList
-                    files={driveFiles}
-                    materialKindOptions={materialKindOptions}
-                    onKindChange={handleDriveKindChange}
-                    onRemove={handleDriveRemove}
-                  />
-                  <div className="edit-actions">
-                    <button
-                      type="button"
-                      className="auth-btn"
-                      disabled={
-                        !id ||
-                        driveBusy ||
-                        driveFiles.some((f) => !f.material_kind) ||
-                        Boolean(driveImportJob && !['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status))
-                      }
-                      onClick={async () => {
-                        if (!id) return;
-                        setDriveBusy(true);
-                        setError(null);
-                        try {
-                          const started = await startDriveImport(
-                            id,
-                            driveFiles
-                              .filter((f) => f.driveFileId)
-                              .map((f) => ({
-                                drive_file_id: f.driveFileId!,
-                                material_kind: f.material_kind,
-                                type: f.type,
-                                file_path_legacy: f.relPath,
-                              }))
-                          );
-                          const job = await getImportJob(started.id);
-                          preserveScroll(drivePanelRef.current, () => {
-                            setDriveImportJob(job);
-                            setDriveFiles([]);
-                            setDriveScan(INITIAL_BULK_SCAN);
-                          });
-                        } catch (err) {
-                          const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
-                          if (/not connected/i.test(message)) {
-                            window.location.href = getDriveConnectUrl(window.location.href);
-                            return;
-                          }
-                          setError(message);
-                        } finally {
-                          setDriveBusy(false);
+            </PainelPastaLocal>
+
+            <PainelImportacaoDrive
+              painelRef={drivePanelRef}
+              ajudaExtra=" Após revisar as categorias, a importação roda em segundo plano com relatório de falhas."
+              conectado={driveConnected}
+              onConectar={irAutorizarDrive}
+              url={driveUrl}
+              onUrlChange={setDriveUrl}
+              ocupado={driveBusy}
+              onMapear={() => void runDriveScan()}
+              scan={driveScan}
+              arquivos={driveFiles}
+              pulados={driveSkipped}
+              materialKindOptions={materialKindOptions}
+              onKindChange={handleDriveKindChange}
+              onRemove={handleDriveRemove}
+              acaoDoLote={
+                <div className="edit-actions">
+                  <button
+                    type="button"
+                    className="auth-btn"
+                    disabled={
+                      !id ||
+                      driveBusy ||
+                      driveTemProblema ||
+                      driveFiles.some((f) => !f.material_kind) ||
+                      Boolean(driveImportJob && !['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status))
+                    }
+                    onClick={async () => {
+                      if (!id) return;
+                      setDriveBusy(true);
+                      setError(null);
+                      try {
+                        const started = await startDriveImport(
+                          id,
+                          driveFiles
+                            .filter((f) => f.driveFileId)
+                            .map((f) => ({
+                              drive_file_id: f.driveFileId!,
+                              material_kind: f.material_kind,
+                              type: f.type,
+                              file_path_legacy: f.relPath,
+                            }))
+                        );
+                        const job = await getImportJob(started.id);
+                        preserveScroll(drivePanelRef.current, () => {
+                          setDriveImportJob(job);
+                          setDriveFiles([]);
+                          setDriveScan(INITIAL_BULK_SCAN);
+                        });
+                      } catch (err) {
+                        const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
+                        if (/not connected|não está conectado/i.test(message)) {
+                          irAutorizarDrive();
+                          return;
                         }
-                      }}
-                    >
-                      Importar {driveFiles.length} arquivo(s) do Drive
-                    </button>
-                  </div>
-                </>
-              )}
-              {driveImportJob && (
-                <div className="drive-job-status">
-                  {!['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
-                    <p className="drive-job-stay">
-                      Não saia desta tela enquanto acompanha o progresso. Fechar a aba não cancela a
-                      importação no servidor, mas você deixa de ver o andamento.
-                    </p>
-                  )}
-                  <p className="drive-job-summary">
-                    <span>
-                      {driveImportJob.done_count}/{driveImportJob.total_count} importados
-                      {driveImportJob.failed_count > 0
-                        ? ` · ${driveImportJob.failed_count} com erro`
-                        : ''}
-                    </span>
-                    <span
-                      className={`drive-job-pill drive-job-pill--${
-                        driveImportJob.status === 'done'
-                          ? 'ok'
-                          : driveImportJob.status === 'completed_with_errors' ||
-                              driveImportJob.status === 'failed'
-                            ? 'err'
-                            : 'run'
-                      }`}
-                    >
-                      {driveImportJob.status === 'done'
-                        ? 'Concluída'
-                        : driveImportJob.status === 'completed_with_errors'
-                          ? 'Concluída com erros'
-                          : driveImportJob.status === 'failed'
-                            ? 'Falhou'
-                            : driveImportJob.status === 'running'
-                              ? 'Em andamento'
-                              : 'Na fila'}
-                    </span>
-                  </p>
-                  <div
-                    className="bulk-scan-progress drive-job-overall"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={driveImportJob.total_count}
-                    aria-valuenow={driveImportJob.done_count + driveImportJob.failed_count}
+                        setError(message);
+                      } finally {
+                        setDriveBusy(false);
+                      }
+                    }}
                   >
-                    <div
-                      className="bulk-scan-progress-bar"
-                      style={{
-                        width: `${
-                          driveImportJob.total_count
-                            ? Math.round(
-                                ((driveImportJob.done_count + driveImportJob.failed_count) /
-                                  driveImportJob.total_count) *
-                                  100
-                              )
-                            : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
-                  {driveImportJob.items && driveImportJob.items.length > 0 && (
-                    <ul className="drive-job-items">
-                      {driveImportJob.items.map((item) => (
-                        <li
-                          key={item.id}
-                          className={`drive-job-item drive-job-item--${item.status}`}
-                        >
-                          <div className="drive-job-item-head">
-                            <span className="drive-job-item-name">
-                              {item.file_path_legacy || item.drive_file_id}
-                            </span>
-                            <span className="drive-job-item-label">{driveItemLabel(item.status)}</span>
-                          </div>
-                          <div
-                            className={`bulk-scan-progress${
-                              item.status === 'running' ? ' drive-job-item-progress--run' : ''
-                            }`}
-                          >
-                            <div
-                              className={`bulk-scan-progress-bar${
-                                item.status === 'failed' ? ' drive-job-item-bar--err' : ''
-                              }${item.status === 'done' ? ' drive-job-item-bar--ok' : ''}`}
-                              style={{
-                                width:
-                                  item.status === 'done' || item.status === 'failed'
-                                    ? '100%'
-                                    : item.status === 'running'
-                                      ? '70%'
-                                      : '0%',
-                              }}
-                            />
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {driveImportJob.failed_count > 0 &&
-                    ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
-                      <>
-                        <p className="drive-job-support">
-                          Não foi possível importar alguns arquivos. Tente de novo ou contate o suporte.
-                        </p>
-                        <button
-                          type="button"
-                          className="auth-btn"
-                          disabled={driveBusy}
-                          onClick={async () => {
-                            setDriveBusy(true);
-                            try {
-                              await retryFailedImportItems(driveImportJob.id);
-                              const job = await getImportJob(driveImportJob.id);
-                              preserveScroll(drivePanelRef.current, () => setDriveImportJob(job));
-                            } catch (err) {
-                              console.error('[Drive import] retry failed', err);
-                              setError(
-                                'Não foi possível tentar de novo. Contate o suporte se o problema continuar.'
-                              );
-                            } finally {
-                              setDriveBusy(false);
-                            }
-                          }}
-                        >
-                          Tentar de novo os que falharam
-                        </button>
-                      </>
-                    )}
+                    Importar {driveFiles.length} arquivo(s) do Drive
+                  </button>
                 </div>
-              )}
-            </div>
+              }
+            >
+              <StatusImportacaoDrive
+                job={driveImportJob}
+                erro={driveJobErro}
+                ocupado={driveBusy}
+                onTentarFalhas={() => void tentarImportacoesQueFalharam()}
+              />
+            </PainelImportacaoDrive>
           </div>
         </section>
       )}
@@ -1921,6 +1814,60 @@ export function PraiseDetailPage() {
                 ) : null}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {outrosGrupos.length > 0 && (
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">📎</span>
+            Outros materiais
+          </h2>
+          <div className="material-grid">
+            {outrosGrupos.flatMap((grupo) =>
+              grupo.items.map((m) => {
+                const href = m.r2_key ? getAssetUrl(m.r2_key) : m.url || null;
+                const nome = materialDisplayName(m);
+                return (
+                  <div key={m.id} className="material-card-wrap">
+                    {href ? (
+                      <a
+                        className="material-link"
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="material-link-icon">📎</span>
+                        <div>
+                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-meta">{grupo.label}</div>
+                        </div>
+                      </a>
+                    ) : (
+                      <div className="material-link material-link--empty">
+                        <span className="material-link-icon">📎</span>
+                        <div>
+                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-meta">
+                            {grupo.label} · arquivo indisponível
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {canEditMaterialsInline ? (
+                      <MaterialInlineAdmin
+                        material={m}
+                        options={materialKindOptions}
+                        saving={savingMaterials}
+                        onUpdateKind={handleMaterialKindChange}
+                        onDelete={handleMaterialDelete}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
       )}

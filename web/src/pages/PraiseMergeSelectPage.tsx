@@ -22,17 +22,37 @@ export function PraiseMergeSelectPage() {
 
   useEffect(() => {
     if (!keeperId) return;
+    // Mesmo padrão da HomePage: duas buscas em voo resolvem em ordem
+    // arbitrária, e a resposta antiga chegando por último repintava a lista
+    // embaixo do termo novo — aqui um clique na linha errada abre direto a
+    // tela de mesclagem, que é destrutiva. A flag protege o estado (inclusive
+    // o "Buscando…", que o `finally` da busca velha apagava); o
+    // AbortController corta a requisição de fato.
+    let cancelado = false;
+    const controle = new AbortController();
+
     const t = setTimeout(() => {
       setLoading(true);
       setError(null);
-      searchPraises({ query: query || undefined, limit: 20 })
+      searchPraises({ query: query || undefined, limit: 20 }, controle.signal)
         .then((res) => {
+          if (cancelado) return;
           setResults(res.data.filter((p) => p.id !== keeperId));
         })
-        .catch((err) => setError(err instanceof Error ? err.message : 'Falha na busca'))
-        .finally(() => setLoading(false));
+        .catch((err) => {
+          if (cancelado) return;
+          setError(err instanceof Error ? err.message : 'Falha na busca');
+        })
+        .finally(() => {
+          if (!cancelado) setLoading(false);
+        });
     }, 300);
-    return () => clearTimeout(t);
+
+    return () => {
+      cancelado = true;
+      controle.abort();
+      clearTimeout(t);
+    };
   }, [query, keeperId]);
 
   if (!keeperId) {

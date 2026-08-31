@@ -15,6 +15,8 @@ export interface PraiseResult {
   category: string;
   lyrics: string;
   group_id: string | null;
+  /** Token de versão da tela: volta no PATCH como `if_updated_at`. */
+  updated_at?: string | null;
   tag_ids: string | null;
 }
 

@@ -37,6 +37,37 @@ export async function loadMaterialKindLabels(
   return map;
 }
 
+/**
+ * Quais destes material_kind não estão no catálogo.
+ *
+ * `praise_materials` não tem FK para `material_kinds`, e as rotas de escrita só
+ * exigiam string não vazia: um material com categoria inventada entrava com 200
+ * e sumia dos filtros por categoria, porque nenhuma categoria tem aquele id.
+ *
+ * Um SELECT com IN para o lote inteiro — o bulk-upload aceita 200 itens, e uma
+ * consulta por arquivo seriam 200 idas ao D1 antes da primeira escrita.
+ */
+export async function materialKindsForaDoCatalogo(
+  db: D1Database,
+  kinds: string[]
+): Promise<string[]> {
+  const pedidos = [...new Set(kinds)];
+  if (pedidos.length === 0) return [];
+
+  const result = await db
+    .prepare(`SELECT id FROM material_kinds WHERE id IN (${pedidos.map(() => '?').join(',')})`)
+    .bind(...pedidos)
+    .all<{ id: string }>();
+
+  const existentes = new Set((result.results ?? []).map((row) => row.id));
+  return pedidos.filter((id) => !existentes.has(id));
+}
+
+/** Mensagem única para as três rotas de escrita, em PT-BR como a tela. */
+export function erroDeCategoriaDesconhecida(faltando: string[]): string {
+  return `Categoria de material desconhecida: ${faltando.map((k) => k.slice(0, 64)).join(', ')}`;
+}
+
 export function labelFor(
   map: Map<string, string>,
   kindId: string,

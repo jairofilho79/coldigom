@@ -4,7 +4,8 @@ import { getDriveAccessToken, listDriveTree } from '../driveApi';
 import { getDriveRefreshToken, hasDriveCredentials } from '../driveCredentials';
 import { parseDriveUrl } from '../driveParse';
 import type { App } from '../env';
-import { isSafeMaterialType } from '../uploadLimits';
+import { erroDeCategoriaDesconhecida, materialKindsForaDoCatalogo } from '../materialKindLabels';
+import { MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { nowSec, requireAuth } from '../middleware';
 
 /** Google Drive e jobs de importacao.
@@ -166,6 +167,12 @@ export function registerDriveRoutes(app: App): void {
     if (!Array.isArray(items) || items.length === 0) {
       return c.json({ error: 'Missing items' }, 400);
     }
+    // Mesmo teto do bulk-upload: sem ele, uma pasta do Drive com milhares de
+    // arquivos virava uma linha e uma mensagem na fila por arquivo, aceita com
+    // 202 — e não havia como parar o trabalho depois de aceito.
+    if (items.length > MAX_UPLOAD_ITEMS) {
+      return c.json({ error: `Máximo de ${MAX_UPLOAD_ITEMS} arquivos por lote` }, 400);
+    }
 
     const praise = await c.env.DB.prepare(`SELECT id FROM praises WHERE id = ?`)
       .bind(praiseId)
@@ -180,6 +187,14 @@ export function registerDriveRoutes(app: App): void {
       if (!item?.drive_file_id || !item.material_kind || !isSafeMaterialType(item.type)) {
         return c.json({ error: 'Invalid item' }, 400);
       }
+    }
+
+    const categoriasInvalidas = await materialKindsForaDoCatalogo(
+      c.env.DB,
+      items.map((item) => item.material_kind)
+    );
+    if (categoriasInvalidas.length > 0) {
+      return c.json({ error: erroDeCategoriaDesconhecida(categoriasInvalidas) }, 400);
     }
 
     const jobId = crypto.randomUUID();

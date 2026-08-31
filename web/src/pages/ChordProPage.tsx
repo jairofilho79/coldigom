@@ -9,7 +9,7 @@ import { serialize } from '../lib/chordpro/serialize';
 import { validateSong } from '../lib/chordpro/validate';
 import type { Song } from '../lib/chordpro/types';
 import { getAssetUrl, getPraise, putMaterialContent, updateMaterial } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import type { Material, PraiseDetail } from '../types';
 
 /** "1 acorde não reconhecido" / "2 acordes não reconhecidos". O revisor precisa

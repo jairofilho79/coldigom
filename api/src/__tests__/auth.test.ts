@@ -4,6 +4,7 @@ import {
   buildGoogleAuthorizeRedirect,
   buildSetCookie,
   clearCookie,
+  consumeAuthExchangeCode,
   isEmailAllowed,
   resolveUserFromCookies,
   resolveUserFromRequest,
@@ -142,5 +143,58 @@ describe('isEmailAllowed', () => {
     // há como conferir a lista, e o certo é recusar.
     expect(isEmailAllowed(undefined, 'a@b.com')).toBe(false);
     expect(isEmailAllowed('', 'a@b.com')).toBe(false);
+  });
+});
+
+describe('consumeAuthExchangeCode', () => {
+  /**
+   * Banco que devolve sempre a mesma linha não usada — é o que um D1 real faz
+   * para duas leituras concorrentes antes de qualquer escrita. A marcação de uso
+   * precisa ser condicional na própria escrita; conferir depois de ler não basta.
+   */
+  function dbComCorrida() {
+    let linhasAfetadasNaProxima = 1;
+    const updates: string[] = [];
+    const db = {
+      prepare: vi.fn((query: string) => ({
+        bind: vi.fn(() => ({
+          first: vi.fn(async () => {
+            if (!query.includes('SELECT')) return null;
+            return {
+              access_token: 'access-1',
+              refresh_token: 'refresh-1',
+              user_json: JSON.stringify({ sub: 'sub-1', email: 'a@b.com' }),
+              used_at: null,
+            };
+          }),
+          run: vi.fn(async () => {
+            if (query.includes('UPDATE')) {
+              updates.push(query);
+              const changes = linhasAfetadasNaProxima;
+              linhasAfetadasNaProxima = 0;
+              return { meta: { changes } };
+            }
+            return { meta: { changes: 0 } };
+          }),
+        })),
+      })),
+    } as unknown as D1Database;
+    return { db, updates };
+  }
+
+  it('só entrega os tokens uma vez, mesmo com duas leituras simultâneas', async () => {
+    const { db } = dbComCorrida();
+
+    const primeira = await consumeAuthExchangeCode(db, 'codigo-1');
+    const segunda = await consumeAuthExchangeCode(db, 'codigo-1');
+
+    expect(primeira?.accessToken).toBe('access-1');
+    expect(segunda).toBeNull();
+  });
+
+  it('marca o uso com escrita condicional, não com conferência prévia', async () => {
+    const { db, updates } = dbComCorrida();
+    await consumeAuthExchangeCode(db, 'codigo-1');
+    expect(updates[0]).toMatch(/used_at IS NULL/);
   });
 });

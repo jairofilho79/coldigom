@@ -272,6 +272,29 @@ function sanitizePostLoginRedirect(raw: string | undefined, webOrigin: string | 
   return '/';
 }
 
+/**
+ * Mantém o destino dentro do site. Diferente de sanitizePostLoginRedirect, preserva
+ * a URL absoluta quando a origem é confiável — o retorno do Drive depende disso,
+ * e reduzir a caminho relativo mandaria o usuário para a origem da API.
+ */
+function sanitizeTrustedRedirect(
+  raw: string | undefined,
+  webOrigin: string | undefined,
+  fallback: string
+): string {
+  if (!raw) return fallback;
+  if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  try {
+    const u = new URL(raw);
+    for (const entry of parseWebOrigins(webOrigin)) {
+      if (isTrustedWebOrigin(u.origin, entry)) return raw;
+    }
+  } catch {
+    /* cai no fallback */
+  }
+  return fallback;
+}
+
 function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) => string | undefined }; json: (b: object, s: number) => Response }): Response | null {
   const web = c.env.WEB_ORIGIN;
   if (!web) return null;
@@ -383,7 +406,11 @@ app.get('/auth/drive/connect', async (c) => {
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const baseUrl = getBaseUrl(c);
-  const redirectTo = c.req.query('redirect') || primaryWebOrigin(c.env.WEB_ORIGIN) || '/';
+  const redirectTo = sanitizeTrustedRedirect(
+    c.req.query('redirect'),
+    c.env.WEB_ORIGIN,
+    primaryWebOrigin(c.env.WEB_ORIGIN) || '/'
+  );
   const { location, setCookies } = await buildGoogleAuthorizeRedirect({
     requestUrl: new URL(c.req.url),
     baseUrl,
@@ -439,7 +466,13 @@ app.get('/auth/callback', async (c) => {
         hasClientSecret: Boolean(c.env.GOOGLE_CLIENT_SECRET),
       })
     );
-    const fallback = c.req.query('redirect') || '/';
+    // O caminho feliz sanitiza o destino lá no /auth/login; este aqui pegava o
+    // parâmetro cru e redirecionava para qualquer domínio, sem exigir login.
+    const fallback = sanitizeTrustedRedirect(
+      c.req.query('redirect'),
+      c.env.WEB_ORIGIN,
+      primaryWebOrigin(c.env.WEB_ORIGIN) || '/'
+    );
     const isDrive = message.toLowerCase().includes('drive');
     return c.redirect(withAuthFlag(fallback, isDrive ? 'drive_error' : 'error'));
   }

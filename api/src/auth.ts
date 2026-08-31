@@ -470,14 +470,23 @@ export async function consumeAuthExchangeCode(
   code: string
 ): Promise<{ accessToken: string; refreshToken: string; user: AuthUser } | null> {
   const now = Math.floor(Date.now() / 1000);
-  const row = await db
+
+  // Marca o uso ANTES de ler, com a condição dentro da própria escrita. Ler,
+  // conferir used_at e só então escrever deixava duas requisições simultâneas
+  // passarem as duas pela conferência: um código de uso único virava reutilizável.
+  const claimed = await db
     .prepare(
-      `SELECT access_token, refresh_token, user_json, used_at FROM auth_exchange_codes WHERE code = ? AND expires_at > ?`
+      `UPDATE auth_exchange_codes SET used_at = ? WHERE code = ? AND used_at IS NULL AND expires_at > ?`
     )
-    .bind(code, now)
-    .first<{ access_token: string; refresh_token: string; user_json: string; used_at: number | null }>();
-  if (!row || row.used_at) return null;
-  await db.prepare(`UPDATE auth_exchange_codes SET used_at = ? WHERE code = ?`).bind(now, code).run();
+    .bind(now, code, now)
+    .run();
+  if (!claimed?.meta?.changes) return null;
+
+  const row = await db
+    .prepare(`SELECT access_token, refresh_token, user_json FROM auth_exchange_codes WHERE code = ?`)
+    .bind(code)
+    .first<{ access_token: string; refresh_token: string; user_json: string }>();
+  if (!row) return null;
   return {
     accessToken: row.access_token,
     refreshToken: row.refresh_token,

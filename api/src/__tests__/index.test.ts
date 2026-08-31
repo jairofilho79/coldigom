@@ -2385,3 +2385,91 @@ describe('AUTH_ALLOWED_EMAILS — autorização de quem já autenticou', () => {
   });
 });
 
+describe('destino de redirect depois do OAuth', () => {
+  const baseEnv = {
+    AUTH_JWT_SECRET: TEST_JWT_SECRET,
+    AUTH_ALLOWED_EMAILS: '*',
+    WEB_ORIGIN: TEST_WEB_ORIGIN,
+    GOOGLE_CLIENT_ID: 'test-client-id',
+  };
+
+  /** Sessão válida num GET — /auth/drive/connect é GET, não POST. */
+  async function authGet(): Promise<RequestInit> {
+    const jwt = await new SignJWT({ email: 'admin@test.com', name: 'Admin', jti: 'j-drive' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('sub-admin')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(TEST_JWT_SECRET));
+    return {
+      method: 'GET',
+      headers: {
+        origin: TEST_WEB_ORIGIN,
+        cookie: `coldigom_access=${encodeURIComponent(jwt)}`,
+      },
+    };
+  }
+
+  it('/auth/callback não leva para fora do site quando o fluxo falha', async () => {
+    // Sem code/state o callback lança de imediato e cai no catch. O caminho de
+    // erro usava o parâmetro cru, virando trampolim de phishing a partir do
+    // nosso domínio — sem precisar de login nenhum.
+    const res = await app.request(
+      '/auth/callback?redirect=https://evil.example/roubo',
+      {},
+      { ...baseEnv, DB: createMockD1({}), ASSETS: createMockR2() }
+    );
+
+    expect(res.status).toBe(302);
+    const location = res.headers.get('location') ?? '';
+    expect(location).not.toContain('evil.example');
+  });
+
+  it('/auth/drive/connect não guarda destino de fora do site', async () => {
+    // O destino vai para o oauth_pending e volta como redirect do callback.
+    const binds: unknown[][] = [];
+    const db = {
+      prepare: vi.fn(() => ({
+        bind: vi.fn((...args: unknown[]) => {
+          binds.push(args);
+          return { run: vi.fn(async () => ({})), first: vi.fn(async () => null) };
+        }),
+      })),
+    };
+
+    const res = await app.request(
+      '/auth/drive/connect?redirect=https://evil.example/roubo',
+      await authGet(),
+      { ...baseEnv, DB: db, ASSETS: createMockR2() }
+    );
+
+    expect(res.status).toBe(302);
+    const guardado = binds.flat().filter((v): v is string => typeof v === 'string');
+    expect(guardado.some((v) => v.includes('evil.example'))).toBe(false);
+  });
+
+  it('/auth/drive/connect preserva destino absoluto do próprio site', async () => {
+    // O fluxo do Drive volta para uma URL absoluta de propósito; sanitizar para
+    // caminho relativo mandaria o usuário para a origem da API.
+    const binds: unknown[][] = [];
+    const db = {
+      prepare: vi.fn(() => ({
+        bind: vi.fn((...args: unknown[]) => {
+          binds.push(args);
+          return { run: vi.fn(async () => ({})), first: vi.fn(async () => null) };
+        }),
+      })),
+    };
+    const destino = `${TEST_WEB_ORIGIN}/praise/abc`;
+
+    await app.request(
+      `/auth/drive/connect?redirect=${encodeURIComponent(destino)}`,
+      await authGet(),
+      { ...baseEnv, DB: db, ASSETS: createMockR2() }
+    );
+
+    const guardado = binds.flat().filter((v): v is string => typeof v === 'string');
+    expect(guardado).toContain(destino);
+  });
+});
+

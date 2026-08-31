@@ -1,3 +1,4 @@
+import { parseListNumbers } from './queryParams';
 import { labelFor, loadMaterialKindLabels } from './materialKindLabels';
 
 export type PlpcgListQuery = {
@@ -64,13 +65,22 @@ type ListRow = {
   has_lyrics: number;
 };
 
+/**
+ * Devolve a consulta pronta ou a mensagem do parâmetro inválido. Antes usava
+ * parseInt direto e herdava os mesmos NaN silenciosos de /api/praises.
+ */
 export function parsePlpcgListQuery(c: {
   req: { query: (key: string) => string | undefined };
-}): PlpcgListQuery {
+}): { ok: true; query: PlpcgListQuery } | { ok: false; error: string } {
   const search = c.req.query('q') || '';
-  const page = parseInt(c.req.query('page') || '1', 10);
-  const limit = parseInt(c.req.query('limit') || '20', 10);
-  const offset = (page - 1) * limit;
+  const numeros = parseListNumbers({
+    page: c.req.query('page'),
+    limit: c.req.query('limit'),
+    numberMin: c.req.query('numberMin'),
+    numberMax: c.req.query('numberMax'),
+  });
+  if (!numeros.ok) return { ok: false, error: numeros.error };
+  const { page, limit, offset, numberMin, numberMax } = numeros;
 
   const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
   const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
@@ -83,25 +93,26 @@ export function parsePlpcgListQuery(c: {
   const materialKinds = c.req.query('materialKinds')
     ? c.req.query('materialKinds')!.split(',').filter(Boolean)
     : undefined;
-  const numberMin = c.req.query('numberMin') ? parseInt(c.req.query('numberMin')!, 10) : undefined;
-  const numberMax = c.req.query('numberMax') ? parseInt(c.req.query('numberMax')!, 10) : undefined;
   const sortParam = c.req.query('sort') || undefined;
   const order = c.req.query('order')?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
   return {
-    search,
-    page,
-    limit,
-    offset,
-    tags,
-    rhythm,
-    tonality,
-    category,
-    materialKinds,
-    numberMin,
-    numberMax,
-    sortParam,
-    order,
+    ok: true,
+    query: {
+      search,
+      page,
+      limit,
+      offset,
+      tags,
+      rhythm,
+      tonality,
+      category,
+      materialKinds,
+      numberMin,
+      numberMax,
+      sortParam,
+      order,
+    },
   };
 }
 

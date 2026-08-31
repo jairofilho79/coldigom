@@ -4,6 +4,7 @@ import { labelFor, loadMaterialKindLabels } from '../materialKindLabels';
 import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
+import { parseListNumbers } from '../queryParams';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -20,9 +21,14 @@ import {
 export function registerPraisesRoutes(app: App): void {
   app.get('/api/praises', async (c) => {
     const search = c.req.query('q') || '';
-    const page = parseInt(c.req.query('page') || '1', 10);
-    const limit = parseInt(c.req.query('limit') || '20', 10);
-    const offset = (page - 1) * limit;
+    const numeros = parseListNumbers({
+      page: c.req.query('page'),
+      limit: c.req.query('limit'),
+      numberMin: c.req.query('numberMin'),
+      numberMax: c.req.query('numberMax'),
+    });
+    if (!numeros.ok) return c.json({ error: numeros.error }, 400);
+    const { page, limit, offset, numberMin, numberMax } = numeros;
 
     const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
     const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
@@ -31,8 +37,6 @@ export function registerPraisesRoutes(app: App): void {
     const materialKinds = c.req.query('materialKinds')
       ? c.req.query('materialKinds')!.split(',').filter(Boolean)
       : undefined;
-    const numberMin = c.req.query('numberMin') ? parseInt(c.req.query('numberMin')!, 10) : undefined;
-    const numberMax = c.req.query('numberMax') ? parseInt(c.req.query('numberMax')!, 10) : undefined;
 
     const sortParam = c.req.query('sort') as SortField | undefined;
     const sort = VALID_SORT_FIELDS.includes(sortParam!) ? sortParam! : 'number';
@@ -126,7 +130,9 @@ export function registerPraisesRoutes(app: App): void {
   // GET /api/plpcg/praises - Lightweight list for PLPCG (no lyrics text; slim materials)
   app.get('/api/plpcg/praises', async (c) => {
     try {
-      const query = parsePlpcgListQuery(c);
+      const parsed = parsePlpcgListQuery(c);
+      if (!parsed.ok) return c.json({ error: parsed.error }, 400);
+      const query = parsed.query;
       const result = await listPlpcgPraises(c.env.DB, query, {
         buildWhereClause,
         buildOrderClause: (sort, order, search) =>

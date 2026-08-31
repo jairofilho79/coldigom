@@ -10,7 +10,7 @@
     "typecheck:api": "cd api && npx tsc --noEmit",
     "typecheck:web": "cd web && npx tsc -b --force",
     "typecheck": "npm run typecheck:api && npm run typecheck:web",
-    "lint": "cd web && npm run lint",
+    "lint": "npm run lint:api && npm run lint:web",
     "test:api": "cd api && npx vitest run",
     "test:web": "cd web && npx vitest run",
     "test": "npm run test:api && npm run test:web",
@@ -18,6 +18,8 @@
     "coverage:web": "cd web && npx vitest run --coverage",
     "coverage": "npm run coverage:api && npm run coverage:web",
     "verify": "npm run typecheck && npm run coverage",
-    "verify:strict": "npm run typecheck && npm run lint && npm run coverage"
+    "verify:strict": "npm run typecheck && npm run lint && npm run coverage",
+    "lint:api": "cd api && npm run lint",
+    "lint:web": "cd web && npm run lint"
   }
 }

@@ -57,6 +57,12 @@ jobs:
         working-directory: ./api
         run: npm run test:coverage
 
+      # Bloqueante desde já: o lint da api nasceu com 0 erros. Os 25
+      # `no-explicit-any` herdados estão como aviso, e cada setor tipa o seu.
+      - name: Lint
+        working-directory: ./api
+        run: npm run lint
+
   web_build_test_coverage:
     name: Web — build / testes / cobertura
     runs-on: ubuntu-latest

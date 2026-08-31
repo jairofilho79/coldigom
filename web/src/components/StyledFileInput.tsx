@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react';
+import { useId } from 'react';
 
 type StyledFileInputProps = {
   label: string;
@@ -22,7 +22,6 @@ export function StyledFileInput({
   onChange,
 }: StyledFileInputProps) {
   const id = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const displayName =
     selectedName ??
@@ -31,7 +30,6 @@ export function StyledFileInput({
   return (
     <div className="styled-file-input">
       <input
-        ref={inputRef}
         id={id}
         type="file"
         className="styled-file-input-native"
@@ -39,7 +37,12 @@ export function StyledFileInput({
         multiple={directory || multiple}
         disabled={disabled}
         onChange={(e) => {
-          onChange(Array.from(e.target.files || []));
+          const input = e.target;
+          onChange(Array.from(input.files || []));
+          // O navegador não dispara `change` quando o value não muda: sem
+          // limpar, reescolher o MESMO arquivo (ou a MESMA pasta, depois de
+          // acrescentar algo nela) não avisava ninguém e a tela travava.
+          input.value = '';
         }}
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore - webkitdirectory is supported by Chromium browsers

@@ -98,7 +98,11 @@ describe('FilterBar Component', () => {
     expect((await screen.findAllByText('Materiais'))[0]).toBeTruthy();
   });
 
-  it('should not render Ritmo or Tom filter dropdowns', async () => {
+  it('renderiza os filtros de Ritmo e Tom', async () => {
+    // Este teste dizia o contrário: petrificava a AUSÊNCIA dos dois filtros.
+    // O pipeline inteiro existia — FilterState, useFilters, services/api e a
+    // API devolvendo as opções — e só a barra não renderizava. Um teste que
+    // fixa uma lacuna vira obstáculo para fechá-la.
     render(
       <MemoryRouter>
         <FilterBar />
@@ -106,8 +110,8 @@ describe('FilterBar Component', () => {
     );
 
     await screen.findByText('Coleções');
-    expect(screen.queryByRole('button', { name: /^Ritmo/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: /^Tom$/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /^Ritmo/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Tom/ })).toBeTruthy();
   });
 
   it('should render category dropdown', async () => {

@@ -85,7 +85,19 @@ export interface FilterOptions {
   tags: TagWithCount[];
 }
 
-export type SortField = 'number' | 'name' | 'rhythm' | 'tonality' | 'category' | 'author' | 'created_at';
+/** Espelha VALID_SORT_FIELDS da API. Existe como valor, e não só como tipo,
+ *  porque o `sort` vem da URL, que é editável à mão. */
+export const VALID_SORT_FIELDS = [
+  'number',
+  'name',
+  'rhythm',
+  'tonality',
+  'category',
+  'author',
+  'created_at',
+] as const;
+
+export type SortField = (typeof VALID_SORT_FIELDS)[number];
 
 export interface SortOption {
   field: SortField;
@@ -106,4 +118,5 @@ export const SORT_OPTIONS: SortOption[] = [
   { field: 'tonality', label: 'Tom', ascending: { label: 'Tom (A-Z)', order: 'asc' }, descending: { label: 'Tom (Z-A)', order: 'desc' } },
   { field: 'category', label: 'Categoria', ascending: { label: 'Categoria (A-Z)', order: 'asc' }, descending: { label: 'Categoria (Z-A)', order: 'desc' } },
   { field: 'author', label: 'Autor', ascending: { label: 'Autor (A-Z)', order: 'asc' }, descending: { label: 'Autor (Z-A)', order: 'desc' } },
+  { field: 'created_at', label: 'Cadastro', ascending: { label: 'Mais antigos', order: 'asc' }, descending: { label: 'Mais recentes', order: 'desc' } },
 ];

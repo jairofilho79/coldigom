@@ -4,7 +4,7 @@ import type { FilterOptions, MaterialKind } from '../types';
 import { SortSelector } from './SortSelector';
 import { useFilters } from '../hooks/useFilters';
 
-type MultiSelectKey = 'category' | 'materialKinds';
+type MultiSelectKey = 'category' | 'rhythm' | 'tonality' | 'materialKinds';
 
 export function FilterBar() {
   const { filters, setFilters, toggleTag, clearAllFilters, activeFilterCount } = useFilters();
@@ -69,7 +69,22 @@ export function FilterBar() {
     setFilters({ [key]: newValues, page: 1 });
   };
 
-  const renderStringDropdown = (key: 'category', label: string, options: string[]) => {
+  /** Faixa de número: vazio limpa o filtro; só inteiro válido vai para a URL. */
+  const alterarFaixa = (campo: 'numberMin' | 'numberMax', bruto: string) => {
+    const texto = bruto.trim();
+    if (texto === '') {
+      setFilters({ [campo]: undefined, page: 1 });
+      return;
+    }
+    if (!/^\d+$/.test(texto)) return;
+    setFilters({ [campo]: Number(texto), page: 1 });
+  };
+
+  const renderStringDropdown = (
+    key: 'category' | 'rhythm' | 'tonality',
+    label: string,
+    options: string[]
+  ) => {
     const isOpen = openDropdown === key;
     const selectedCount = filters[key].length;
     const rotuloGrupo = label;
@@ -160,6 +175,70 @@ export function FilterBar() {
     );
   };
 
+  /**
+   * Cada filtro aplicado, com rótulo legível e como removê-lo sozinho.
+   *
+   * Antes só existia um contador numérico no gatilho de cada dropdown: não dava
+   * para ver o que estava aplicado, nem tirar um filtro sem reabrir o menu
+   * certo e caçar a opção marcada. Com Ritmo e Tom entrando, isso ficaria pior.
+   */
+  const filtrosAtivos: { chave: string; rotulo: string; remover: () => void }[] = [];
+
+  if (filterOptions) {
+    const semValor = <T,>(lista: T[], valor: T) => lista.filter((v) => v !== valor);
+
+    if (filters.query) {
+      filtrosAtivos.push({
+        chave: 'q',
+        rotulo: `Busca: ${filters.query}`,
+        remover: () => setFilters({ query: '', page: 1 }),
+      });
+    }
+    for (const id of filters.tags) {
+      const tag = filterOptions.tags.find((t) => t.id === id);
+      filtrosAtivos.push({
+        chave: `tag:${id}`,
+        rotulo: `Coleção: ${tag?.name ?? id}`,
+        remover: () => toggleTag(id),
+      });
+    }
+    for (const [campo, titulo] of [
+      ['rhythm', 'Ritmo'],
+      ['tonality', 'Tom'],
+      ['category', 'Categoria'],
+    ] as const) {
+      for (const valor of filters[campo]) {
+        filtrosAtivos.push({
+          chave: `${campo}:${valor}`,
+          rotulo: `${titulo}: ${valor}`,
+          remover: () => setFilters({ [campo]: semValor(filters[campo], valor), page: 1 }),
+        });
+      }
+    }
+    for (const id of filters.materialKinds) {
+      const kind = materialKinds.find((k) => k.id === id);
+      filtrosAtivos.push({
+        chave: `material:${id}`,
+        rotulo: `Material: ${kind?.name ?? id}`,
+        remover: () => setFilters({ materialKinds: semValor(filters.materialKinds, id), page: 1 }),
+      });
+    }
+    if (filters.numberMin !== undefined) {
+      filtrosAtivos.push({
+        chave: 'numberMin',
+        rotulo: `Número a partir de ${filters.numberMin}`,
+        remover: () => setFilters({ numberMin: undefined, page: 1 }),
+      });
+    }
+    if (filters.numberMax !== undefined) {
+      filtrosAtivos.push({
+        chave: 'numberMax',
+        rotulo: `Número até ${filters.numberMax}`,
+        remover: () => setFilters({ numberMax: undefined, page: 1 }),
+      });
+    }
+  }
+
   if (erroOpcoes) {
     return (
       <div className="filter-bar">
@@ -240,6 +319,39 @@ export function FilterBar() {
       <div className="filter-controls-row">
         {renderMaterialKindsDropdown()}
         {renderStringDropdown('category', 'Categoria', filterOptions.categories)}
+        {/* Ritmo e Tom existiam no FilterState, no useFilters, no services/api e
+            a API já devolvia as opções — faltava só a barra renderizar. */}
+        {renderStringDropdown('rhythm', 'Ritmo', filterOptions.rhythms)}
+        {renderStringDropdown('tonality', 'Tom', filterOptions.tonalities)}
+
+        <div className="filter-number-range">
+          <label className="filter-number-label" htmlFor="filtro-numero-min">
+            Nº de
+            <input
+              id="filtro-numero-min"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              className="filter-number-input"
+              aria-label="Número mínimo"
+              value={filters.numberMin ?? ''}
+              onChange={(e) => alterarFaixa('numberMin', e.target.value)}
+            />
+          </label>
+          <label className="filter-number-label" htmlFor="filtro-numero-max">
+            até
+            <input
+              id="filtro-numero-max"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              className="filter-number-input"
+              aria-label="Número máximo"
+              value={filters.numberMax ?? ''}
+              onChange={(e) => alterarFaixa('numberMax', e.target.value)}
+            />
+          </label>
+        </div>
 
         <SortSelector
           sort={filters.sort}
@@ -247,7 +359,7 @@ export function FilterBar() {
           onChange={handleSortChange}
         />
 
-        {activeFilterCount > 0 && (
+        {filtrosAtivos.length > 0 && (
           <button
             type="button"
             className="clear-filters-btn"
@@ -261,6 +373,23 @@ export function FilterBar() {
           </button>
         )}
       </div>
+
+      {filtrosAtivos.length > 0 && (
+        <div className="filter-active-row" role="group" aria-label="Filtros aplicados">
+          {filtrosAtivos.map((f) => (
+            <button
+              key={f.chave}
+              type="button"
+              className="filter-active-chip"
+              aria-label={`Remover filtro ${f.rotulo}`}
+              onClick={f.remover}
+            >
+              {f.rotulo}
+              <span aria-hidden="true">×</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

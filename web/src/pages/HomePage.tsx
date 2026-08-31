@@ -12,7 +12,7 @@ import type { Praise, PaginationInfo } from '../types';
 
 export function HomePage() {
   const { user, authError } = useAuth();
-  const { filters, setFilters } = useFilters();
+  const { filters, setFilters, clearAllFilters } = useFilters();
 
   const [praises, setPraises] = useState<Praise[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -61,6 +61,20 @@ export function HomePage() {
       cancelado = true;
     };
   }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.category, filters.materialKinds, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
+
+  // Rótulos do que está aplicado, para o estado vazio explicar o porquê em vez
+  // de repetir "tente ajustar seus filtros" sem dizer quais. Coleções e tipos
+  // de material aparecem como contagem: aqui só temos os ids, e os nomes vivem
+  // na barra de filtros.
+  const filtrosAplicados = [
+    ...filters.rhythm.map((v) => `Ritmo: ${v}`),
+    ...filters.tonality.map((v) => `Tom: ${v}`),
+    ...filters.category.map((v) => `Categoria: ${v}`),
+    filters.tags.length > 0 ? `${filters.tags.length} coleção(ões)` : null,
+    filters.materialKinds.length > 0 ? `${filters.materialKinds.length} tipo(s) de material` : null,
+    filters.numberMin !== undefined ? `número a partir de ${filters.numberMin}` : null,
+    filters.numberMax !== undefined ? `número até ${filters.numberMax}` : null,
+  ].filter((v): v is string => v !== null);
 
   const handleSearch = (newQuery: string) => {
     setFilters({ query: newQuery, page: 1 });
@@ -120,7 +134,12 @@ export function HomePage() {
               </div>
             </div>
           )}
-          <ResultsTable praises={praises} />
+          <ResultsTable
+            praises={praises}
+            termoBuscado={filters.query || undefined}
+            filtrosAplicados={filtrosAplicados}
+            aoLimparFiltros={clearAllFilters}
+          />
           {pagination && (
             <Pagination pagination={pagination} onPageChange={handlePageChange} />
           )}

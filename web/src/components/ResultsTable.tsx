@@ -4,6 +4,11 @@ import type { Praise } from '../types';
 
 interface ResultsTableProps {
   praises: Praise[];
+  /** Termo buscado, para o estado vazio dizer o que não encontrou. */
+  termoBuscado?: string;
+  /** Rótulos dos filtros aplicados, para o estado vazio explicar o porquê. */
+  filtrosAplicados?: string[];
+  aoLimparFiltros?: () => void;
 }
 
 function parseTagNames(tagNames: string | null | undefined): string[] {
@@ -32,18 +37,44 @@ function groupPraises(praises: Praise[]): PraiseGroup[] {
   return order.map((key) => ({ key, members: map.get(key)! }));
 }
 
-export function ResultsTable({ praises }: ResultsTableProps) {
+export function ResultsTable({
+  praises,
+  termoBuscado,
+  filtrosAplicados = [],
+  aoLimparFiltros,
+}: ResultsTableProps) {
   const groups = useMemo(() => groupPraises(praises), [praises]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   if (praises.length === 0) {
+    // Antes o texto era fixo — "Tente ajustar seus filtros" — mesmo sem filtro
+    // nenhum aplicado, e sem dizer quais estavam nem como tirá-los. Vazio sem
+    // causa visível é o que faz a busca parecer quebrada.
+    const temFiltro = filtrosAplicados.length > 0;
+    const temBusca = Boolean(termoBuscado);
+
     return (
       <div className="no-results">
         <div className="no-results-icon">📖</div>
         <div className="no-results-title">Nenhum louvor encontrado</div>
-        <div className="no-results-desc">
-          Tente ajustar seus filtros ou buscar com termos diferentes.
-        </div>
+        {temBusca && (
+          <div className="no-results-desc">
+            Nada corresponde a <strong>{termoBuscado}</strong>.
+          </div>
+        )}
+        {temFiltro && (
+          <div className="no-results-desc">
+            Filtros aplicados: {filtrosAplicados.join(' · ')}
+          </div>
+        )}
+        {!temBusca && !temFiltro && (
+          <div className="no-results-desc">O acervo não devolveu nenhum resultado.</div>
+        )}
+        {temFiltro && aoLimparFiltros && (
+          <button type="button" className="clear-filters-btn" onClick={aoLimparFiltros}>
+            Limpar filtros
+          </button>
+        )}
       </div>
     );
   }
@@ -104,8 +135,10 @@ export function ResultsTable({ praises }: ResultsTableProps) {
                       '—'
                     ) : tags.length > 0 ? (
                       <div className="col-tags-list">
-                        {tags.map((name) => (
-                          <span key={name} className="detail-tag">
+                        {tags.map((name, i) => (
+                          // Índice na chave: o nome sozinho colide quando a
+                          // mesma linha traz dois rótulos iguais.
+                          <span key={`${name}-${i}`} className="detail-tag">
                             {name}
                           </span>
                         ))}

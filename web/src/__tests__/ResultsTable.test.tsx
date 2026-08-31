@@ -124,11 +124,18 @@ describe('ResultsTable Component', () => {
     expect(links[1]).toHaveAttribute('href', '/praise/1c12786e-4d32-4e95-a136-d85266008e11');
   });
 
-  it('should render empty state when no praises', () => {
-    renderWithRouter(<ResultsTable praises={[]} />);
+  it('mostra estado vazio sem sugerir ajuste de filtro quando não há filtro', async () => {
+    // A mensagem era fixa — "Tente ajustar seus filtros" — mesmo sem filtro
+    // nenhum aplicado. Vazio sem causa visível é o que faz a busca parecer
+    // quebrada.
+    render(
+      <MemoryRouter>
+        <ResultsTable praises={[]} />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText(/nenhum louvor encontrado/i)).toBeTruthy();
-    expect(screen.getByText(/tente ajustar seus filtros/i)).toBeTruthy();
+    expect(screen.queryByText(/ajustar seus filtros/i)).toBeNull();
   });
 
   it('should render single praise', () => {

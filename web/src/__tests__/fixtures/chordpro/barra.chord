@@ -1,0 +1,19 @@
+{title: A Barra Em Todas As Posições}
+{subtitle: 999}
+{key: G}
+{rhythm: Básico}
+{artist: Let. J.F. / Mús. J.F.}
+{meta: column right}
+
+{comment: Estrofe}
+[G]   Solto antes da frase,
+No meio [C]   da frase o acorde solta,
+E solto depois da frase   [D]
+Co[Am]la - [D7]do em toda sílaba,
+[G]Solto e colado na [C]mesma linha   [D]
+
+{comment: Coro }
+; nota do pipeline presa a este trecho
+Ds [Usa-m veio assim do PDF
+O colchete vazio [] também
+E o colchete escapado \[assim\] continua escapado

@@ -158,9 +158,3 @@ entraram. A mensagem de erro diz quantos entraram, e reenviar o que faltou é
 manual.
 **Por que foi aceito:** a alternativa é uma sessão de upload no servidor, com
 estado e limpeza — muito para o ganho, dado que o erro agora é explícito.
-
-### `PraiseDetailPage.tsx` continua um arquivo só
-**O que:** o S7 fechou os defeitos com testes, mas a extração em componentes
-menores ficou para o bloco 6 do próprio setor. Se o bloco 6 não acontecer, este
-item permanece: 1.900+ linhas, com o painel do Drive duplicado entre o modo de
-criação e o de edição.

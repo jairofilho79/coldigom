@@ -84,22 +84,24 @@ describe('PATCH /api/materials/:id — url de material youtube', () => {
   });
 
   it('aceita trocar por outro vídeo do YouTube', async () => {
+    // `not.toBe(400)` deixava um 500 passar por sucesso: aqui o que importa é
+    // que o PATCH concluiu e devolveu o louvor.
     const { res } = await patchMaterial({ url: 'https://youtu.be/abc123' });
 
-    expect(res.status).not.toBe(400);
+    expect(res.status).toBe(200);
   });
 
   it('não estorva um PATCH que nem mexe na url', async () => {
     // Marcar revisado num material youtube não pode virar "url é obrigatória".
     const { res } = await patchMaterial({ is_reviewed: true });
 
-    expect(res.status).not.toBe(400);
+    expect(res.status).toBe(200);
   });
 
   it('libera a url quando o tipo deixa de ser youtube no mesmo PATCH', async () => {
     const { res } = await patchMaterial({ type: 'link', url: 'https://drive.google.com/x' });
 
-    expect(res.status).not.toBe(400);
+    expect(res.status).toBe(200);
   });
 
   it('continua exigindo url ao mudar o tipo para youtube', async () => {

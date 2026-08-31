@@ -1266,6 +1266,8 @@ describe('API Routes', () => {
         prepare: vi.fn(() => ({
           bind: vi.fn().mockReturnThis(),
           first: vi.fn().mockResolvedValue({ id: chordId, praise_id: praiseId, type: 'chord', r2_key: r2Key }),
+          // O PUT passou a limpar a marca de revisão junto com a gravação.
+          run: vi.fn(async () => ({})),
         })),
       };
       const mockR2 = createMockR2();
@@ -1347,6 +1349,8 @@ describe('API Routes', () => {
               type: 'chord',
               r2_key: r2Key,
             })),
+            // O PUT passou a limpar a marca de revisão junto com a gravação.
+            run: vi.fn(async () => ({})),
           })),
         })),
       };
@@ -1418,6 +1422,8 @@ describe('API Routes', () => {
               type: 'chord',
               r2_key: r2Key,
             })),
+            // O PUT passou a limpar a marca de revisão junto com a gravação.
+            run: vi.fn(async () => ({})),
           })),
         })),
       };

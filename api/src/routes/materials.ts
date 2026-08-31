@@ -3,6 +3,63 @@ import type { AuthUser } from '../auth';
 import { listMaterialKindsForLocale } from '../materialKindLabels';
 import type { App } from '../env';
 import { requireAuth, requireUploadOrAuth } from '../middleware';
+import { storageKeyFor } from '../storageKeys';
+import { MAX_CHORD_CONTENT_BYTES, isSafeMaterialType } from '../uploadLimits';
+
+type LeituraDeCorpo = { excedeu: true } | { excedeu: false; texto: string };
+
+/**
+ * Lê o corpo com teto, sem materializar o que passa do limite.
+ *
+ * `c.req.text()` trazia o corpo inteiro para a memória antes de qualquer
+ * checagem: num Worker de 128 MB, um PUT de 5 MB passava para gravar uma cifra
+ * de ~611 bytes. Aqui o content-length declarado já corta a maioria dos casos, e
+ * a leitura em pedaços cobre o corpo em chunked, que não declara tamanho.
+ */
+async function lerCorpoComTeto(request: Request, limite: number): Promise<LeituraDeCorpo> {
+  const declarado = Number(request.headers.get('content-length'));
+  if (Number.isFinite(declarado) && declarado > limite) return { excedeu: true };
+
+  const corpo = request.body;
+  if (!corpo) return { excedeu: false, texto: '' };
+
+  const leitor = corpo.getReader();
+  const partes: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await leitor.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > limite) {
+        await leitor.cancel();
+        return { excedeu: true };
+      }
+      partes.push(value);
+    }
+  } finally {
+    leitor.releaseLock();
+  }
+
+  const junto = new Uint8Array(total);
+  let deslocamento = 0;
+  for (const parte of partes) {
+    junto.set(parte, deslocamento);
+    deslocamento += parte.byteLength;
+  }
+  return { excedeu: false, texto: new TextDecoder().decode(junto) };
+}
+
+/**
+ * If-Match chega entre aspas (e pode vir marcado como fraco); o R2 compara o
+ * valor cru. `*` significa "qualquer objeto existente" e não é condição de
+ * versão: cai no caminho sem onlyIf.
+ */
+function normalizarIfMatch(header: string | undefined): string | null {
+  const bruto = header?.trim();
+  if (!bruto || bruto === '*') return null;
+  return bruto.replace(/^W\//i, '').replace(/^"(.*)"$/, '$1');
+}
 
 /** Materiais: catalogo de tipos, conteudo, edicao e remocao. */
 export function registerMaterialsRoutes(app: App): void {
@@ -24,9 +81,27 @@ export function registerMaterialsRoutes(app: App): void {
 
     let body: string;
     try {
-      body = await c.req.text();
+      const leitura = await lerCorpoComTeto(c.req.raw, MAX_CHORD_CONTENT_BYTES);
+      if (leitura.excedeu) {
+        return c.json(
+          {
+            error: `Cifra acima do limite de ${Math.round(MAX_CHORD_CONTENT_BYTES / 1024)} KB.`,
+          },
+          413
+        );
+      }
+      body = leitura.texto;
     } catch {
       return c.json({ error: 'Invalid body' }, 400);
+    }
+
+    // Corpo vazio respondia 200 e substituía o .chord por nada. A única defesa
+    // era do lado da tela; o review-app grava por token e não passa por ela.
+    // A regra aqui é a mais simples que se sustenta sozinha — "tem de sobrar
+    // caractere depois de tirar o espaço" —, de propósito: replicar a gramática
+    // do cliente daria duas regras divergentes em vez de uma rede.
+    if (body.trim().length === 0) {
+      return c.json({ error: 'A cifra não pode ficar vazia.' }, 400);
     }
 
     try {
@@ -40,9 +115,63 @@ export function registerMaterialsRoutes(app: App): void {
       if (row.type !== 'chord') return c.json({ error: 'Material is not a chord' }, 400);
       if (!row.r2_key) return c.json({ error: 'Material has no r2_key' }, 400);
 
-      await c.env.ASSETS.put(`storage/${row.r2_key}`, body, {
+      // Confere e grava na MESMA instrução, como o PATCH do louvor já faz. O
+      // cliente relia o arquivo e comparava antes de gravar: entre a comparação
+      // e o PUT cabia outra gravação. Sem If-Match, grava como antes — o PLPCG e
+      // o review-app não mandam o header.
+      const opcoes: R2PutOptions = {
         httpMetadata: { contentType: rawContentType.trim() || 'text/plain; charset=utf-8' },
-      });
+      };
+      const ifMatch = normalizarIfMatch(c.req.header('if-match'));
+      if (ifMatch) opcoes.onlyIf = { etagMatches: ifMatch };
+
+      const gravado = (await c.env.ASSETS.put(
+        storageKeyFor(row.r2_key),
+        body,
+        opcoes
+      )) as R2Object | null;
+
+      // Só com onlyIf o R2 devolve null, e é aí que null significa "outra
+      // gravação chegou primeiro". Sem If-Match, o retorno não carrega decisão.
+      if (ifMatch && !gravado) {
+        return c.json(
+          {
+            error: 'A cifra foi alterada por outra pessoa. Recarregue antes de salvar.',
+            code: 'stale_write',
+          },
+          409
+        );
+      }
+
+      // Trocar o conteúdo apaga a marca de revisão, SEMPRE. A migração 015 diz
+      // que a marca existe para saber o que ainda precisa de olho humano; texto
+      // novo nunca teve esse olho, venha de quem vier. Condicionar a marca ao
+      // autor seria adivinhar que reler o próprio texto conta como revisar.
+      await c.env.DB.prepare(
+        `UPDATE praise_materials
+            SET is_reviewed = 0, reviewed_at = NULL, reviewed_by = NULL
+          WHERE id = ?`
+      )
+        .bind(row.id)
+        .run();
+
+      // O token de upload é segredo estático compartilhado e não tem identidade:
+      // sem este registro, qualquer cifra podia ser substituída sem rastro de
+      // quando, por quem, nem de que tamanho.
+      const autor = c.get('user') as AuthUser | undefined;
+      console.log(
+        JSON.stringify({
+          msg: 'material.content.write',
+          material_id: row.id,
+          praise_id: row.praise_id,
+          bytes: new TextEncoder().encode(body).byteLength,
+          credential: autor ? 'session' : 'token',
+          sub: autor?.sub ?? null,
+        })
+      );
+
+      // Sem o ETag novo o cliente não consegue salvar duas vezes seguidas.
+      if (gravado?.httpEtag) c.header('ETag', gravado.httpEtag);
 
       return c.json({
         ok: true,
@@ -74,24 +203,29 @@ export function registerMaterialsRoutes(app: App): void {
     }
 
     if ('type' in body) {
-      if (body.type !== null && typeof body.type !== 'string') {
-        return c.json({ error: "Field 'type' must be a string" }, 400);
+      // Aqui só havia `typeof !== 'string'`. As rotas de CRIAÇÃO já passavam por
+      // isSafeMaterialType; a edição ficou de fora quando a travessia via `type`
+      // foi fechada. E o `type` vira extensão da chave do R2 e da entrada do ZIP
+      // servido por GET /api/praises/:id/download.zip, que é rota pública.
+      if (!isSafeMaterialType(body.type)) {
+        return c.json({ error: "Field 'type' must be a safe material type" }, 400);
       }
       sets.push(`type = ?`);
       bindings.push(body.type);
     }
 
+    // A decisão sobre r2_key depende da linha que está no banco, então fica para
+    // depois do SELECT; aqui só a validação de forma.
+    let urlNova: string | null | undefined;
     if ('url' in body) {
       if (body.url !== null && typeof body.url !== 'string') {
         return c.json({ error: "Field 'url' must be a string" }, 400);
       }
       const trimmed = typeof body.url === 'string' ? body.url.trim() : null;
+      const valor: string | null = trimmed && trimmed.length > 0 ? trimmed : null;
+      urlNova = valor;
       sets.push(`url = ?`);
-      bindings.push(trimmed && trimmed.length > 0 ? trimmed : null);
-      // If url is set, ensure r2_key is NULL (logical material)
-      if (trimmed && trimmed.length > 0) {
-        sets.push(`r2_key = NULL`);
-      }
+      bindings.push(valor);
     }
 
     if ('is_reviewed' in body) {
@@ -112,8 +246,25 @@ export function registerMaterialsRoutes(app: App): void {
     if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
 
     try {
-      const row = await c.env.DB.prepare(`SELECT praise_id, type FROM praise_materials WHERE id = ?`).bind(materialId).first() as any;
+      const row = await c.env.DB.prepare(`SELECT praise_id, type, r2_key FROM praise_materials WHERE id = ?`).bind(materialId).first() as any;
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
+
+      // `SET url = ?, r2_key = NULL` sumia com o ponteiro do banco e NÃO apagava
+      // o objeto: o .chord ficava órfão no R2 e sem volta. Entre apagar o objeto
+      // (best-effort, como o DELETE) e recusar, recusamos: um PATCH de metadado
+      // não pode ser o caminho para destruir o único arquivo de uma cifra, ainda
+      // mais um best-effort que pode falhar em silêncio. O DELETE já faz as duas
+      // limpezas juntas para quem realmente quer se livrar do material.
+      if (urlNova && row.r2_key) {
+        return c.json(
+          {
+            error:
+              'Este material tem arquivo guardado. Remova o material antes de trocá-lo por um link.',
+          },
+          400
+        );
+      }
+      if (urlNova) sets.push(`r2_key = NULL`);
 
       // Enforce: if type is youtube, url must be a valid youtube url
       //
@@ -125,9 +276,8 @@ export function registerMaterialsRoutes(app: App): void {
       // próprio corpo declara youtube — marcar revisado não vira erro de url.
       const tipoNoCorpo = 'type' in body ? (typeof body.type === 'string' ? body.type : null) : undefined;
       const tipoEfetivo = tipoNoCorpo === undefined ? (row.type as string | null) : tipoNoCorpo;
-      const newUrl = 'url' in body ? (typeof body.url === 'string' ? body.url.trim() : null) : undefined;
-      if (tipoEfetivo === 'youtube' && (newUrl !== undefined || tipoNoCorpo === 'youtube')) {
-        const effectiveUrl = newUrl ?? undefined;
+      if (tipoEfetivo === 'youtube' && (urlNova !== undefined || tipoNoCorpo === 'youtube')) {
+        const effectiveUrl = urlNova ?? undefined;
         if (!effectiveUrl || effectiveUrl.length === 0) return c.json({ error: "Field 'url' is required for type youtube" }, 400);
         try {
           const parsed = new URL(effectiveUrl);
@@ -165,7 +315,7 @@ export function registerMaterialsRoutes(app: App): void {
 
       if (row.r2_key) {
         try {
-          await c.env.ASSETS.delete(`storage/${row.r2_key}`);
+          await c.env.ASSETS.delete(storageKeyFor(row.r2_key));
         } catch (e) {
           // Best-effort cleanup
           console.warn('Failed to delete R2 object:', e);

@@ -45,6 +45,8 @@ import {
   createPraise,
   groupPraise,
   bulkUploadMaterials,
+  removePraiseTag,
+  deleteMaterial,
 } from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
@@ -596,6 +598,47 @@ describe('PraiseDetailPage Component', () => {
       const categorySelects = screen.getAllByLabelText('Categoria do material');
       expect(categorySelects.length).toBeGreaterThanOrEqual(2);
       expect(screen.getAllByRole('button', { name: 'Remover' }).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('resposta de escrita antiga não ressuscita material já apagado', async () => {
+      // Cada mutação devolve o louvor inteiro e chamava setPraise cru. As flags de
+      // "ocupado" são separadas (tagsBusy, savingMaterials), então nada impedia duas
+      // escritas ao mesmo tempo — e a resposta que chegasse por último vencia, mesmo
+      // sendo a mais antiga. O PDF apagado no servidor voltava para a tela.
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+
+      let resolverTag: (v: PraiseDetail) => void = () => {};
+      (removePraiseTag as ReturnType<typeof vi.fn>).mockReturnValue(
+        new Promise<PraiseDetail>((resolve) => {
+          resolverTag = resolve;
+        })
+      );
+      const semPdf: PraiseDetail = {
+        ...mockPraiseDetail,
+        materials: mockPraiseDetail.materials.filter((m) => m.type !== 'pdf'),
+      };
+      (deleteMaterial as ReturnType<typeof vi.fn>).mockResolvedValue(semPdf);
+
+      await waitFor(() => {
+        expect(screen.getByText('Partituras')).toBeTruthy();
+      });
+
+      // Escrita 1: remover a tag — fica em voo.
+      await user.click(screen.getByLabelText('Remover tag Coletânea'));
+      // Escrita 2: remover o PDF — responde primeiro, tirando a seção da tela.
+      await user.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
+      await waitFor(() => {
+        expect(screen.queryByText('Partituras')).toBeNull();
+      });
+
+      // Só agora a escrita 1 responde, com o louvor de antes (o PDF ainda lá).
+      resolverTag(mockPraiseDetail);
+
+      await waitFor(() => {
+        expect(removePraiseTag).toHaveBeenCalled();
+      });
+      expect(screen.queryByText('Partituras')).toBeNull();
     });
 
     it('exibe placeholder de edição em Acordes no modo edição', async () => {

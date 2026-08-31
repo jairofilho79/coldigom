@@ -247,6 +247,33 @@ export function PraiseDetailPage() {
   const [newSubtagName, setNewSubtagName] = useState('');
   const [subtagBusy, setSubtagBusy] = useState(false);
 
+  // Toda mutação (tag, material, metadados, letra, agrupamento) devolve o louvor
+  // inteiro, e cada uma chamava setPraise cru. As flags de "ocupado" são separadas,
+  // então duas escritas podiam estar em voo ao mesmo tempo — e vencia a que chegasse
+  // por último, ainda que fosse a mais antiga: um material apagado no servidor
+  // reaparecia na tela, e o clique seguinte nele dava "Material not found".
+  const seqEscritaRef = useRef(0);
+
+  /**
+   * Executa uma escrita e só aplica a resposta se nenhuma outra escrita tiver
+   * começado depois dela. Erros continuam subindo para quem chamou.
+   */
+  const executarEscrita = useCallback(
+    async (operacao: () => Promise<PraiseDetail>): Promise<void> => {
+      const seq = ++seqEscritaRef.current;
+      const atualizado = await operacao();
+      if (seq !== seqEscritaRef.current) return;
+      setPraise(atualizado);
+    },
+    []
+  );
+
+  /** Para escritas cuja resposta já veio por outro caminho: marca como a mais nova. */
+  const aplicarEscrita = useCallback((atualizado: PraiseDetail) => {
+    seqEscritaRef.current += 1;
+    setPraise(atualizado);
+  }, []);
+
   useEffect(() => {
     const fetchPraise = async () => {
       if (!id || id === 'new') return;
@@ -372,7 +399,10 @@ export function PraiseDetailPage() {
           setDriveImportJob(job);
           if (['done', 'completed_with_errors', 'failed'].includes(job.status) && id && id !== 'new') {
             try {
+              const seq = seqEscritaRef.current;
               const refreshed = await getPraise(id);
+              // Se uma escrita começou enquanto a releitura viajava, ela é mais nova.
+              if (seq !== seqEscritaRef.current) return;
               preserveScroll(drivePanelRef.current, () => setPraise(refreshed));
             } catch {
               /* ignore */
@@ -583,8 +613,7 @@ export function PraiseDetailPage() {
     setSavingMaterials(true);
     setError(null);
     try {
-      const updated = await updateMaterial(materialId, { material_kind });
-      setPraise(updated);
+      await executarEscrita(() => updateMaterial(materialId, { material_kind }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao atualizar material');
     } finally {
@@ -596,8 +625,7 @@ export function PraiseDetailPage() {
     setSavingMaterials(true);
     setError(null);
     try {
-      const updated = await deleteMaterial(materialId);
-      setPraise(updated);
+      await executarEscrita(() => deleteMaterial(materialId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao remover material');
     } finally {
@@ -743,15 +771,16 @@ export function PraiseDetailPage() {
         setPendingTagIds([]);
         setLouvorCriado(null);
       } else if (id) {
-        const updated = await updatePraise(id, {
-          name: edit.name,
-          number: edit.number,
-          author: edit.author,
-          rhythm: edit.rhythm,
-          tonality: edit.tonality,
-          category: edit.category,
-        });
-        setPraise(updated);
+        await executarEscrita(() =>
+          updatePraise(id, {
+            name: edit.name,
+            number: edit.number,
+            author: edit.author,
+            rhythm: edit.rhythm,
+            tonality: edit.tonality,
+            category: edit.category,
+          })
+        );
       }
     } catch (err) {
       const motivo = err instanceof Error ? err.message : 'Falha ao salvar metadados';
@@ -772,8 +801,7 @@ export function PraiseDetailPage() {
     setSavingLyrics(true);
     setError(null);
     try {
-      const updated = await updatePraise(id, { lyrics: edit.lyrics });
-      setPraise(updated);
+      await executarEscrita(() => updatePraise(id, { lyrics: edit.lyrics }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar letra');
     } finally {
@@ -984,8 +1012,7 @@ export function PraiseDetailPage() {
                     setTagsBusy(true);
                     setError(null);
                     try {
-                      const updated = await removePraiseTag(id, tag.id);
-                      setPraise(updated);
+                      await executarEscrita(() => removePraiseTag(id, tag.id));
                     } catch (err) {
                       setError(err instanceof Error ? err.message : 'Falha ao remover tag');
                     } finally {
@@ -1023,8 +1050,7 @@ export function PraiseDetailPage() {
                     setTagsBusy(true);
                     setError(null);
                     try {
-                      const updated = await addPraiseTag(id, tagToAdd);
-                      setPraise(updated);
+                      await executarEscrita(() => addPraiseTag(id, tagToAdd));
                       setTagToAdd('');
                     } catch (err) {
                       setError(err instanceof Error ? err.message : 'Falha ao adicionar tag');
@@ -1080,8 +1106,7 @@ export function PraiseDetailPage() {
                         if (isCreate) {
                           setPendingTagIds((ids) => (ids.includes(created.id) ? ids : [...ids, created.id]));
                         } else if (id) {
-                          const updated = await addPraiseTag(id, created.id);
-                          setPraise(updated);
+                          await executarEscrita(() => addPraiseTag(id, created.id));
                         }
                         setNewSubtagName('');
                         setNewSubtagParentId('');
@@ -1142,8 +1167,7 @@ export function PraiseDetailPage() {
                     setGroupingBusy(true);
                     setError(null);
                     try {
-                      const updated = await groupPraise(id, groupTargetId.trim());
-                      setPraise(updated);
+                      await executarEscrita(() => groupPraise(id, groupTargetId.trim()));
                       setGroupTargetId('');
                       setShowGroupInput(false);
                     } catch (err) {
@@ -1525,7 +1549,7 @@ export function PraiseDetailPage() {
                         } else {
                           return;
                         }
-                        setPraise(updated);
+                        aplicarEscrita(updated);
                         setNewMat({ ...DEFAULT_NEW_MAT, material_kind: newMat.material_kind });
                       } catch (err) {
                         setError(err instanceof Error ? err.message : 'Falha ao criar material');
@@ -1597,7 +1621,7 @@ export function PraiseDetailPage() {
                                 file_path_legacy: f.relPath,
                               }))
                           );
-                          setPraise(updated);
+                          aplicarEscrita(updated);
                           setBulkFiles([]);
                           setBulkScan(INITIAL_BULK_SCAN);
                         } catch (err) {

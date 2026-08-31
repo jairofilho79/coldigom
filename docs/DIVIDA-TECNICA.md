@@ -117,6 +117,11 @@ latente, sem repro no código de hoje.
   `AudioPlayer.tsx` e `only-export-components` em `BulkFolderScanStatus.tsx` e
   `AuthContext.tsx`. Setores S5 e S7. **Enquanto não zerar, o passo de lint do
   web no CI segue `continue-on-error`** — o da api já é bloqueante.
+- **`driveImport.ts` em 1,5% e `driveCredentials.ts` em 0% de cobertura**
+  (setor S4): o `driveImport` é o consumidor da fila do Cloudflare, e testá-lo
+  de verdade exige simular `MessageBatch`, retentativas e a fila. O S4 cobriu o
+  que dava sem essa infraestrutura (`driveApi` foi de 4% para 18%, `driveParse`
+  para 81%), mas o caminho de importação em si segue quase sem rede.
 - **25 avisos de `no-explicit-any` na api**: cada setor tipa o que é seu ao
   passar pelo arquivo.
 - **`HomePage.test.tsx` mocka o `useFilters` inteiro**, então a integração

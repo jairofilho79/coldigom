@@ -1,11 +1,13 @@
 name: PR Mergeable
 
 on:
+  # develop é a branch de integração da varredura de refatoração: cada setor
+  # entra por PR nela, e sem listá-la aqui esses PRs passariam sem portão.
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   # A main recebe commit e merge direto; sem isto o portão nunca roda neles.
   push:
-    branches: [main]
+    branches: [main, develop]
 
 permissions:
   contents: read

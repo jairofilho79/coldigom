@@ -10,6 +10,7 @@ import {
   VALID_SORT_FIELDS,
   buildOrderClause,
   buildWhereClause,
+  isFtsError,
   resolveTagFilterGroups,
   tagHasChildren,
   type PraiseResult,
@@ -109,7 +110,7 @@ export function registerPraisesRoutes(app: App): void {
         },
       });
     } catch (error) {
-      if (useFtsAttempt && search) {
+      if (useFtsAttempt && search && isFtsError(error)) {
         useFtsAttempt = false;
         console.warn(
           JSON.stringify({

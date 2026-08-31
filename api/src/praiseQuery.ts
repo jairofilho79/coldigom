@@ -27,17 +27,48 @@ export type TagRow = {
 
 export const TAG_LABEL_SQL = `CASE WHEN tp.name IS NOT NULL THEN tp.name || ' · ' || t.name ELSE t.name END`;
 
+/**
+ * Para cada tag pedida, o grupo de tags que o filtro deve considerar: as
+ * subtags dela, ou ela mesma quando não tem subtag.
+ *
+ * Uma consulta só. Era uma por tag, em série — filtrar por cinco tags custava
+ * cinco viagens ao D1 antes da consulta principal.
+ */
 export async function resolveTagFilterGroups(
   db: D1Database,
   tagIds: string[]
 ): Promise<string[][]> {
-  const groups: string[][] = [];
-  for (const id of tagIds) {
-    const children = await db.prepare('SELECT id FROM tags WHERE parent_id = ?').bind(id).all();
-    const childIds = ((children.results as { id: string }[]) ?? []).map((r) => r.id);
-    groups.push(childIds.length > 0 ? childIds : [id]);
+  if (tagIds.length === 0) return [];
+
+  const placeholders = tagIds.map(() => '?').join(',');
+  const children = await db
+    .prepare(`SELECT id, parent_id FROM tags WHERE parent_id IN (${placeholders})`)
+    .bind(...tagIds)
+    .all();
+
+  const byParent = new Map<string, string[]>();
+  for (const row of ((children.results as { id: string; parent_id: string }[]) ?? [])) {
+    const lista = byParent.get(row.parent_id) ?? [];
+    lista.push(row.id);
+    byParent.set(row.parent_id, lista);
   }
-  return groups;
+
+  // A ordem dos grupos acompanha a ordem das tags pedidas: cada grupo vira uma
+  // condição AND separada, e trocar a ordem trocaria o significado do filtro.
+  return tagIds.map((id) => byParent.get(id) ?? [id]);
+}
+
+/**
+ * A falha é do índice de texto, ou é um erro de SQL de verdade?
+ *
+ * O laço de duas tentativas tratava QUALQUER exceção como "o FTS falhou, tenta
+ * sem ele". Um alias errado numa cláusula de filtro virava um warning
+ * api.praises.fts_fallback e depois um 500 genérico — a mensagem mentia sobre a
+ * causa e o diagnóstico ficava impossível.
+ */
+export function isFtsError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return /praises_fts|fts5|\bMATCH\b/i.test(msg);
 }
 
 export async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { getMe, logout as apiLogout, refreshSession, exchangeAuthCode } from '../services/api';
-import { AuthContext } from './authContextValue';
+import { getMe, logout as apiLogout, refreshSession, exchangeAuthCode, type AuthUser } from '../services/api';
+import { AuthContext, type AuthContextValue } from './authContextValue';
 
 
 const CHAVE_ERRO = 'coldigom_auth_error';

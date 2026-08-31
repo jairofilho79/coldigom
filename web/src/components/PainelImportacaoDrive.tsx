@@ -26,6 +26,7 @@ export function PainelImportacaoDrive({
   pulados,
   materialKindOptions,
   onKindChange,
+  onRemove,
   acaoDoLote,
   children,
 }: {

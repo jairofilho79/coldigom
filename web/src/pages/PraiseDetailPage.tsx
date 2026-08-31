@@ -323,6 +323,7 @@ export function PraiseDetailPage() {
   const [tagToAdd, setTagToAdd] = useState('');
   const [tagsBusy, setTagsBusy] = useState(false);
   const [idCopied, setIdCopied] = useState(false);
+  const copiaTimeoutRef = useRef<number | null>(null);
   const [showGroupInput, setShowGroupInput] = useState(false);
   const [groupTargetId, setGroupTargetId] = useState('');
   const [groupingBusy, setGroupingBusy] = useState(false);
@@ -715,6 +716,9 @@ export function PraiseDetailPage() {
   useEffect(() => {
     return () => {
       bulkScanAbortRef.current?.abort();
+      // O scan do Drive também fica em voo; só o local era abortado.
+      driveScanAbortRef.current?.abort();
+      if (copiaTimeoutRef.current) window.clearTimeout(copiaTimeoutRef.current);
     };
   }, []);
   const assignedTagIds = useMemo(
@@ -1195,7 +1199,8 @@ export function PraiseDetailPage() {
                   try {
                     await navigator.clipboard.writeText(praise.id);
                     setIdCopied(true);
-                    window.setTimeout(() => setIdCopied(false), 2000);
+                    if (copiaTimeoutRef.current) window.clearTimeout(copiaTimeoutRef.current);
+                    copiaTimeoutRef.current = window.setTimeout(() => setIdCopied(false), 2000);
                   } catch {
                     setError('Não foi possível copiar o ID');
                   }

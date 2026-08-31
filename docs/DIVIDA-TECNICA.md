@@ -8,7 +8,7 @@ Regra: nada some daqui por esquecimento. Ao fechar um item, apague a linha no
 mesmo commit que o resolve — e se decidir que não vale mais a pena, registre a
 decisão em vez de apagar em silêncio.
 
-Última atualização: 2026-08-31, ao fim do S6 bloco 3.
+Última atualização: 2026-08-31, ao fim do S7.
 
 ---
 
@@ -67,18 +67,6 @@ a receber tráfego anônimo relevante.
 
 ---
 
-### Detecção de escrita concorrente nos metadados do louvor — setor S3, precisa do S7
-**Onde:** `PATCH /api/praises/:id`, e a tela em `web/src/pages/PraiseDetailPage.tsx`
-**O que:** duas pessoas editando o mesmo louvor — a última a salvar vence, em
-silêncio, e o trabalho da primeira some sem aviso. O editor de cifras já tem
-essa detecção; os metadados não.
-**Por que não foi feito no S3:** o servidor sozinho não resolve. Precisa de um
-token de versão que a tela leia ao abrir e devolva ao salvar, e o
-`PraiseDetailPage.tsx` é arquivo do S7. Fazer só o lado do servidor deixaria a
-API recusando gravações que a tela não sabe reenviar.
-**Retomar em:** S7, junto com a tela — provavelmente com `updated_at` como
-token, seguindo o mesmo desenho já usado no editor de cifras.
-
 ## Fragilidades conhecidas, sem quebra hoje
 
 ### Contagem e listagem usam formas diferentes de consulta
@@ -105,21 +93,11 @@ latente, sem repro no código de hoje.
 
 ## Dívida menor, catalogada
 
-- **27 erros de lint no `web`**: 24 são `any` em `PraiseDetailPage.test.tsx` e
-  `HomePage.test.tsx`; os outros três são `set-state-in-effect` no
-  `AudioPlayer.tsx` e `only-export-components` em `BulkFolderScanStatus.tsx` e
-  `AuthContext.tsx`. Setores S5 e S7. **Enquanto não zerar, o passo de lint do
-  web no CI segue `continue-on-error`** — o da api já é bloqueante.
 - **`driveImport.ts` em 1,5% e `driveCredentials.ts` em 0% de cobertura**
   (setor S4): o `driveImport` é o consumidor da fila do Cloudflare, e testá-lo
   de verdade exige simular `MessageBatch`, retentativas e a fila. O S4 cobriu o
   que dava sem essa infraestrutura (`driveApi` foi de 4% para 18%, `driveParse`
   para 81%), mas o caminho de importação em si segue quase sem rede.
-- **`AuthContext.tsx` exporta o provider e o hook no mesmo arquivo**
-  (`react-refresh/only-export-components`): separar exige trocar o import em
-  seis arquivos, dois deles do S7 e do S8. Não compensa mexer em quatro setores
-  para apagar um erro de lint — fica para o S7, que vai editar esses arquivos
-  de qualquer forma.
 - **25 avisos de `no-explicit-any` na api**: cada setor tipa o que é seu ao
   passar pelo arquivo.
 - **`HomePage.test.tsx` mocka o `useFilters` inteiro**, então a integração
@@ -143,3 +121,46 @@ latente, sem repro no código de hoje.
 - **Higiene do repositório (setor S10)**: `ingestion.sql` e `ingestion_no_tx.sql`
   no diretório de trabalho, três cópias de `LOGO_COLORIDO*.svg`,
   `fix_ingestion.py` na raiz, `.DS_Store`.
+
+---
+
+## Encontrado no S7, adiado com motivo
+
+### `PATCH /api/materials/:id` não valida `material_kind` contra o catálogo
+**Onde:** `api/src/routes/materials.ts`
+**O que:** o S7 passou a validar a categoria nas três rotas de **criação**
+(POST JSON, bulk-upload, drive-import). O PATCH ficou de fora do escopo que foi
+dado à varredura e não entrou.
+**Custo de fechar:** uma linha — o helper `materialKindsForaDoCatalogo` já existe.
+**Retomar em:** S10, ou na próxima mudança que passar por esse arquivo.
+
+### `POST /api/praises/:id/materials` não confere se o louvor existe
+**Onde:** `api/src/routes/praises.ts`
+**O que:** o bulk-upload e o drive-import conferem e devolvem 404; a rota de
+material avulso insere direto e o INSERT falha por FK, virando 500. Não deixa
+arquivo órfão no R2 porque é material lógico — só devolve o código errado.
+
+### Granularidade de segundo no token de escrita concorrente
+**Onde:** `PATCH /api/praises/:id`, campo `if_updated_at`
+**O que:** `datetime('now')` só tem segundos, então duas gravações dentro do
+mesmo segundo não são detectadas. A janela cega é de ~1 s.
+**Por que foi aceito:** o alvo real é duas pessoas com a tela aberta por minutos
+ou horas, não uma corrida de milissegundos. Fechar exigiria trocar o token, e o
+formato de `updated_at` é lido pelo PLPCG.
+**Se um dia importar:** coluna `version INTEGER` incrementada no mesmo UPDATE —
+aditivo, sem mexer no `updated_at`.
+
+### Envio em lote fatiado não é atômico entre as fatias
+**Onde:** `web/src/services/api.ts`, `bulkUploadMaterials`
+**O que:** cada fatia de 200 arquivos é atômica no servidor, mas as fatias são
+requisições independentes. Falhando a terceira de cinco, as duas primeiras já
+entraram. A mensagem de erro diz quantos entraram, e reenviar o que faltou é
+manual.
+**Por que foi aceito:** a alternativa é uma sessão de upload no servidor, com
+estado e limpeza — muito para o ganho, dado que o erro agora é explícito.
+
+### `PraiseDetailPage.tsx` continua um arquivo só
+**O que:** o S7 fechou os defeitos com testes, mas a extração em componentes
+menores ficou para o bloco 6 do próprio setor. Se o bloco 6 não acontecer, este
+item permanece: 1.900+ linhas, com o painel do Drive duplicado entre o modo de
+criação e o de edição.

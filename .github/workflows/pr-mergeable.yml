@@ -87,9 +87,8 @@ jobs:
         working-directory: ./web
         run: npm run test:coverage
 
-      # Informativo por ora: 38 erros herdados, todos catalogados e atribuídos
-      # aos setores S5/S6/S7. Vira bloqueante quando o S6 fechar.
-      - name: Lint (informativo)
+      # Bloqueante desde o S7: eram 38 erros herdados no S0, catalogados e
+      # atribuídos por setor. O último saiu com a separação do AuthContext.
+      - name: Lint
         working-directory: ./web
-        continue-on-error: true
         run: npm run lint

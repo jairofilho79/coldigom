@@ -16,10 +16,11 @@ export default defineConfig({
       // S6 (2026-08-31): 67 / 62 / 64 / 69
       // S5 (2026-08-31): 68 / 63 / 64 / 70
       thresholds: {
-        statements: 68,
-        branches: 63,
-        functions: 64,
-        lines: 70,
+        // S7: medido 77.88 / 70.29 / 75.03 / 80.37
+        statements: 77,
+        branches: 70,
+        functions: 75,
+        lines: 80,
       },
     },
   },

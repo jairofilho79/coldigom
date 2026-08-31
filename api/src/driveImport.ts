@@ -16,6 +16,18 @@ export type DriveImportEnv = {
 
 const MAX_ATTEMPTS = 5;
 
+/**
+ * Falhas do Drive que reenviar não conserta.
+ *
+ * 413 é o nosso próprio teto de tamanho (`downloadDriveFile`): o arquivo não vai
+ * encolher entre uma tentativa e outra, e cada retentativa rebaixava os 100 MB
+ * de novo — cinco vezes, mostrando "Na fila" o tempo todo. 400 é pedido
+ * malformado, e o pedido é sempre o mesmo. 401/403/404 já estavam: credencial,
+ * permissão e arquivo ausente não mudam por insistência. Fora daqui — 429 e
+ * 5xx, que são do lado do Google e passam — o item volta para a fila.
+ */
+const FALHA_PERMANENTE = /failed \((400|401|403|404|413)\)/i;
+
 function nowSec(): number {
   return Math.floor(Date.now() / 1000);
 }
@@ -120,7 +132,7 @@ export async function processImportItem(
       .run();
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const permanent = /failed \(40[134]\)/i.test(message) || attempts >= MAX_ATTEMPTS;
+    const permanent = FALHA_PERMANENTE.test(message) || attempts >= MAX_ATTEMPTS;
     await env.DB.prepare(
       `UPDATE import_job_items SET status = ?, error = ?, updated_at = ? WHERE id = ?`
     )

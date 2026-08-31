@@ -1,6 +1,11 @@
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { PraiseZipTooLargeError, buildPraiseZipStream } from '../praiseZip';
-import { labelFor, loadMaterialKindLabels } from '../materialKindLabels';
+import {
+  erroDeCategoriaDesconhecida,
+  labelFor,
+  loadMaterialKindLabels,
+  materialKindsForaDoCatalogo,
+} from '../materialKindLabels';
 import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
@@ -276,6 +281,7 @@ export function registerPraisesRoutes(app: App): void {
       const praiseQuery = `
         SELECT 
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
+          p.updated_at,
           GROUP_CONCAT(pt.tag_id) as tag_ids
         FROM praises p
         LEFT JOIN praise_tags pt ON p.id = pt.praise_id
@@ -481,6 +487,15 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: 'Invalid JSON body' }, 400);
     }
 
+    // Token de versão, opcional: a tela lê o updated_at ao abrir e devolve aqui.
+    // Ausente = grava como sempre gravou — o PLPCG consome esta mesma API e não
+    // manda o campo.
+    const ifUpdatedAt = body.if_updated_at;
+    const conferirVersao = ifUpdatedAt !== undefined;
+    if (conferirVersao && (typeof ifUpdatedAt !== 'string' || !ifUpdatedAt)) {
+      return c.json({ error: "Field 'if_updated_at' must be a non-empty string" }, 400);
+    }
+
     const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
     const sets: string[] = [];
     const bindings: (string | null)[] = [];
@@ -518,8 +533,28 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     try {
-      const sql = `UPDATE praises SET ${sets.join(', ')}, updated_at = datetime('now') WHERE id = ?`;
-      await c.env.DB.prepare(sql).bind(...bindings, id).run();
+      // Conferir e gravar na MESMA instrução: um SELECT seguido de UPDATE só
+      // mudaria a corrida de lugar — dá para outra gravação entrar entre os dois.
+      const sql = `UPDATE praises SET ${sets.join(', ')}, updated_at = datetime('now') WHERE id = ?${
+        conferirVersao ? ' AND updated_at = ?' : ''
+      }`;
+      const escrita = await c.env.DB.prepare(sql)
+        .bind(...bindings, id, ...(conferirVersao ? [ifUpdatedAt as string] : []))
+        .run();
+
+      if (conferirVersao && (escrita.meta?.changes ?? 0) === 0) {
+        // Nenhuma linha atingida: ou o louvor sumiu, ou alguém gravou entre a
+        // abertura da tela e o save. Só aqui, no caminho de exceção, vale ler.
+        const existe = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(id).first();
+        if (!existe) return c.json({ error: 'Praise not found' }, 404);
+        return c.json(
+          {
+            error: 'O louvor foi alterado por outra pessoa. Recarregue a página.',
+            code: 'stale_write',
+          },
+          409
+        );
+      }
     } catch (error) {
       console.error('Error updating praise:', error);
       return c.json({ error: 'Failed to update praise' }, 500);
@@ -741,11 +776,34 @@ export function registerPraisesRoutes(app: App): void {
       const source = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(sourceId).first();
       if (!source) return c.json({ error: 'Source praise not found' }, 404);
 
+      // A lista que chega é a união das tags dos dois louvores, então as tags
+      // que o keeper JÁ tinha voltam aqui. Uma delas virar tag pai (alguém criou
+      // uma subtag depois) não é tentativa nova de associar tag pai: é dado
+      // preexistente, e recusar matava toda mesclagem daquele louvor. Tag pai
+      // vinda só do louvor fonte continua barrada — aí a associação é nova.
+      const jaNoKeeper = new Set(
+        (
+          (
+            await c.env.DB.prepare('SELECT tag_id FROM praise_tags WHERE praise_id = ?')
+              .bind(keeperId)
+              .all<{ tag_id: string }>()
+          ).results ?? []
+        ).map((linha) => linha.tag_id)
+      );
+
       for (const tagId of tagIds) {
         const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
         if (!tag) return c.json({ error: 'Tag not found' }, 400);
+        if (jaNoKeeper.has(tagId)) continue;
         if (await tagHasChildren(c.env.DB, tagId)) {
-          return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
+          // Sem o nome não havia como saber qual das tags do lote era a culpada.
+          const nome = await c.env.DB.prepare('SELECT name FROM tags WHERE id = ?')
+            .bind(tagId)
+            .first<{ name: string }>();
+          return c.json(
+            { error: `Cannot attach a parent tag; use a subtag: ${nome?.name ?? tagId}` },
+            400
+          );
         }
       }
 
@@ -875,6 +933,12 @@ export function registerPraisesRoutes(app: App): void {
       if (!hasUrl) return c.json({ error: "Field 'url' is required for type youtube" }, 400);
       if (!isYouTube(url)) return c.json({ error: 'Invalid YouTube URL' }, 400);
     }
+
+    const foraDoCatalogo = await materialKindsForaDoCatalogo(c.env.DB, [material_kind]);
+    if (foraDoCatalogo.length > 0) {
+      return c.json({ error: erroDeCategoriaDesconhecida(foraDoCatalogo) }, 400);
+    }
+
     const id = crypto.randomUUID();
 
     try {
@@ -928,6 +992,14 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: `Máximo de ${MAX_UPLOAD_ITEMS} arquivos por lote` }, 400);
     }
 
+    // O louvor tinha que existir antes de qualquer upload: sem esta leitura os
+    // objetos subiam ao R2 e só então o INSERT batia na FK, deixando arquivo
+    // órfão. O drive-import já checava; esta rota, não.
+    const louvor = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?')
+      .bind(praiseId)
+      .first<{ id: string }>();
+    if (!louvor) return c.json({ error: 'Praise not found' }, 404);
+
     // Valida o lote INTEIRO antes de escrever qualquer coisa. O laço antigo
     // validava e gravava item a item: um lote com o segundo item inválido já
     // tinha gravado o primeiro no R2 e no banco.
@@ -964,35 +1036,57 @@ export function registerPraisesRoutes(app: App): void {
       validados.push({ item, file });
     }
 
+    const categoriasInvalidas = await materialKindsForaDoCatalogo(
+      c.env.DB,
+      validados.map(({ item }) => item.material_kind)
+    );
+    if (categoriasInvalidas.length > 0) {
+      return c.json({ error: erroDeCategoriaDesconhecida(categoriasInvalidas) }, 400);
+    }
+
+    // O INSERT precisa da chave do R2, então os objetos sobem primeiro. Como o
+    // R2 não participa da transação do D1, guardamos as chaves para desfazer à
+    // mão se o banco recusar o lote.
+    const subidos: { materialId: string; r2_key: string; item: (typeof items)[number]; file: File }[] = [];
     try {
       for (const { item, file } of validados) {
         const materialId = crypto.randomUUID();
         const r2_key = `assets/praises/${praiseId}/${materialId}.${item.type}`;
-        const storageKey = `storage/${r2_key}`;
 
-        await c.env.ASSETS.put(storageKey, file.stream(), {
+        await c.env.ASSETS.put(`storage/${r2_key}`, file.stream(), {
           httpMetadata: {
             contentType: file.type || undefined,
           },
         });
-
-        await c.env.DB.prepare(
-          `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        ).bind(
-          materialId,
-          praiseId,
-          item.material_kind,
-          item.type,
-          r2_key,
-          item.file_path_legacy || file.name,
-          null,
-          null,
-          null
-        ).run();
+        subidos.push({ materialId, r2_key, item, file });
       }
+
+      // Banco, tudo ou nada. O D1 executa o lote em transação: se um statement
+      // falha, a sequência inteira é abortada. Antes era um INSERT solto por
+      // arquivo, e cair no arquivo 40 de 60 devolvia 500 com 39 materiais já
+      // gravados — o usuário reclicava e ganhava 39 duplicatas.
+      await c.env.DB.batch(
+        subidos.map(({ materialId, r2_key, item, file }) =>
+          c.env.DB.prepare(
+            `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            materialId,
+            praiseId,
+            item.material_kind,
+            item.type,
+            r2_key,
+            item.file_path_legacy || file.name,
+            null,
+            null,
+            null
+          )
+        )
+      );
     } catch (error) {
       console.error('Error bulk uploading materials:', error);
+      // Sem linha no banco, o objeto no R2 é lixo que ninguém mais alcança.
+      await apagarDoR2(c.env, subidos.map((s) => s.r2_key));
       return c.json({ error: 'Failed to bulk upload materials' }, 500);
     }
 

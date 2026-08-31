@@ -112,13 +112,21 @@ export function registerMaterialsRoutes(app: App): void {
     if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
 
     try {
-      const row = await c.env.DB.prepare(`SELECT praise_id FROM praise_materials WHERE id = ?`).bind(materialId).first() as any;
+      const row = await c.env.DB.prepare(`SELECT praise_id, type FROM praise_materials WHERE id = ?`).bind(materialId).first() as any;
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
 
       // Enforce: if type is youtube, url must be a valid youtube url
-      const newType = typeof body.type === 'string' ? body.type : null;
-      const newUrl = 'url' in body ? (typeof body.url === 'string' ? body.url.trim() : null) : null;
-      if (newType === 'youtube') {
+      //
+      // O tipo do corpo é opcional; sem ele quem manda é o tipo que já está no
+      // banco. Antes, `newType` ficava null quando o corpo não trazia 'type', e
+      // um PATCH só com url num material youtube não passava por validação
+      // nenhuma: o card continuava com o selo do YouTube apontando para
+      // qualquer host. Só validamos quando a url está sendo mexida ou quando o
+      // próprio corpo declara youtube — marcar revisado não vira erro de url.
+      const tipoNoCorpo = 'type' in body ? (typeof body.type === 'string' ? body.type : null) : undefined;
+      const tipoEfetivo = tipoNoCorpo === undefined ? (row.type as string | null) : tipoNoCorpo;
+      const newUrl = 'url' in body ? (typeof body.url === 'string' ? body.url.trim() : null) : undefined;
+      if (tipoEfetivo === 'youtube' && (newUrl !== undefined || tipoNoCorpo === 'youtube')) {
         const effectiveUrl = newUrl ?? undefined;
         if (!effectiveUrl || effectiveUrl.length === 0) return c.json({ error: "Field 'url' is required for type youtube" }, 400);
         try {

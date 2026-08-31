@@ -1,23 +1,7 @@
 import type { BulkFileItem } from '../lib/materialKindInference/scanFolder';
 import type { InferenceResult } from '../lib/materialKindInference';
+import type { BulkScanState } from './bulkScanState';
 
-type BulkScanPhase = 'idle' | 'scanning' | 'done' | 'error';
-
-export type BulkScanState = {
-  phase: BulkScanPhase;
-  processed: number;
-  total: number;
-  folderName: string | null;
-  error: string | null;
-};
-
-export const INITIAL_BULK_SCAN: BulkScanState = {
-  phase: 'idle',
-  processed: 0,
-  total: 0,
-  folderName: null,
-  error: null,
-};
 
 type BulkFolderScanStatusProps = {
   scan: BulkScanState;

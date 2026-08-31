@@ -1,17 +1,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
 import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
 import { StyledFileInput } from '../components/StyledFileInput';
-import {
-  BulkFolderScanStatus,
-  InferenceBadge,
-  INITIAL_BULK_SCAN,
-  type BulkScanState,
-} from '../components/BulkFolderScanStatus';
+import { BulkFolderScanStatus, InferenceBadge } from '../components/BulkFolderScanStatus';
+import { INITIAL_BULK_SCAN, type BulkScanState } from '../components/bulkScanState';
 import { Select } from '../components/Select';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { groupMaterialsByType, materialDisplayName } from '../lib/materials';

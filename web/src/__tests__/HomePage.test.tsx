@@ -96,11 +96,11 @@ describe('HomePage Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (searchPraises as any).mockResolvedValue({
+    (searchPraises as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: mockPraises,
       pagination: mockPagination,
     });
-    (getFilterOptions as any).mockResolvedValue({
+    (getFilterOptions as ReturnType<typeof vi.fn>).mockResolvedValue({
       rhythms: ['Avulsos', 'Coletânea'],
       tonalities: ['C', 'G'],
       categories: ['Louvor', 'Adoração'],
@@ -109,7 +109,7 @@ describe('HomePage Component', () => {
         { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
       ],
     });
-    (getMaterialKinds as any).mockResolvedValue([
+    (getMaterialKinds as ReturnType<typeof vi.fn>).mockResolvedValue([
       { id: 'kind1', name: 'Partitura' },
       { id: 'kind2', name: 'Áudio' },
     ]);
@@ -149,7 +149,7 @@ describe('HomePage Component', () => {
   });
 
   it('should show loading state initially', async () => {
-    (searchPraises as any).mockImplementation(
+    (searchPraises as ReturnType<typeof vi.fn>).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -159,7 +159,7 @@ describe('HomePage Component', () => {
   });
 
   it('should show error state on API error', async () => {
-    (searchPraises as any).mockRejectedValue(new Error('API Error'));
+    (searchPraises as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API Error'));
 
     renderHome();
 
@@ -169,7 +169,7 @@ describe('HomePage Component', () => {
   });
 
   it('should show empty state when no results', async () => {
-    (searchPraises as any).mockResolvedValue({
+    (searchPraises as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: [],
       pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
     });
@@ -203,7 +203,7 @@ describe('HomePage Component', () => {
   });
 
   it('should show pagination when there are multiple pages', async () => {
-    (searchPraises as any).mockResolvedValue({
+    (searchPraises as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: mockPraises,
       pagination: { page: 1, limit: 1, total: 2, totalPages: 2 },
     });

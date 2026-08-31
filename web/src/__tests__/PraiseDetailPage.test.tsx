@@ -116,7 +116,7 @@ describe('PraiseDetailPage Component', () => {
   }
 
   it('should render loading state initially', async () => {
-    (getPraise as any).mockImplementation(() => new Promise(() => {}));
+    (getPraise as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(() => {}));
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -124,7 +124,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should render praise details', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -140,7 +140,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should show download zip link without login', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -156,7 +156,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should show praise id and copy to clipboard', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
     const user = userEvent.setup();
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
@@ -180,7 +180,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should render tags', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -191,7 +191,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should render lyrics section', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -202,7 +202,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should render audio player', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -217,7 +217,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should render PDF links', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -228,7 +228,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should render back link', async () => {
-    (getPraise as any).mockResolvedValue(mockPraiseDetail);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -238,7 +238,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should show error state on API error', async () => {
-    (getPraise as any).mockRejectedValue(new Error('API Error'));
+    (getPraise as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API Error'));
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -248,7 +248,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('should show not found state when praise is null', async () => {
-    (getPraise as any).mockResolvedValue(null);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     renderWithRouter('non-existent-id');
 
@@ -262,27 +262,32 @@ describe('PraiseDetailPage Component', () => {
       ...mockPraiseDetail,
       materials: [mockPraiseDetail.materials[0]], // Only PDF
     };
-    (getPraise as any).mockResolvedValue(praiseWithoutAudio);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithoutAudio);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    // Espera o carregamento: afirmar ausência com a tela ainda vazia não prova nada.
+    await screen.findByText('Grande Deus');
 
-    await waitFor(() => {
-      expect(screen.queryByText('Áudio')).toBeNull();
-    });
+    expect(screen.queryByText('Áudio')).toBeNull();
+    expect(screen.getByText('Partituras')).toBeTruthy();
   });
 
-  it('should not render lyrics section when no lyrics', async () => {
-    const praiseWithoutLyrics = {
+  it('louvor sem letra mostra a seção com o aviso, não some com ela', async () => {
+    // O teste antigo afirmava que a seção NÃO era renderizada — e passava porque a
+    // assertiva negativa rodava na primeira execução síncrona do waitFor, com a
+    // tela ainda em "Carregando louvor...". A seção sempre existiu. Numa
+    // ferramenta de gestão, mostrar a lacuna é melhor que escondê-la: quem abre o
+    // louvor precisa ver que falta letra.
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
       ...mockPraiseDetail,
       lyrics: '',
-    };
-    (getPraise as any).mockResolvedValue(praiseWithoutLyrics);
+    });
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await screen.findByText('Grande Deus');
 
-    await waitFor(() => {
-      expect(screen.queryByText('Letra')).toBeNull();
-    });
+    expect(screen.getByText('Letra')).toBeTruthy();
+    expect(screen.getByText('Sem letra cadastrada.')).toBeTruthy();
   });
 
   it('should not render tags section when no tags', async () => {
@@ -291,14 +296,12 @@ describe('PraiseDetailPage Component', () => {
       tags: [],
       tag_ids: '',
     };
-    (getPraise as any).mockResolvedValue(praiseWithoutTags);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithoutTags);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await screen.findByText('Grande Deus');
 
-    await waitFor(() => {
-      const ColetaneaTag = screen.queryByText('Coletânea');
-      expect(ColetaneaTag).toBeNull();
-    });
+    expect(screen.queryByText('Coletânea')).toBeNull();
   });
 
   describe('Novo louvor', () => {
@@ -606,7 +609,10 @@ describe('PraiseDetailPage Component', () => {
       expect((addBtn as HTMLButtonElement).disabled).toBe(true);
     });
 
-    it('não exibe painel Materiais cadastrados', async () => {
+    it('o painel de admin lista os materiais que já existem, editáveis', async () => {
+      // Este teste substitui um que afirmava a ausência do título
+      // "Materiais cadastrados" — string que não existe em componente nenhum,
+      // então ele não podia falhar por motivo algum.
       renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
       await enterEditMode();
 
@@ -614,7 +620,8 @@ describe('PraiseDetailPage Component', () => {
         expect(screen.getByText('Materiais (admin)')).toBeTruthy();
       });
 
-      expect(screen.queryByRole('heading', { name: 'Materiais cadastrados' })).toBeNull();
+      // O PDF e o MP3 da fixture aparecem com edição inline, um seletor cada.
+      expect(screen.getAllByLabelText('Categoria do material')).toHaveLength(2);
     });
 
     it('não exibe edição/remoção de material fora do modo edição', async () => {
@@ -875,7 +882,7 @@ describe('PraiseDetailPage Component', () => {
         },
       ],
     };
-    (getPraise as any).mockResolvedValue(praiseWithChords);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithChords);
 
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
@@ -904,7 +911,7 @@ describe('PraiseDetailPage Component', () => {
   }
 
   it('o card de cifra linka para a página dedicada, não para o arquivo cru', async () => {
-    (getPraise as any).mockResolvedValue(praiseWithChord(true));
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithChord(true));
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     const link = await screen.findByRole('link', { name: /Cifra I/ });
@@ -915,7 +922,7 @@ describe('PraiseDetailPage Component', () => {
   });
 
   it('cifra sem conteúdo aparece marcada e continua clicável', async () => {
-    (getPraise as any).mockResolvedValue(praiseWithChord(false));
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseWithChord(false));
     renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
 
     const link = await screen.findByRole('link', { name: /Cifra I/ });

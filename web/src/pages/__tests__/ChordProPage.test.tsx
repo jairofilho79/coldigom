@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ChordProPage } from '../ChordProPage';
 import { AuthProvider } from '../../context/AuthContext';
-import * as AuthContext from '../../context/AuthContext';
+import * as AuthContext from '../../context/useAuth';
 import * as api from '../../services/api';
 import { parse } from '../../lib/chordpro/parse';
 import { serialize } from '../../lib/chordpro/serialize';

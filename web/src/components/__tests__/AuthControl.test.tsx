@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthControl } from '../AuthControl';
-import * as AuthContext from '../../context/AuthContext';
+import * as AuthContext from '../../context/useAuth';
 
 function mockAuth(
   user: { name?: string; email?: string; picture?: string } | null,

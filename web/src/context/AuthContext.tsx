@@ -1,16 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { getMe, logout as apiLogout, refreshSession, exchangeAuthCode, type AuthUser } from '../services/api';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { getMe, logout as apiLogout, refreshSession, exchangeAuthCode } from '../services/api';
+import { AuthContext } from './authContextValue';
 
-type AuthContextValue = {
-  user: AuthUser | null;
-  ready: boolean;
-  isAuthenticated: boolean;
-  authError: string | null;
-  logout: () => Promise<void>;
-  refetch: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | null>(null);
 
 const CHAVE_ERRO = 'coldigom_auth_error';
 
@@ -152,12 +143,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return ctx;
 }

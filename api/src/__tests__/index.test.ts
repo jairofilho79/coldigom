@@ -868,21 +868,26 @@ describe('API Routes', () => {
     it('should return filter options', async () => {
       const mockDB = {
         prepare: vi.fn((query: string) => {
+          // Responde igual com e sem .bind(): a rota passou a montar as
+          // consultas com os filtros aplicados como bindings. E casa pela
+          // tabela, não pelo texto exato do COUNT.
+          const responder = (results: unknown[]) => ({
+            all: vi.fn().mockResolvedValue({ results }),
+            bind: vi.fn(() => ({ all: vi.fn().mockResolvedValue({ results }) })),
+          });
           if (query.includes('DISTINCT rhythm')) {
-            return { all: vi.fn().mockResolvedValue({ results: [{ rhythm: 'Avulsos' }, { rhythm: 'Coletânea' }] }) };
+            return responder([{ rhythm: 'Avulsos' }, { rhythm: 'Coletânea' }]);
           }
           if (query.includes('DISTINCT tonality')) {
-            return { all: vi.fn().mockResolvedValue({ results: [{ tonality: 'C' }, { tonality: 'G' }] }) };
+            return responder([{ tonality: 'C' }, { tonality: 'G' }]);
           }
           if (query.includes('DISTINCT category')) {
-            return { all: vi.fn().mockResolvedValue({ results: [{ category: 'Louvor' }, { category: 'Adoração' }] }) };
+            return responder([{ category: 'Louvor' }, { category: 'Adoração' }]);
           }
-          // Casa pela tabela, não pelo texto exato do COUNT: a contagem passou
-          // a ser COUNT(DISTINCT ...) e o mock antigo deixou de reconhecer.
           if (query.includes('FROM tags')) {
-            return { all: vi.fn().mockResolvedValue({ results: mockTags.map(t => ({ ...t, count: 1 })) }) };
+            return responder(mockTags.map(t => ({ ...t, count: 1 })));
           }
-          return { all: vi.fn().mockResolvedValue({ results: [] }) };
+          return responder([]);
         }),
       };
       const mockR2 = createMockR2();

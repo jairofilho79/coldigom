@@ -25,10 +25,31 @@ export function FilterBar() {
   // O .catch(console.error) engolia a falha e filterOptions ficava null para
   // sempre: a barra inteira virava um spinner sem fim, sem mensagem e sem
   // saída, enquanto a tabela de resultados carregava normalmente ao lado.
+  // Refaz a consulta quando os filtros mudam: as opções agora refletem o que
+  // ainda produz resultado. `filterOptions` NÃO é limpo antes — limpar faria a
+  // barra inteira sumir e voltar a cada clique de filtro.
+  const chaveDosFiltros = JSON.stringify([
+    filters.query,
+    filters.tags,
+    filters.rhythm,
+    filters.tonality,
+    filters.category,
+    filters.materialKinds,
+    filters.numberMin,
+    filters.numberMax,
+  ]);
+
   useEffect(() => {
     let cancelado = false;
+    const correntes = JSON.parse(chaveDosFiltros) as [
+      string, string[], string[], string[], string[], string[], number | undefined, number | undefined
+    ];
+    const [query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax] = correntes;
 
-    Promise.all([getFilterOptions(), getMaterialKinds()])
+    Promise.all([
+      getFilterOptions({ query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax }),
+      getMaterialKinds(),
+    ])
       .then(([opts, kinds]) => {
         if (cancelado) return;
         setFilterOptions(opts);
@@ -41,7 +62,7 @@ export function FilterBar() {
     return () => {
       cancelado = true;
     };
-  }, [tentativa]);
+  }, [tentativa, chaveDosFiltros]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

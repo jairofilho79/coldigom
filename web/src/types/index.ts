@@ -59,6 +59,12 @@ export interface PraiseGroupMember {
 }
 
 export interface PraiseDetail extends Praise {
+  /**
+   * Token de versão para detecção de escrita concorrente. Vai de volta como
+   * `if_updated_at` no PATCH; o servidor responde 409 se alguém gravou no meio.
+   * Opcional porque respostas antigas e fixtures não o trazem.
+   */
+  updated_at?: string;
   tags: Tag[];
   materials: Material[];
   group_members: PraiseGroupMember[];

@@ -643,6 +643,77 @@ describe('PraiseDetailPage Component', () => {
       expect(screen.getAllByRole('button', { name: 'Remover' }).length).toBeGreaterThanOrEqual(2);
     });
 
+    it('apagar material pergunta antes, e recusar não apaga nada', async () => {
+      // Um clique apagava o material e o arquivo no R2, sem volta. Numa ferramenta
+      // de gestão isso é perda de acervo por clique torto.
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      try {
+        renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+        const user = await enterEditMode();
+
+        await waitFor(() => {
+          expect(screen.getByText('Partituras')).toBeTruthy();
+        });
+        await user.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
+
+        expect(confirmar).toHaveBeenCalled();
+        expect(confirmar.mock.calls[0][0]).toMatch(/permanentemente|definitiv/i);
+        expect(deleteMaterial).not.toHaveBeenCalled();
+      } finally {
+        confirmar.mockRestore();
+      }
+    });
+
+    it('apagar material segue em frente quando o usuário confirma', async () => {
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      try {
+        (deleteMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+          ...mockPraiseDetail,
+          materials: [],
+        });
+        renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+        const user = await enterEditMode();
+
+        await waitFor(() => {
+          expect(screen.getByText('Partituras')).toBeTruthy();
+        });
+        await user.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
+
+        await waitFor(() => {
+          expect(deleteMaterial).toHaveBeenCalledTimes(1);
+        });
+      } finally {
+        confirmar.mockRestore();
+      }
+    });
+
+    it('salvar manda o token de versão que a tela carregou', async () => {
+      // Sem token, duas pessoas editando o mesmo louvor: a última a salvar vence
+      // em silêncio, e o trabalho da primeira some sem aviso. O editor de cifras
+      // já tinha essa detecção; os metadados não.
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        updated_at: '2026-08-31 12:00:00',
+      });
+      (updatePraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+
+      await waitFor(() => {
+        expect((screen.getAllByRole('textbox')[0] as HTMLInputElement).value).toBe('Grande Deus');
+      });
+      await user.click(screen.getAllByRole('button', { name: 'Salvar' })[0]);
+
+      await waitFor(() => {
+        expect(updatePraise).toHaveBeenCalledWith(
+          '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+          expect.objectContaining({ name: 'Grande Deus' }),
+          '2026-08-31 12:00:00'
+        );
+      });
+    });
+
     it('fechar a edição descarta o que não foi salvo', async () => {
       // `edit` é cópia derivada de `praise`, semeada uma única vez no fetch. Fechar a
       // edição só invertia `isEditing`: o valor alterado continuava lá, invisível.
@@ -743,7 +814,9 @@ describe('PraiseDetailPage Component', () => {
       // Escrita 1: remover a tag — fica em voo.
       await user.click(screen.getByLabelText('Remover tag Coletânea'));
       // Escrita 2: remover o PDF — responde primeiro, tirando a seção da tela.
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
       await user.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
+      confirmar.mockRestore();
       await waitFor(() => {
         expect(screen.queryByText('Partituras')).toBeNull();
       });

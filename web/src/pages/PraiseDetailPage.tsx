@@ -279,6 +279,8 @@ export function PraiseDetailPage() {
   const [driveSkipped, setDriveSkipped] = useState<Array<{ path: string; reason: string }>>([]);
   const [driveImportJob, setDriveImportJob] = useState<ImportJobSummary | null>(null);
   const [driveBusy, setDriveBusy] = useState(false);
+  const [driveJobErro, setDriveJobErro] = useState<string | null>(null);
+  const [mergeAviso, setMergeAviso] = useState<string | null>(null);
   const driveScanAbortRef = useRef<AbortController | null>(null);
   const drivePanelRef = useRef<HTMLDivElement | null>(null);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
@@ -424,26 +426,38 @@ export function PraiseDetailPage() {
   }, []);
 
   useEffect(() => {
-    const jobId = (location.state as { driveImportJobId?: string } | null)?.driveImportJobId;
-    if (!jobId || isCreate) return;
-    void getImportJob(jobId)
-      .then((job) => setDriveImportJob(job))
-      .catch(() => undefined);
-  }, [location.state, isCreate]);
+    const state = location.state as {
+      driveImportJobId?: string;
+      mergeSuccess?: boolean;
+      mergedPraiseName?: string;
+    } | null;
+    if (!state) return;
+
+    if (state.mergeSuccess) {
+      setMergeAviso(
+        state.mergedPraiseName
+          ? `Mesclagem concluída — «${state.mergedPraiseName}» foi importado e excluído.`
+          : 'Mesclagem concluída.'
+      );
+    }
+    if (state.driveImportJobId && !isCreate) {
+      void getImportJob(state.driveImportJobId)
+        .then((job) => setDriveImportJob(job))
+        .catch(() => setDriveJobErro('Não foi possível acompanhar esta importação.'));
+    }
+
+    // Consumido: sem limpar, o aviso e o painel do job antigo voltavam num F5 ou
+    // no botão Voltar do navegador, porque o react-router preserva history.state.
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, isCreate, navigate]);
 
   useEffect(() => {
-    if (!driveImportJob?.id) return;
-    const terminal = ['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status);
-    if (terminal) {
-      const failed = driveImportJob.items?.filter((i) => i.status === 'failed') ?? [];
-      if (failed.length > 0) {
-        console.error('[Drive import] falhas técnicas', failed.map((i) => ({
-          path: i.file_path_legacy || i.drive_file_id,
-          error: i.error,
-        })));
-      }
-      return;
-    }
+    if (!driveImportJob?.id || driveJobErro) return;
+    // O motivo de cada falha agora aparece na própria linha do item, então este
+    // efeito não precisa mais ler `items` — que vinha como array novo a cada
+    // resposta e, estando nas dependências, destruía e recriava o intervalo a
+    // cada consulta.
+    if (['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status)) return;
     const t = window.setInterval(() => {
       void getImportJob(driveImportJob.id)
         .then(async (job) => {
@@ -460,10 +474,18 @@ export function PraiseDetailPage() {
             }
           }
         })
-        .catch(() => undefined);
+        .catch(() => {
+          // Engolir o erro deixava o intervalo rodando para sempre — o job podia
+          // ter sumido (louvor apagado leva o job pela cascata, ou é de outra
+          // sessão) e a tela ficava em "Na fila" eternamente, consultando a API
+          // a cada 1,5 s até o usuário sair da página.
+          setDriveJobErro(
+            'Não foi possível acompanhar esta importação. Ela pode ter terminado; recarregue a página.'
+          );
+        });
     }, 1500);
     return () => window.clearInterval(t);
-  }, [driveImportJob?.id, driveImportJob?.status, id, driveImportJob?.items]);
+  }, [driveImportJob?.id, driveImportJob?.status, driveJobErro, id]);
 
   const runDriveScan = useCallback(async () => {
     const url = driveUrl.trim();
@@ -677,6 +699,17 @@ export function PraiseDetailPage() {
   };
 
   const handleMaterialDelete = async (materialId: string) => {
+    // Um clique apagava o material e o arquivo no R2, sem volta. Mesma confirmação
+    // que a tela de mesclagem usa antes de excluir do louvor que sobrevive.
+    const alvo = praise?.materials.find((m) => m.id === materialId);
+    const nome = alvo ? materialDisplayName(alvo) : 'este material';
+    if (
+      !window.confirm(
+        `«${nome}» será excluído permanentemente, junto com o arquivo guardado. Continuar?`
+      )
+    ) {
+      return;
+    }
     setSavingMaterials(true);
     setError(null);
     try {
@@ -827,14 +860,18 @@ export function PraiseDetailPage() {
         setLouvorCriado(null);
       } else if (id) {
         await executarEscrita(() =>
-          updatePraise(id, {
-            name: edit.name,
-            number: edit.number,
-            author: edit.author,
-            rhythm: edit.rhythm,
-            tonality: edit.tonality,
-            category: edit.category,
-          })
+          updatePraise(
+            id,
+            {
+              name: edit.name,
+              number: edit.number,
+              author: edit.author,
+              rhythm: edit.rhythm,
+              tonality: edit.tonality,
+              category: edit.category,
+            },
+            praise?.updated_at
+          )
         );
       }
     } catch (err) {
@@ -899,7 +936,7 @@ export function PraiseDetailPage() {
     setSavingLyrics(true);
     setError(null);
     try {
-      await executarEscrita(() => updatePraise(id, { lyrics: edit.lyrics }));
+      await executarEscrita(() => updatePraise(id, { lyrics: edit.lyrics }, praise?.updated_at));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar letra');
     } finally {
@@ -919,6 +956,12 @@ export function PraiseDetailPage() {
       {error ? (
         <div className="error-state" style={{ marginBottom: '1rem' }}>
           <div className="error-state-desc">{error}</div>
+        </div>
+      ) : null}
+
+      {mergeAviso ? (
+        <div className="detail-aviso" role="status">
+          {mergeAviso}
         </div>
       ) : null}
 
@@ -1842,6 +1885,11 @@ export function PraiseDetailPage() {
                   </div>
                 </>
               )}
+              {driveJobErro ? (
+                <p className="drive-job-support" role="status">
+                  {driveJobErro}
+                </p>
+              ) : null}
               {driveImportJob && (
                 <div className="drive-job-status">
                   {!['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status) && (
@@ -1913,6 +1961,9 @@ export function PraiseDetailPage() {
                             </span>
                             <span className="drive-job-item-label">{driveItemLabel(item.status)}</span>
                           </div>
+                          {item.status === 'failed' && item.error ? (
+                            <div className="drive-job-item-erro">{item.error}</div>
+                          ) : null}
                           <div
                             className={`bulk-scan-progress${
                               item.status === 'running' ? ' drive-job-item-progress--run' : ''

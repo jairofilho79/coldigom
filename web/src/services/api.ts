@@ -245,14 +245,20 @@ export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetai
 
 export async function updatePraise(
   id: string,
-  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>
+  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>,
+  /**
+   * `updated_at` que a tela carregou. Vai como `if_updated_at`; se alguém gravou
+   * no meio, o servidor responde 409 em vez de deixar a última escrita vencer em
+   * silêncio. Omitido, a gravação se comporta como sempre — o PLPCG não o manda.
+   */
+  ifUpdatedAt?: string
 ): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${id}`,
     {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(ifUpdatedAt ? { ...updates, if_updated_at: ifUpdatedAt } : updates),
     }
   );
   return response.data;

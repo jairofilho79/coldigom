@@ -53,13 +53,6 @@ aditivo mantendo `tag_ids`/`tag_names` para compatibilidade.
 **Antes de fechar:** conferir no D1 de produção se existe alguma tag com vírgula
 no nome. Se não existir, o risco cai para zero e o item vira só higiene.
 
-### Cancelamento real da requisição de busca — setor S5
-**Onde:** `web/src/pages/HomePage.tsx`, `web/src/services/api.ts`
-**O que:** a corrida entre respostas foi fechada (S6): resposta obsoleta não
-sobrescreve mais a boa. Mas a requisição antiga continua trafegando.
-**O que falta:** `AbortSignal` atravessando o `fetchJson` do `services/api.ts`.
-**Por que não foi feito:** `services/api.ts` é arquivo do S5.
-
 ### Rate limiting — setor S1, reavaliar
 **Onde:** nenhuma rota tem.
 **Análise feita:** os alvos de força bruta são um código de troca de 32 bytes
@@ -122,6 +115,11 @@ latente, sem repro no código de hoje.
   de verdade exige simular `MessageBatch`, retentativas e a fila. O S4 cobriu o
   que dava sem essa infraestrutura (`driveApi` foi de 4% para 18%, `driveParse`
   para 81%), mas o caminho de importação em si segue quase sem rede.
+- **`AuthContext.tsx` exporta o provider e o hook no mesmo arquivo**
+  (`react-refresh/only-export-components`): separar exige trocar o import em
+  seis arquivos, dois deles do S7 e do S8. Não compensa mexer em quatro setores
+  para apagar um erro de lint — fica para o S7, que vai editar esses arquivos
+  de qualquer forma.
 - **25 avisos de `no-explicit-any` na api**: cada setor tipa o que é seu ao
   passar pelo arquivo.
 - **`HomePage.test.tsx` mocka o `useFilters` inteiro**, então a integração

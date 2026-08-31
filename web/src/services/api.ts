@@ -24,14 +24,27 @@ function getStoredRefreshToken(): string | null {
   }
 }
 
+/**
+ * Escritas guardadas como as leituras já eram. Com armazenamento bloqueado —
+ * Safari privado, cookies desligados — o acesso lança, e estas são chamadas
+ * no caminho de login, que é onde isso derruba a sessão inteira.
+ */
 export function setAuthTokens(accessToken: string, refreshToken: string): void {
-  sessionStorage.setItem(ACCESS_KEY, accessToken);
-  sessionStorage.setItem(REFRESH_KEY, refreshToken);
+  try {
+    sessionStorage.setItem(ACCESS_KEY, accessToken);
+    sessionStorage.setItem(REFRESH_KEY, refreshToken);
+  } catch {
+    /* sessão só em memória: o Bearer desta aba continua valendo */
+  }
 }
 
 export function clearAuthTokens(): void {
-  sessionStorage.removeItem(ACCESS_KEY);
-  sessionStorage.removeItem(REFRESH_KEY);
+  try {
+    sessionStorage.removeItem(ACCESS_KEY);
+    sessionStorage.removeItem(REFRESH_KEY);
+  } catch {
+    /* nada a limpar se nem dá para escrever */
+  }
 }
 
 function authHeaders(): Record<string, string> {
@@ -102,6 +115,10 @@ export async function refreshSession(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/**
+ * `init.signal` é repassado ao fetch e sobrevive à renovação de sessão: sem
+ * isso, o cancelamento se perdia justamente na tentativa que vem depois do 401.
+ */
 async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = false): Promise<T> {
   const headers = {
     ...authHeaders(),
@@ -137,7 +154,8 @@ export interface SearchParams {
 }
 
 export async function searchPraises(
-  params: SearchParams = {}
+  params: SearchParams = {},
+  signal?: AbortSignal
 ): Promise<{ data: Praise[]; pagination: PaginationInfo }> {
   const urlParams = new URLSearchParams();
 
@@ -158,7 +176,8 @@ export async function searchPraises(
   if (params.order) urlParams.set('order', params.order);
 
   const response = await fetchJson<ApiResponse<Praise[]>>(
-    `${API_BASE_URL}/api/praises?${urlParams}`
+    `${API_BASE_URL}/api/praises?${urlParams}`,
+    signal ? { signal } : undefined
   );
   return {
     data: response.data,

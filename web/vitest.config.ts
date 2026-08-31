@@ -14,11 +14,12 @@ export default defineConfig({
       // Catraca: sobe a cada setor fechado, nunca desce.
       // S0 (2026-08-31): 65 / 60 / 63 / 66
       // S6 (2026-08-31): 67 / 62 / 64 / 69
+      // S5 (2026-08-31): 68 / 63 / 64 / 70
       thresholds: {
-        statements: 67,
-        branches: 62,
+        statements: 68,
+        branches: 63,
         functions: 64,
-        lines: 69,
+        lines: 70,
       },
     },
   },

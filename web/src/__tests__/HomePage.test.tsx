@@ -185,19 +185,20 @@ describe('HomePage Component', () => {
     renderHome();
 
     await waitFor(() => {
-      expect(searchPraises).toHaveBeenCalledWith(
-        expect.objectContaining({
-          query: '',
-          page: 1,
-          tags: [],
-          rhythm: [],
-          tonality: [],
-          category: [],
-          materialKinds: [],
-          sort: 'number',
-          order: 'asc',
-        })
-      );
+      // Só os filtros importam aqui; a busca passou a receber também um
+      // AbortSignal, e travar a aridade da chamada faria a asserção quebrar a
+      // cada argumento novo sem que nada de relevante tivesse mudado.
+      expect(vi.mocked(searchPraises).mock.calls[0][0]).toMatchObject({
+        query: '',
+        page: 1,
+        tags: [],
+        rhythm: [],
+        tonality: [],
+        category: [],
+        materialKinds: [],
+        sort: 'number',
+        order: 'asc',
+      });
     });
   });
 

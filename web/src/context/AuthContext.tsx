@@ -12,12 +12,40 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const CHAVE_ERRO = 'coldigom_auth_error';
+
+/** Acesso tolerante: armazenamento bloqueado degrada, não derruba. */
+function lerErroSalvo(): string | null {
+  try {
+    return sessionStorage.getItem(CHAVE_ERRO);
+  } catch {
+    return null;
+  }
+}
+
+function salvarErro(msg: string): void {
+  try {
+    sessionStorage.setItem(CHAVE_ERRO, msg);
+  } catch {
+    /* a mensagem ainda aparece nesta aba, via estado */
+  }
+}
+
+function limparErroSalvo(): void {
+  try {
+    sessionStorage.removeItem(CHAVE_ERRO);
+  } catch {
+    /* nada a limpar */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(() =>
-    sessionStorage.getItem('coldigom_auth_error')
-  );
+  // Lido no inicializador do useState, que roda DURANTE o render: com
+  // armazenamento bloqueado o acesso lança e a árvore inteira cai. É o mesmo
+  // cenário Safari/iPhone que o projeto já contornou na sessão por cookie.
+  const [authError, setAuthError] = useState<string | null>(() => lerErroSalvo());
   const refetchInFlight = useRef<Promise<void> | null>(null);
 
   const refetch = useCallback(async () => {
@@ -51,19 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (auth) {
         if (auth === 'error' || auth === 'drive_error') {
           const msg = 'Falha no login. Tente de novo.';
-          sessionStorage.setItem('coldigom_auth_error', msg);
+          salvarErro(msg);
           setAuthError(msg);
         } else if (auth === 'exchange') {
-          sessionStorage.removeItem('coldigom_auth_error');
+          limparErroSalvo();
           setAuthError(null);
           const code = url.searchParams.get('code');
           if (!code || !(await exchangeAuthCode(code))) {
             const msg = 'Falha no login. Tente de novo.';
-            sessionStorage.setItem('coldigom_auth_error', msg);
+            salvarErro(msg);
             setAuthError(msg);
           }
         } else {
-          sessionStorage.removeItem('coldigom_auth_error');
+          limparErroSalvo();
           setAuthError(null);
           const attempts = auth === 'success' ? 4 : 1;
           for (let i = 0; i < attempts; i += 1) {

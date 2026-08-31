@@ -134,6 +134,16 @@ function createStatefulMockD1() {
   const praiseTagIds = new Map<string, string[]>();
 
   return {
+    /**
+     * O merge passou a escrever em lote, para ser atômico. O mock executa os
+     * statements do lote em ordem, que é o que o D1 faz — assim as asserções
+     * sobre o estado final continuam valendo.
+     */
+    batch: vi.fn(async (stmts: { run: () => Promise<unknown> }[]) => {
+      const saidas = [];
+      for (const stmt of stmts) saidas.push(await stmt.run());
+      return saidas;
+    }),
     prepare: vi.fn((query: string) => ({
       bind: vi.fn((...args: unknown[]) => ({
         run: vi.fn(async () => {
@@ -1898,6 +1908,17 @@ describe('API Routes', () => {
       const assetsDelete = vi.fn().mockResolvedValue(undefined);
 
       const db = {
+        /**
+         * O merge passou a escrever em lote, para ser atômico: o D1 executa a
+         * sequência em transação e reverte tudo se um statement falhar. O mock
+         * executa os statements em ordem, que é o mesmo efeito no caminho feliz
+         * — assim as asserções sobre o estado final continuam valendo.
+         */
+        batch: vi.fn(async (stmts: { run: () => Promise<unknown> }[]) => {
+          const saidas = [];
+          for (const stmt of stmts) saidas.push(await stmt.run());
+          return saidas;
+        }),
         prepare: vi.fn((query: string) => ({
           bind: vi.fn((...args: unknown[]) => ({
             run: vi.fn(async () => {

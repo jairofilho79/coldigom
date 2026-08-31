@@ -74,6 +74,18 @@ a receber tráfego anônimo relevante.
 
 ---
 
+### Detecção de escrita concorrente nos metadados do louvor — setor S3, precisa do S7
+**Onde:** `PATCH /api/praises/:id`, e a tela em `web/src/pages/PraiseDetailPage.tsx`
+**O que:** duas pessoas editando o mesmo louvor — a última a salvar vence, em
+silêncio, e o trabalho da primeira some sem aviso. O editor de cifras já tem
+essa detecção; os metadados não.
+**Por que não foi feito no S3:** o servidor sozinho não resolve. Precisa de um
+token de versão que a tela leia ao abrir e devolva ao salvar, e o
+`PraiseDetailPage.tsx` é arquivo do S7. Fazer só o lado do servidor deixaria a
+API recusando gravações que a tela não sabe reenviar.
+**Retomar em:** S7, junto com a tela — provavelmente com `updated_at` como
+token, seguindo o mesmo desenho já usado no editor de cifras.
+
 ## Fragilidades conhecidas, sem quebra hoje
 
 ### Contagem e listagem usam formas diferentes de consulta
@@ -121,6 +133,10 @@ latente, sem repro no código de hoje.
   desenvolvimento e eles se acumulam até travar tudo. Contorno: `--pool=threads`
   ou `pkill -f vitest`. Mudar no `vitest.config.ts` afeta o CI também, então é
   decisão pendente do dono.
+- **A barra de filtros cresceu e não foi verificada em tela estreita** (setor
+  S9): o S6 acrescentou Ritmo, Tom, faixa de número e as marcas de filtro ativo
+  à `FilterBar`. O CSS ganhou uma media query para a faixa de número, mas o
+  conjunto não foi testado num aparelho real nem em viewport de celular.
 - **Higiene do repositório (setor S10)**: `ingestion.sql` e `ingestion_no_tx.sql`
   no diretório de trabalho, três cópias de `LOGO_COLORIDO*.svg`,
   `fix_ingestion.py` na raiz, `.DS_Store`.

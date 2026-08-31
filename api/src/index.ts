@@ -12,6 +12,7 @@ import {
   clearAllAuthCookieHeaders,
   getRefreshCookieName,
   isEmailAllowed,
+  timingSafeEqual,
   type AuthUser,
 } from './auth';
 import { labelFor, listMaterialKindsForLocale, loadMaterialKindLabels } from './materialKindLabels';
@@ -181,13 +182,10 @@ app.use('/*', async (c, next) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return next();
   try {
+    // Sem log de sucesso: o sub do Google é identificador pessoal e ia para o
+    // log em toda requisição, anônima inclusive. Só a falha interessa.
     const user = await resolveUserFromRequest({ request: c.req.raw, jwtSecret });
-    if (user) {
-      c.set('user', user);
-      console.log(JSON.stringify({ msg: 'auth.soft.ok', method: c.req.method, path: c.req.path, sub: user.sub }));
-    } else {
-      console.log(JSON.stringify({ msg: 'auth.soft.none', method: c.req.method, path: c.req.path }));
-    }
+    if (user) c.set('user', user);
   } catch {
     console.log(JSON.stringify({ msg: 'auth.soft.invalid', method: c.req.method, path: c.req.path }));
   }
@@ -355,13 +353,23 @@ async function requireUploadOrAuth(c: any, next: any) {
   // Um Bearer que NÃO é ele não é erro: é o JWT de quem está logado no navegador,
   // e precisa seguir para o requireAuth. Rejeitar aqui derrubava todo usuário
   // logado com 401 — estar autenticado era exatamente o que quebrava.
-  if (uploadToken && token && token === uploadToken) return await next();
+  if (uploadToken && token && (await timingSafeEqual(token, uploadToken))) return await next();
 
   return requireAuth(c, next);
 }
 
 // --- Auth routes ---
-app.get('/auth/status', (c) => {
+// Diagnóstico, não é consumido por nenhuma tela: devolve o WEB_ORIGIN inteiro,
+// o callbackUrl e quais segredos existem. Exige sessão. Sem checagem de Origin
+// porque é GET sem efeito — a defesa de CSRF é para mutação.
+app.get('/auth/status', async (c) => {
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  const user = jwtSecret
+    ? await resolveUserFromRequest({ request: c.req.raw, jwtSecret }).catch(() => null)
+    : null;
+  if (!user || !isEmailAllowed(user.email, c.env.AUTH_ALLOWED_EMAILS)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
   const sameSite = getAuthCookieSameSite(c);
   return c.json({
     googleClientConfigured: Boolean(c.env.GOOGLE_CLIENT_ID),

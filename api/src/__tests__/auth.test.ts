@@ -5,6 +5,7 @@ import {
   buildSetCookie,
   clearCookie,
   consumeAuthExchangeCode,
+  createAuthExchangeCode,
   isEmailAllowed,
   resolveUserFromCookies,
   resolveUserFromRequest,
@@ -196,5 +197,87 @@ describe('consumeAuthExchangeCode', () => {
     const { db, updates } = dbComCorrida();
     await consumeAuthExchangeCode(db, 'codigo-1');
     expect(updates[0]).toMatch(/used_at IS NULL/);
+  });
+});
+
+describe('endurecimento da verificação de token', () => {
+  const secret = '0123456789abcdef0123456789abcdef';
+
+  it('recusa JWT assinado com outro algoritmo, mesmo com o segredo certo', async () => {
+    // Sem fixar o algoritmo, a verificação aceita qualquer HS*. A jose infere
+    // pelo tipo da chave hoje, mas nada no código trava isso — e travar é o que
+    // impede uma regressão silenciosa numa troca de biblioteca.
+    const hs512 = await new SignJWT({ email: 'a@b.com', jti: 'j1' })
+      .setProtectedHeader({ alg: 'HS512' })
+      .setSubject('sub-1')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(secret));
+
+    const req = new Request('https://api.example/auth/me', {
+      headers: { authorization: `Bearer ${hs512}` },
+    });
+    expect(await resolveUserFromRequest({ request: req, jwtSecret: secret })).toBeNull();
+  });
+
+  it('não aceita mais o cookie de sessão legado', async () => {
+    // Depreciado em 2026-04-28 com TTL de 7 dias: nenhuma sessão legada existe
+    // desde 05/05. Manter o caminho vivo só preservava dois formatos de token
+    // indistinguíveis, verificados com o mesmo segredo.
+    const legado = await new SignJWT({ email: 'a@b.com' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('sub-legado')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(secret));
+
+    const req = new Request('https://api.example/auth/me', {
+      headers: { cookie: `coldigom_session=${encodeURIComponent(legado)}` },
+    });
+    expect(await resolveUserFromCookies({ request: req, jwtSecret: secret })).toBeNull();
+  });
+});
+
+describe('limpeza das tabelas efêmeras', () => {
+  function dbQueSpiona() {
+    const queries: string[] = [];
+    const db = {
+      prepare: vi.fn((query: string) => {
+        queries.push(query);
+        return {
+          bind: vi.fn(() => ({
+            run: vi.fn(async () => ({ meta: { changes: 1 } })),
+            first: vi.fn(async () => null),
+          })),
+          run: vi.fn(async () => ({ meta: { changes: 1 } })),
+        };
+      }),
+    } as unknown as D1Database;
+    return { db, queries };
+  }
+
+  it('abrir um login apaga os oauth_pending vencidos', async () => {
+    // Só havia DELETE no sucesso do callback. Toda tentativa abandonada ficava
+    // no D1 para sempre.
+    const { db, queries } = dbQueSpiona();
+    await buildGoogleAuthorizeRedirect({
+      requestUrl: new URL('https://api.example/auth/login'),
+      baseUrl: 'https://api.example',
+      clientId: 'cid',
+      redirectTo: '/',
+      db,
+    });
+    expect(queries.some((q) => /DELETE FROM oauth_pending WHERE expires_at/.test(q))).toBe(true);
+  });
+
+  it('criar um código de troca apaga os vencidos', async () => {
+    const { db, queries } = dbQueSpiona();
+    await createAuthExchangeCode({
+      db,
+      accessToken: 'a',
+      refreshToken: 'r',
+      user: { sub: 'sub-1' },
+    });
+    expect(queries.some((q) => /DELETE FROM auth_exchange_codes WHERE expires_at/.test(q))).toBe(true);
   });
 });

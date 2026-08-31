@@ -1575,8 +1575,18 @@ describe('API Routes', () => {
     it('returns configuration flags without secrets', async () => {
       const mockDB = createMockD1({});
       const mockR2 = createMockR2();
+      // Deixou de ser público: expunha WEB_ORIGIN, callbackUrl e quais segredos
+      // existem, sem nenhuma tela consumir.
+      const jwt = await new SignJWT({ email: 'admin@test.com', jti: 'j-cfg' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setSubject('sub-admin')
+        .setIssuedAt()
+        .setExpirationTime('2h')
+        .sign(new TextEncoder().encode('0123456789abcdef0123456789abcdef'));
 
-      const res = await app.request('/auth/status', {}, {
+      const res = await app.request('/auth/status', {
+        headers: { cookie: `coldigom_access=${encodeURIComponent(jwt)}` },
+      }, {
         DB: mockDB,
         ASSETS: mockR2,
         GOOGLE_CLIENT_ID: 'client-id',
@@ -2470,6 +2480,56 @@ describe('destino de redirect depois do OAuth', () => {
 
     const guardado = binds.flat().filter((v): v is string => typeof v === 'string');
     expect(guardado).toContain(destino);
+  });
+});
+
+describe('endurecimento da borda', () => {
+  const baseEnv = {
+    AUTH_JWT_SECRET: TEST_JWT_SECRET,
+    AUTH_ALLOWED_EMAILS: '*',
+    WEB_ORIGIN: TEST_WEB_ORIGIN,
+  };
+
+  it('/auth/status não é mais público', async () => {
+    // Devolvia o WEB_ORIGIN inteiro, o callbackUrl e quais segredos existem.
+    // Nenhuma tela do site consome — é endpoint de diagnóstico.
+    const res = await app.request('/auth/status', {}, { ...baseEnv, DB: createMockD1({}), ASSETS: createMockR2() });
+    expect(res.status).toBe(401);
+  });
+
+  it('/auth/status responde para quem está autenticado', async () => {
+    const jwt = await new SignJWT({ email: 'admin@test.com', jti: 'j-status' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('sub-admin')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(TEST_JWT_SECRET));
+
+    const res = await app.request(
+      '/auth/status',
+      { headers: { origin: TEST_WEB_ORIGIN, cookie: `coldigom_access=${encodeURIComponent(jwt)}` } },
+      { ...baseEnv, DB: createMockD1({}), ASSETS: createMockR2() }
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it('token de upload errado no último caractere é recusado', async () => {
+    // Guarda contra comparação por prefixo; a propriedade de tempo constante em
+    // si não é observável por teste.
+    const res = await app.request(
+      '/api/materials/chord-mat-1/content',
+      {
+        method: 'PUT',
+        headers: {
+          'content-type': 'text/plain',
+          origin: TEST_WEB_ORIGIN,
+          authorization: 'Bearer test-upload-token-abd',
+        },
+        body: '{title: X}',
+      },
+      { ...baseEnv, DB: createMockD1(), ASSETS: createMockR2(), COLDIGOM_UPLOAD_TOKEN: 'test-upload-token-abc' }
+    );
+    expect(res.status).toBe(401);
   });
 });
 

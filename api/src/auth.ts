@@ -80,6 +80,23 @@ async function sha256Base64Url(input: string): Promise<string> {
   return base64UrlEncode(new Uint8Array(digest));
 }
 
+/**
+ * Comparação que não vaza informação pelo tempo. Compara os digests, o que de
+ * quebra neutraliza a diferença de comprimento entre os dois valores.
+ */
+export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [da, db] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const x = new Uint8Array(da);
+  const y = new Uint8Array(db);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
 /** SHA-256 hex for opaque refresh token lookup in D1 */
 export async function hashRefreshTokenHex(raw: string): Promise<string> {
   const bytes = new TextEncoder().encode(raw);
@@ -184,6 +201,12 @@ export async function buildGoogleAuthorizeRedirect(params: {
   }
 
   const expiresAt = Math.floor(Date.now() / 1000) + 600;
+  // Varre o vencido no caminho de escrita: só havia DELETE no sucesso do
+  // callback, então toda tentativa abandonada ficava no D1 para sempre.
+  await params.db
+    .prepare(`DELETE FROM oauth_pending WHERE expires_at <= ?`)
+    .bind(Math.floor(Date.now() / 1000))
+    .run();
   await params.db
     .prepare(
       `INSERT OR REPLACE INTO oauth_pending (state, code_verifier, redirect_to, purpose, expires_at) VALUES (?, ?, ?, ?, ?)`
@@ -295,25 +318,15 @@ export async function signAccessJwt(params: {
 
 export async function verifyAccessJwt(params: { jwtSecret: string; token: string }): Promise<AuthUser & { jti?: string }> {
   const secret = new TextEncoder().encode(params.jwtSecret);
-  const { payload } = await jwtVerify(params.token, secret);
+  // Algoritmo fixado: a jose já restringe pelo tipo da chave, mas deixar
+  // implícito é o tipo de coisa que uma troca de biblioteca afrouxa em silêncio.
+  const { payload } = await jwtVerify(params.token, secret, { algorithms: ['HS256'] });
   return {
     sub: String(payload.sub),
     email: typeof payload.email === 'string' ? payload.email : undefined,
     name: typeof payload.name === 'string' ? payload.name : undefined,
     picture: typeof payload.picture === 'string' ? payload.picture : undefined,
     jti: typeof payload.jti === 'string' ? payload.jti : undefined,
-  };
-}
-
-/** Legacy long-lived session JWT (7d) — read-only verification for migration */
-export async function verifyLegacySessionJwt(params: { jwtSecret: string; token: string }): Promise<AuthUser> {
-  const secret = new TextEncoder().encode(params.jwtSecret);
-  const { payload } = await jwtVerify(params.token, secret);
-  return {
-    sub: String(payload.sub),
-    email: typeof payload.email === 'string' ? payload.email : undefined,
-    name: typeof payload.name === 'string' ? payload.name : undefined,
-    picture: typeof payload.picture === 'string' ? payload.picture : undefined,
   };
 }
 
@@ -456,6 +469,10 @@ export async function createAuthExchangeCode(params: {
 }): Promise<string> {
   const code = randomString(32);
   const expiresAt = Math.floor(Date.now() / 1000) + 120;
+  await params.db
+    .prepare(`DELETE FROM auth_exchange_codes WHERE expires_at <= ?`)
+    .bind(Math.floor(Date.now() / 1000))
+    .run();
   await params.db
     .prepare(
       `INSERT INTO auth_exchange_codes (code, access_token, refresh_token, user_json, expires_at) VALUES (?, ?, ?, ?, ?)`
@@ -654,28 +671,25 @@ export async function resolveUserFromRequest(params: {
   return resolveUserFromCookies(params);
 }
 
-/** Resolve user from access cookie, legacy session cookie, or null */
+/**
+ * Resolve o usuário pelo cookie de acesso.
+ *
+ * A sessão legada de 7 dias foi depreciada em 2026-04-28: toda ela expirou em
+ * 05/05, e aceitá-la mantinha dois formatos de token indistinguíveis, verificados
+ * com o mesmo segredo e sem nenhuma claim separando um do outro. O cookie
+ * continua sendo limpo, para não deixar lixo em navegador antigo.
+ */
 export async function resolveUserFromCookies(params: {
   request: Request;
   jwtSecret: string;
 }): Promise<AuthUser | null> {
   const access = getCookie(params.request, ACCESS_COOKIE);
-  if (access) {
-    try {
-      return await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: access });
-    } catch {
-      /* fall through */
-    }
+  if (!access) return null;
+  try {
+    return await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: access });
+  } catch {
+    return null;
   }
-  const legacy = getCookie(params.request, LEGACY_SESSION_COOKIE);
-  if (legacy) {
-    try {
-      return await verifyLegacySessionJwt({ jwtSecret: params.jwtSecret, token: legacy });
-    } catch {
-      return null;
-    }
-  }
-  return null;
 }
 
 /** Clear auth cookies without DB (e.g. invalid refresh) */

@@ -43,47 +43,48 @@ import { getPraise, getMe, createPraise, groupPraise } from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
 
+const mockPraiseDetail: PraiseDetail = {
+  id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+  name: 'Grande Deus',
+  number: '001',
+  author: 'Autor 1',
+  rhythm: 'Avulsos',
+  tonality: 'C',
+  category: 'Louvor',
+  lyrics: 'Esta é a letra do louvor',
+  group_id: null,
+  tag_ids: 'tag1,tag2',
+  tag_names: 'Coletânea,Avulsos',
+  tags: [
+    { id: 'tag1', name: 'Coletânea', parent_id: null },
+    { id: 'tag2', name: 'Avulsos', parent_id: null },
+  ],
+  materials: [
+    {
+      id: 'mat1',
+      praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+      material_kind: 'kind1',
+      material_kind_name: 'Partitura',
+      type: 'pdf',
+      r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat1.pdf',
+      file_path_legacy: 'path/to/file.pdf',
+      source_material_id: null,
+    },
+    {
+      id: 'mat2',
+      praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+      material_kind: 'kind2',
+      material_kind_name: 'Áudio',
+      type: 'mp3',
+      r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat2.mp3',
+      file_path_legacy: 'path/to/file.mp3',
+      source_material_id: null,
+    },
+  ],
+  group_members: [],
+};
+
 describe('PraiseDetailPage Component', () => {
-  const mockPraiseDetail: PraiseDetail = {
-    id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
-    name: 'Grande Deus',
-    number: '001',
-    author: 'Autor 1',
-    rhythm: 'Avulsos',
-    tonality: 'C',
-    category: 'Louvor',
-    lyrics: 'Esta é a letra do louvor',
-    group_id: null,
-    tag_ids: 'tag1,tag2',
-    tag_names: 'Coletânea,Avulsos',
-    tags: [
-      { id: 'tag1', name: 'Coletânea', parent_id: null },
-      { id: 'tag2', name: 'Avulsos', parent_id: null },
-    ],
-    materials: [
-      {
-        id: 'mat1',
-        praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
-        material_kind: 'kind1',
-        material_kind_name: 'Partitura',
-        type: 'pdf',
-        r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat1.pdf',
-        file_path_legacy: 'path/to/file.pdf',
-        source_material_id: null,
-      },
-      {
-        id: 'mat2',
-        praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
-        material_kind: 'kind2',
-        material_kind_name: 'Áudio',
-        type: 'mp3',
-        r2_key: 'assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/mat2.mp3',
-        file_path_legacy: 'path/to/file.mp3',
-        source_material_id: null,
-      },
-    ],
-    group_members: [],
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -616,5 +617,83 @@ describe('PraiseDetailPage Component', () => {
       '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/cifra/mat3'
     );
     expect(screen.getByText(/sem conte\u00fado/i)).toBeInTheDocument();
+  });
+});
+
+describe('Materiais de tipo fora dos quatro com apresentação própria', () => {
+  // A API aceita qualquer tipo `^[a-z0-9]{1,16}$` (api/src/uploadLimits.ts) porque o
+  // acervo tem mid, gestures, txt e link vindos de ingestão legada, e a importação
+  // em lote infere o tipo pela extensão do arquivo. A tela só sabia desenhar quatro.
+  const praiseComMid: PraiseDetail = {
+    ...mockPraiseDetail,
+    materials: [
+      {
+        id: 'mat-mid',
+        praise_id: mockPraiseDetail.id,
+        material_kind: 'kind1',
+        material_kind_name: 'Coral',
+        type: 'mid',
+        r2_key: `assets/praises/${mockPraiseDetail.id}/mat-mid.mid`,
+        file_path_legacy: 'Louvor/Coral.mid',
+        source_material_id: null,
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseComMid);
+  });
+
+  function render1(id: string) {
+    return render(
+      <MemoryRouter initialEntries={[`/praise/${id}`]}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+  }
+
+  it('exibe o material em vez de descartá-lo em silêncio', async () => {
+    render1(mockPraiseDetail.id);
+
+    // Espera o carregamento terminar antes de afirmar qualquer ausência/presença.
+    await screen.findByText('Grande Deus');
+
+    expect(screen.getByText('Outros materiais')).toBeTruthy();
+    expect(screen.getByText('Coral')).toBeTruthy();
+  });
+
+  it('oferece link para abrir o arquivo guardado', async () => {
+    render1(mockPraiseDetail.id);
+    await screen.findByText('Grande Deus');
+
+    const link = screen.getByRole('link', { name: /Coral/ });
+    expect(link.getAttribute('href')).toContain('mat-mid.mid');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('permite trocar a categoria e remover no modo edição', async () => {
+    (getMe as ReturnType<typeof vi.fn>).mockResolvedValue({
+      sub: 'admin-1',
+      email: 'admin@test.com',
+      name: 'Admin Teste',
+    });
+    const user = userEvent.setup();
+    render1(mockPraiseDetail.id);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+    });
+    await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Outros materiais')).toBeTruthy();
+    });
+    expect(screen.getAllByLabelText('Categoria do material').length).toBeGreaterThanOrEqual(1);
   });
 });

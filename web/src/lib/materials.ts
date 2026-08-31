@@ -1,8 +1,8 @@
-import type { Material } from '../types';
+import type { KnownMaterialType, Material, MaterialType } from '../types';
 
-const TYPE_ORDER: Material['type'][] = ['youtube', 'pdf', 'mp3', 'chord'];
+const TYPE_ORDER: KnownMaterialType[] = ['youtube', 'pdf', 'mp3', 'chord'];
 
-const TYPE_LABELS: Record<Material['type'], string> = {
+const TYPE_LABELS: Record<KnownMaterialType, string> = {
   youtube: 'YouTube',
   pdf: 'PDF',
   mp3: 'MP3',
@@ -26,7 +26,7 @@ export function sortMaterialsAlphabetically(materials: Material[]): Material[] {
 }
 
 export type MaterialTypeGroup = {
-  type: Material['type'];
+  type: MaterialType;
   label: string;
   items: Material[];
 };
@@ -51,8 +51,8 @@ export function groupMaterialsByType(materials: Material[]): MaterialTypeGroup[]
 
   for (const [type, items] of [...byType.entries()].sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))) {
     groups.push({
-      type: type as Material['type'],
-      label: type,
+      type,
+      label: type.toUpperCase(),
       items,
     });
   }

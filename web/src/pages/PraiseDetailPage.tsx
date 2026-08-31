@@ -14,7 +14,7 @@ import {
 } from '../components/BulkFolderScanStatus';
 import { Select } from '../components/Select';
 import { SearchableSelect } from '../components/SearchableSelect';
-import { groupMaterialsByType } from '../lib/materials';
+import { groupMaterialsByType, materialDisplayName } from '../lib/materials';
 import {
   folderNameFromFiles,
   scanFolderFilesAsync,
@@ -86,6 +86,9 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
 }
 
 const BULK_LIST_PREVIEW = 25;
+
+/** Tipos que ganham seção desenhada sob medida na tela. */
+const TIPOS_COM_SECAO_PROPRIA = new Set(['youtube', 'mp3', 'pdf', 'chord']);
 
 function drivePreviewUrl(driveFileId: string): string {
   return `https://drive.google.com/file/d/${driveFileId}/view`;
@@ -564,6 +567,11 @@ export function PraiseDetailPage() {
   const audioMaterials = materialGroups.find((g) => g.type === 'mp3')?.items ?? [];
   const pdfMaterials = materialGroups.find((g) => g.type === 'pdf')?.items ?? [];
   const chordMaterials = materialGroups.find((g) => g.type === 'chord')?.items ?? [];
+  // Todo o resto. Sem esta lista, material que a API aceitou (mid, gestures, txt,
+  // e qualquer extensão que a importação em lote infira) ficava invisível: gravado
+  // no banco e no R2, presente no ZIP, e sem nenhum caminho na tela para ser visto,
+  // recategorizado ou apagado — o usuário reimportava achando que tinha falhado.
+  const outrosGrupos = materialGroups.filter((g) => !TIPOS_COM_SECAO_PROPRIA.has(g.type));
   const canEditMaterialsInline = Boolean(userName && isEditing && !isCreate);
 
   const handleMaterialKindChange = async (materialId: string, material_kind: string) => {
@@ -1921,6 +1929,60 @@ export function PraiseDetailPage() {
                 ) : null}
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {outrosGrupos.length > 0 && (
+        <section className="detail-section animate-fade-in-up">
+          <h2 className="detail-section-title">
+            <span className="detail-section-icon">📎</span>
+            Outros materiais
+          </h2>
+          <div className="material-grid">
+            {outrosGrupos.flatMap((grupo) =>
+              grupo.items.map((m) => {
+                const href = m.r2_key ? getAssetUrl(m.r2_key) : m.url || null;
+                const nome = materialDisplayName(m);
+                return (
+                  <div key={m.id} className="material-card-wrap">
+                    {href ? (
+                      <a
+                        className="material-link"
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="material-link-icon">📎</span>
+                        <div>
+                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-meta">{grupo.label}</div>
+                        </div>
+                      </a>
+                    ) : (
+                      <div className="material-link material-link--empty">
+                        <span className="material-link-icon">📎</span>
+                        <div>
+                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-meta">
+                            {grupo.label} · arquivo indisponível
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {canEditMaterialsInline ? (
+                      <MaterialInlineAdmin
+                        material={m}
+                        options={materialKindOptions}
+                        saving={savingMaterials}
+                        onUpdateKind={handleMaterialKindChange}
+                        onDelete={handleMaterialDelete}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
       )}

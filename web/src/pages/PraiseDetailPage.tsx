@@ -71,6 +71,19 @@ function preserveScroll(el: HTMLElement | null | undefined, run: () => void) {
   });
 }
 
+/** Os campos editáveis, lidos do louvor. Semeia a cópia de edição. */
+function camposDe(p: PraiseDetail) {
+  return {
+    name: p.name || '',
+    number: p.number || '',
+    author: p.author || '',
+    rhythm: p.rhythm || '',
+    tonality: p.tonality || '',
+    category: p.category || '',
+    lyrics: p.lyrics || '',
+  };
+}
+
 function driveItemLabel(status: string): string {
   if (status === 'done') return 'Ok';
   if (status === 'failed') return 'Falha';
@@ -246,6 +259,11 @@ export function PraiseDetailPage() {
   const [newSubtagParentId, setNewSubtagParentId] = useState('');
   const [newSubtagName, setNewSubtagName] = useState('');
   const [subtagBusy, setSubtagBusy] = useState(false);
+  // "Criar e associar" são duas escritas: cria a tag no catálogo, depois liga ao
+  // louvor. Falhando a segunda, a tag já existe — e sem guardar qual, a tentativa
+  // seguinte criava outra de mesmo nome sob o mesmo pai. O catálogo é compartilhado,
+  // então as duas ficavam indistinguíveis no dropdown de todo mundo.
+  const [subtagCriada, setSubtagCriada] = useState<Tag | null>(null);
 
   // Toda mutação (tag, material, metadados, letra, agrupamento) devolve o louvor
   // inteiro, e cada uma chamava setPraise cru. As flags de "ocupado" são separadas,
@@ -286,15 +304,7 @@ export function PraiseDetailPage() {
           return;
         }
         setPraise(data);
-        setEdit({
-          name: data.name || '',
-          number: data.number || '',
-          author: data.author || '',
-          rhythm: data.rhythm || '',
-          tonality: data.tonality || '',
-          category: data.category || '',
-          lyrics: data.lyrics || '',
-        });
+        setEdit(camposDe(data));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load praise');
       } finally {
@@ -706,11 +716,11 @@ export function PraiseDetailPage() {
     // render seguinte, e o `catch` desta mesma execução precisa da resposta agora.
     let louvorNoServidor = Boolean(louvorCriado);
     try {
+      if (!edit.name.trim()) {
+        setError('Nome é obrigatório');
+        return;
+      }
       if (isCreate) {
-        if (!edit.name.trim()) {
-          setError('Nome é obrigatório');
-          return;
-        }
         if (bulkFiles.some((f) => !f.material_kind) || driveFiles.some((f) => !f.material_kind)) {
           setError('Defina a categoria de todos os arquivos antes de criar');
           return;
@@ -796,6 +806,49 @@ export function PraiseDetailPage() {
     }
   };
 
+  const criarEAssociarSubtag = async () => {
+    if (!newSubtagParentId || !newSubtagName.trim()) return;
+    setSubtagBusy(true);
+    setError(null);
+    let tag = subtagCriada;
+    try {
+      if (!tag) {
+        tag = await createTag({
+          name: newSubtagName.trim(),
+          parent_id: newSubtagParentId,
+        });
+        setSubtagCriada(tag);
+        setCatalogTags((prev) => [...prev, tag as Tag]);
+      }
+      if (isCreate) {
+        const criada = tag;
+        setPendingTagIds((ids) => (ids.includes(criada.id) ? ids : [...ids, criada.id]));
+      } else if (id) {
+        await executarEscrita(() => addPraiseTag(id, (tag as Tag).id));
+      }
+      setNewSubtagName('');
+      setNewSubtagParentId('');
+      setSubtagCriada(null);
+    } catch (err) {
+      const motivo = err instanceof Error ? err.message : 'Falha ao criar subtag';
+      // Sem distinguir os passos, a mensagem culpava a criação por um erro que era
+      // da associação, e o usuário reagia recriando a tag.
+      setError(tag ? `${motivo} — a subtag já foi criada; falta associá-la.` : motivo);
+    } finally {
+      setSubtagBusy(false);
+    }
+  };
+
+  const alternarEdicao = () => {
+    setIsEditing((editando) => {
+      // Reabrir tem que mostrar o que está gravado. Antes, `edit` era semeado uma
+      // única vez no fetch: o valor abandonado ao fechar continuava lá, invisível, e
+      // ia junto no próximo Salvar de qualquer outro campo.
+      if (!editando && praise) setEdit(camposDe(praise));
+      return !editando;
+    });
+  };
+
   const saveLyrics = async () => {
     if (!id || isCreate) return;
     setSavingLyrics(true);
@@ -848,7 +901,7 @@ export function PraiseDetailPage() {
                   <button
                     type="button"
                     className="auth-btn"
-                    onClick={() => setIsEditing(v => !v)}
+                    onClick={alternarEdicao}
                   >
                     {isEditing ? 'Fechar edição' : 'Editar'}
                   </button>
@@ -1093,31 +1146,13 @@ export function PraiseDetailPage() {
                     type="button"
                     className="auth-btn"
                     disabled={!newSubtagParentId || !newSubtagName.trim() || subtagBusy || tagsBusy || (!isCreate && !id)}
-                    onClick={async () => {
-                      if (!newSubtagParentId || !newSubtagName.trim()) return;
-                      setSubtagBusy(true);
-                      setError(null);
-                      try {
-                        const created = await createTag({
-                          name: newSubtagName.trim(),
-                          parent_id: newSubtagParentId,
-                        });
-                        setCatalogTags((prev) => [...prev, created]);
-                        if (isCreate) {
-                          setPendingTagIds((ids) => (ids.includes(created.id) ? ids : [...ids, created.id]));
-                        } else if (id) {
-                          await executarEscrita(() => addPraiseTag(id, created.id));
-                        }
-                        setNewSubtagName('');
-                        setNewSubtagParentId('');
-                      } catch (err) {
-                        setError(err instanceof Error ? err.message : 'Falha ao criar subtag');
-                      } finally {
-                        setSubtagBusy(false);
-                      }
-                    }}
+                    onClick={() => void criarEAssociarSubtag()}
                   >
-                    {subtagBusy ? 'Criando…' : 'Criar e associar'}
+                    {subtagBusy
+                      ? 'Criando…'
+                      : subtagCriada
+                        ? 'Associar ao louvor'
+                        : 'Criar e associar'}
                   </button>
                 </div>
               </div>

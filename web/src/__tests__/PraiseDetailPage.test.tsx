@@ -31,6 +31,7 @@ vi.mock('../services/api', async (importOriginal) => {
     addPraiseTag: vi.fn(),
     removePraiseTag: vi.fn(),
     groupPraise: vi.fn(),
+    createTag: vi.fn(),
     createMaterial: vi.fn(),
     updateMaterial: vi.fn(),
     deleteMaterial: vi.fn(),
@@ -47,6 +48,9 @@ import {
   bulkUploadMaterials,
   removePraiseTag,
   deleteMaterial,
+  createTag,
+  addPraiseTag,
+  updatePraise,
 } from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
@@ -598,6 +602,79 @@ describe('PraiseDetailPage Component', () => {
       const categorySelects = screen.getAllByLabelText('Categoria do material');
       expect(categorySelects.length).toBeGreaterThanOrEqual(2);
       expect(screen.getAllByRole('button', { name: 'Remover' }).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('fechar a edição descarta o que não foi salvo', async () => {
+      // `edit` é cópia derivada de `praise`, semeada uma única vez no fetch. Fechar a
+      // edição só invertia `isEditing`: o valor alterado continuava lá, invisível.
+      // Ao reabrir e salvar qualquer outro campo, o nome ia junto — o usuário achava
+      // que tinha descartado, e gravava sem saber.
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+
+      const campoNome = () => screen.getAllByRole('textbox')[0] as HTMLInputElement;
+      await waitFor(() => {
+        expect(campoNome().value).toBe('Grande Deus');
+      });
+
+      await user.clear(campoNome());
+      await user.type(campoNome(), 'Aleluia 2');
+      expect(campoNome().value).toBe('Aleluia 2');
+
+      await user.click(screen.getByRole('button', { name: 'Fechar edição' }));
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      expect(campoNome().value).toBe('Grande Deus');
+    });
+
+    it('não deixa salvar o louvor com o nome vazio', async () => {
+      // A checagem de nome obrigatório existia só no ramo de criação. No de edição a
+      // tela mandava assim mesmo e o usuário recebia de volta a frase do servidor,
+      // em inglês, num app inteiramente em português.
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+
+      const campoNome = () => screen.getAllByRole('textbox')[0] as HTMLInputElement;
+      await waitFor(() => {
+        expect(campoNome().value).toBe('Grande Deus');
+      });
+      await user.clear(campoNome());
+      await user.click(screen.getAllByRole('button', { name: 'Salvar' })[0]);
+
+      expect(await screen.findByText('Nome é obrigatório')).toBeTruthy();
+      expect(updatePraise).not.toHaveBeenCalled();
+    });
+
+    it('subtag criada não é criada de novo quando só a associação falha', async () => {
+      // "Criar e associar" são duas escritas: POST /api/tags e depois
+      // POST /api/praises/:id/tags. Falhando a segunda, a mensagem culpava a
+      // primeira ("Falha ao criar subtag") e os campos não eram limpos — clicar de
+      // novo criava uma segunda tag de mesmo nome sob o mesmo pai, no catálogo que
+      // todo mundo enxerga, e as duas ficavam indistinguíveis no dropdown.
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+
+      (createTag as ReturnType<typeof vi.fn>).mockResolvedValue({
+        id: 'tag-nova',
+        name: '4.2026',
+        parent_id: 'tag1',
+        parent_name: 'Coletânea',
+      });
+      (addPraiseTag as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Falha de rede'));
+
+      await screen.findByText('Nova subtag');
+      await user.click(screen.getByLabelText('Tag pai da subtag'));
+      await user.click(screen.getByRole('option', { name: 'Coletânea' }));
+      await user.type(screen.getByLabelText('Nome da subtag'), '4.2026');
+
+      await user.click(screen.getByRole('button', { name: /Criar e associar|Associar/ }));
+      await screen.findByText(/Falha de rede/);
+
+      await user.click(screen.getByRole('button', { name: /Criar e associar|Associar/ }));
+      await waitFor(() => {
+        expect(addPraiseTag).toHaveBeenCalledTimes(2);
+      });
+      expect(createTag).toHaveBeenCalledTimes(1);
     });
 
     it('resposta de escrita antiga não ressuscita material já apagado', async () => {

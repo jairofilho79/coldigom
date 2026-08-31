@@ -1,4 +1,4 @@
-import type { Context } from 'hono';
+import type { Context, Next } from 'hono';
 
 import {
   isEmailAllowed,
@@ -11,7 +11,7 @@ import type { Env } from './env';
 
 export type AppContext = Context<{ Bindings: Env; Variables: { user: AuthUser } }>;
 
-export function getBaseUrl(c: any): string {
+export function getBaseUrl(c: AppContext): string {
   // Prefer explicit AUTH_BASE_URL (recommended in production)
   if (c.env.AUTH_BASE_URL) return c.env.AUTH_BASE_URL;
   const url = new URL(c.req.url);
@@ -43,7 +43,7 @@ export function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: st
   return null;
 }
 
-export async function requireAuth(c: any, next: any) {
+export async function requireAuth(c: AppContext, next: Next) {
   const blocked = assertTrustedMutationOrigin(c);
   if (blocked) return blocked;
 
@@ -85,7 +85,7 @@ export function bearerToken(c: { req: { header: (n: string) => string | undefine
 }
 
 /** Review-app upload token (no Origin) or admin JWT. */
-export async function requireUploadOrAuth(c: any, next: any) {
+export async function requireUploadOrAuth(c: AppContext, next: Next) {
   const uploadToken = c.env.COLDIGOM_UPLOAD_TOKEN?.trim();
   const token = bearerToken(c);
 

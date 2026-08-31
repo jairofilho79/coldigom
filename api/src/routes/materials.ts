@@ -4,6 +4,11 @@ import { listMaterialKindsForLocale } from '../materialKindLabels';
 import type { App } from '../env';
 import { requireAuth, requireUploadOrAuth } from '../middleware';
 import { storageKeyFor } from '../storageKeys';
+import type { MaterialRow } from '../praiseZip';
+import {
+  erroDeCategoriaDesconhecida,
+  materialKindsForaDoCatalogo,
+} from '../materialKindLabels';
 import { MAX_CHORD_CONTENT_BYTES, isSafeMaterialType } from '../uploadLimits';
 
 type LeituraDeCorpo = { excedeu: true } | { excedeu: false; texto: string };
@@ -188,16 +193,18 @@ export function registerMaterialsRoutes(app: App): void {
   // PATCH /api/materials/:materialId - Update a material (admin)
   app.patch('/api/materials/:materialId', requireAuth, async (c) => {
     const materialId = c.req.param('materialId');
-    const body = await c.req.json().catch(() => null) as any;
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
 
     const sets: string[] = [];
     const bindings: (string | number | null)[] = [];
 
+    let categoriaNova: string | undefined;
     if ('material_kind' in body) {
       if (body.material_kind !== null && typeof body.material_kind !== 'string') {
         return c.json({ error: "Field 'material_kind' must be a string" }, 400);
       }
+      if (typeof body.material_kind === 'string') categoriaNova = body.material_kind;
       sets.push(`material_kind = ?`);
       bindings.push(body.material_kind);
     }
@@ -228,6 +235,15 @@ export function registerMaterialsRoutes(app: App): void {
       bindings.push(valor);
     }
 
+    if (categoriaNova !== undefined) {
+      // As três rotas de criação já validavam contra o catálogo; a edição ficou de
+      // fora, e material com categoria inexistente some dos filtros por categoria.
+      const foraDoCatalogo = await materialKindsForaDoCatalogo(c.env.DB, [categoriaNova]);
+      if (foraDoCatalogo.length > 0) {
+        return c.json({ error: erroDeCategoriaDesconhecida(foraDoCatalogo) }, 400);
+      }
+    }
+
     if ('is_reviewed' in body) {
       if (typeof body.is_reviewed !== 'boolean') {
         return c.json({ error: "Field 'is_reviewed' must be a boolean" }, 400);
@@ -246,7 +262,9 @@ export function registerMaterialsRoutes(app: App): void {
     if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
 
     try {
-      const row = await c.env.DB.prepare(`SELECT praise_id, type, r2_key FROM praise_materials WHERE id = ?`).bind(materialId).first() as any;
+      const row = await c.env.DB.prepare(`SELECT praise_id, type, r2_key FROM praise_materials WHERE id = ?`)
+        .bind(materialId)
+        .first<Pick<MaterialRow, 'praise_id' | 'type' | 'r2_key'>>();
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
 
       // `SET url = ?, r2_key = NULL` sumia com o ponteiro do banco e NÃO apagava
@@ -293,7 +311,7 @@ export function registerMaterialsRoutes(app: App): void {
         .bind(...bindings, materialId)
         .run();
 
-      const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env as any);
+      const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env);
       const json = await res.json();
       return c.json(json, res.status as ContentfulStatusCode);
     } catch (error) {
@@ -308,7 +326,7 @@ export function registerMaterialsRoutes(app: App): void {
     try {
       const row = await c.env.DB.prepare(`SELECT praise_id, r2_key FROM praise_materials WHERE id = ?`)
         .bind(materialId)
-        .first() as any;
+        .first<Pick<MaterialRow, 'praise_id' | 'r2_key'>>();
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
 
       await c.env.DB.prepare(`DELETE FROM praise_materials WHERE id = ?`).bind(materialId).run();
@@ -322,7 +340,7 @@ export function registerMaterialsRoutes(app: App): void {
         }
       }
 
-      const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env as any);
+      const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env);
       const json = await res.json();
       return c.json(json, res.status as ContentfulStatusCode);
     } catch (error) {

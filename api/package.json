@@ -20,7 +20,7 @@
     "ingest:verify": "tsx scripts/ingest-verify.ts",
     "migration:r2-copy": "node scripts/r2-copy.mjs",
     "test": "vitest",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint ."
   },
   "keywords": [

@@ -11,12 +11,14 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/__tests__/**', 'src/**/*.{test,spec}.{ts,tsx}', 'src/vitest-env.d.ts'],
-      // Catraca: o piso medido em 2026-08-31. Sobe conforme os setores fecham.
+      // Catraca: sobe a cada setor fechado, nunca desce.
+      // S0 (2026-08-31): 65 / 60 / 63 / 66
+      // S6 (2026-08-31): 67 / 62 / 64 / 69
       thresholds: {
-        statements: 65,
-        branches: 60,
-        functions: 63,
-        lines: 66,
+        statements: 67,
+        branches: 62,
+        functions: 64,
+        lines: 69,
       },
     },
   },

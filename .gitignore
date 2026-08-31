@@ -20,8 +20,9 @@ coverage/
 # Environment files
 .env
 .env.local
-.env.production
 .env.*.local
+# web/.env.production NÃO é ignorado: não tem segredo (só VITE_API_URL vazio) e
+# é a fonte única de verdade da origem da API entre o CI e o deploy manual.
 
 # IDE
 .idea/

@@ -20,6 +20,13 @@ export function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Sem isto, duas buscas em voo resolvem em ordem arbitrária e a última a
+    // chegar vence — mesmo sendo a mais antiga. Clicar dois filtros em
+    // sequência rápida deixava a tela mostrando o resultado do primeiro
+    // clique, e o erro de uma busca já superada pintava erro sobre resultado
+    // válido.
+    let cancelado = false;
+
     const fetchPraises = async () => {
       setLoading(true);
       setError(null);
@@ -37,16 +44,22 @@ export function HomePage() {
           sort: filters.sort,
           order: filters.order,
         });
+        if (cancelado) return;
         setPraises(result.data);
         setPagination(result.pagination);
       } catch (err) {
+        if (cancelado) return;
         setError(err instanceof Error ? err.message : 'Failed to load praises');
       } finally {
-        setLoading(false);
+        if (!cancelado) setLoading(false);
       }
     };
 
     fetchPraises();
+
+    return () => {
+      cancelado = true;
+    };
   }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.category, filters.materialKinds, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
 
   const handleSearch = (newQuery: string) => {

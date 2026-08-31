@@ -7,6 +7,17 @@ interface SearchBarProps {
 
 export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
   const [query, setQuery] = useState(initialValue);
+  // O campo é rascunho do usuário, mas precisa acompanhar quando o termo
+  // aplicado muda por fora — "Limpar filtros", botão Voltar, link com outro q.
+  // Antes o estado era iniciado uma vez e nunca mais olhava para initialValue,
+  // então a lista desfiltrava e o campo continuava exibindo o termo antigo.
+  // Ajuste durante o render, e não em efeito: só dispara quando o termo
+  // aplicado de fato muda, então não atropela quem está digitando.
+  const [termoAplicado, setTermoAplicado] = useState(initialValue);
+  if (initialValue !== termoAplicado) {
+    setTermoAplicado(initialValue);
+    setQuery(initialValue);
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -19,7 +30,7 @@ export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="search-bar">
+    <form onSubmit={handleSubmit} className="search-bar" role="search">
       <div className="search-input-wrapper">
         <svg
           className="search-icon"
@@ -36,10 +47,11 @@ export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
           <path d="m21 21-4.3-4.3" />
         </svg>
         <input
-          type="text"
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar por nome, letra, autor, ID..."
+          aria-label="Buscar por nome, letra, autor ou ID"
           className="search-input"
         />
         {query && (

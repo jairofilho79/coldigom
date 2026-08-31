@@ -911,6 +911,20 @@
   color: var(--text-tertiary);
 }
 
+/* Texto só para leitor de tela: anuncia estado (carregando, contagem) sem
+   ocupar espaço visual. Não existia; a barra de filtros girava um spinner mudo. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .error-state {
   display: flex;
   flex-direction: column;

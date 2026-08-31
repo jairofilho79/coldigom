@@ -11,16 +11,30 @@ export function FilterBar() {
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [erroOpcoes, setErroOpcoes] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // O .catch(console.error) engolia a falha e filterOptions ficava null para
+  // sempre: a barra inteira virava um spinner sem fim, sem mensagem e sem
+  // saída, enquanto a tabela de resultados carregava normalmente ao lado.
   useEffect(() => {
+    let cancelado = false;
+
     Promise.all([getFilterOptions(), getMaterialKinds()])
       .then(([opts, kinds]) => {
+        if (cancelado) return;
         setFilterOptions(opts);
         setMaterialKinds(kinds);
       })
-      .catch(console.error);
-  }, []);
+      .catch(() => {
+        if (!cancelado) setErroOpcoes(true);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [tentativa]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -127,10 +141,34 @@ export function FilterBar() {
     );
   };
 
+  if (erroOpcoes) {
+    return (
+      <div className="filter-bar">
+        <div className="error-state" role="alert">
+          <div className="error-state-title">Não foi possível carregar os filtros</div>
+          <p className="error-state-desc">Verifique a conexão e tente novamente.</p>
+          <button
+            type="button"
+            className="clear-filters-btn"
+            onClick={() => {
+              // Reset aqui, no evento, e não dentro do efeito: chamar setState
+              // direto no efeito dispara re-render em cascata.
+              setErroOpcoes(false);
+              setTentativa((n) => n + 1);
+            }}
+          >
+            Tentar de novo
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!filterOptions) {
     return (
       <div className="filter-bar">
-        <div className="loading-state" style={{ padding: 'var(--space-8)' }}>
+        <div className="loading-state" style={{ padding: 'var(--space-8)' }} role="status">
+          <span className="sr-only">Carregando opções de filtro…</span>
           <div className="loading-spinner" />
         </div>
       </div>

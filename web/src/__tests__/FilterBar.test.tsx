@@ -148,7 +148,10 @@ describe('FilterBar Component', () => {
     expect(container.querySelector('.loading-spinner')).toBeTruthy();
   });
 
-  it('should handle API error gracefully', async () => {
+  it('mostra erro com opção de tentar de novo quando as opções falham', async () => {
+    // A asserção anterior era `queryByText('Coletânea')).toBeNull()` — um texto
+    // que este componente nunca renderiza em cenário nenhum. Passava com ou sem
+    // o bug do spinner eterno, que é justamente o que deveria pegar.
     (getFilterOptions as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API Error'));
 
     render(
@@ -157,7 +160,8 @@ describe('FilterBar Component', () => {
       </MemoryRouter>
     );
 
-    expect(screen.queryByText('Coletânea')).toBeNull();
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /tentar de novo/i })).toBeTruthy();
   });
 
   it('should render sort selector', async () => {

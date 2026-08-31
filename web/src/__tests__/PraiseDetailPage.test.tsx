@@ -352,6 +352,45 @@ describe('PraiseDetailPage Component', () => {
       });
     });
 
+    it('aponta o arquivo que a API recusaria e trava o envio até resolver', async () => {
+      // Um arquivo sem extensão vira o tipo "louvor 42", que a API recusa — e a
+      // recusa derruba o LOTE INTEIRO. Antes, isso só aparecia depois do upload
+      // completo, com a lista truncada em 25 itens e sem botão para tirar o culpado.
+      const user = userEvent.setup();
+      renderWithRouter('new');
+      await screen.findByText('Novo louvor');
+
+      await user.type(screen.getAllByRole('textbox')[0], 'Louvor Novo');
+      await user.upload(screen.getByLabelText('Escolher pasta'), [
+        new File(['x'], 'Partitura.pdf', { type: 'application/pdf' }),
+        new File(['x'], 'Louvor 42'),
+      ]);
+      await screen.findByText(/Louvor 42/);
+
+      expect(screen.getByText(/1 arquivo\(s\) precisam de atenção/)).toBeTruthy();
+      expect(
+        (screen.getByRole('button', { name: 'Criar louvor' }) as HTMLButtonElement).disabled
+      ).toBe(true);
+    });
+
+    it('mostra todos os arquivos quando são mais que a prévia', async () => {
+      const user = userEvent.setup();
+      renderWithRouter('new');
+      await screen.findByText('Novo louvor');
+
+      const muitos = Array.from(
+        { length: 30 },
+        (_, i) => new File(['x'], `Partitura ${i}.pdf`, { type: 'application/pdf' })
+      );
+      await user.upload(screen.getByLabelText('Escolher pasta'), muitos);
+      await screen.findByText('Partitura 0.pdf');
+
+      // O 29º não cabia na prévia de 25 e ficava sem categoria nem botão Remover.
+      expect(screen.queryByText('Partitura 29.pdf')).toBeNull();
+      await user.click(screen.getByRole('button', { name: /Ver os 30/ }));
+      expect(screen.getByText('Partitura 29.pdf')).toBeTruthy();
+    });
+
     it('não cria um segundo louvor quando o envio dos arquivos falha', async () => {
       // Criar é uma sequência: createPraise, depois bulkUploadMaterials, depois o
       // import do Drive. Falhando o segundo passo, o louvor do primeiro já existe —

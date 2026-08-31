@@ -22,6 +22,12 @@ import {
   type BulkFileItem,
 } from '../lib/materialKindInference/scanFolder';
 import type { PraiseDetail, Tag, MaterialKind } from '../types';
+import {
+  MAX_UPLOAD_BYTES,
+  formatarMB,
+  problemaDoArquivo,
+  type ProblemaDeArquivo,
+} from '../lib/uploadLimits';
 
 function tagLabel(tag: Tag, catalog?: Tag[]): string {
   if (tag.parent_name) return `${tag.parent_name} · ${tag.name}`;
@@ -113,6 +119,13 @@ function openLocalFilePreview(file: File): void {
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
+/** Frase do problema, para quem só vê a lista e precisa saber o que fazer. */
+function textoDoProblema(problema: ProblemaDeArquivo): string {
+  return problema === 'grande'
+    ? `acima do limite de ${formatarMB(MAX_UPLOAD_BYTES)} por arquivo`
+    : 'sem extensão reconhecida — a API recusa o lote inteiro por causa dele';
+}
+
 function BulkFilePreviewList({
   files,
   materialKindOptions,
@@ -126,11 +139,30 @@ function BulkFilePreviewList({
   onRemove?: (index: number) => void;
   editable?: boolean;
 }) {
+  const [verTodos, setVerTodos] = useState(false);
   if (files.length === 0) return null;
+
+  // Um arquivo problemático além do 25º ficava sem seletor de categoria e sem
+  // botão Remover — impossível de corrigir pela tela, e ele sozinho derrubava o
+  // envio inteiro. Os problemáticos entram sempre; o resto respeita a prévia.
+  const comIndice = files.map((it, idx) => ({ it, idx, problema: problemaDoArquivo(it) }));
+  const problematicos = comIndice.filter((x) => x.problema);
+  const visiveis = verTodos
+    ? comIndice
+    : [
+        ...problematicos,
+        ...comIndice.filter((x) => !x.problema).slice(0, BULK_LIST_PREVIEW),
+      ].sort((a, b) => a.idx - b.idx);
+  const ocultos = files.length - visiveis.length;
 
   return (
     <div className="bulk-list">
-      {files.slice(0, BULK_LIST_PREVIEW).map((it, idx) => {
+      {problematicos.length > 0 && (
+        <div className="bulk-scan-hint bulk-list-alerta" role="status">
+          {problematicos.length} arquivo(s) precisam de atenção antes do envio.
+        </div>
+      )}
+      {visiveis.map(({ it, idx, problema }) => {
         const size = it.sizeBytes ?? it.file?.size;
         const canPreview = Boolean(it.driveFileId || it.file);
         return (
@@ -140,6 +172,9 @@ function BulkFilePreviewList({
               <div className="bulk-meta">
                 <span className="pill">{it.type}</span>
                 <InferenceBadge inference={it.inference} />
+                {problema ? (
+                  <span className="pill bulk-problema">{textoDoProblema(problema)}</span>
+                ) : null}
                 {typeof size === 'number' ? (
                   <span className="bulk-size">{Math.round(size / 1024)} KB</span>
                 ) : null}
@@ -195,8 +230,14 @@ function BulkFilePreviewList({
           </div>
         );
       })}
-      {files.length > BULK_LIST_PREVIEW && (
-        <div className="lyrics-empty">… e mais {files.length - BULK_LIST_PREVIEW} arquivo(s)</div>
+      {ocultos > 0 && (
+        <button
+          type="button"
+          className="linkish bulk-list-ver-todos"
+          onClick={() => setVerTodos(true)}
+        >
+          Ver os {files.length} arquivo(s) — {ocultos} fora da prévia
+        </button>
       )}
     </div>
   );
@@ -618,6 +659,10 @@ export function PraiseDetailPage() {
   // recategorizado ou apagado — o usuário reimportava achando que tinha falhado.
   const outrosGrupos = materialGroups.filter((g) => !TIPOS_COM_SECAO_PROPRIA.has(g.type));
   const canEditMaterialsInline = Boolean(userName && isEditing && !isCreate);
+  // Um único arquivo recusado derruba o lote inteiro no servidor. Barrar aqui evita
+  // a subida completa seguida de recusa, que era o que acontecia.
+  const bulkTemProblema = bulkFiles.some((f) => problemaDoArquivo(f) !== null);
+  const driveTemProblema = driveFiles.some((f) => problemaDoArquivo(f) !== null);
 
   const handleMaterialKindChange = async (materialId: string, material_kind: string) => {
     setSavingMaterials(true);
@@ -1457,6 +1502,8 @@ export function PraiseDetailPage() {
               disabled={
                 savingMetadata ||
                 !userName ||
+                bulkTemProblema ||
+                driveTemProblema ||
                 bulkFiles.some((f) => !f.material_kind) ||
                 driveFiles.some((f) => !f.material_kind)
               }
@@ -1639,7 +1686,12 @@ export function PraiseDetailPage() {
                     <button
                       type="button"
                       className="auth-btn"
-                      disabled={!id || bulkUploading || bulkFiles.some(f => !f.material_kind)}
+                      disabled={
+                        !id ||
+                        bulkUploading ||
+                        bulkTemProblema ||
+                        bulkFiles.some((f) => !f.material_kind)
+                      }
                       onClick={async () => {
                         if (!id) return;
                         setBulkUploading(true);
@@ -1747,6 +1799,7 @@ export function PraiseDetailPage() {
                       disabled={
                         !id ||
                         driveBusy ||
+                        driveTemProblema ||
                         driveFiles.some((f) => !f.material_kind) ||
                         Boolean(driveImportJob && !['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status))
                       }

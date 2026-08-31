@@ -3370,3 +3370,20 @@ button.linkish {
   font-size: var(--text-sm);
   color: #ffb020;
 }
+
+/* Arquivos que a API recusaria: um só derruba o lote inteiro, então precisam
+   saltar aos olhos na lista antes de o usuário tentar enviar. */
+.bulk-list-alerta {
+  color: var(--color-danger, #c1121f);
+  font-weight: 600;
+}
+
+.bulk-problema {
+  border-color: color-mix(in srgb, var(--color-danger, #c1121f) 45%, var(--border-subtle));
+  color: var(--color-danger, #c1121f);
+}
+
+.bulk-list-ver-todos {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+}

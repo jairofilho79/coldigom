@@ -39,7 +39,13 @@ vi.mock('../services/api', async (importOriginal) => {
   };
 });
 
-import { getPraise, getMe, createPraise, groupPraise } from '../services/api';
+import {
+  getPraise,
+  getMe,
+  createPraise,
+  groupPraise,
+  bulkUploadMaterials,
+} from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
 
@@ -338,6 +344,75 @@ describe('PraiseDetailPage Component', () => {
           })
         );
       });
+    });
+
+    it('não cria um segundo louvor quando o envio dos arquivos falha', async () => {
+      // Criar é uma sequência: createPraise, depois bulkUploadMaterials, depois o
+      // import do Drive. Falhando o segundo passo, o louvor do primeiro já existe —
+      // e a tela ficava em /praise/new com o formulário intacto, convidando a clicar
+      // de novo e criar um louvor duplicado e vazio no acervo.
+      const user = userEvent.setup();
+      const created: PraiseDetail = {
+        ...mockPraiseDetail,
+        id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        name: 'Louvor Novo',
+        materials: [],
+        tags: [],
+        tag_ids: '',
+      };
+      (createPraise as ReturnType<typeof vi.fn>).mockResolvedValue(created);
+      (bulkUploadMaterials as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Máximo de 200 arquivos por lote')
+      );
+
+      renderWithRouter('new');
+      await screen.findByText('Novo louvor');
+
+      await user.type(screen.getAllByRole('textbox')[0], 'Louvor Novo');
+      await user.upload(
+        screen.getByLabelText('Escolher pasta'),
+        [new File(['x'], 'Partitura.pdf', { type: 'application/pdf' })]
+      );
+      await screen.findByText(/Partitura\.pdf/);
+
+      const botao = screen.getByRole('button', { name: 'Criar louvor' });
+      await user.click(botao);
+      await screen.findByText(/Máximo de 200 arquivos por lote/);
+
+      // Segunda tentativa: o louvor já existe, então não pode nascer outro.
+      await user.click(screen.getByRole('button', { name: /Criar louvor|Tentar enviar/ }));
+
+      await waitFor(() => {
+        expect(bulkUploadMaterials).toHaveBeenCalledTimes(2);
+      });
+      expect(createPraise).toHaveBeenCalledTimes(1);
+    });
+
+    it('avisa que o louvor já foi criado quando só o envio falhou', async () => {
+      const user = userEvent.setup();
+      (createPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        materials: [],
+        tags: [],
+        tag_ids: '',
+      });
+      (bulkUploadMaterials as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Falha de rede')
+      );
+
+      renderWithRouter('new');
+      await screen.findByText('Novo louvor');
+
+      await user.type(screen.getAllByRole('textbox')[0], 'Louvor Novo');
+      await user.upload(
+        screen.getByLabelText('Escolher pasta'),
+        [new File(['x'], 'Partitura.pdf', { type: 'application/pdf' })]
+      );
+      await screen.findByText(/Partitura\.pdf/);
+      await user.click(screen.getByRole('button', { name: 'Criar louvor' }));
+
+      expect(await screen.findByText(/louvor já foi criado/i)).toBeTruthy();
     });
   });
 

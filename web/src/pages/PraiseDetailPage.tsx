@@ -202,6 +202,11 @@ export function PraiseDetailPage() {
   const [isEditing, setIsEditing] = useState(isCreate);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [savingMetadata, setSavingMetadata] = useState(false);
+  // Criar é uma sequência de três passos com efeito no servidor: cria o louvor,
+  // sobe os arquivos, dispara o import do Drive. Falhando qualquer passo depois do
+  // primeiro, o louvor já existe — guardamos qual para que uma nova tentativa
+  // retome de onde parou em vez de criar um louvor duplicado e vazio no acervo.
+  const [louvorCriado, setLouvorCriado] = useState<PraiseDetail | null>(null);
   const [savingLyrics, setSavingLyrics] = useState(false);
   const [savingMaterials, setSavingMaterials] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
@@ -669,6 +674,9 @@ export function PraiseDetailPage() {
   const saveMetadata = async () => {
     setSavingMetadata(true);
     setError(null);
+    // Lido de forma síncrona: o `setLouvorCriado` logo abaixo só chega ao estado no
+    // render seguinte, e o `catch` desta mesma execução precisa da resposta agora.
+    let louvorNoServidor = Boolean(louvorCriado);
     try {
       if (isCreate) {
         if (!edit.name.trim()) {
@@ -679,16 +687,21 @@ export function PraiseDetailPage() {
           setError('Defina a categoria de todos os arquivos antes de criar');
           return;
         }
-        let created = await createPraise({
-          name: edit.name.trim(),
-          number: edit.number || null,
-          author: edit.author || null,
-          rhythm: edit.rhythm || null,
-          tonality: edit.tonality || null,
-          category: edit.category || null,
-          lyrics: edit.lyrics || null,
-          tag_ids: pendingTagIds,
-        });
+        let created = louvorCriado;
+        if (!created) {
+          created = await createPraise({
+            name: edit.name.trim(),
+            number: edit.number || null,
+            author: edit.author || null,
+            rhythm: edit.rhythm || null,
+            tonality: edit.tonality || null,
+            category: edit.category || null,
+            lyrics: edit.lyrics || null,
+            tag_ids: pendingTagIds,
+          });
+          setLouvorCriado(created);
+          louvorNoServidor = true;
+        }
         if (bulkFiles.length > 0) {
           created = await bulkUploadMaterials(
             created.id,
@@ -728,6 +741,7 @@ export function PraiseDetailPage() {
         setDriveFiles([]);
         setDriveScan(INITIAL_BULK_SCAN);
         setPendingTagIds([]);
+        setLouvorCriado(null);
       } else if (id) {
         const updated = await updatePraise(id, {
           name: edit.name,
@@ -740,7 +754,14 @@ export function PraiseDetailPage() {
         setPraise(updated);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao salvar metadados');
+      const motivo = err instanceof Error ? err.message : 'Falha ao salvar metadados';
+      // Sem esta distinção o usuário lia só o erro do envio e concluía que nada
+      // tinha acontecido — quando na verdade o louvor já estava no acervo.
+      setError(
+        isCreate && louvorNoServidor
+          ? `${motivo} — o louvor já foi criado; tentar de novo só reenvia os arquivos.`
+          : motivo
+      );
     } finally {
       setSavingMetadata(false);
     }
@@ -1382,7 +1403,11 @@ export function PraiseDetailPage() {
               }
               onClick={() => void saveMetadata()}
             >
-              {savingMetadata ? 'Salvando…' : 'Criar louvor'}
+              {savingMetadata
+                ? 'Salvando…'
+                : louvorCriado
+                  ? 'Tentar enviar os arquivos de novo'
+                  : 'Criar louvor'}
             </button>
           </div>
         </section>

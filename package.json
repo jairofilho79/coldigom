@@ -6,6 +6,18 @@
     "dev:api": "cd api && npm run dev",
     "dev:web": "cd web && npm run dev",
     "build:api": "cd api && npm run build",
-    "build:web": "cd web && npm run build"
+    "build:web": "cd web && npm run build",
+    "typecheck:api": "cd api && npx tsc --noEmit",
+    "typecheck:web": "cd web && npx tsc -b --force",
+    "typecheck": "npm run typecheck:api && npm run typecheck:web",
+    "lint": "cd web && npm run lint",
+    "test:api": "cd api && npx vitest run",
+    "test:web": "cd web && npx vitest run",
+    "test": "npm run test:api && npm run test:web",
+    "coverage:api": "cd api && npx vitest run --coverage",
+    "coverage:web": "cd web && npx vitest run --coverage",
+    "coverage": "npm run coverage:api && npm run coverage:web",
+    "verify": "npm run typecheck && npm run coverage",
+    "verify:strict": "npm run typecheck && npm run lint && npm run coverage"
   }
 }

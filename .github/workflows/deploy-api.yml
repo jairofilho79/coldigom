@@ -30,6 +30,10 @@ jobs:
         working-directory: ./api
         run: npm run build
 
+      - name: Testes com cobertura (bloqueia o deploy)
+        working-directory: ./api
+        run: npm run test:coverage
+
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:

@@ -9,6 +9,15 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/__tests__/**', 'src/**/*.{test,spec}.{ts,tsx}', 'src/vitest-env.d.ts'],
+      // Catraca: o piso medido em 2026-08-31. Sobe conforme os setores fecham.
+      thresholds: {
+        statements: 65,
+        branches: 60,
+        functions: 63,
+        lines: 66,
+      },
     },
   },
 });

@@ -32,6 +32,10 @@ jobs:
         env:
           VITE_API_URL: "https://coldigom-api.jairofilho79.workers.dev"
 
+      - name: Testes com cobertura (bloqueia o deploy)
+        working-directory: ./web
+        run: npm run test:coverage
+
       - name: Deploy to Pages
         uses: cloudflare/wrangler-action@v3
         with:

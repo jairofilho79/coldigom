@@ -2208,6 +2208,10 @@ app.get('/assets/*', async (c) => {
   
   c.header('Content-Type', contentType);
   c.header('Accept-Ranges', 'bytes');
+  // Os assets são públicos e consumidos de outra origem em dev (VITE_API_URL
+  // aponta pro Worker) e por outros clientes; sem CORP o navegador recusa
+  // embutir o áudio/PDF em qualquer página que use COEP.
+  c.header('Cross-Origin-Resource-Policy', 'cross-origin');
   c.header('Content-Disposition', `inline; filename="${r2Key.split('/').pop()}"`);
   
   c.status(status as 200 | 206);

@@ -86,6 +86,44 @@ function camposDe(p: PraiseDetail) {
   };
 }
 
+const CHAVE_RASCUNHO = 'coldigom_rascunho_louvor';
+
+type Rascunho = {
+  rota: string;
+  edit: ReturnType<typeof camposDe>;
+  pendingTagIds: string[];
+  driveUrl: string;
+};
+
+/**
+ * Autorizar o Drive é navegação de página inteira: o componente remonta do zero
+ * na volta, e tudo que estava digitado — nome, número, autor, ritmo, tom,
+ * categoria, letra, tags escolhidas e o próprio link colado — voltava em branco.
+ *
+ * Acesso tolerante ao armazenamento: bloqueado, degrada em vez de derrubar a
+ * árvore inteira (mesma lição do S5). Arquivos locais não são recuperáveis por
+ * este caminho; a pasta precisa ser escolhida de novo, e a tela avisa.
+ */
+function salvarRascunho(r: Rascunho): void {
+  try {
+    sessionStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
+  } catch {
+    /* sem rascunho, o comportamento é o de antes */
+  }
+}
+
+function consumirRascunho(rota: string): Rascunho | null {
+  try {
+    const cru = sessionStorage.getItem(CHAVE_RASCUNHO);
+    if (!cru) return null;
+    sessionStorage.removeItem(CHAVE_RASCUNHO);
+    const r = JSON.parse(cru) as Rascunho;
+    return r?.rota === rota ? r : null;
+  } catch {
+    return null;
+  }
+}
+
 function driveItemLabel(status: string): string {
   if (status === 'done') return 'Ok';
   if (status === 'failed') return 'Falha';
@@ -260,6 +298,7 @@ export function PraiseDetailPage() {
   const [savingLyrics, setSavingLyrics] = useState(false);
   const [savingMaterials, setSavingMaterials] = useState(false);
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
+  const [categoriasErro, setCategoriasErro] = useState<string | null>(null);
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<BulkFileItem[]>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
@@ -277,6 +316,7 @@ export function PraiseDetailPage() {
   const [driveBusy, setDriveBusy] = useState(false);
   const [driveJobErro, setDriveJobErro] = useState<string | null>(null);
   const [mergeAviso, setMergeAviso] = useState<string | null>(null);
+  const [rascunhoAviso, setRascunhoAviso] = useState<string | null>(null);
   const driveScanAbortRef = useRef<AbortController | null>(null);
   const drivePanelRef = useRef<HTMLDivElement | null>(null);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
@@ -355,22 +395,6 @@ export function PraiseDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    const fetchKinds = async () => {
-      try {
-        const kinds = await getMaterialKinds();
-        setMaterialKinds(kinds);
-        if (!newMat.material_kind && kinds.length > 0) {
-          setNewMat(s => ({ ...s, material_kind: kinds[0].id }));
-        }
-      } catch {
-        // ignore
-      }
-    };
-    fetchKinds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (!userName) return;
     const fetchTagCatalog = async () => {
       try {
@@ -382,6 +406,28 @@ export function PraiseDetailPage() {
     };
     void fetchTagCatalog();
   }, [userName]);
+
+  /**
+   * Sem catálogo, o seletor de categoria fica sem opção, `canSubmitNewMaterial`
+   * nunca devolve true e o botão de adicionar material fica desabilitado para
+   * sempre. O catch era vazio: nada disso tinha explicação na tela.
+   */
+  const carregarCategorias = useCallback(async () => {
+    setCategoriasErro(null);
+    try {
+      const kinds = await getMaterialKinds();
+      setMaterialKinds(kinds);
+      if (kinds.length > 0) {
+        setNewMat((s) => (s.material_kind ? s : { ...s, material_kind: kinds[0].id }));
+      }
+    } catch {
+      setCategoriasErro('Não foi possível carregar as categorias de material.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void carregarCategorias();
+  }, [carregarCategorias]);
 
   const materialKindOptions = useMemo(
     () => materialKinds.map((k) => ({ value: k.id, label: k.name })),
@@ -412,14 +458,34 @@ export function PraiseDetailPage() {
   }, [userName]);
 
   useEffect(() => {
-    const auth = new URLSearchParams(window.location.search).get('auth');
+    const params = new URLSearchParams(location.search);
+    const auth = params.get('auth');
+    if (!auth) return;
+
     if (auth === 'drive_connected') {
       setDriveConnected(true);
       setError(null);
     } else if (auth === 'drive_error') {
       setError('Não foi possível conectar o Google Drive. Tente novamente.');
     }
-  }, []);
+
+    const rascunho = consumirRascunho(location.pathname);
+    if (rascunho) {
+      setEdit(rascunho.edit);
+      setPendingTagIds(rascunho.pendingTagIds);
+      setDriveUrl(rascunho.driveUrl);
+      setIsEditing(true);
+      setRascunhoAviso(
+        'Recuperamos o que você tinha preenchido. Os arquivos da pasta local precisam ser escolhidos de novo.'
+      );
+    }
+
+    // O parâmetro sai da URL: sem isso, um F5 reafirmava a conexão do Drive
+    // (mesmo se ela tivesse sido revogada) ou refixava o erro para sempre.
+    params.delete('auth');
+    const busca = params.toString();
+    navigate(`${location.pathname}${busca ? `?${busca}` : ''}`, { replace: true });
+  }, [location.search, location.pathname, navigate]);
 
   useEffect(() => {
     const state = location.state as {
@@ -483,6 +549,21 @@ export function PraiseDetailPage() {
     return () => window.clearInterval(t);
   }, [driveImportJob?.id, driveImportJob?.status, driveJobErro, id]);
 
+  // Ref, não dependência: o rascunho muda a cada tecla, e pô-lo nas dependências
+  // recriaria o callback do scan em todo render.
+  const rascunhoRef = useRef<Rascunho | null>(null);
+  rascunhoRef.current = {
+    rota: location.pathname,
+    edit,
+    pendingTagIds,
+    driveUrl,
+  };
+
+  const irAutorizarDrive = useCallback(() => {
+    if (rascunhoRef.current) salvarRascunho(rascunhoRef.current);
+    window.location.href = getDriveConnectUrl(window.location.href);
+  }, []);
+
   const runDriveScan = useCallback(async () => {
     const url = driveUrl.trim();
     if (!url) {
@@ -506,7 +587,7 @@ export function PraiseDetailPage() {
     });
     try {
       if (driveConnected === false) {
-        window.location.href = getDriveConnectUrl(window.location.href);
+        irAutorizarDrive();
         return;
       }
       const scan = await startDriveScan(url);
@@ -532,7 +613,7 @@ export function PraiseDetailPage() {
       const message = err instanceof Error ? err.message : 'Falha ao ler o Google Drive';
       if (/not connected/i.test(message) || /drive_not_connected/i.test(message)) {
         setDriveConnected(false);
-        window.location.href = getDriveConnectUrl(window.location.href);
+        irAutorizarDrive();
         return;
       }
       setDriveScan({
@@ -546,7 +627,7 @@ export function PraiseDetailPage() {
     } finally {
       setDriveBusy(false);
     }
-  }, [driveUrl, driveConnected, materialKinds]);
+  }, [driveUrl, driveConnected, materialKinds, irAutorizarDrive]);
 
   const runFolderScan = useCallback(async (files: File[]) => {
     if (files.length === 0) {
@@ -567,7 +648,9 @@ export function PraiseDetailPage() {
         processed: 0,
         total: files.length,
         folderName,
-        error: 'Catálogo de categorias ainda carregando. Aguarde um instante e clique em “Tentar novamente”.',
+        error: categoriasErro
+          ? `${categoriasErro} Sem elas não dá para classificar os arquivos.`
+          : 'Catálogo de categorias ainda carregando. Aguarde um instante e clique em “Tentar novamente”.',
       });
       return;
     }
@@ -613,7 +696,7 @@ export function PraiseDetailPage() {
         error: err instanceof Error ? err.message : 'Falha ao analisar a pasta',
       });
     }
-  }, [materialKinds]);
+  }, [materialKinds, categoriasErro]);
 
   useEffect(() => {
     folderInputRetryRef.current = () => {
@@ -958,6 +1041,25 @@ export function PraiseDetailPage() {
       {mergeAviso ? (
         <div className="detail-aviso" role="status">
           {mergeAviso}
+        </div>
+      ) : null}
+
+      {rascunhoAviso ? (
+        <div className="detail-aviso" role="status">
+          {rascunhoAviso}
+        </div>
+      ) : null}
+
+      {categoriasErro && userName ? (
+        <div className="error-state" style={{ marginBottom: '1rem' }} role="status">
+          <div className="error-state-desc">{categoriasErro}</div>
+          <button
+            type="button"
+            className="auth-btn"
+            onClick={() => void carregarCategorias()}
+          >
+            Tentar carregar de novo
+          </button>
         </div>
       ) : null}
 
@@ -1472,9 +1574,7 @@ export function PraiseDetailPage() {
                   <button
                     type="button"
                     className="linkish"
-                    onClick={() => {
-                      window.location.href = getDriveConnectUrl(window.location.href);
-                    }}
+                    onClick={irAutorizarDrive}
                   >
                     Conectar Google Drive
                   </button>
@@ -1777,9 +1877,7 @@ export function PraiseDetailPage() {
                   <button
                     type="button"
                     className="linkish"
-                    onClick={() => {
-                      window.location.href = getDriveConnectUrl(window.location.href);
-                    }}
+                    onClick={irAutorizarDrive}
                   >
                     Conectar Google Drive
                   </button>
@@ -1866,8 +1964,8 @@ export function PraiseDetailPage() {
                           });
                         } catch (err) {
                           const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
-                          if (/not connected/i.test(message)) {
-                            window.location.href = getDriveConnectUrl(window.location.href);
+                          if (/not connected|não está conectado/i.test(message)) {
+                            irAutorizarDrive();
                             return;
                           }
                           setError(message);

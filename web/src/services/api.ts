@@ -1,5 +1,6 @@
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
+import { mensagemAmigavel } from './mensagensDeErro';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== null
@@ -134,7 +135,10 @@ async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = fa
   }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' })) as { error?: string };
-    throw new Error(error.error || `HTTP ${response.status}`);
+    const bruta = error.error || `HTTP ${response.status}`;
+    // A frase do servidor é para quem investiga; a da tela é para quem usa.
+    console.error('[api]', response.status, url, bruta);
+    throw new Error(mensagemAmigavel(bruta));
   }
   return response.json() as Promise<T>;
 }

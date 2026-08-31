@@ -51,6 +51,7 @@ import {
   createTag,
   addPraiseTag,
   updatePraise,
+  getMaterialKinds,
 } from '../services/api';
 
 const mockAdminUser = { sub: 'admin-1', email: 'admin@test.com', name: 'Admin Teste' };
@@ -461,6 +462,94 @@ describe('PraiseDetailPage Component', () => {
       await user.click(screen.getByRole('button', { name: 'Criar louvor' }));
 
       expect(await screen.findByText(/louvor já foi criado/i)).toBeTruthy();
+    });
+  });
+
+  describe('Rascunho no redirecionamento do Google Drive', () => {
+    beforeEach(() => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      sessionStorage.clear();
+    });
+
+    function renderComQuery(entrada: string) {
+      return render(
+        <MemoryRouter initialEntries={[entrada]}>
+          <AuthProvider>
+            <Routes>
+              <Route path="/praise/:id" element={<PraiseDetailPage />} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      );
+    }
+
+    it('guarda o que foi digitado antes de sair para autorizar o Drive', async () => {
+      // O redirecionamento é navegação de página inteira: na volta o componente
+      // remonta e nome, número, autor, tags e o link colado voltavam em branco.
+      const user = userEvent.setup();
+      renderComQuery('/praise/new');
+      await screen.findByText('Novo louvor');
+
+      await user.type(screen.getAllByRole('textbox')[0], 'Louvor Novo');
+      await user.click(screen.getByRole('button', { name: 'Conectar Google Drive' }));
+
+      const salvo = sessionStorage.getItem('coldigom_rascunho_louvor');
+      expect(salvo).toBeTruthy();
+      expect(JSON.parse(salvo!).edit.name).toBe('Louvor Novo');
+    });
+
+    it('devolve o rascunho ao voltar da autorização', async () => {
+      sessionStorage.setItem(
+        'coldigom_rascunho_louvor',
+        JSON.stringify({
+          rota: '/praise/new',
+          edit: { name: 'Louvor Novo', number: '42', author: '', rhythm: '', tonality: '', category: '', lyrics: '' },
+          pendingTagIds: [],
+          driveUrl: 'https://drive.google.com/drive/folders/abc',
+        })
+      );
+
+      renderComQuery('/praise/new?auth=drive_connected');
+      await screen.findByText('Novo louvor');
+
+      await waitFor(() => {
+        expect((screen.getAllByRole('textbox')[0] as HTMLInputElement).value).toBe('Louvor Novo');
+      });
+      // Consumido: um F5 depois disso não deve ressuscitar o rascunho.
+      expect(sessionStorage.getItem('coldigom_rascunho_louvor')).toBeNull();
+    });
+  });
+
+  describe('Catálogo de categorias indisponível', () => {
+    beforeEach(() => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+    });
+
+    it('avisa que falhou em vez de sumir em silêncio, e o retry refaz a busca', async () => {
+      // O catch era vazio. Sem catálogo, o seletor de categoria fica sem opção, o
+      // botão "Adicionar material" nunca habilita, e a mensagem do scan em lote
+      // dizia "ainda carregando" — mentira: tinha falhado, e o "Tentar novamente"
+      // só refazia o scan local, nunca a busca do catálogo.
+      const user = userEvent.setup();
+      (getMaterialKinds as ReturnType<typeof vi.fn>)
+        .mockRejectedValueOnce(new Error('rede caiu'))
+        .mockResolvedValueOnce([{ id: 'kind1', name: 'Partitura' }]);
+
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy();
+      });
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      const aviso = await screen.findByText(/não foi possível carregar as categorias/i);
+      expect(aviso).toBeTruthy();
+
+      await user.click(screen.getByRole('button', { name: 'Tentar carregar de novo' }));
+      await waitFor(() => {
+        expect(screen.queryByText(/não foi possível carregar as categorias/i)).toBeNull();
+      });
+      expect(getMaterialKinds).toHaveBeenCalledTimes(2);
     });
   });
 

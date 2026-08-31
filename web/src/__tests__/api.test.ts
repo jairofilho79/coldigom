@@ -238,24 +238,26 @@ describe('API Service', () => {
       await expect(searchPraises()).rejects.toThrow('Bad request');
     });
 
-    it('should fall back to HTTP status when error JSON has no message', async () => {
+    it('erro sem mensagem vira uma frase que o usuário entende', async () => {
+      // Antes o teste exigia literalmente "HTTP 503" — a mesma string que ia
+      // parar na caixa vermelha da tela, num app inteiramente em português.
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 503,
         json: () => Promise.resolve({}),
       });
 
-      await expect(searchPraises()).rejects.toThrow('HTTP 503');
+      await expect(searchPraises()).rejects.toThrow(/servidor teve um problema/i);
     });
 
-    it('should throw generic error when response parsing fails', async () => {
+    it('resposta que não é JSON também vira frase legível', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         json: () => Promise.reject(new Error('Parse error')),
       });
 
-      await expect(searchPraises()).rejects.toThrow('Request failed');
+      await expect(searchPraises()).rejects.toThrow(/requisição falhou/i);
     });
   });
 
@@ -352,7 +354,7 @@ describe('API Service', () => {
         json: () => Promise.resolve({ error: 'Praise not found' }),
       });
 
-      await expect(getPraise('non-existent')).rejects.toThrow('Praise not found');
+      await expect(getPraise('non-existent')).rejects.toThrow(/não existe mais/i);
     });
   });
 

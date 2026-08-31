@@ -128,12 +128,29 @@ export function PraiseMergeImportPage() {
     [catalogTags]
   );
 
+  /** Tags que o louvor que sobrevive já tem: o servidor não as trata como associação nova. */
+  const tagIdsDoKeeper = useMemo(
+    () => new Set((keeper?.tags ?? []).map((t) => t.id)),
+    [keeper?.tags]
+  );
+
   // Basta alguém criar uma subtag de «Coral» para toda mesclagem envolvendo
   // esse louvor passar a morrer com um 400 no último clique, sem dizer qual
   // tag é a culpada. Aqui a culpada aparece antes, com nome.
+  //
+  // Só bloqueia a tag de agrupamento que viria do louvor FONTE: o servidor
+  // aceita a que o keeper já tinha, porque ela não é associação nova — mesclar
+  // não pode ser a porta dos fundos para espalhar tag pai, mas também não pode
+  // impedir o louvor de continuar com a tag que já era dele.
   const tagsQueBloqueiam = useMemo(
-    () => allTags.filter((t) => selectedTagIds.has(t.id) && tagIdsDeAgrupamento.has(t.id)),
-    [allTags, selectedTagIds, tagIdsDeAgrupamento]
+    () =>
+      allTags.filter(
+        (t) =>
+          selectedTagIds.has(t.id) &&
+          tagIdsDeAgrupamento.has(t.id) &&
+          !tagIdsDoKeeper.has(t.id)
+      ),
+    [allTags, selectedTagIds, tagIdsDeAgrupamento, tagIdsDoKeeper]
   );
 
   const resolvedMetadata = useMemo(() => {

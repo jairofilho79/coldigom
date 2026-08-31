@@ -274,10 +274,40 @@ describe('PraiseMergeImportPage', () => {
     expect(await screen.findByText('mesclado: Grande Deus Dup')).toBeTruthy();
   });
 
-  it('tag de agrupamento é apontada e trava a finalização até ser desmarcada', async () => {
-    // O servidor recusa a mesclagem inteira com 400 quando um id da lista é
-    // tag com filhos. Sem esse aviso, o usuário só descobre no último clique
-    // e sem saber qual tag é a culpada.
+  it('tag de agrupamento vinda do louvor fonte é apontada e trava a finalização', async () => {
+    // O servidor recusa anexar tag com filhos que o louvor ainda não tinha —
+    // mesclar não pode ser a porta dos fundos para espalhar tag pai. Sem esse
+    // aviso, o usuário só descobre no último clique, com um 400 que não diz
+    // qual tag é a culpada. «Avulsos» vem só do louvor fonte.
+    const user = userEvent.setup();
+    vi.mocked(getTags).mockResolvedValue([
+      ...CATALOGO,
+      { id: 'tag2a', name: '2026', parent_id: 'tag2' },
+    ]);
+
+    renderMergeImport();
+    await esperarCarregar();
+
+    const aviso = await screen.findByText(/agrupa subtags/i);
+    expect(aviso.textContent).toMatch(/Avulsos/);
+    expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeDisabled();
+
+    const tags = secao('Tags');
+    await user.click(within(tags).getByRole('checkbox', { name: /Avulsos/ }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeEnabled()
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Finalizar mesclagem' }));
+    await waitFor(() => expect(mergePraises).toHaveBeenCalled());
+    expect(vi.mocked(mergePraises).mock.calls[0][1].tag_ids).toEqual(['tag1']);
+  });
+
+  it('tag de agrupamento que o louvor que sobrevive já tinha não trava nada', async () => {
+    // O servidor a aceita: ela não é associação nova. Travar aqui impediria uma
+    // mesclagem que funciona, e obrigaria o usuário a abrir mão de uma tag que
+    // já era dele.
     const user = userEvent.setup();
     vi.mocked(getTags).mockResolvedValue([
       ...CATALOGO,
@@ -287,20 +317,10 @@ describe('PraiseMergeImportPage', () => {
     renderMergeImport();
     await esperarCarregar();
 
-    const aviso = await screen.findByText(/agrupa subtags/i);
-    expect(aviso.textContent).toMatch(/Coletânea/);
-    expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeDisabled();
-
-    const tags = secao('Tags');
-    await user.click(within(tags).getByRole('checkbox', { name: /Coletânea/ }));
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeEnabled()
-    );
-
+    expect(screen.queryByText(/agrupa subtags/i)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Finalizar mesclagem' }));
     await waitFor(() => expect(mergePraises).toHaveBeenCalled());
-    expect(vi.mocked(mergePraises).mock.calls[0][1].tag_ids).toEqual(['tag2']);
+    expect([...vi.mocked(mergePraises).mock.calls[0][1].tag_ids].sort()).toEqual(['tag1', 'tag2']);
   });
 
   it('catálogo de tags indisponível não impede a mesclagem', async () => {

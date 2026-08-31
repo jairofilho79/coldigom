@@ -11,6 +11,8 @@ import {
   rotateRefreshSession,
   clearAllAuthCookieHeaders,
   getRefreshCookieName,
+  isEmailAllowed,
+  timingSafeEqual,
   type AuthUser,
 } from './auth';
 import { labelFor, listMaterialKindsForLocale, loadMaterialKindLabels } from './materialKindLabels';
@@ -36,6 +38,7 @@ type Env = {
   AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
   DRIVE_IMPORT?: Queue<DriveImportQueueMessage>;
   COLDIGOM_UPLOAD_TOKEN?: string;
+  AUTH_ALLOWED_EMAILS?: string;
 };
 
 interface PraiseResult {
@@ -179,13 +182,10 @@ app.use('/*', async (c, next) => {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return next();
   try {
+    // Sem log de sucesso: o sub do Google é identificador pessoal e ia para o
+    // log em toda requisição, anônima inclusive. Só a falha interessa.
     const user = await resolveUserFromRequest({ request: c.req.raw, jwtSecret });
-    if (user) {
-      c.set('user', user);
-      console.log(JSON.stringify({ msg: 'auth.soft.ok', method: c.req.method, path: c.req.path, sub: user.sub }));
-    } else {
-      console.log(JSON.stringify({ msg: 'auth.soft.none', method: c.req.method, path: c.req.path }));
-    }
+    if (user) c.set('user', user);
   } catch {
     console.log(JSON.stringify({ msg: 'auth.soft.invalid', method: c.req.method, path: c.req.path }));
   }
@@ -270,6 +270,29 @@ function sanitizePostLoginRedirect(raw: string | undefined, webOrigin: string | 
   return '/';
 }
 
+/**
+ * Mantém o destino dentro do site. Diferente de sanitizePostLoginRedirect, preserva
+ * a URL absoluta quando a origem é confiável — o retorno do Drive depende disso,
+ * e reduzir a caminho relativo mandaria o usuário para a origem da API.
+ */
+function sanitizeTrustedRedirect(
+  raw: string | undefined,
+  webOrigin: string | undefined,
+  fallback: string
+): string {
+  if (!raw) return fallback;
+  if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  try {
+    const u = new URL(raw);
+    for (const entry of parseWebOrigins(webOrigin)) {
+      if (isTrustedWebOrigin(u.origin, entry)) return raw;
+    }
+  } catch {
+    /* cai no fallback */
+  }
+  return fallback;
+}
+
 function assertTrustedMutationOrigin(c: { env: Env; req: { header: (n: string) => string | undefined }; json: (b: object, s: number) => Response }): Response | null {
   const web = c.env.WEB_ORIGIN;
   if (!web) return null;
@@ -287,9 +310,28 @@ async function requireAuth(c: any, next: any) {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
 
+  // Política de autorização é configuração obrigatória: sem ela a API recusa
+  // tudo, em vez de liberar. Ver AUTH_ALLOWED_EMAILS no wrangler.toml.
+  const allowList = c.env.AUTH_ALLOWED_EMAILS?.trim();
+  if (!allowList) {
+    console.error(
+      JSON.stringify({
+        msg: 'auth.config.missing',
+        detail: 'AUTH_ALLOWED_EMAILS não está configurada; toda rota autenticada recusa.',
+      })
+    );
+    return c.json({ error: 'Auth not configured' }, 500);
+  }
+
   try {
     const user = c.get('user') ?? (await resolveUserFromRequest({ request: c.req.raw, jwtSecret }));
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
+    if (!isEmailAllowed(user.email, allowList)) {
+      console.warn(
+        JSON.stringify({ msg: 'auth.forbidden', method: c.req.method, path: c.req.path })
+      );
+      return c.json({ error: 'Forbidden' }, 403);
+    }
     c.set('user', user);
     return await next();
   } catch {
@@ -311,13 +353,23 @@ async function requireUploadOrAuth(c: any, next: any) {
   // Um Bearer que NÃO é ele não é erro: é o JWT de quem está logado no navegador,
   // e precisa seguir para o requireAuth. Rejeitar aqui derrubava todo usuário
   // logado com 401 — estar autenticado era exatamente o que quebrava.
-  if (uploadToken && token && token === uploadToken) return await next();
+  if (uploadToken && token && (await timingSafeEqual(token, uploadToken))) return await next();
 
   return requireAuth(c, next);
 }
 
 // --- Auth routes ---
-app.get('/auth/status', (c) => {
+// Diagnóstico, não é consumido por nenhuma tela: devolve o WEB_ORIGIN inteiro,
+// o callbackUrl e quais segredos existem. Exige sessão. Sem checagem de Origin
+// porque é GET sem efeito — a defesa de CSRF é para mutação.
+app.get('/auth/status', async (c) => {
+  const jwtSecret = c.env.AUTH_JWT_SECRET;
+  const user = jwtSecret
+    ? await resolveUserFromRequest({ request: c.req.raw, jwtSecret }).catch(() => null)
+    : null;
+  if (!user || !isEmailAllowed(user.email, c.env.AUTH_ALLOWED_EMAILS)) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
   const sameSite = getAuthCookieSameSite(c);
   return c.json({
     googleClientConfigured: Boolean(c.env.GOOGLE_CLIENT_ID),
@@ -362,7 +414,11 @@ app.get('/auth/drive/connect', async (c) => {
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const baseUrl = getBaseUrl(c);
-  const redirectTo = c.req.query('redirect') || primaryWebOrigin(c.env.WEB_ORIGIN) || '/';
+  const redirectTo = sanitizeTrustedRedirect(
+    c.req.query('redirect'),
+    c.env.WEB_ORIGIN,
+    primaryWebOrigin(c.env.WEB_ORIGIN) || '/'
+  );
   const { location, setCookies } = await buildGoogleAuthorizeRedirect({
     requestUrl: new URL(c.req.url),
     baseUrl,
@@ -418,7 +474,13 @@ app.get('/auth/callback', async (c) => {
         hasClientSecret: Boolean(c.env.GOOGLE_CLIENT_SECRET),
       })
     );
-    const fallback = c.req.query('redirect') || '/';
+    // O caminho feliz sanitiza o destino lá no /auth/login; este aqui pegava o
+    // parâmetro cru e redirecionava para qualquer domínio, sem exigir login.
+    const fallback = sanitizeTrustedRedirect(
+      c.req.query('redirect'),
+      c.env.WEB_ORIGIN,
+      primaryWebOrigin(c.env.WEB_ORIGIN) || '/'
+    );
     const isDrive = message.toLowerCase().includes('drive');
     return c.redirect(withAuthFlag(fallback, isDrive ? 'drive_error' : 'error'));
   }

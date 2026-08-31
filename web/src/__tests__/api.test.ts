@@ -1,11 +1,14 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl } from '../services/api';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens } from '../services/api';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
 // Mock fetch (API client always sends credentials: 'include')
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
-const withCreds = { credentials: 'include' } as const;
+// objectContaining, e não igualdade exata: o fetchJson também injeta `headers`
+// (o Bearer da sessão). O que importa aqui é a credencial ir junto; o cabeçalho
+// de autorização tem asserção própria em "Authorization header" abaixo.
+const withCreds = expect.objectContaining({ credentials: 'include' });
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -410,6 +413,41 @@ describe('API Service', () => {
       const result = getAssetUrl(r2Key);
       
       expect(result).toContain(r2Key);
+    });
+  });
+
+  // O Bearer da sessão é injetado pelo fetchJson em toda chamada. Antes isto era
+  // garantido por acidente, pela igualdade exata do init nas asserções acima;
+  // agora é explícito — inclusive o caso anônimo, que não pode vazar cabeçalho.
+  describe('Authorization header', () => {
+    afterEach(() => {
+      clearAuthTokens();
+    });
+
+    it('omite Authorization quando não há sessão', async () => {
+      clearAuthTokens();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: [] }),
+      });
+
+      await getTags();
+
+      const [, init] = mockFetch.mock.calls[0];
+      expect(init.headers).toEqual({});
+    });
+
+    it('envia o access token como Bearer quando há sessão', async () => {
+      setAuthTokens('access-abc', 'refresh-xyz');
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: [] }),
+      });
+
+      await getTags();
+
+      const [, init] = mockFetch.mock.calls[0];
+      expect(init.headers).toEqual({ Authorization: 'Bearer access-abc' });
     });
   });
 });

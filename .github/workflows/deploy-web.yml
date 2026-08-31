@@ -30,7 +30,17 @@ jobs:
         working-directory: ./web
         run: npm run build
         env:
-          VITE_API_URL: "https://coldigom-api.jairofilho79.workers.dev"
+          # Vazio = same-origin, servido pelo proxy das Pages Functions. É o que o
+          # api/deploy-frontend.sh sempre fez; o CI apontava direto pro workers.dev
+          # e, ao rodar, sobrescreveria produção quebrando o cookie de sessão no
+          # Safari/iPhone (workers.dev vira terceiro e o cookie é bloqueado).
+          # Explícito de propósito: sem a variável, o fallback de api.ts é
+          # http://localhost:8787 e o build de produção sai apontando pra localhost.
+          VITE_API_URL: ""
+
+      - name: Testes com cobertura (bloqueia o deploy)
+        working-directory: ./web
+        run: npm run test:coverage
 
       - name: Deploy to Pages
         uses: cloudflare/wrangler-action@v3

@@ -13,6 +13,7 @@
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
 
 const REPO_ROOT = path.join(process.cwd(), '..');
@@ -362,7 +363,18 @@ export async function runIngest(argv: string[] = process.argv.slice(2)): Promise
   return report;
 }
 
-runIngest().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+// Só roda quando o arquivo é o script invocado (npm run ingest:*). Sem a guarda,
+// qualquer import dispara a ingestão inteira — inclusive o do teste unitário de
+// resolveLocalFile: local, reescreve o ingestion.sql de 9,8 MB a cada `npm test`;
+// no CI, onde storage/ não existe por ser gitignored, cai no process.exit(1) e
+// derruba o job da API. É por isso que o PR Mergeable nunca passou.
+const isRunAsScript =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isRunAsScript) {
+  runIngest().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}

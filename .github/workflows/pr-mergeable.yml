@@ -3,6 +3,9 @@ name: PR Mergeable
 on:
   pull_request:
     branches: [main]
+  # A main recebe commit e merge direto; sem isto o portão nunca roda neles.
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -15,6 +18,7 @@ jobs:
   up_to_date_with_main:
     name: Branch atualizada com main
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,7 +51,7 @@ jobs:
         working-directory: ./api
         run: npm run build
 
-      - name: Testes com cobertura (≥ 95%)
+      - name: Testes com cobertura (catraca em vitest.config.ts)
         working-directory: ./api
         run: npm run test:coverage
 
@@ -71,6 +75,13 @@ jobs:
         working-directory: ./web
         run: npm run build
 
-      - name: Testes com cobertura (≥ 95%)
+      - name: Testes com cobertura (catraca em vitest.config.ts)
         working-directory: ./web
         run: npm run test:coverage
+
+      # Informativo por ora: 38 erros herdados, todos catalogados e atribuídos
+      # aos setores S5/S6/S7. Vira bloqueante quando o S6 fechar.
+      - name: Lint (informativo)
+        working-directory: ./web
+        continue-on-error: true
+        run: npm run lint

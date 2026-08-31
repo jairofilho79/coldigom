@@ -487,6 +487,19 @@ export function registerPraisesRoutes(app: App): void {
     for (const key of updatable) {
       if (!(key in body)) continue;
       const val = body[key];
+
+      // O nome é o único campo que não pode ficar vazio. O POST já exigia isso;
+      // o PATCH aceitava null para qualquer campo, e as duas rotas discordavam
+      // sobre o mesmo dado — dava para deixar um louvor sem nome no acervo.
+      if (key === 'name') {
+        if (typeof val !== 'string' || !val.trim()) {
+          return c.json({ error: "Field 'name' must be a non-empty string" }, 400);
+        }
+        sets.push('name = ?');
+        bindings.push(val.trim());
+        continue;
+      }
+
       if (val === null || val === undefined) {
         sets.push(`${key} = ?`);
         bindings.push(null);
@@ -607,20 +620,47 @@ export function registerPraisesRoutes(app: App): void {
     }
   });
 
-  async function deletePraiseWithAssets(env: Env, praiseId: string): Promise<void> {
-    const materials = await env.DB.prepare(
-      `SELECT id, r2_key FROM praise_materials WHERE praise_id = ?`
-    ).bind(praiseId).all();
-    for (const row of (materials.results as { id: string; r2_key: string | null }[]) ?? []) {
-      if (row.r2_key) {
-        try {
-          await env.ASSETS.delete(`storage/${row.r2_key}`);
-        } catch (e) {
-          console.warn('Failed to delete R2 object:', e);
-        }
+  /**
+   * Arquivos que ficarão órfãos ao apagar um louvor: os materiais que ainda
+   * pertencem a ele, tirando os que estão sendo movidos para outro.
+   *
+   * Precisa ser lido ANTES da escrita: depois do DELETE, a cascata de
+   * praise_materials já levou as linhas e não há mais como saber quais chaves
+   * do R2 ficaram sem dono.
+   */
+  async function chavesQueFicaraoOrfas(
+    env: Env,
+    praiseId: string,
+    idsQueSaem: string[]
+  ): Promise<string[]> {
+    const excecao =
+      idsQueSaem.length > 0 ? ` AND id NOT IN (${idsQueSaem.map(() => '?').join(',')})` : '';
+    const materiais = await env.DB.prepare(
+      `SELECT id, r2_key FROM praise_materials WHERE praise_id = ?${excecao}`
+    )
+      .bind(praiseId, ...idsQueSaem)
+      .all();
+    return ((materiais.results as { r2_key: string | null }[]) ?? [])
+      .map((m) => m.r2_key)
+      .filter((k): k is string => Boolean(k));
+  }
+
+  /**
+   * Limpeza best-effort do R2, feita SÓ depois de o banco confirmar.
+   *
+   * Falhar aqui deixa arquivo órfão — desperdício de espaço, recuperável. A
+   * ordem inversa, que era a de antes, destruía o arquivo e deixava a linha
+   * apontando para o vazio. Nenhum armazenamento de objetos participa da
+   * transação do D1, então a escolha real é qual lado fica inconsistente.
+   */
+  async function apagarDoR2(env: Env, chaves: string[]): Promise<void> {
+    for (const chave of chaves) {
+      try {
+        await env.ASSETS.delete(`storage/${chave}`);
+      } catch (e) {
+        console.warn(JSON.stringify({ msg: 'r2.delete.failed', key: chave, error: String(e) }));
       }
     }
-    await env.DB.prepare('DELETE FROM praises WHERE id = ?').bind(praiseId).run();
   }
 
   // POST /api/praises/:keeperId/merge - Merge duplicate praise into keeper (admin)
@@ -720,34 +760,48 @@ export function registerPraisesRoutes(app: App): void {
         }
       }
 
-      await c.env.DB.prepare(
-        `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, category = ?, lyrics = ?,
-         updated_at = datetime('now') WHERE id = ?`
-      ).bind(
-        metaValues.name,
-        metaValues.number,
-        metaValues.author,
-        metaValues.rhythm,
-        metaValues.tonality,
-        metaValues.category,
-        metaValues.lyrics,
-        keeperId
-      ).run();
+      // Lido antes da escrita: depois do DELETE a cascata já levou as linhas.
+      const orfas = await chavesQueFicaraoOrfas(c.env, sourceId, materialIdsToImport);
 
-      await c.env.DB.prepare('DELETE FROM praise_tags WHERE praise_id = ?').bind(keeperId).run();
-      for (const tagId of tagIds) {
-        await c.env.DB.prepare(
-          'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
-        ).bind(keeperId, tagId).run();
-      }
+      // Fase 1 — banco, tudo ou nada. O D1 executa o lote em transação: se um
+      // statement falha, a sequência inteira é revertida. Antes eram cinco
+      // escritas soltas, e falhar entre a segunda e a terceira deixava o keeper
+      // sem nenhuma tag.
+      await c.env.DB.batch([
+        c.env.DB.prepare(
+          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, category = ?, lyrics = ?,
+           updated_at = datetime('now') WHERE id = ?`
+        ).bind(
+          metaValues.name,
+          metaValues.number,
+          metaValues.author,
+          metaValues.rhythm,
+          metaValues.tonality,
+          metaValues.category,
+          metaValues.lyrics,
+          keeperId
+        ),
+        // As tags do keeper passam a ser exatamente a lista recebida: apaga e
+        // repõe. Lista vazia deixa o louvor sem tag, e isso é deliberado — é
+        // como a tela de merge expressa "nenhuma tag no resultado".
+        c.env.DB.prepare('DELETE FROM praise_tags WHERE praise_id = ?').bind(keeperId),
+        ...tagIds.map((tagId) =>
+          c.env.DB
+            .prepare('INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)')
+            .bind(keeperId, tagId)
+        ),
+        ...materialIdsToImport.map((materialId) =>
+          c.env.DB
+            .prepare(
+              `UPDATE praise_materials SET praise_id = ?, merged_from_praise_id = ? WHERE id = ? AND praise_id = ?`
+            )
+            .bind(keeperId, sourceId, materialId, sourceId)
+        ),
+        c.env.DB.prepare('DELETE FROM praises WHERE id = ?').bind(sourceId),
+      ]);
 
-      for (const materialId of materialIdsToImport) {
-        await c.env.DB.prepare(
-          `UPDATE praise_materials SET praise_id = ?, merged_from_praise_id = ? WHERE id = ? AND praise_id = ?`
-        ).bind(keeperId, sourceId, materialId, sourceId).run();
-      }
-
-      await deletePraiseWithAssets(c.env, sourceId);
+      // Fase 2 — só depois do commit.
+      await apagarDoR2(c.env, orfas);
     } catch (error) {
       console.error('Error merging praises:', error);
       return c.json({ error: 'Failed to merge praises' }, 500);

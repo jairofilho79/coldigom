@@ -1260,6 +1260,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
           COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
         }
@@ -1284,6 +1285,7 @@ describe('API Routes', () => {
           DB: createMockD1(),
           ASSETS: createMockR2(),
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
           COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
         }
@@ -1307,6 +1309,7 @@ describe('API Routes', () => {
           DB: createMockD1(),
           ASSETS: createMockR2(),
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
           COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
         }
@@ -1339,6 +1342,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
         }
       );
@@ -1377,6 +1381,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: createMockR2(),
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
         }
       );
@@ -1412,6 +1417,7 @@ describe('API Routes', () => {
         DB: mockDB,
         ASSETS: mockR2,
         AUTH_JWT_SECRET: TEST_JWT_SECRET,
+        AUTH_ALLOWED_EMAILS: '*',
         WEB_ORIGIN: TEST_WEB_ORIGIN,
         COLDIGOM_UPLOAD_TOKEN: uploadToken,
       });
@@ -1431,6 +1437,7 @@ describe('API Routes', () => {
         DB: createMockD1(),
         ASSETS: createMockR2(),
         AUTH_JWT_SECRET: TEST_JWT_SECRET,
+        AUTH_ALLOWED_EMAILS: '*',
         WEB_ORIGIN: TEST_WEB_ORIGIN,
       });
       expect(res.status).toBe(401);
@@ -1575,6 +1582,7 @@ describe('API Routes', () => {
         GOOGLE_CLIENT_ID: 'client-id',
         GOOGLE_CLIENT_SECRET: 'secret',
         AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+        AUTH_ALLOWED_EMAILS: '*',
         AUTH_BASE_URL: 'https://api.example',
         WEB_ORIGIN: 'https://web.example',
         AUTH_COOKIE_SAMESITE: 'None',
@@ -1597,6 +1605,7 @@ describe('API Routes', () => {
   describe('POST /api/praises', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
@@ -1707,6 +1716,7 @@ describe('API Routes', () => {
   describe('POST /api/tags', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
@@ -1779,6 +1789,7 @@ describe('API Routes', () => {
   describe('POST /api/praises/:id/tags leaf-only', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
@@ -1822,6 +1833,7 @@ describe('API Routes', () => {
   describe('POST /api/praises/:keeperId/merge', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
     const keeperId = mockPraises[0].id;
@@ -2078,6 +2090,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+          AUTH_ALLOWED_EMAILS: '*',
         }
       );
 
@@ -2098,6 +2111,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: 'https://good.example',
         }
       );
@@ -2271,3 +2285,103 @@ describe('buildWhereClause', () => {
     expect(result.bindings).toHaveLength(11);
   });
 });
+
+describe('AUTH_ALLOWED_EMAILS — autorização de quem já autenticou', () => {
+  // authRequestInit assina a sessão de admin@test.com.
+  const baseEnv = {
+    AUTH_JWT_SECRET: TEST_JWT_SECRET,
+    WEB_ORIGIN: TEST_WEB_ORIGIN,
+  };
+
+  function tagsDb() {
+    return {
+      prepare: vi.fn(() => ({
+        bind: vi.fn(() => ({
+          run: vi.fn(async () => ({})),
+          first: vi.fn(async () => null),
+          all: vi.fn(async () => ({ results: [] })),
+        })),
+      })),
+    };
+  }
+
+  it('recusa com 500 quando a política não está configurada', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      { ...baseEnv, DB: tagsDb(), ASSETS: createMockR2() }
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it('deixa passar quando a política é "*"', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      { ...baseEnv, AUTH_ALLOWED_EMAILS: '*', DB: tagsDb(), ASSETS: createMockR2() }
+    );
+    expect(res.status).not.toBe(403);
+    expect(res.status).not.toBe(500);
+  });
+
+  it('deixa passar quem está na lista', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      {
+        ...baseEnv,
+        AUTH_ALLOWED_EMAILS: 'outro@exemplo.org,admin@test.com',
+        DB: tagsDb(),
+        ASSETS: createMockR2(),
+      }
+    );
+    expect(res.status).not.toBe(403);
+    expect(res.status).not.toBe(500);
+  });
+
+  it('recusa com 403 quem autenticou mas não está na lista', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      {
+        ...baseEnv,
+        AUTH_ALLOWED_EMAILS: 'so-esse@exemplo.org',
+        DB: tagsDb(),
+        ASSETS: createMockR2(),
+      }
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('o token de upload do review-app continua passando sem política de e-mail', async () => {
+    // O review-app roda sem sessão e sem e-mail; a lista não se aplica a ele.
+    const uploadToken = 'test-upload-token-abc';
+    const mockDB = {
+      prepare: vi.fn(() => ({
+        bind: vi.fn(() => ({
+          first: vi.fn(async () => ({
+            id: 'chord-mat-1',
+            praise_id: 'praise-1',
+            type: 'chord',
+            r2_key: 'storage/assets/praises/praise-1/chord-mat-1.chord',
+          })),
+          run: vi.fn(async () => ({})),
+        })),
+      })),
+    };
+    const res = await app.request(
+      '/api/materials/chord-mat-1/content',
+      {
+        method: 'PUT',
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          authorization: `Bearer ${uploadToken}`,
+        },
+        body: '{title: ViaToken}',
+      },
+      { ...baseEnv, DB: mockDB, ASSETS: createMockR2(), COLDIGOM_UPLOAD_TOKEN: uploadToken }
+    );
+    expect(res.status).toBe(200);
+  });
+});
+

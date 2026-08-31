@@ -32,6 +32,16 @@ AUTH_BASE_URL = "https://coldigom-web.pages.dev"
 # CSV: coldigom SPA + PLPCG (*plpcg.com cobre plpcg.com, v2.plpcg.com, 120826.plpcg.com, etc.)
 WEB_ORIGIN = "https://coldigom-web.pages.dev,https://*plpcg.com,https://plpcg-v2.pages.dev,https://plpcjf.org,https://plpcg-120826.pages.dev"
 AUTH_COOKIE_SAMESITE = "Lax"
+# Quem pode escrever depois de autenticar. Obrigatória: sem ela toda rota
+# autenticada responde 500, de propósito — esquecer não pode virar acesso aberto.
+#
+# "*" delega a decisão à lista de usuários de teste do OAuth no console do Google
+# (máximo 100 e-mails), que é o arranjo atual. ATENÇÃO: isso só protege enquanto
+# o app estiver em modo de teste. Se ele for PUBLICADO no console, qualquer conta
+# Google passa a concluir o login e este "*" deixa de barrar qualquer coisa —
+# nesse dia, troque por um CSV de e-mails:
+#   AUTH_ALLOWED_EMAILS = "fulano@gmail.com,beltrana@exemplo.org"
+AUTH_ALLOWED_EMAILS = "*"
 
 # Workers AI (fallback ChordPro — binding usado por rotas internas futuras)
 [ai]

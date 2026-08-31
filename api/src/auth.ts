@@ -12,6 +12,14 @@ export type AuthEnv = {
    * - `Lax`: works when SPA and API are same-site.
    */
   AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
+  /**
+   * Quem pode usar a API depois de autenticar. Obrigatória — sem ela ninguém entra.
+   * - `*`: delega à lista de usuários de teste do OAuth no console do Google
+   *   (máx. 100). Vale enquanto o app estiver em modo de teste; se ele for
+   *   PUBLICADO lá, `*` deixa de proteger qualquer coisa.
+   * - CSV de e-mails: só esses entram, independente do que o Google permita.
+   */
+  AUTH_ALLOWED_EMAILS?: string;
 };
 
 type GoogleIdTokenClaims = {
@@ -243,6 +251,27 @@ export async function verifyGoogleIdToken(params: {
 }
 
 export type AuthUser = { sub: string; email?: string; name?: string; picture?: string };
+
+/**
+ * Autenticar responde "quem é você"; isto responde "você pode usar isto".
+ * Sem política configurada a resposta é não: esquecer a variável de ambiente não
+ * pode virar acesso liberado.
+ */
+export function isEmailAllowed(
+  email: string | undefined,
+  allowList: string | undefined
+): boolean {
+  const policy = allowList?.trim();
+  if (!policy) return false;
+  if (policy === '*') return true;
+  const wanted = email?.trim().toLowerCase();
+  if (!wanted) return false;
+  return policy
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(wanted);
+}
 
 export async function signAccessJwt(params: {
   jwtSecret: string;
@@ -515,6 +544,11 @@ export async function handleOAuthCallback(params: {
 
   const claims = await verifyGoogleIdToken({ idToken: tokenResponse.id_token, clientId: params.clientId });
   if (!claims?.sub) throw new Error('Invalid id_token payload');
+  // O e-mail é o que a allowlist compara; aceitar um não verificado deixaria
+  // alguém entrar com endereço que não provou possuir.
+  if (claims.email && claims.email_verified === false) {
+    throw new Error('Google account email is not verified');
+  }
 
   const user: AuthUser = {
     sub: claims.sub,

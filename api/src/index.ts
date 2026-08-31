@@ -11,6 +11,7 @@ import {
   rotateRefreshSession,
   clearAllAuthCookieHeaders,
   getRefreshCookieName,
+  isEmailAllowed,
   type AuthUser,
 } from './auth';
 import { labelFor, listMaterialKindsForLocale, loadMaterialKindLabels } from './materialKindLabels';
@@ -36,6 +37,7 @@ type Env = {
   AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
   DRIVE_IMPORT?: Queue<DriveImportQueueMessage>;
   COLDIGOM_UPLOAD_TOKEN?: string;
+  AUTH_ALLOWED_EMAILS?: string;
 };
 
 interface PraiseResult {
@@ -287,9 +289,28 @@ async function requireAuth(c: any, next: any) {
   const jwtSecret = c.env.AUTH_JWT_SECRET;
   if (!jwtSecret) return c.json({ error: 'Auth not configured' }, 500);
 
+  // Política de autorização é configuração obrigatória: sem ela a API recusa
+  // tudo, em vez de liberar. Ver AUTH_ALLOWED_EMAILS no wrangler.toml.
+  const allowList = c.env.AUTH_ALLOWED_EMAILS?.trim();
+  if (!allowList) {
+    console.error(
+      JSON.stringify({
+        msg: 'auth.config.missing',
+        detail: 'AUTH_ALLOWED_EMAILS não está configurada; toda rota autenticada recusa.',
+      })
+    );
+    return c.json({ error: 'Auth not configured' }, 500);
+  }
+
   try {
     const user = c.get('user') ?? (await resolveUserFromRequest({ request: c.req.raw, jwtSecret }));
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
+    if (!isEmailAllowed(user.email, allowList)) {
+      console.warn(
+        JSON.stringify({ msg: 'auth.forbidden', method: c.req.method, path: c.req.path })
+      );
+      return c.json({ error: 'Forbidden' }, 403);
+    }
     c.set('user', user);
     return await next();
   } catch {

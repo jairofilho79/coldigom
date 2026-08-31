@@ -34,6 +34,11 @@ AUTH_BASE_URL = "https://coldigom-api.jairofilho79.workers.dev"
 # Comma-separated allowed SPA origins. Use https://*example.com for any subdomain + apex.
 WEB_ORIGIN = "https://coldigom-web.pages.dev,https://*plpcg.com"
 AUTH_COOKIE_SAMESITE = "None"
+# Obrigatória: sem ela toda rota autenticada responde 500, de propósito.
+# "*" delega à lista de usuários de teste do OAuth no Google (máx. 100) e só
+# protege enquanto o app estiver em modo de teste. Se publicar o app lá, troque
+# por um CSV de e-mails: AUTH_ALLOWED_EMAILS = "fulano@gmail.com,beltrana@x.org"
+AUTH_ALLOWED_EMAILS = "*"
 
 [dev]
 port = 8787

@@ -4,6 +4,7 @@ import {
   buildGoogleAuthorizeRedirect,
   buildSetCookie,
   clearCookie,
+  isEmailAllowed,
   resolveUserFromCookies,
   resolveUserFromRequest,
 } from '../auth';
@@ -104,5 +105,42 @@ describe('auth cookie policy', () => {
     expect(url.searchParams.get('access_type')).toBe('offline');
     expect(url.searchParams.get('prompt')).toBe('consent');
     expect(setCookies).toEqual([]);
+  });
+});
+
+describe('isEmailAllowed', () => {
+  it('recusa quando não há política configurada', () => {
+    // Fail closed: sem AUTH_ALLOWED_EMAILS a API não deve deixar ninguém entrar,
+    // nem mesmo quem tem um JWT válido. Esquecer a variável não pode virar
+    // "liberado para todo mundo".
+    expect(isEmailAllowed('a@b.com', undefined)).toBe(false);
+    expect(isEmailAllowed('a@b.com', '')).toBe(false);
+    expect(isEmailAllowed('a@b.com', '   ')).toBe(false);
+  });
+
+  it('com "*" delega à lista de usuários de teste do OAuth no Google', () => {
+    expect(isEmailAllowed('qualquer@gmail.com', '*')).toBe(true);
+    expect(isEmailAllowed(undefined, '*')).toBe(true);
+    expect(isEmailAllowed('a@b.com', ' * ')).toBe(true);
+  });
+
+  it('com lista, admite só quem está nela', () => {
+    const lista = 'jairofilho79@gmail.com,outro@exemplo.org';
+    expect(isEmailAllowed('jairofilho79@gmail.com', lista)).toBe(true);
+    expect(isEmailAllowed('outro@exemplo.org', lista)).toBe(true);
+    expect(isEmailAllowed('intruso@gmail.com', lista)).toBe(false);
+  });
+
+  it('compara sem diferenciar maiúsculas nem espaços em volta', () => {
+    const lista = ' Jairofilho79@Gmail.com , outro@exemplo.org ';
+    expect(isEmailAllowed('jairofilho79@gmail.com', lista)).toBe(true);
+    expect(isEmailAllowed('  OUTRO@EXEMPLO.ORG  ', lista)).toBe(true);
+  });
+
+  it('com lista, recusa sessão sem e-mail', () => {
+    // O id_token do Google pode vir sem email se o escopo mudar; nesse caso não
+    // há como conferir a lista, e o certo é recusar.
+    expect(isEmailAllowed(undefined, 'a@b.com')).toBe(false);
+    expect(isEmailAllowed('', 'a@b.com')).toBe(false);
   });
 });

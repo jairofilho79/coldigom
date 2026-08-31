@@ -85,3 +85,54 @@ export function parseListNumbers(raw: {
     numberMax: Number.isNaN(numberMax.value) ? undefined : numberMax.value,
   };
 }
+
+/** Os filtros de lista, na forma que buildWhereClause espera. */
+export type FiltrosDeLista = {
+  search?: string;
+  tags?: string[];
+  rhythm?: string[];
+  tonality?: string[];
+  category?: string[];
+  materialKinds?: string[];
+  numberMin?: number;
+  numberMax?: number;
+};
+
+function lista(bruto: string | undefined): string[] | undefined {
+  const itens = bruto ? bruto.split(',').filter(Boolean) : [];
+  return itens.length > 0 ? itens : undefined;
+}
+
+/**
+ * Filtros vindos da query string, compartilhados por /api/praises e por
+ * /api/praises/filters — que precisa dos mesmos filtros para saber quais
+ * opções ainda produzem resultado.
+ */
+export function parseFiltrosDeLista(
+  q: (chave: string) => string | undefined
+): { ok: true; filtros: FiltrosDeLista; page: number; limit: number; offset: number } | { ok: false; error: string } {
+  const numeros = parseListNumbers({
+    page: q('page'),
+    limit: q('limit'),
+    numberMin: q('numberMin'),
+    numberMax: q('numberMax'),
+  });
+  if (!numeros.ok) return { ok: false, error: numeros.error };
+
+  return {
+    ok: true,
+    page: numeros.page,
+    limit: numeros.limit,
+    offset: numeros.offset,
+    filtros: {
+      search: q('q') || undefined,
+      tags: lista(q('tags')),
+      rhythm: lista(q('rhythm')),
+      tonality: lista(q('tonality')),
+      category: lista(q('category')),
+      materialKinds: lista(q('materialKinds')),
+      numberMin: numeros.numberMin,
+      numberMax: numeros.numberMax,
+    },
+  };
+}

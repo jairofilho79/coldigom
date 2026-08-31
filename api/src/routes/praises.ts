@@ -4,7 +4,7 @@ import { labelFor, loadMaterialKindLabels } from '../materialKindLabels';
 import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
-import { parseListNumbers } from '../queryParams';
+import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -151,16 +151,48 @@ export function registerPraisesRoutes(app: App): void {
 
   // GET /api/praises/filters - Get filter options
   app.get('/api/praises/filters', async (c) => {
+    // As opções eram globais: a tela oferecia um ritmo que, combinado com a
+    // categoria já escolhida, dava zero resultados. Agora cada dimensão é
+    // contada sob os DEMAIS filtros — ignorando o próprio, senão escolher
+    // "Valsa" apagaria os outros ritmos da lista e não haveria como trocar
+    // para "Marcha" sem limpar o filtro antes.
+    const parsed = parseFiltrosDeLista((k) => c.req.query(k));
+    if (!parsed.ok) return c.json({ error: parsed.error }, 400);
+    const { filtros } = parsed;
+
     try {
-      const [rhythmsResult, tonalitiesResult, categoriesResult, tagsResult] = await Promise.all([
-        c.env.DB.prepare(`SELECT DISTINCT rhythm FROM praises WHERE rhythm IS NOT NULL AND rhythm != '' ORDER BY rhythm`).all(),
-        c.env.DB.prepare(`SELECT DISTINCT tonality FROM praises WHERE tonality IS NOT NULL AND tonality != '' ORDER BY tonality`).all(),
-        c.env.DB.prepare(`SELECT DISTINCT category FROM praises WHERE category IS NOT NULL AND category != '' ORDER BY category`).all(),
-        // Contagem de louvores DISTINTOS da tag e das suas subtags. Era
-        // derivada em JS somando as contagens dos filhos, o que contava duas
-        // vezes o louvor marcado com duas subtags do mesmo pai e descartava os
-        // louvores ligados diretamente ao pai.
-        c.env.DB.prepare(`
+      const gruposDeTags =
+        filtros.tags && filtros.tags.length > 0
+          ? await resolveTagFilterGroups(c.env.DB, filtros.tags)
+          : undefined;
+
+      /** Cláusula com todos os filtros menos o da dimensão pedida. */
+      const exceto = (dimensao: keyof typeof filtros | 'tags') => {
+        const { clause, bindings } = buildWhereClause({
+          search: filtros.search,
+          useFts: false,
+          tagGroups: dimensao === 'tags' ? undefined : gruposDeTags,
+          rhythm: dimensao === 'rhythm' ? undefined : filtros.rhythm,
+          tonality: dimensao === 'tonality' ? undefined : filtros.tonality,
+          category: dimensao === 'category' ? undefined : filtros.category,
+          materialKinds: filtros.materialKinds,
+          numberMin: filtros.numberMin,
+          numberMax: filtros.numberMax,
+        });
+        return { clause, bindings };
+      };
+
+      const valoresDe = (coluna: 'rhythm' | 'tonality' | 'category') => {
+        const { clause, bindings } = exceto(coluna);
+        const prefixo = clause ? `${clause} AND ` : 'WHERE ';
+        const sql = `SELECT DISTINCT ${coluna} FROM praises p ${prefixo}p.${coluna} IS NOT NULL AND p.${coluna} != '' ORDER BY ${coluna}`;
+        return c.env.DB.prepare(sql).bind(...bindings).all();
+      };
+
+      const tagsComContagem = () => {
+        const { clause, bindings } = exceto('tags');
+        const prefixo = clause ? `${clause} AND ` : 'WHERE ';
+        const sql = `
           SELECT
             t.id,
             t.name,
@@ -168,27 +200,38 @@ export function registerPraisesRoutes(app: App): void {
             (
               SELECT COUNT(DISTINCT pt.praise_id)
               FROM praise_tags pt
-              WHERE pt.tag_id = t.id
-                 OR pt.tag_id IN (SELECT filho.id FROM tags filho WHERE filho.parent_id = t.id)
+              JOIN praises p ON p.id = pt.praise_id
+              ${prefixo}(
+                pt.tag_id = t.id
+                OR pt.tag_id IN (SELECT filho.id FROM tags filho WHERE filho.parent_id = t.id)
+              )
             ) AS count
           FROM tags t
           ORDER BY t.name
-        `).all(),
+        `;
+        return c.env.DB.prepare(sql).bind(...bindings).all();
+      };
+
+      const [rhythmsResult, tonalitiesResult, categoriesResult, tagsResult] = await Promise.all([
+        valoresDe('rhythm'),
+        valoresDe('tonality'),
+        valoresDe('category'),
+        tagsComContagem(),
       ]);
 
-      const tagRows = (tagsResult.results as { id: string; name: string; parent_id: string | null; count: number }[]) ?? [];
-      const tagsOut = tagRows.map((t) => ({
-        id: t.id,
-        name: t.name,
-        parent_id: t.parent_id ?? null,
-        count: Number(t.count),
-      }));
+      const tagRows =
+        (tagsResult.results as { id: string; name: string; parent_id: string | null; count: number }[]) ?? [];
 
       return c.json({
-        rhythms: (rhythmsResult.results as { rhythm: string }[]).map(r => r.rhythm),
-        tonalities: (tonalitiesResult.results as { tonality: string }[]).map(r => r.tonality),
-        categories: (categoriesResult.results as { category: string }[]).map(r => r.category),
-        tags: tagsOut,
+        rhythms: (rhythmsResult.results as { rhythm: string }[]).map((r) => r.rhythm),
+        tonalities: (tonalitiesResult.results as { tonality: string }[]).map((r) => r.tonality),
+        categories: (categoriesResult.results as { category: string }[]).map((r) => r.category),
+        tags: tagRows.map((t) => ({
+          id: t.id,
+          name: t.name,
+          parent_id: t.parent_id ?? null,
+          count: Number(t.count),
+        })),
       });
     } catch (error) {
       console.error('Error fetching filters:', error);

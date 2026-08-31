@@ -741,12 +741,90 @@
   cursor: pointer;
 }
 
+/* Virou <button> para poder ser alcançado e operado por teclado; era um <span>
+   dentro de uma <tr onClick>, que só existia para o mouse. Os resets abaixo
+   mantêm a aparência de texto que ele sempre teve. */
+/* Faixa de número e marcas de filtro ativo — controles que a barra passou a
+   oferecer no S6. Ritmo e Tom reusam o dropdown que já existia. */
+.filter-number-range {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filter-number-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.filter-number-input {
+  width: 5.5rem;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--bg-surface, transparent);
+  border: 1px solid var(--border-default, currentColor);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.filter-active-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.filter-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-sunken, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--border-default, transparent);
+  border-radius: var(--radius-full, 999px);
+  cursor: pointer;
+}
+
+.filter-active-chip:hover {
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .filter-number-range {
+    width: 100%;
+  }
+
+  .filter-number-input {
+    width: 100%;
+  }
+}
+
 .results-group-name {
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   color: var(--text-primary);
   user-select: none;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.results-group-name:focus-visible {
+  outline: 2px solid var(--c-accent, currentColor);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 3px);
 }
 
 .results-group-child td {
@@ -909,6 +987,20 @@
   font-family: var(--font-body);
   font-size: var(--text-sm);
   color: var(--text-tertiary);
+}
+
+/* Texto só para leitor de tela: anuncia estado (carregando, contagem) sem
+   ocupar espaço visual. Não existia; a barra de filtros girava um spinner mudo. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .error-state {

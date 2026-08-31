@@ -47,6 +47,25 @@ export function Select({
     setFocusedIndex(-1);
   }, []);
 
+  /**
+   * Onde o destaque começa ao abrir: na opção atual, ou na primeira habilitada.
+   *
+   * Isto era um efeito com `enabledIndices` nas dependências — um array
+   * recriado a cada render. O efeito rodava depois de TODO commit com o menu
+   * aberto e devolvia o destaque para a opção já selecionada: as setas não
+   * saíam do lugar e o realce do mouse piscava e voltava. Como a pergunta só
+   * importa no instante da abertura, o lugar disso é o handler que abre.
+   */
+  const indiceInicial = (): number => {
+    const selecionada = options.findIndex((o) => o.value === value && !o.disabled);
+    return selecionada >= 0 ? selecionada : enabledIndices[0] ?? -1;
+  };
+
+  const abrir = () => {
+    setFocusedIndex(indiceInicial());
+    setOpen(true);
+  };
+
   const selectIndex = useCallback(
     (index: number) => {
       const opt = options[index];
@@ -68,19 +87,13 @@ export function Select({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open, close]);
 
-  useEffect(() => {
-    if (!open) return;
-    const selectedIdx = options.findIndex((o) => o.value === value && !o.disabled);
-    setFocusedIndex(selectedIdx >= 0 ? selectedIdx : enabledIndices[0] ?? -1);
-  }, [open, value, options, enabledIndices]);
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
 
     if (!open) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
-        setOpen(true);
+        abrir();
       }
       return;
     }
@@ -136,7 +149,11 @@ export function Select({
         aria-controls={open ? listboxId : undefined}
         aria-labelledby={label ? `${selectId}-label` : undefined}
         aria-label={!label ? ariaLabel : undefined}
-        onClick={() => !disabled && setOpen((o) => !o)}
+        onClick={() => {
+          if (disabled) return;
+          if (open) close();
+          else abrir();
+        }}
         onKeyDown={handleKeyDown}
       >
         <span className="app-select-value">{displayLabel}</span>

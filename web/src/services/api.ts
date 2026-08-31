@@ -166,9 +166,25 @@ export async function searchPraises(
   };
 }
 
-export async function getFilterOptions(): Promise<FilterOptions> {
+/**
+ * Opções de filtro. Aceita os filtros correntes porque a API passou a devolver
+ * só o que ainda produz resultado sob eles — antes as opções eram globais e a
+ * tela oferecia combinação que dava zero.
+ */
+export async function getFilterOptions(params: SearchParams = {}): Promise<FilterOptions> {
+  const urlParams = new URLSearchParams();
+  if (params.query) urlParams.set('q', params.query);
+  if (params.tags?.length) urlParams.set('tags', params.tags.join(','));
+  if (params.rhythm?.length) urlParams.set('rhythm', params.rhythm.join(','));
+  if (params.tonality?.length) urlParams.set('tonality', params.tonality.join(','));
+  if (params.category?.length) urlParams.set('category', params.category.join(','));
+  if (params.materialKinds?.length) urlParams.set('materialKinds', params.materialKinds.join(','));
+  if (params.numberMin !== undefined) urlParams.set('numberMin', params.numberMin.toString());
+  if (params.numberMax !== undefined) urlParams.set('numberMax', params.numberMax.toString());
+
+  const qs = urlParams.toString();
   const response = await fetchJson<FilterOptions>(
-    `${API_BASE_URL}/api/praises/filters`
+    `${API_BASE_URL}/api/praises/filters${qs ? `?${qs}` : ''}`
   );
   return response;
 }

@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { SortField } from '../types';
+import { VALID_SORT_FIELDS, type SortField } from '../types';
 
 export interface FilterState {
   query: string;
@@ -16,30 +16,59 @@ export interface FilterState {
   page: number;
 }
 
+/**
+ * Leitores puros da query string.
+ *
+ * Ficam fora do hook de propósito. Declarados no corpo do componente, eram
+ * recriados a cada render e o React Compiler recusava otimizar o hook inteiro
+ * ("Compilation Skipped"), porque a dependência inferida (`getParam`) não batia
+ * com a declarada (`searchParams`). Como funções de módulo, a única dependência
+ * do useMemo é o próprio searchParams — que é o que sempre foi verdade.
+ */
+function lerTexto(params: URLSearchParams, chave: string): string {
+  return params.get(chave) ?? '';
+}
+
+function lerLista(params: URLSearchParams, chave: string): string[] {
+  const bruto = params.get(chave);
+  return bruto ? bruto.split(',').filter(Boolean) : [];
+}
+
+/**
+ * Inteiro da URL, ou undefined. A URL é editável à mão e compartilhável:
+ * `?numberMin=abc` virava NaN, era contado como filtro ativo e chegava à API
+ * literalmente como "numberMin=NaN" — que ela agora recusa com 400.
+ */
+function lerInteiro(params: URLSearchParams, chave: string, minimo = 0): number | undefined {
+  const bruto = params.get(chave);
+  if (bruto === null || !/^\d+$/.test(bruto.trim())) return undefined;
+  const valor = Number(bruto);
+  return valor >= minimo ? valor : undefined;
+}
+
+/** O `as SortField` de antes não validava nada: ?sort=qualquer_coisa ia cru para a API. */
+function lerOrdenacao(params: URLSearchParams): SortField {
+  const bruto = params.get('sort');
+  return (VALID_SORT_FIELDS as readonly string[]).includes(bruto ?? '')
+    ? (bruto as SortField)
+    : 'number';
+}
+
 export function useFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const getParam = <T>(key: string, defaultValue: T): T => {
-    const value = searchParams.get(key);
-    if (value === null) return defaultValue;
-    if (typeof defaultValue === 'string') return value as T;
-    if (typeof defaultValue === 'number') return parseInt(value, 10) as T;
-    if (Array.isArray(defaultValue)) return value.split(',').filter(Boolean) as T;
-    return defaultValue;
-  };
-
   const filters = useMemo<FilterState>(() => ({
-    query: getParam('q', ''),
-    tags: getParam('tags', []),
-    rhythm: getParam('rhythm', []),
-    tonality: getParam('tonality', []),
-    category: getParam('category', []),
-    materialKinds: getParam('materialKinds', []),
-    numberMin: searchParams.has('numberMin') ? parseInt(searchParams.get('numberMin')!, 10) : undefined,
-    numberMax: searchParams.has('numberMax') ? parseInt(searchParams.get('numberMax')!, 10) : undefined,
-    sort: getParam('sort', 'number') as SortField,
-    order: getParam('order', 'asc'),
-    page: getParam('page', 1),
+    query: lerTexto(searchParams, 'q'),
+    tags: lerLista(searchParams, 'tags'),
+    rhythm: lerLista(searchParams, 'rhythm'),
+    tonality: lerLista(searchParams, 'tonality'),
+    category: lerLista(searchParams, 'category'),
+    materialKinds: lerLista(searchParams, 'materialKinds'),
+    numberMin: lerInteiro(searchParams, 'numberMin'),
+    numberMax: lerInteiro(searchParams, 'numberMax'),
+    sort: lerOrdenacao(searchParams),
+    order: searchParams.get('order') === 'desc' ? 'desc' : 'asc',
+    page: lerInteiro(searchParams, 'page', 1) ?? 1,
   }), [searchParams]);
 
   const setFilters = useCallback((updates: Partial<FilterState>) => {

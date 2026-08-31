@@ -86,10 +86,17 @@ describe('GET /api/praises/filters — contagem de tags', () => {
       db: {
         prepare: vi.fn((sql: string) => {
           sqls.push(sql);
+          // A rota passou a montar as consultas com bindings (os filtros
+          // aplicados), então o mock precisa responder igual pelos dois
+          // caminhos — com e sem .bind().
+          const resposta = { results: sql.includes('FROM tags') ? linhas : [] };
           return {
-            all: vi.fn(async () => ({ results: sql.includes('FROM tags') ? linhas : [] })),
+            all: vi.fn(async () => resposta),
             first: vi.fn(async () => null),
-            bind: vi.fn(() => ({ all: vi.fn(async () => ({ results: [] })), first: vi.fn(async () => null) })),
+            bind: vi.fn(() => ({
+              all: vi.fn(async () => resposta),
+              first: vi.fn(async () => null),
+            })),
           };
         }),
       },

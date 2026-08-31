@@ -83,7 +83,10 @@ function resolveMockAll(query: string, responses: { all?: { results: unknown[] }
 }
 
 // Mock D1Database
-const createMockD1 = (responses: any = {}) => ({
+/** O material como a API o devolve — só o que estas asserções olham. */
+type MaterialResposta = { id: string; type: string; has_content?: boolean };
+
+const createMockD1 = (responses: Record<string, unknown> = {}) => ({
   prepare: vi.fn((query: string) => ({
     bind: vi.fn((...args: unknown[]) => ({
       all: vi.fn().mockImplementation(async () => {
@@ -210,7 +213,7 @@ function createStatefulMockD1() {
 }
 
 // Mock R2Bucket (head + ranged get, aligned with Worker R2 API)
-const createMockR2 = (object: any = null) => {
+const createMockR2 = (object: R2ObjectBody | null = null) => {
   const objectBody = object?.body ?? null;
   const defaultBytes =
     objectBody instanceof Uint8Array ? objectBody : objectBody ? new Uint8Array(objectBody) : null;
@@ -1010,9 +1013,9 @@ describe('API Routes', () => {
       expect(res.status).toBe(200);
 
       const json = await res.json();
-      const cifras = json.data.materials.filter((m: any) => m.type === 'chord');
-      expect(cifras.find((m: any) => m.id === 'ch1').has_content).toBe(true);
-      expect(cifras.find((m: any) => m.id === 'ch2').has_content).toBe(false);
+      const cifras = json.data.materials.filter((m: MaterialResposta) => m.type === 'chord');
+      expect(cifras.find((m: MaterialResposta) => m.id === 'ch1').has_content).toBe(true);
+      expect(cifras.find((m: MaterialResposta) => m.id === 'ch2').has_content).toBe(false);
     });
 
     it('consulta o R2 com o prefixo storage/ e só para cifras', async () => {
@@ -1030,7 +1033,7 @@ describe('API Routes', () => {
       const { mockPraise, DB, ASSETS } = praiseWithChords(async () => null);
       const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { DB, ASSETS });
       const json = await res.json();
-      const pdf = json.data.materials.find((m: any) => m.type === 'pdf');
+      const pdf = json.data.materials.find((m: MaterialResposta) => m.type === 'pdf');
       expect(pdf.has_content).toBeUndefined();
     });
 

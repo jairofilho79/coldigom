@@ -69,3 +69,6 @@ api/.zshrc
 
 # mockups do brainstorming (superpowers)
 .superpowers/
+
+# Rascunhos locais do dono (fora do fluxo do repositório)
+.wip/

@@ -267,6 +267,10 @@ export function registerDriveRoutes(app: App): void {
   app.post('/api/import-jobs/:id/retry-failed', requireAuth, async (c) => {
     const user = c.get('user') as AuthUser;
     const jobId = c.req.param('id');
+    // `param` é `string | undefined` no tipo. Na prática a rota só casa com o
+    // parâmetro presente, mas sem a guarda o id viajava para dentro da mensagem
+    // da fila, e um `jobId: undefined` só apareceria no consumidor, longe daqui.
+    if (!jobId) return c.json({ error: 'Job not found' }, 404);
     const job = await c.env.DB.prepare(
       `SELECT id FROM import_jobs WHERE id = ? AND user_sub = ?`
     )

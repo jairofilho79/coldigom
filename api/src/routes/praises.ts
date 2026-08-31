@@ -12,6 +12,7 @@ import { requireAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { storageKeyFor } from '../storageKeys';
+import type { MaterialRow } from '../praiseZip';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -366,7 +367,7 @@ export function registerPraisesRoutes(app: App): void {
       // nunca tiveram arquivo publicado — só o R2 sabe quais existem de verdade.
       // Sem isto, o card de cifra na UI prometeria conteúdo que não existe.
       const materials = await Promise.all(
-        (materialsResult.results as any[]).map(async m => {
+        (materialsResult.results as MaterialRow[]).map(async m => {
           const base = {
             ...m,
             material_kind_name: labelFor(materialKindLabels, m.material_kind),
@@ -498,7 +499,7 @@ export function registerPraisesRoutes(app: App): void {
   // PATCH /api/praises/:id - Update praise fields (admin)
   app.patch('/api/praises/:id', requireAuth, async (c) => {
     const id = c.req.param('id');
-    const body = await c.req.json().catch(() => null) as any;
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body !== 'object') {
       return c.json({ error: 'Invalid JSON body' }, 400);
     }
@@ -578,7 +579,7 @@ export function registerPraisesRoutes(app: App): void {
 
     // Return updated detail (same shape as GET /api/praises/:id)
     try {
-      const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env as any);
+      const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env);
       const json = await res.json();
       return c.json(json, res.status as ContentfulStatusCode);
     } catch (error) {
@@ -624,7 +625,7 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     try {
-      const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env as any);
+      const res = await app.request(`/api/praises/${id}`, { method: 'GET' }, c.env);
       const json = await res.json();
       return c.json(json, res.status as ContentfulStatusCode);
     } catch (error) {
@@ -663,7 +664,7 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     try {
-      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env);
       const json = await res.json();
       return c.json(json, res.status as ContentfulStatusCode);
     } catch (error) {
@@ -910,7 +911,7 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     try {
-      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env);
       const json = await res.json();
       return c.json(json, res.status as ContentfulStatusCode);
     } catch (error) {
@@ -922,7 +923,7 @@ export function registerPraisesRoutes(app: App): void {
   // POST /api/praises/:id/materials - Create a material (admin, JSON)
   app.post('/api/praises/:id/materials', requireAuth, async (c) => {
     const praiseId = c.req.param('id');
-    const body = await c.req.json().catch(() => null) as any;
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
 
     const material_kind = body.material_kind;
@@ -955,6 +956,14 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: erroDeCategoriaDesconhecida(foraDoCatalogo) }, 400);
     }
 
+    // As rotas irmãs (bulk-upload e drive-import) conferem e devolvem 404. Esta
+    // inseria direto: o INSERT falhava por chave estrangeira e virava 500 — "o
+    // servidor quebrou" em vez de "esse louvor não existe".
+    const louvor = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?')
+      .bind(praiseId)
+      .first();
+    if (!louvor) return c.json({ error: 'Praise not found' }, 404);
+
     const id = crypto.randomUUID();
 
     try {
@@ -977,7 +986,7 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: 'Failed to create material' }, 500);
     }
 
-    const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+    const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env);
     const json = await res.json();
     return c.json(json, res.status as ContentfulStatusCode);
   });
@@ -1106,7 +1115,7 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: 'Failed to bulk upload materials' }, 500);
     }
 
-    const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as any);
+    const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env);
     const json = await res.json();
     return c.json(json, res.status as ContentfulStatusCode);
   });

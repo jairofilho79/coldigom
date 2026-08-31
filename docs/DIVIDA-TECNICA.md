@@ -8,7 +8,7 @@ Regra: nada some daqui por esquecimento. Ao fechar um item, apague a linha no
 mesmo commit que o resolve — e se decidir que não vale mais a pena, registre a
 decisão em vez de apagar em silêncio.
 
-Última atualização: 2026-08-31, ao fim do S8.
+Última atualização: 2026-08-31, ao fim do S10.
 
 ---
 
@@ -93,13 +93,16 @@ latente, sem repro no código de hoje.
 
 ## Dívida menor, catalogada
 
+- **Pool do vitest no CI**: os scripts locais (`npm test`, `npm run coverage` da
+  raiz) já passam `--pool=threads`, então o travamento em máquina de
+  desenvolvimento acabou. O `vitest.config.ts` continua no padrão (`forks`), que
+  é o que o CI usa — mudar lá é decisão do dono, e nada hoje pede.
+
 - **`driveImport.ts` em 1,5% e `driveCredentials.ts` em 0% de cobertura**
   (setor S4): o `driveImport` é o consumidor da fila do Cloudflare, e testá-lo
   de verdade exige simular `MessageBatch`, retentativas e a fila. O S4 cobriu o
   que dava sem essa infraestrutura (`driveApi` foi de 4% para 18%, `driveParse`
   para 81%), mas o caminho de importação em si segue quase sem rede.
-- **25 avisos de `no-explicit-any` na api**: cada setor tipa o que é seu ao
-  passar pelo arquivo.
 - **`HomePage.test.tsx` mocka o `useFilters` inteiro**, então a integração
   URL↔busca não é exercitada por ele. Testes novos do S6 cobrem parte disso por
   fora, mas o buraco original continua.
@@ -110,36 +113,14 @@ latente, sem repro no código de hoje.
 - **`limit` fixo em 20**, não ajustável pelo usuário nem presente na URL.
 - **Sem busca incremental, sugestões ou histórico de busca** — o campo só
   dispara no Enter.
-- **Pool do vitest**: o padrão (`forks`) pendura processos neste ambiente de
-  desenvolvimento e eles se acumulam até travar tudo. Contorno: `--pool=threads`
-  ou `pkill -f vitest`. Mudar no `vitest.config.ts` afeta o CI também, então é
-  decisão pendente do dono.
 - **A barra de filtros cresceu e não foi verificada em tela estreita** (setor
   S9): o S6 acrescentou Ritmo, Tom, faixa de número e as marcas de filtro ativo
   à `FilterBar`. O CSS ganhou uma media query para a faixa de número, mas o
   conjunto não foi testado num aparelho real nem em viewport de celular.
-- **Higiene do repositório (setor S10)**: `ingestion.sql` e `ingestion_no_tx.sql`
-  no diretório de trabalho, três cópias de `LOGO_COLORIDO*.svg`,
-  `fix_ingestion.py` na raiz, `.DS_Store`.
 
 ---
 
 ## Encontrado no S7, adiado com motivo
-
-### `PATCH /api/materials/:id` não valida `material_kind` contra o catálogo
-**Onde:** `api/src/routes/materials.ts`
-**O que:** o S7 passou a validar a categoria nas três rotas de **criação**
-(POST JSON, bulk-upload, drive-import). O PATCH ficou de fora. O S8 fechou o
-`type` desta mesma rota (era travessia de caminho no ZIP público), mas não a
-categoria.
-**Custo de fechar:** uma linha — o helper `materialKindsForaDoCatalogo` já existe.
-**Retomar em:** S10, ou na próxima mudança que passar por esse arquivo.
-
-### `POST /api/praises/:id/materials` não confere se o louvor existe
-**Onde:** `api/src/routes/praises.ts`
-**O que:** o bulk-upload e o drive-import conferem e devolvem 404; a rota de
-material avulso insere direto e o INSERT falha por FK, virando 500. Não deixa
-arquivo órfão no R2 porque é material lógico — só devolve o código errado.
 
 ### Granularidade de segundo no token de escrita concorrente
 **Onde:** `PATCH /api/praises/:id`, campo `if_updated_at`

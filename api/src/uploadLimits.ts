@@ -17,6 +17,19 @@ export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_UPLOAD_ITEMS = 200;
 
 /**
+ * 256 KB por cifra em `PUT /api/materials/:id/content`, que não tinha teto
+ * nenhum: `c.req.text()` materializava o corpo inteiro antes de qualquer
+ * checagem, e um PUT de 5 MB passava.
+ *
+ * Não reaproveita MAX_UPLOAD_BYTES — aqueles 100 MB são para PDF e áudio. Uma
+ * cifra do acervo tem ~611 bytes; a mais longa que se pode imaginar, com
+ * anotação em cada linha, não passa de umas dezenas de KB. 256 KB dá ~400x de
+ * folga sobre a média e ainda é pequeno o bastante para que um corpo absurdo
+ * seja recusado antes de virar objeto gigante no R2 sob a chave de uma cifra.
+ */
+export const MAX_CHORD_CONTENT_BYTES = 256 * 1024;
+
+/**
  * Restringe por FORMA, não por lista fechada: o acervo tem tipos que não estão
  * todos no código (pdf, mp3, mid, midi, chord, gestures, txt, link, youtube, e
  * possivelmente outros vindos da ingestão legada). Uma lista errada quebraria

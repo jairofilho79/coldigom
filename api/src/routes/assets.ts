@@ -83,6 +83,13 @@ export function registerAssetsRoutes(app: App): void {
   
     c.header('Content-Type', contentType);
     c.header('Accept-Ranges', 'bytes');
+    // Sem ETag o cliente não tinha como pedir gravação condicional da cifra:
+    // PUT /api/materials/:id/content aceita If-Match, mas ninguém tinha o token
+    // para mandar. Vem do head, que é o objeto INTEIRO — em 206 o ETag continua
+    // sendo o da representação completa, como manda o RFC 9110.
+    if (metadata.httpEtag) {
+      c.header('ETag', metadata.httpEtag);
+    }
     // Os assets são públicos e consumidos de outra origem em dev (VITE_API_URL
     // aponta pro Worker) e por outros clientes; sem CORP o navegador recusa
     // embutir o áudio/PDF em qualquer página que use COEP.

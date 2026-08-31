@@ -11,6 +11,7 @@ import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
+import { storageKeyFor } from '../storageKeys';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -371,9 +372,24 @@ export function registerPraisesRoutes(app: App): void {
             material_kind_name: labelFor(materialKindLabels, m.material_kind),
           };
           if (m.type !== 'chord') return base;
-          const key = m.r2_key ? `storage/${String(m.r2_key).replace(/^\//, '')}` : null;
-          const object = key ? await c.env.ASSETS.head(key) : null;
-          return { ...base, has_content: object !== null };
+          if (!m.r2_key) return { ...base, has_content: false };
+          // Cada head com catch PRÓPRIO. Estes heads rodavam dentro do try do
+          // handler: um soluço do R2 tirava o louvor inteiro do ar — nome, letra,
+          // tags e todos os materiais — por causa de uma flag opcional. Sem
+          // resposta, has_content sai do JSON e o cliente decide o que mostrar.
+          try {
+            const object = await c.env.ASSETS.head(storageKeyFor(m.r2_key));
+            return { ...base, has_content: object !== null };
+          } catch (error) {
+            console.warn(
+              JSON.stringify({
+                msg: 'praise.has_content.head_failed',
+                material_id: m.id,
+                detail: String(error),
+              })
+            );
+            return { ...base, has_content: undefined };
+          }
         })
       );
 

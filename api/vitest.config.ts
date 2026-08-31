@@ -17,11 +17,11 @@ export default defineConfig({
       // S3 (2026-08-31): 55 / 48 / 63 / 57
       // S4 (2026-08-31): 58 / 51 / 65 / 59
       thresholds: {
-        // S7: medido 66.01 / 60.99 / 71.25 / 68.20
-        statements: 65,
-        branches: 60,
-        functions: 71,
-        lines: 68,
+        // S8: medido 69.42 / 64.94 / 72.09 / 71.76
+        statements: 69,
+        branches: 64,
+        functions: 72,
+        lines: 71,
       },
     },
   },

@@ -100,7 +100,6 @@ describe('normalização — só as formas declaradas', () => {
     ['Cm7b5', 'Cø'],
     ['Cø', 'Cø'],
     ['Cdim', 'C°'],
-    ['Co', 'C°'],
     ['C°', 'C°'],
     ['Cmaj7', 'C7M'],
     ['CM7', 'C7M'],
@@ -117,5 +116,19 @@ describe('normalização — só as formas declaradas', () => {
 
   it('devolve intacto o que não reconhece — normalizar não é consertar', () => {
     expect(normalizeChord('Bmm')).toBe('Bmm');
+  });
+});
+
+describe('normalizar não é adivinhar', () => {
+  it('"Do" continua não reconhecido — é o nome da nota, não um D diminuto', () => {
+    // A heurística antiga virava "Do" em "D°". Ela disparava em exatamente um token
+    // em todo o acervo, e era este: o único caso genuinamente ambíguo. Marcar e
+    // deixar o revisor decidir é o comportamento certo numa ferramenta de gestão.
+    expect(normalizeChord('Do')).toBe('Do');
+    expect(parseChordToken('Do').kind).toBe('unknown');
+  });
+
+  it('o símbolo escrito por extenso continua valendo', () => {
+    expect(parseChordToken('D°').kind).toBe('chord');
   });
 });

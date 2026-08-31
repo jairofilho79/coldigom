@@ -50,11 +50,15 @@ export function isTrustedWebOrigin(origin: string, entry: string): boolean {
     const o = new URL(origin);
     if (parsed.protocol && o.protocol !== parsed.protocol) return false;
 
+    // Só o curinga vale por subdomínio. Os dois ramos eram a MESMA expressão, e
+    // hostnameMatchesBaseDomain casa qualquer sufixo: `https://web.example`
+    // confiava em `https://atacante.web.example`, ampliando a superfície de CSRF
+    // de toda mutação da API. Entrada sem curinga agora exige hostname igual.
     if (parsed.wildcard) {
       return hostnameMatchesBaseDomain(o.hostname, parsed.hostname);
     }
 
-    return hostnameMatchesBaseDomain(o.hostname, parsed.hostname);
+    return o.hostname === parsed.hostname;
   } catch {
     return false;
   }

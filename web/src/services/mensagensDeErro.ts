@@ -39,6 +39,15 @@ const TRADUCOES: Array<[RegExp, string]> = [
   [/^HTTP 413$/i, 'O envio é grande demais para uma requisição só.'],
 ];
 
+/**
+ * Falha do próprio `fetch` (rede caiu, DNS, CORS): o navegador lança em vez de
+ * responder, então nunca passava pelo tradutor abaixo — e o usuário lia
+ * "Failed to fetch" ou "Load failed", conforme o navegador.
+ */
+export function mensagemDeRede(): string {
+  return 'Não foi possível falar com o servidor. Verifique sua conexão e tente de novo.';
+}
+
 /** Erro do Drive vem com o corpo cru da resposta do Google grudado. */
 const ERRO_DO_DRIVE = /^Drive \w+ failed \((\d{3})\)/i;
 

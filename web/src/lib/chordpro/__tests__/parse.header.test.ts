@@ -29,10 +29,32 @@ describe('parse — cabeçalho', () => {
     expect(parse('{subtitle: ?}\n').header.subtitle).toBeUndefined();
   });
 
-  it('ignora em silêncio diretiva desconhecida, inclusive meta', () => {
+  /**
+   * Este teste dizia "ignora em silêncio diretiva desconhecida, inclusive meta" e
+   * cristalizava o descarte como comportamento desejado. Só que `{meta: column ...}`
+   * está em 5589 dos 5590 arquivos do acervo: é o registro de qual coluna do PDF o
+   * louvor ocupava, o dado que sustenta a regra "louvor que atravessa coluna vira um
+   * arquivo só". Descartar era perder origem que não dá para reconstruir, e o R2 não
+   * versiona. Agora a diretiva desconhecida fica guardada onde estava, literal.
+   */
+  it('guarda diretiva desconhecida, inclusive meta, fora do header', () => {
     const song = parse('{meta: column full}\n{qualquer: coisa}\n{title: X}\n');
     expect(song.header).toEqual({ title: 'X' });
     expect(song.stanzas).toEqual([]);
+    expect(song.headerLines).toEqual([
+      { kind: 'raw', text: '{meta: column full}' },
+      { kind: 'raw', text: '{qualquer: coisa}' },
+      { kind: 'field', key: 'title', value: 'X', text: '{title: X}' },
+    ]);
+  });
+
+  it('diretiva de valor ausente vira entrada de campo sem valor, não some', () => {
+    const song = parse('{key: }\n{subtitle: ?}\n');
+    expect(song.header).toEqual({});
+    expect(song.headerLines).toEqual([
+      { kind: 'field', key: 'key', value: undefined, text: '{key: }' },
+      { kind: 'field', key: 'subtitle', value: undefined, text: '{subtitle: ?}' },
+    ]);
   });
 
   it('a lápide real tem os dois formatos de ausente e nenhum campo de cabeçalho', () => {

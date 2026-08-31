@@ -8,7 +8,7 @@ Regra: nada some daqui por esquecimento. Ao fechar um item, apague a linha no
 mesmo commit que o resolve — e se decidir que não vale mais a pena, registre a
 decisão em vez de apagar em silêncio.
 
-Última atualização: 2026-08-31, ao fim do S7.
+Última atualização: 2026-08-31, ao fim do S8.
 
 ---
 
@@ -129,8 +129,9 @@ latente, sem repro no código de hoje.
 ### `PATCH /api/materials/:id` não valida `material_kind` contra o catálogo
 **Onde:** `api/src/routes/materials.ts`
 **O que:** o S7 passou a validar a categoria nas três rotas de **criação**
-(POST JSON, bulk-upload, drive-import). O PATCH ficou de fora do escopo que foi
-dado à varredura e não entrou.
+(POST JSON, bulk-upload, drive-import). O PATCH ficou de fora. O S8 fechou o
+`type` desta mesma rota (era travessia de caminho no ZIP público), mas não a
+categoria.
 **Custo de fechar:** uma linha — o helper `materialKindsForaDoCatalogo` já existe.
 **Retomar em:** S10, ou na próxima mudança que passar por esse arquivo.
 
@@ -158,3 +159,56 @@ entraram. A mensagem de erro diz quantos entraram, e reenviar o que faltou é
 manual.
 **Por que foi aceito:** a alternativa é uma sessão de upload no servidor, com
 estado e limpeza — muito para o ganho, dado que o erro agora é explícito.
+
+---
+
+## Encontrado no S8, adiado com motivo
+
+### Notação brasileira de acorde é recusada pelo validador
+**Onde:** `web/src/lib/chordpro/chord.ts`, `QUALITY_RE`
+**O que:** `A4` (sus4), `A7+` (7M), `Asus`, `Aadd9`, `A6/9`, `Cdim7`, `C9sus4` e
+`A°7` voltam como não reconhecidos. A gramática foi derivada dos 2224 acordes do
+gabarito e é fiel a ele — mas o gabarito são 56 arquivos. São grafias legítimas
+que o revisor vai digitar e o validador vai recusar sem oferecer alias.
+**Por que não foi feito:** ampliar a gramática exige decidir, com o dono do
+acervo, quais grafias são canônicas — e ele já fixou regras de extração antes.
+É conversa, não conserto solitário. O "Salvar assim mesmo" existe justamente
+para o acorde legítimo que a gramática não previu, então ninguém fica travado.
+**Retomar quando:** houver a lista de grafias aceitas, vinda do dono.
+
+### `[A][B]` marca duas barras vermelhas que não existem no PDF
+**Onde:** `web/src/lib/chordpro/parse.ts`, cálculo de `attached`
+**O que:** em dois acordes adjacentes, nenhum encosta em letra — os dois encostam
+no colchete do outro — e ambos saem `attached: true`, que a view pinta como
+barra. Contra a regra "colado ⟺ tinha barra".
+**Por que não foi feito:** zero ocorrências de `][` nos 5590 arquivos do acervo.
+O defeito existe, o dano não. Fechar exige olhar o caractere de texto vizinho
+ignorando colchete de acorde adjacente.
+
+### `hasLyrics` congela no parse e mente depois de qualquer edição
+**Onde:** `web/src/lib/chordpro/types.ts` e `parse.ts`
+**O que:** é calculado uma vez e as operações de `edit.ts` o carregam adiante sem
+recalcular: um Song com zero estrofes pode ter `hasLyrics: true`.
+**Já contornado:** a `ChordProPage` não confia nele — usa `temLinhaDeLetra()`, e o
+comentário lá explica exatamente por quê.
+**O que falta:** virar derivado, ou sair do tipo público. Enquanto estiver lá,
+mente para o próximo chamador.
+
+### `replaceLine` descarta tudo depois da primeira linha
+**Onde:** `web/src/lib/chordpro/edit.ts`
+**O que:** texto com `\n` só tem a primeira linha aproveitada; texto que não forma
+linha vira linha vazia, que na releitura é separador de estrofe e some.
+**Por que não foi feito:** não é explorável pela tela — o campo é `<input>` e o
+editor recusa antes com "Esse texto não forma uma linha de cifra". É o contrato
+da biblioteca que está frouxo, não um bug de produto.
+
+### Deploy de preview do Cloudflare Pages deixa de ser origem confiável
+**Onde:** `api/src/origins.ts`, `api/wrangler.toml`
+**O que:** o S8 corrigiu `isTrustedWebOrigin` — entrada sem curinga passou a exigir
+hostname igual, porque os dois ramos do `if (wildcard)` eram a mesma expressão e
+`https://coldigom-web.pages.dev` confiava em qualquer subdomínio.
+**Efeito colateral:** as URLs de preview do Pages (`<hash>.coldigom-web.pages.dev`)
+deixam de ser aceitas. O CI só publica `--branch=main`, então nenhum fluxo
+automático depende disso; mas abrir um preview à mão e tentar editar vai falhar.
+**Se incomodar:** trocar a entrada por `https://*coldigom-web.pages.dev` no
+`WEB_ORIGIN` — a sintaxe de curinga já existe e já é usada para `*plpcg.com`.

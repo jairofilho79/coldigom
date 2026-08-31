@@ -155,27 +155,33 @@ export function registerPraisesRoutes(app: App): void {
         c.env.DB.prepare(`SELECT DISTINCT rhythm FROM praises WHERE rhythm IS NOT NULL AND rhythm != '' ORDER BY rhythm`).all(),
         c.env.DB.prepare(`SELECT DISTINCT tonality FROM praises WHERE tonality IS NOT NULL AND tonality != '' ORDER BY tonality`).all(),
         c.env.DB.prepare(`SELECT DISTINCT category FROM praises WHERE category IS NOT NULL AND category != '' ORDER BY category`).all(),
+        // Contagem de louvores DISTINTOS da tag e das suas subtags. Era
+        // derivada em JS somando as contagens dos filhos, o que contava duas
+        // vezes o louvor marcado com duas subtags do mesmo pai e descartava os
+        // louvores ligados diretamente ao pai.
         c.env.DB.prepare(`
-          SELECT t.id, t.name, t.parent_id, COUNT(pt.praise_id) as count
+          SELECT
+            t.id,
+            t.name,
+            t.parent_id,
+            (
+              SELECT COUNT(DISTINCT pt.praise_id)
+              FROM praise_tags pt
+              WHERE pt.tag_id = t.id
+                 OR pt.tag_id IN (SELECT filho.id FROM tags filho WHERE filho.parent_id = t.id)
+            ) AS count
           FROM tags t
-          LEFT JOIN praise_tags pt ON t.id = pt.tag_id
-          GROUP BY t.id
           ORDER BY t.name
         `).all(),
       ]);
 
       const tagRows = (tagsResult.results as { id: string; name: string; parent_id: string | null; count: number }[]) ?? [];
-      const childCountByParent = new Map<string, number>();
-      for (const t of tagRows) {
-        if (t.parent_id) {
-          childCountByParent.set(t.parent_id, (childCountByParent.get(t.parent_id) ?? 0) + Number(t.count));
-        }
-      }
-      const tagsOut = tagRows.map((t) => {
-        const hasChildren = childCountByParent.has(t.id);
-        const count = hasChildren ? (childCountByParent.get(t.id) ?? 0) : Number(t.count);
-        return { id: t.id, name: t.name, parent_id: t.parent_id ?? null, count };
-      });
+      const tagsOut = tagRows.map((t) => ({
+        id: t.id,
+        name: t.name,
+        parent_id: t.parent_id ?? null,
+        count: Number(t.count),
+      }));
 
       return c.json({
         rhythms: (rhythmsResult.results as { rhythm: string }[]).map(r => r.rhythm),

@@ -33,6 +33,12 @@ export function registerTagsRoutes(app: App): void {
     if (typeof name !== 'string' || !name.trim()) {
       return c.json({ error: "Field 'name' is required" }, 400);
     }
+    // As tags viajam num GROUP_CONCAT separado por vírgula e o cliente faz
+    // split(','): uma tag "Natal, Advento" aparecia como duas. Barrar na
+    // entrada evita criar dado que a exibição não consegue representar.
+    if (name.includes(',')) {
+      return c.json({ error: "O nome da tag não pode conter vírgula" }, 400);
+    }
 
     let parentId: string | null = null;
     if ('parent_id' in body && body.parent_id != null && body.parent_id !== '') {

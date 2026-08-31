@@ -877,7 +877,9 @@ describe('API Routes', () => {
           if (query.includes('DISTINCT category')) {
             return { all: vi.fn().mockResolvedValue({ results: [{ category: 'Louvor' }, { category: 'Adoração' }] }) };
           }
-          if (query.includes('COUNT(pt.praise_id)')) {
+          // Casa pela tabela, não pelo texto exato do COUNT: a contagem passou
+          // a ser COUNT(DISTINCT ...) e o mock antigo deixou de reconhecer.
+          if (query.includes('FROM tags')) {
             return { all: vi.fn().mockResolvedValue({ results: mockTags.map(t => ({ ...t, count: 1 })) }) };
           }
           return { all: vi.fn().mockResolvedValue({ results: [] }) };

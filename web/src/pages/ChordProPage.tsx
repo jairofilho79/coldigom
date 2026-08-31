@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChordProEditor } from '../components/chordpro/ChordProEditor';
 import { ChordProView } from '../components/chordpro/ChordProView';
@@ -9,6 +9,7 @@ import { serialize } from '../lib/chordpro/serialize';
 import { validateSong } from '../lib/chordpro/validate';
 import type { Song } from '../lib/chordpro/types';
 import { getAssetUrl, getPraise, putMaterialContent, updateMaterial } from '../services/api';
+import { mensagemDeRede } from '../services/mensagensDeErro';
 import { useAuth } from '../context/useAuth';
 import type { Material, PraiseDetail } from '../types';
 
@@ -85,7 +86,9 @@ function ReviewSwitch({
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-label="Marcar cifra como revisada"
+        // Sem `aria-label`: o nome acessível sai do texto visível dentro do botão.
+        // Um rótulo fixo divergia do que a tela mostra quando ligado ("Revisada"),
+        // e quem usa Controle por Voz não conseguia acionar pelo que estava lendo.
         className={`cp-review-switch${checked ? ' is-on' : ''}`}
         disabled={saving}
         onClick={async () => {
@@ -112,7 +115,11 @@ function ReviewSwitch({
           {[quando, quem.trim()].filter(Boolean).join(' · ')}
         </span>
       ) : null}
-      {error ? <span className="cp-review-error">{error}</span> : null}
+      {error ? (
+        <span className="cp-review-error" role="status" aria-live="polite">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -146,6 +153,14 @@ export function ChordProPage() {
   const [saved, setSaved] = useState<{ key: string; source: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveAviso, setSaveAviso] = useState<string | null>(null);
+  const [textoDoConflito, setTextoDoConflito] = useState<string | null>(null);
+  // O editor continua editável enquanto o PUT viaja. `salvar` fecha o editor com
+  // base na closure do clique; sem esta referência, o que a pessoa digitou no meio
+  // sumia da tela sem ter sido gravado — e a checagem de concorrência seguinte
+  // passava, porque a tela já se achava em dia.
+  const draftRef = useRef<Song | null>(null);
+  draftRef.current = draft;
 
   useEffect(() => {
     if (!praiseId) return;
@@ -200,8 +215,39 @@ export function ChordProPage() {
     setSaveError(null);
   }, [material?.r2_key]);
 
+  useEffect(() => {
+    if (!temAlteracoesPendentes) return;
+    // Sem isto, fechar a aba ou navegar para fora leva embora o trabalho de quem
+    // estava editando, sem uma palavra.
+    const aoSair = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', aoSair);
+    return () => window.removeEventListener('beforeunload', aoSair);
+  });
+
   const issues = useMemo(() => (draft ? validateSong(draft) : []), [draft]);
+  /**
+   * Há trabalho na tela que ainda não está no servidor?
+   *
+   * Identidade de referência, não comparação de texto: abrir o editor faz
+   * `setDraft(song)`, e toda operação de `edit.ts` devolve um objeto novo. Comparar
+   * `serialize(draft)` com `serverSource` pareceria mais direto, mas amarraria esta
+   * guarda à fidelidade do ida-e-volta — e enquanto ela não for perfeita, abrir e
+   * fechar o editor sem tocar em nada acusaria alteração pendente.
+   */
+  const temAlteracoesPendentes = draft !== null && draft !== song;
   const rascunhoVazio = draft !== null && !temLinhaDeLetra(draft);
+
+  /** Fecha o editor — a menos que a pessoa tenha continuado editando durante a gravação. */
+  function concluir(gravado: Song) {
+    if (draftRef.current === gravado) {
+      setDraft(null);
+      setSaveAviso(null);
+      return;
+    }
+    setSaveAviso(
+      'Gravado. Você fez alterações novas depois do clique — elas ainda não foram salvas.'
+    );
+  }
 
   async function salvar(forcar: boolean) {
     if (!draft || !material?.r2_key) return;
@@ -226,7 +272,15 @@ export function ChordProPage() {
       // acordes, nunca esta proteção.
       // `no-store` porque uma resposta de cache é exatamente o texto que já temos:
       // a checagem passaria sempre e a proteção viraria enfeite.
-      const atual = await fetch(getAssetUrl(material.r2_key), { cache: 'no-store' });
+      let atual: Response;
+      try {
+        atual = await fetch(getAssetUrl(material.r2_key), { cache: 'no-store' });
+      } catch {
+        // Rejeição do fetch não passa pelo tradutor do `fetchJson`: sem isto, a
+        // tela mostrava "Failed to fetch" num app inteiramente em português.
+        setSaveError(mensagemDeRede());
+        return;
+      }
       if (!atual.ok) {
         // Não é conflito: é não saber. Mandar recarregar aqui faria a pessoa jogar
         // fora o rascunho por causa de um soluço do R2 — a perda que esta checagem
@@ -234,18 +288,30 @@ export function ChordProPage() {
         setSaveError('Não foi possível verificar o arquivo no servidor. Tente salvar de novo.');
         return;
       }
-      if ((await atual.text()) !== serverSource) {
+      const novo = serialize(draft);
+      const noServidor = await atual.text();
+      if (noServidor !== serverSource) {
+        // Antes de acusar terceiro: pode ser a nossa própria gravação anterior, que
+        // chegou ao servidor e cuja resposta se perdeu no caminho. Nesse caso a tela
+        // acusava conflito e mandava recarregar — jogando fora o rascunho por causa
+        // de um trabalho que já estava salvo, num ciclo que se repetia para sempre.
+        if (noServidor === novo) {
+          setSaved({ key: material.r2_key, source: novo });
+          concluir(draft);
+          return;
+        }
         setSaveError(
-          'O arquivo mudou no servidor desde que você abriu. Recarregue antes de salvar.'
+          'O arquivo mudou no servidor desde que você abriu. Recarregue antes de salvar. ' +
+            'Copie o seu texto abaixo antes, se quiser aproveitá-lo.'
         );
+        setTextoDoConflito(novo);
         return;
       }
 
-      const novo = serialize(draft);
       await putMaterialContent(material.id, novo);
       // O que está no servidor agora é o que acabamos de gravar.
       setSaved({ key: material.r2_key, source: novo });
-      setDraft(null);
+      concluir(draft);
     } catch (err) {
       // Erro vira mensagem ao lado dos botões e o editor continua aberto: sair
       // daqui jogaria fora o trabalho da pessoa.
@@ -391,6 +457,8 @@ export function ChordProPage() {
             song={draft}
             onChange={(newSong) => {
               setDraft(newSong);
+              setSaveAviso(null);
+              setTextoDoConflito(null);
               // Limpar erro obsoleto quando usuário retorna a editar após uma recusa.
               // Se `salvar()` rejeitou por conteúdo vazio ou validação, a mensagem fica
               // em tela até que o botão "Cancelar edição" a apague — a menos que desfaça
@@ -436,8 +504,18 @@ export function ChordProPage() {
               className="cp-edit-cancel"
               disabled={saving}
               onClick={() => {
+                if (
+                  temAlteracoesPendentes &&
+                  !window.confirm(
+                    'Você tem alterações não salvas nesta cifra. Descartar o que foi editado?'
+                  )
+                ) {
+                  return;
+                }
                 setDraft(null);
                 setSaveError(null);
+                setSaveAviso(null);
+                setTextoDoConflito(null);
               }}
             >
               Cancelar edição
@@ -456,7 +534,30 @@ export function ChordProPage() {
                 {saveError}
               </span>
             ) : null}
+            {saveAviso ? (
+              <span className="cp-edit-issues" role="status" aria-live="polite">
+                {saveAviso}
+              </span>
+            ) : null}
           </div>
+          {/* Detectar o conflito e parar ali deixava a pessoa sem saída: não há diff,
+              não há "manter a minha versão", e a edição é linha a linha — recarregar,
+              a única ação sugerida, apaga tudo. Aqui vai o texto inteiro do rascunho,
+              selecionável, para ser copiado antes de recarregar. */}
+          {textoDoConflito ? (
+            <div className="cp-conflito">
+              <label htmlFor="cp-conflito-texto" className="cp-panel-label">
+                Sua versão, para copiar antes de recarregar
+              </label>
+              <textarea
+                id="cp-conflito-texto"
+                className="lyrics-editor"
+                readOnly
+                rows={12}
+                value={textoDoConflito}
+              />
+            </div>
+          ) : null}
         </div>
       ) : song && song.hasLyrics ? (
         <div className="cp-scope" data-cp-theme={theme}>

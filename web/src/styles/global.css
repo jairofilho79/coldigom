@@ -3405,3 +3405,15 @@ button.linkish {
   font-size: var(--text-xs);
   color: var(--color-danger, #c1121f);
 }
+
+/* Saída para o conflito de gravação: detectar e parar deixava a pessoa sem como
+   preservar o próprio trabalho — não há diff, e a edição é linha a linha. */
+.cp-conflito {
+  margin-top: var(--space-4);
+}
+
+.cp-conflito textarea {
+  width: 100%;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--text-xs);
+}

@@ -461,3 +461,190 @@ describe('modo de edição', () => {
     expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument();
   });
 });
+
+describe('não perder o trabalho de quem edita', () => {
+  const FONTE = '{title: X}\n{key: A}\n\n[A]letra';
+
+  /** Promessa que o teste resolve quando quiser, para segurar a gravação no ar. */
+  function adiavel<T>() {
+    let resolver!: (v: T) => void;
+    let rejeitar!: (e: unknown) => void;
+    const promessa = new Promise<T>((res, rej) => {
+      resolver = res;
+      rejeitar = rej;
+    });
+    return { promessa, resolver, rejeitar };
+  }
+
+  it('o que for digitado durante a gravação não é descartado em silêncio', async () => {
+    // O editor continua editável enquanto o PUT viaja, e `salvar` fecha o editor
+    // com um setDraft(null) incondicional sobre a closure do clique. O que a pessoa
+    // digitou no meio não foi gravado E some da tela, sem aviso — e a próxima
+    // checagem de concorrência passa, porque a tela já se acha em dia.
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const put = adiavel<Response>();
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') return put.promessa;
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        return new Response(FONTE, { status: 200 });
+      })
+    );
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    // Com a gravação no ar, a pessoa corrige o tom.
+    const tom = screen.getByLabelText('Tom');
+    await userEvent.clear(tom);
+    await userEvent.type(tom, 'D');
+
+    put.resolver(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+
+    // `findBy` espera de verdade; um `waitFor` com assertiva de presença passaria
+    // na primeira execução síncrona, antes de a gravação concluir — foi o que
+    // aconteceu na primeira versão deste teste.
+    expect(await screen.findByText(/alterações novas/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Tom')).toHaveValue('D');
+  });
+
+  it('gravação que deu certo mas cuja resposta se perdeu não vira conflito falso', async () => {
+    // O PUT chega ao servidor e grava; a resposta se perde (queda de conexão, 502
+    // de intermediário). Na segunda tentativa a releitura traz o texto que a própria
+    // pessoa acabou de gravar, e a tela acusava "o arquivo mudou no servidor",
+    // mandando recarregar — o que joga o rascunho fora. E o ciclo se repetia sempre.
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const gravado = serialize(parse(FONTE));
+    let tentativas = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') {
+          tentativas += 1;
+          // A primeira gravação acontece no servidor, mas a resposta não chega.
+          if (tentativas === 1) return Promise.reject(new TypeError('Failed to fetch'));
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        }
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        // Depois da primeira tentativa, o servidor já tem o texto novo.
+        return new Response(tentativas === 0 ? FONTE : gravado, { status: 200 });
+      })
+    );
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+    await waitFor(() => expect(tentativas).toBe(1));
+
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/mudou no servidor/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('erro de rede ao salvar não aparece em inglês', async () => {
+    // `mensagemAmigavel` só roda dentro do `if (!response.ok)` do fetchJson: uma
+    // rejeição do próprio fetch escapava crua para a tela.
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') return Promise.reject(new TypeError('Failed to fetch'));
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        return new Response(FONTE, { status: 200 });
+      })
+    );
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/conexão|rede/i)).toBeInTheDocument();
+  });
+
+  it('cancelar a edição com alterações pendentes pergunta antes de descartar', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response(FONTE, { status: 200 }));
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    const tom = screen.getByLabelText('Tom');
+    await userEvent.clear(tom);
+    await userEvent.type(tom, 'D');
+
+    await userEvent.click(screen.getByRole('button', { name: /cancelar edição/i }));
+
+    expect(confirmar).toHaveBeenCalled();
+    // Recusou: o editor continua aberto, com o que foi digitado.
+    expect(screen.getByLabelText('Tom')).toHaveValue('D');
+  });
+
+  it('cancelar sem ter mudado nada não pergunta nada', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response(FONTE, { status: 200 }));
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /cancelar edição/i }));
+
+    expect(confirmar).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Tom')).not.toBeInTheDocument();
+  });
+
+  it('fechar a aba com edição aberta é barrado pelo navegador', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response(FONTE, { status: 200 }));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    const tom = screen.getByLabelText('Tom');
+    await userEvent.clear(tom);
+    await userEvent.type(tom, 'D');
+
+    const evento = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(evento);
+    expect(evento.defaultPrevented).toBe(true);
+  });
+});
+
+describe('marca de revisão', () => {
+  const FONTE_R = '{title: X}\n{key: A}\n\n[A]letra';
+
+  it('o nome acessível do switch é o rótulo que está na tela', async () => {
+    // Era `aria-label="Marcar cifra como revisada"` fixo, enquanto o texto visível
+    // vira "Revisada" quando ligado: quem usa Controle por Voz e diz "clicar
+    // Revisada" não ativava nada, e o leitor de tela anunciava o contrário do que
+    // a tela mostra. WCAG 2.5.3, Label in Name.
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response(FONTE_R, { status: 200 }));
+
+    renderPage();
+    const sw = await screen.findByRole('switch');
+    expect(sw).toHaveAccessibleName('Marcar como revisada');
+    expect(sw).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('falha ao marcar como revisada é anunciada, não só pintada', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response(FONTE_R, { status: 200 }));
+    vi.spyOn(api, 'updateMaterial').mockRejectedValue(new Error('Sem permissão'));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole('switch'));
+
+    const erro = await screen.findByText('Sem permissão');
+    expect(erro).toHaveAttribute('role', 'status');
+    expect(erro).toHaveAttribute('aria-live', 'polite');
+  });
+});

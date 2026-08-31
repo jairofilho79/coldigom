@@ -1,6 +1,6 @@
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
-import { mensagemAmigavel } from './mensagensDeErro';
+import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== null
@@ -126,7 +126,17 @@ async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = fa
     ...authHeaders(),
     ...(init?.headers as Record<string, string> | undefined),
   };
-  const response = await fetch(url, { credentials: 'include', ...init, headers });
+  let response: Response;
+  try {
+    response = await fetch(url, { credentials: 'include', ...init, headers });
+  } catch (err) {
+    // Rejeição do próprio fetch não tem `response`, então não passava pelo
+    // tradutor lá embaixo: chegava crua na tela como "Failed to fetch".
+    // Abort é intenção de quem chamou, não falha — sobe como está.
+    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    console.error('[api] falha de rede', url, err);
+    throw new Error(mensagemDeRede());
+  }
   if (response.status === 401 && !isAfterRefresh && !isAuthPathNoRefresh(url)) {
     const renewed = await refreshSession();
     if (renewed) {

@@ -1505,7 +1505,8 @@
   }
 }
 
-.edit-field label {
+.edit-field label,
+.edit-field-label {
   display: block;
   font-family: var(--font-body);
   font-size: var(--text-xs);

@@ -210,31 +210,31 @@ export function PraiseMergeImportPage() {
 
   if (!keeperId || !sourceId) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <p className="error-state-desc">Parâmetros inválidos.</p>
-      </div>
+      </main>
     );
   }
 
   if (loading) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <p className="muted">Carregando…</p>
-      </div>
+      </main>
     );
   }
 
   if (!keeper || !source) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <p className="error-state-desc">{error || 'Louvor não encontrado.'}</p>
         <Link to={`/praise/${keeperId}`} className="auth-btn">Voltar</Link>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="page-container detail-page merge-import-page">
+    <main className="page-container detail-page merge-import-page">
       <Link to={`/praise/${keeperId}/merge`} className="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m15 18-6-6 6-6" />
@@ -505,6 +505,6 @@ export function PraiseMergeImportPage() {
           {saving ? 'Finalizando…' : 'Finalizar mesclagem'}
         </button>
       </div>
-    </div>
+    </main>
   );
 }

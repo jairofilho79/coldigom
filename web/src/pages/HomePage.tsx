@@ -92,7 +92,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="page-container">
+    <main className="page-container">
       <header className="brand-header animate-fade-in-up">
         <div className="brand-header-top">
           <div>
@@ -116,16 +116,19 @@ export function HomePage() {
       <SearchBar onSearch={handleSearch} initialValue={filters.query} />
       <FilterBar />
 
+      {/* Filtrar, buscar ou paginar troca a tabela inteira sem nenhum aviso: quem
+          usa leitor de tela clicava num filtro e não sabia se a busca tinha
+          começado, terminado, falhado ou trazido zero. */}
       {loading && (
-        <div className="loading-state">
-          <div className="loading-spinner" />
+        <div className="loading-state" role="status">
+          <div className="loading-spinner" aria-hidden="true" />
           <div className="loading-text">Buscando louvores...</div>
         </div>
       )}
 
       {error && (
-        <div className="error-state">
-          <div className="error-state-icon">⚠</div>
+        <div className="error-state" role="alert">
+          <div className="error-state-icon" aria-hidden="true">⚠</div>
           <div className="error-state-title">Erro ao carregar</div>
           <div className="error-state-desc">{error}</div>
         </div>
@@ -135,7 +138,7 @@ export function HomePage() {
         <>
           {pagination && (
             <div className="results-info">
-              <div className="results-count">
+              <div className="results-count" role="status" aria-live="polite">
                 <strong>{pagination.total}</strong> resultados encontrados
               </div>
             </div>
@@ -151,6 +154,6 @@ export function HomePage() {
           )}
         </>
       )}
-    </div>
+    </main>
   );
 }

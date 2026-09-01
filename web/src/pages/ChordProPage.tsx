@@ -338,30 +338,30 @@ export function ChordProPage() {
 
   if (loadingPraise) {
     return (
-      <div className="page-container cp-page">
+      <main className="page-container cp-page">
         <div className="loading-state">
           <div className="loading-spinner" />
           <div className="loading-text">Carregando cifra...</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (praiseError || !praise) {
     return (
-      <div className="page-container cp-page">
+      <main className="page-container cp-page">
         <div className="error-state">
           <div className="error-state-icon">⚠</div>
           <div className="error-state-title">Erro ao carregar</div>
           <div className="error-state-desc">{praiseError || 'Louvor não encontrado'}</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!material) {
     return (
-      <div className="page-container cp-page">
+      <main className="page-container cp-page">
         <Link to={`/praise/${praise.id}`} className="cp-back">
           ← {praise.name}
         </Link>
@@ -369,7 +369,7 @@ export function ChordProPage() {
           <div className="no-results-icon">📄</div>
           <div className="no-results-title">Material não encontrado neste louvor</div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -384,7 +384,7 @@ export function ChordProPage() {
   const semLetra = content.status === 'absent' || (song !== null && !song.hasLyrics);
 
   return (
-    <div className="page-container cp-page">
+    <main className="page-container cp-page">
       <Link to={`/praise/${praise.id}`} className="cp-back">
         ← {praise.name}
       </Link>
@@ -636,6 +636,6 @@ export function ChordProPage() {
           </div>
         ) : null}
       </section>
-    </div>
+    </main>
   );
 }

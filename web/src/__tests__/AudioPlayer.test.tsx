@@ -391,3 +391,29 @@ describe('AudioPlayer — modo de edição', () => {
     expect(onDelete).toHaveBeenCalledWith('m2');
   });
 });
+
+describe('nome acessível das faixas no modo admin', () => {
+  it('o botão de trocar de faixa tem nome mesmo sem o rótulo visível', () => {
+    // Com `admin`, o rótulo visível some (a categoria passa a ser editável ao
+    // lado) e sobrava só o ícone `aria-hidden`: o botão não se anunciava. Quem
+    // usa leitor de tela não conseguia trocar de faixa.
+    render(
+      <AudioPlayer
+        materials={[
+          { id: 'a', material_kind: 'k1', material_kind_name: 'Soprano', type: 'mp3', r2_key: 'k/a.mp3' },
+          { id: 'b', material_kind: 'k2', material_kind_name: 'Contralto', type: 'mp3', r2_key: 'k/b.mp3' },
+        ] as never}
+        getAssetUrl={(k) => `https://cdn.test/${k}`}
+        admin={{
+          materialKindOptions: [{ value: 'k1', label: 'Soprano' }],
+          saving: false,
+          onUpdateKind: async () => {},
+          onDelete: async () => {},
+        }}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /Soprano/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Contralto/ })).toBeTruthy();
+  });
+});

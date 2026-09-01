@@ -671,35 +671,35 @@ export function PraiseDetailPage() {
 
   if (!isCreate && loading) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <div className="loading-state">
           <div className="loading-spinner" />
           <div className="loading-text">Carregando louvor...</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!isCreate && error && !praise) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <div className="error-state">
           <div className="error-state-icon">⚠</div>
           <div className="error-state-title">Erro ao carregar</div>
           <div className="error-state-desc">{error}</div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!isCreate && !praise) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <div className="no-results">
           <div className="no-results-icon">📖</div>
           <div className="no-results-title">Louvor não encontrado</div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -899,7 +899,7 @@ export function PraiseDetailPage() {
   };
 
   return (
-    <div className="page-container detail-page">
+    <main className="page-container detail-page">
       <Link to="/" className="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m15 18-6-6 6-6" />
@@ -1006,30 +1006,30 @@ export function PraiseDetailPage() {
 
         {isEditing && (userName || !isCreate) ? (
           <div className="edit-grid">
-            <div className="edit-field">
-              <label>Nome</label>
+            <label className="edit-field">
+              <span className="edit-field-label">Nome</span>
               <input value={edit.name} onChange={(e) => setEdit(s => ({ ...s, name: e.target.value }))} />
-            </div>
-            <div className="edit-field">
-              <label>Número</label>
+            </label>
+            <label className="edit-field">
+              <span className="edit-field-label">Número</span>
               <input value={edit.number} onChange={(e) => setEdit(s => ({ ...s, number: e.target.value }))} />
-            </div>
-            <div className="edit-field">
-              <label>Autor</label>
+            </label>
+            <label className="edit-field">
+              <span className="edit-field-label">Autor</span>
               <input value={edit.author} onChange={(e) => setEdit(s => ({ ...s, author: e.target.value }))} />
-            </div>
-            <div className="edit-field">
-              <label>Ritmo</label>
+            </label>
+            <label className="edit-field">
+              <span className="edit-field-label">Ritmo</span>
               <input value={edit.rhythm} onChange={(e) => setEdit(s => ({ ...s, rhythm: e.target.value }))} />
-            </div>
-            <div className="edit-field">
-              <label>Tom</label>
+            </label>
+            <label className="edit-field">
+              <span className="edit-field-label">Tom</span>
               <input value={edit.tonality} onChange={(e) => setEdit(s => ({ ...s, tonality: e.target.value }))} />
-            </div>
-            <div className="edit-field">
-              <label>Categoria</label>
+            </label>
+            <label className="edit-field">
+              <span className="edit-field-label">Categoria</span>
               <input value={edit.category} onChange={(e) => setEdit(s => ({ ...s, category: e.target.value }))} />
-            </div>
+            </label>
 
             {!isCreate ? (
               <div className="edit-actions">
@@ -1871,6 +1871,6 @@ export function PraiseDetailPage() {
           </div>
         </section>
       )}
-    </div>
+    </main>
   );
 }

@@ -8,7 +8,7 @@ Regra: nada some daqui por esquecimento. Ao fechar um item, apague a linha no
 mesmo commit que o resolve — e se decidir que não vale mais a pena, registre a
 decisão em vez de apagar em silêncio.
 
-Última atualização: 2026-08-31, ao fim do S10.
+Última atualização: 2026-08-31, ao fim do S9 — a varredura por setores fecha aqui.
 
 ---
 
@@ -113,10 +113,6 @@ latente, sem repro no código de hoje.
 - **`limit` fixo em 20**, não ajustável pelo usuário nem presente na URL.
 - **Sem busca incremental, sugestões ou histórico de busca** — o campo só
   dispara no Enter.
-- **A barra de filtros cresceu e não foi verificada em tela estreita** (setor
-  S9): o S6 acrescentou Ritmo, Tom, faixa de número e as marcas de filtro ativo
-  à `FilterBar`. O CSS ganhou uma media query para a faixa de número, mas o
-  conjunto não foi testado num aparelho real nem em viewport de celular.
 
 ---
 
@@ -193,3 +189,45 @@ deixam de ser aceitas. O CI só publica `--branch=main`, então nenhum fluxo
 automático depende disso; mas abrir um preview à mão e tentar editar vai falhar.
 **Se incomodar:** trocar a entrada por `https://*coldigom-web.pages.dev` no
 `WEB_ORIGIN` — a sintaxe de curinga já existe e já é usada para `*plpcg.com`.
+
+---
+
+## Encontrado no S9, adiado com motivo
+
+### `.results-container` esconde o que não couber, sem oferecer rolagem
+**Onde:** `web/src/styles/global.css`, `.results-container { overflow: hidden }`
+**O que:** acima de 768px a tabela volta a `display: table` sem `overflow-x`,
+dentro de um contêiner que corta. Se o conteúdo passar da largura, some sem
+barra de rolagem e sem gesto que o revele.
+**Por que não foi mexido:** **não reproduziu.** Medi em 844 e 932px (iPhone
+deitado) com dados realistas — nomes longos e três coleções por linha — e a
+tabela coube: `scrollWidth == clientWidth`, nada cortado. O mecanismo existe,
+mas mexer no `overflow` afeta o `border-radius` e o cabeçalho fixo, e eu não
+tinha um caso que falhasse para provar que o conserto conserta.
+**Retomar quando:** aparecer louvor cujas coleções estourem a linha, ou ao
+acrescentar coluna à tabela.
+
+### O cabeçalho fixo da tabela nunca gruda
+**Onde:** `web/src/styles/global.css`, `.results-table thead { position: sticky }`
+**O que:** acima de 768px o ancestral `.results-container` tem `overflow: hidden`
+e vira o contêiner de rolagem do sticky — com a altura exata da tabela, não há
+por onde deslizar. Abaixo de 768px a própria tabela é `overflow-x: auto`, e com
+um eixo `auto` o outro também computa `auto`: o sticky passa a se referenciar ao
+topo da tabela, não ao da tela.
+**Efeito:** rolar 20 linhas no celular deixa a lista sem legenda de coluna.
+**Por que não foi feito:** mesmo conserto e mesmo risco do item acima.
+
+### Alvos de toque entre 24 e 44px
+**O que:** `.tag-chip` (34px), `.filter-dropdown-trigger` (34px),
+`.filter-dropdown-item` (37px), `.auth-btn` (32px) ficam acima do piso de 24px
+da WCAG 2.5.8 e abaixo dos 44px da Apple. Os que estavam **abaixo de 24** foram
+corrigidos no S9.
+**Por que parei aí:** levar todos a 44px muda a densidade da barra de filtros
+inteira, e densidade é decisão de produto numa ferramenta de gestão.
+
+### As regras de toque não são verificáveis em navegador de mesa
+As regras sob `@media (pointer: coarse)` — área de toque e tamanho de fonte dos
+campos — não ativam fora de aparelho de toque. Verifiquei-as reaplicando o
+conteúdo das regras sem a condição, o que prova que fazem o efeito esperado; que
+o iOS as ative e que o resultado seja confortável com o polegar, só o aparelho
+diz.

@@ -69,6 +69,7 @@ export function PainelImportacaoDrive({
         <input
           type="url"
           className="edit-input"
+          aria-label="Link da pasta ou arquivo do Google Drive"
           placeholder="https://drive.google.com/drive/folders/…"
           value={url}
           disabled={ocupado}

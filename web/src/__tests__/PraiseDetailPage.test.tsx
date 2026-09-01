@@ -1100,3 +1100,47 @@ describe('Materiais de tipo fora dos quatro com apresentação própria', () => 
     expect(screen.getAllByLabelText('Categoria do material').length).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe('acessibilidade do formulário e dos materiais', () => {
+  function render2(id: string) {
+    return render(
+      <MemoryRouter initialEntries={[`/praise/${id}`]}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+  });
+
+  it('cada campo de metadado tem nome acessível', async () => {
+    // Eram `<label>Nome</label>` com o `<input>` como IRMÃO: sem `htmlFor` e sem
+    // envolver o campo, nenhum dos seis tinha nome. Quem usa leitor de tela ouvia
+    // "campo de edição, em branco" seis vezes e não sabia qual era qual; quem usa
+    // Controle por Voz não conseguia dizer "clique em Nome". É o formulário
+    // central de um CRUD.
+    const user = userEvent.setup();
+    render2('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: 'Editar' })[0]).toBeTruthy();
+    });
+    await user.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
+
+    for (const rotulo of ['Nome', 'Número', 'Autor', 'Ritmo', 'Tom', 'Categoria']) {
+      expect(screen.getAllByLabelText(rotulo).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('a página tem um landmark principal', async () => {
+    render2('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await screen.findByText('Grande Deus');
+    expect(screen.getByRole('main')).toBeTruthy();
+  });
+});

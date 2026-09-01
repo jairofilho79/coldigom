@@ -277,6 +277,11 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
                     type="button"
                     className="audio-track-select"
                     onClick={() => selectTrack(m.id)}
+                    // Com `admin` o rótulo visível sai daqui (a categoria vira
+                    // editável ao lado) e sobrava só o ícone `aria-hidden`: o
+                    // botão não se anunciava e não havia como trocar de faixa
+                    // por leitor de tela.
+                    aria-label={admin ? `Tocar ${name}` : undefined}
                   >
                     <span className="audio-track-icon" aria-hidden>
                       {isActive && isPlaying ? (

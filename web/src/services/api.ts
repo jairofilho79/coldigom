@@ -185,8 +185,14 @@ export async function searchPraises(
   if (params.materialKinds && params.materialKinds.length > 0) {
     urlParams.set('materialKinds', params.materialKinds.join(','));
   }
-  if (params.numberMin !== undefined) urlParams.set('numberMin', params.numberMin.toString());
-  if (params.numberMax !== undefined) urlParams.set('numberMax', params.numberMax.toString());
+  // `!= null` e não `!== undefined`: a FilterBar serializa os filtros com
+  // JSON.stringify para comparar mudanças, e JSON.stringify troca `undefined`
+  // por `null` dentro de um array. Na volta, `null !== undefined` era verdadeiro
+  // e `.toString()` lançava TypeError de forma SÍNCRONA, antes do fetch — a
+  // barra caía em "não foi possível carregar os filtros" sem nada no console e
+  // sem nada no network, que é o mais difícil de diagnosticar.
+  if (params.numberMin != null) urlParams.set('numberMin', params.numberMin.toString());
+  if (params.numberMax != null) urlParams.set('numberMax', params.numberMax.toString());
   if (params.sort) urlParams.set('sort', params.sort);
   if (params.order) urlParams.set('order', params.order);
 
@@ -213,8 +219,10 @@ export async function getFilterOptions(params: SearchParams = {}): Promise<Filte
   if (params.tonality?.length) urlParams.set('tonality', params.tonality.join(','));
   if (params.category?.length) urlParams.set('category', params.category.join(','));
   if (params.materialKinds?.length) urlParams.set('materialKinds', params.materialKinds.join(','));
-  if (params.numberMin !== undefined) urlParams.set('numberMin', params.numberMin.toString());
-  if (params.numberMax !== undefined) urlParams.set('numberMax', params.numberMax.toString());
+  // Ver a nota em searchPraises: `null` chega aqui pela serialização da
+  // FilterBar, e `null !== undefined` deixava o `.toString()` explodir.
+  if (params.numberMin != null) urlParams.set('numberMin', params.numberMin.toString());
+  if (params.numberMax != null) urlParams.set('numberMax', params.numberMax.toString());
 
   const qs = urlParams.toString();
   const response = await fetchJson<FilterOptions>(

@@ -42,9 +42,14 @@ export function FilterBar() {
   useEffect(() => {
     let cancelado = false;
     const correntes = JSON.parse(chaveDosFiltros) as [
-      string, string[], string[], string[], string[], string[], number | undefined, number | undefined
+      string, string[], string[], string[], string[], string[], number | null, number | null
     ];
-    const [query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax] = correntes;
+    const [query, tags, rhythm, tonality, category, materialKinds, minCru, maxCru] = correntes;
+    // JSON.stringify troca `undefined` por `null` dentro de um array, então o que
+    // volta daqui não é o mesmo tipo que entrou. Desfaz a troca na fronteira, em
+    // vez de deixar o `null` viajar para dentro do serviço.
+    const numberMin = minCru ?? undefined;
+    const numberMax = maxCru ?? undefined;
 
     Promise.all([
       getFilterOptions({ query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax }),

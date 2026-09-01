@@ -305,9 +305,14 @@ export function FilterBar() {
         <div className="filter-section-label">Coleções</div>
         <div className="filter-tags-row">
           {(() => {
-            const roots = filterOptions.tags.filter((t) => !t.parent_id);
+            // `?? []` porque um campo ausente na resposta derrubava a árvore
+            // inteira do React com "Cannot read properties of undefined", e não
+            // só esta barra: a tela ficava em branco. O tipo promete o array,
+            // mas o tipo não é garantia em tempo de execução.
+            const todasAsTags = filterOptions.tags ?? [];
+            const roots = todasAsTags.filter((t) => !t.parent_id);
             const childrenOf = (parentId: string) =>
-              filterOptions.tags.filter((t) => t.parent_id === parentId);
+              todasAsTags.filter((t) => t.parent_id === parentId);
             return roots.flatMap((root) => {
               const children = childrenOf(root.id);
               const chips = [

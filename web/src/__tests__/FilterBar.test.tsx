@@ -181,6 +181,12 @@ describe('FilterBar Component', () => {
 });
 
 describe('o que a barra realmente entrega ao serviço', () => {
+  // O `beforeEach` do describe principal não alcança este bloco: sem limpar
+  // aqui, `mock.calls[0]` seria a chamada de OUTRO teste.
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('faixa de número ausente chega como undefined, não como null', async () => {
     // Este é o teste que faltava. A barra serializa os filtros com
     // JSON.stringify para comparar mudanças, e JSON.stringify troca `undefined`
@@ -202,7 +208,8 @@ describe('o que a barra realmente entrega ao serviço', () => {
     );
 
     await waitFor(() => expect(getFilterOptions).toHaveBeenCalled());
-    const args = (getFilterOptions as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const chamadas = (getFilterOptions as ReturnType<typeof vi.fn>).mock.calls;
+    const args = chamadas[chamadas.length - 1][0];
     expect(args.numberMin).toBeUndefined();
     expect(args.numberMax).toBeUndefined();
     expect(args.numberMin).not.toBeNull();

@@ -3541,3 +3541,55 @@ button.linkish {
   outline: 2px solid var(--c-accent-500);
   outline-offset: -2px;
 }
+
+/* --------------------------------------------------------------------------
+   Menu de filtro em tela estreita
+   --------------------------------------------------------------------------
+   O menu é `position: absolute; left: 0; min-width: 200px` ancorado no próprio
+   gatilho, sem limite à direita. Medido em 390px: o menu de "Ritmo" abre em
+   x=246 e vai até 446 — 64px além da viewport —, os nomes das opções ficam
+   cortados e a PÁGINA inteira passa a rolar de lado enquanto ele está aberto.
+
+   Nem `left: 0` nem `right: 0` resolvem sozinhos: ancorado à esquerda, o menu
+   dos gatilhos da direita estoura; ancorado à direita, o dos gatilhos da
+   esquerda estoura para o outro lado. Abaixo de 640px o menu deixa de se
+   ancorar no gatilho e passa a ocupar a largura da barra, que sempre cabe.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .filter-dropdown {
+    position: static;
+  }
+
+  .filter-dropdown-menu {
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Respiro das seções em tela estreita
+   --------------------------------------------------------------------------
+   `.detail-section` usa 32px de padding e nunca era reduzido no celular. Em
+   320px isso são 96px de 320 — 30% da tela — só de margem, somando o padding
+   da página. É a causa de o slider de posição do áudio sobrar com 36px de
+   largura para uma faixa de quatro minutos.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .detail-section {
+    padding: var(--space-4);
+  }
+}
+
+/* A trilha do áudio tem 6px de altura, e é ela o alvo de toque real: o
+   `::-webkit-slider-thumb` de 14px é pintura e não aumenta a caixa do input.
+   Em aparelho de toque a caixa cresce e a trilha continua fina, desenhada no
+   `runnable-track`. */
+@media (pointer: coarse) {
+  .audio-player-progress {
+    height: 32px;
+    background: transparent;
+  }
+}

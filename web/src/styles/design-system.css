@@ -25,6 +25,13 @@
   --c-accent-100: #f5eede;
   --c-accent-200: #eadaba;
   --c-accent-300: #dec08e;
+  /* Usada em quatro lugares e nunca definida: `var(--accent-gold)` sem fallback
+     vira `unset` e o link herda a cor do texto. Com `text-decoration: none`
+     junto, "← Voltar", "PDF de origem" e "Abrir em nova aba" ficavam
+     visualmente idênticos a texto comum (WCAG 1.4.1). */
+  --accent-gold: #dec08e;
+  /* Também usada sem definição, com fallback #c1121f — que dá 2,67:1 no escuro. */
+  --color-danger: #f87171;
   --c-accent-400: #d0a265;
   --c-accent-500: #c9a96e;
   --c-accent-600: #b08a4a;
@@ -52,7 +59,10 @@
   --c-success-bg: #ecfdf3;
   --c-warning: #b45309;
   --c-warning-bg: #fffbeb;
-  --c-error: #b91c1c;
+  /* A paleta semântica nasceu para fundo claro e o app é escuro: #b91c1c dava
+     2,97:1 sobre --bg-base, num título de 20px que é o primeiro a ser lido. */
+  --c-error: #f87171;
+  --c-error-light: #b91c1c;
   --c-error-bg: #fef2f2;
   --c-info: #1d4ed8;
   --c-info-bg: #eff6ff;
@@ -66,7 +76,10 @@
 
   --text-primary: #f5f0e8;
   --text-secondary: #a89f91;
-  --text-tertiary: #6b6459;
+  /* Era #6b6459: 2,85:1 sobre --bg-surface, e todos os usos são de 12 ou 14px —
+     a exceção de texto grande não vale. Pegava os nomes das colunas da tabela,
+     o texto de toda mensagem de erro e o "Sem conteúdo" das cifras vazias. */
+  --text-tertiary: #968e81;
   --text-inverse: #1c1917;
 
   --border-subtle: rgba(245, 240, 232, 0.06);

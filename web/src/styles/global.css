@@ -2937,6 +2937,8 @@ button.linkish {
    O vermelho difere entre as paletas porque o mesmo tom não tem o mesmo
    contraste sobre os dois fundos. */
 .cp-scope[data-cp-theme='dark'] {
+  --cp-warn: #ffb020;
+  --cp-foco: var(--c-accent-500);
   --cp-bg: #0f0e13;
   --cp-text: #e7e5e4;
   --cp-dim: #a8a29e;
@@ -2944,6 +2946,9 @@ button.linkish {
   --cp-rule: #2b2a33;
 }
 .cp-scope[data-cp-theme='light'] {
+  /* O amarelo #ffb020 sobre o fundo claro dá 1,63:1, e o anel dourado 2,08:1. */
+  --cp-warn: #8a5a00;
+  --cp-foco: #8a6d3b;
   --cp-bg: #faf6ee;
   --cp-text: #2b2622;
   --cp-dim: #7a726a;
@@ -3122,8 +3127,18 @@ button.linkish {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cp-review-track,
-  .cp-review-thumb { transition: none; }
+  /* Cobria só o interruptor de revisão. Ficavam de fora as animações infinitas
+     (`drive-job-pulse` e os dois `spin`, que rodam durante importações longas —
+     exatamente o caso da WCAG 2.2.2 para quem tem distúrbio vestibular), os
+     `fadeIn*` de quase toda seção, o `stagger-children` e a rolagem suave. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .cp-state {
@@ -3274,14 +3289,14 @@ button.linkish {
 
 /* Âmbar, não vermelho: vermelho já é a tinta do acorde no corpo da cifra. */
 .cp-line-row--invalid {
-  border-left-color: #ffb020;
+  border-left-color: var(--cp-warn, #ffb020);
   background: rgba(255, 176, 32, 0.07);
 }
 .cp-line-issue {
   flex: 0 1 auto;
   align-self: center;
   font-size: var(--text-xs);
-  color: #ffb020;
+  color: var(--cp-warn, #ffb020);
 }
 
 /* Três botões por linha, um deles destrutivo ("Remover linha", sem confirmação e sem
@@ -3373,14 +3388,14 @@ button.linkish {
 /* Exceção, não ação primária: âmbar (o mesmo de .cp-line-issue) e contorno tracejado,
    para ler como "isto sai do caminho normal". */
 .cp-edit-force {
-  color: #ffb020;
+  color: var(--cp-warn, #ffb020);
   border-style: dashed;
-  border-color: color-mix(in srgb, #ffb020 45%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--cp-warn, #ffb020) 45%, var(--border-subtle));
   background: transparent;
 }
 .cp-edit-actions .cp-edit-force:hover:not(:disabled) {
-  color: #ffb020;
-  border-color: #ffb020;
+  color: var(--cp-warn, #ffb020);
+  border-color: var(--cp-warn, #ffb020);
 }
 
 .cp-edit-cancel { color: var(--text-secondary); }
@@ -3390,7 +3405,7 @@ button.linkish {
 .cp-edit-issues {
   margin-left: auto;
   font-size: var(--text-sm);
-  color: #ffb020;
+  color: var(--cp-warn, #ffb020);
 }
 
 /* Arquivos que a API recusaria: um só derruba o lote inteiro, então precisam
@@ -3511,4 +3526,18 @@ button.linkish {
     width: 100%;
     justify-content: flex-end;
   }
+}
+
+/* O anel de foco global é dourado, pensado para o fundo escuro do app: dentro
+   da cifra em tema claro ele cai para 2,08:1 e quem navega por teclado perde o
+   rastro. Aqui ele segue o tema da cifra. */
+.cp-scope :focus-visible {
+  outline: 2px solid var(--cp-foco, var(--c-accent-500));
+}
+
+/* Única regra de `outline: none` do arquivo sem contrapartida em `:focus`. As
+   opções são <button> de verdade: dava para tabular até elas e o foco sumia. */
+.app-select-option:focus-visible {
+  outline: 2px solid var(--c-accent-500);
+  outline-offset: -2px;
 }

@@ -9,6 +9,10 @@
    -------------------------------------------------------------------------- */
 .app-shell {
   min-height: 100vh;
+  /* `vh` no Safari do iPhone mede com as barras recolhidas: ao chegar sobra
+     faixa vazia e, quando a barra some ao rolar, o layout salta. `dvh` acompanha;
+     a linha de `vh` acima fica como reserva para quem não o suporta. */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg-base);
@@ -901,6 +905,12 @@
    -------------------------------------------------------------------------- */
 .pagination {
   display: flex;
+  /* Medido: na página 46 de 92, os 11 itens somam 480px. Sem wrap e com o
+     conteúdo centralizado, o excedente sai pelos dois lados — e a rolagem
+     lateral em LTR só revela o direito. Em 390px o "←" ficava inteiro fora da
+     tela e o "1" quase todo: não havia como voltar uma página nem ir à
+     primeira, em nenhum tamanho de iPhone. */
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: var(--space-1);
@@ -2590,6 +2600,10 @@ button.linkish {
   display: block;
   width: 100%;
   min-height: 70vh;
+  /* `vh` no Safari do iPhone mede com as barras recolhidas: ao chegar sobra
+     faixa vazia e, quando a barra some ao rolar, o layout salta. `dvh` acompanha;
+     a linha de `vh` acima fica como reserva para quem não o suporta. */
+  min-height: 70dvh;
   border: none;
   background: #1a1a1a;
 }
@@ -2893,9 +2907,6 @@ button.linkish {
     font-size: var(--text-sm);
   }
 
-  .search-input {
-    font-size: var(--text-sm);
-  }
 
   .detail-header {
     padding: var(--space-5);
@@ -2940,6 +2951,11 @@ button.linkish {
 }
 
 .cp-scope {
+  /* A célula da cifra é `white-space: pre` de propósito — é o que mantém o
+     acorde em cima da sílaba certa. Uma linha longa então não quebra, e sem
+     rolagem aqui ela empurrava o documento inteiro: medido em 390px, a página
+     ganhava rolagem lateral e o cabeçalho saía do lugar junto. */
+  overflow-x: auto;
   background: var(--cp-bg);
   color: var(--cp-text);
   border-radius: var(--radius-lg);
@@ -2992,6 +3008,10 @@ button.linkish {
 .cp-back:hover { text-decoration: underline; }
 
 .cp-header {
+  /* Medido em 390px com sessão aberta: as ações (switch de revisão + editar +
+     tema) somam 380px indeformáveis, e o título não encolhe abaixo do
+     min-content. O conjunto estourava 118px e o botão de tema saía da tela. */
+  flex-wrap: wrap;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -3028,6 +3048,7 @@ button.linkish {
 /* Marca de revisão humana. O switch fica no cabeçalho da cifra: é decisão
    sobre o que se está lendo, não detalhe de registro. */
 .cp-header-actions {
+  flex-shrink: 1;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -3416,4 +3437,77 @@ button.linkish {
   width: 100%;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: var(--text-xs);
+}
+
+/* --------------------------------------------------------------------------
+   iOS: zoom automático ao focar campo
+   --------------------------------------------------------------------------
+   O Safari do iPhone amplia a página quando o campo focado tem fonte menor que
+   16px, e não desfaz ao sair: o layout desloca e o que estava sendo lido sai de
+   cena. Como esta é uma ferramenta de gestão, quase todo campo é de edição do
+   acervo — o efeito aparecia em toda tela de trabalho.
+
+   `maximum-scale=1` no meta viewport resolveria o zoom e quebraria o pinçar
+   para ampliar, que é recurso de acessibilidade. Subir a fonte é o único
+   caminho que o iOS aceita sem esse custo. `pointer: coarse` limita a mudança a
+   aparelho de toque; no computador os 14px continuam.
+   -------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Área de toque
+   --------------------------------------------------------------------------
+   A diretriz da Apple pede 44x44 CSS px; a WCAG 2.5.8 aceita 24x24 como piso.
+   Medidos abaixo disso: o "x" de limpar a busca (24x24), o "x" de tirar uma
+   coleção do louvor (20x20), os botões +/-/¶ de cada linha do editor de cifra
+   (26x18, com 4px entre eles — e o do meio APAGA a linha), o "Ver" da lista de
+   importação (22x24) e as marcas de filtro ativo (26px de altura).
+
+   Só em aparelho de toque: no computador o alvo é o ponteiro, e inchar tudo
+   estragaria a densidade de uma ferramenta de gestão.
+   -------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .search-clear-btn,
+  .detail-tag-remove,
+  .detail-copy-id-btn,
+  .bulk-remove,
+  .filter-active-chip,
+  .cp-line-actions button,
+  .cp-line-edit-actions button,
+  .sort-order-btn,
+  .auth-btn,
+  .results-group-name {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* O "x" fica com alvo de 44px sem inchar o chip: a caixa cresce para fora. */
+  .detail-tag-remove,
+  .search-clear-btn {
+    margin: -10px;
+    padding: 10px;
+  }
+
+  /* Um alvo de 44px por linha, três lado a lado, não cabe em 320px ao lado do
+     texto da cifra. Abaixo de 640px as ações vão para uma linha própria. */
+  .cp-line-actions {
+    gap: var(--space-2);
+  }
+}
+
+@media (pointer: coarse) and (max-width: 640px) {
+  .cp-line-row {
+    flex-wrap: wrap;
+  }
+
+  .cp-line-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

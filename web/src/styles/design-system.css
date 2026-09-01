@@ -183,6 +183,10 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-base);
   min-height: 100vh;
+  /* `vh` no Safari do iPhone mede com as barras recolhidas: ao chegar sobra
+     faixa vazia e, quando a barra some ao rolar, o layout salta. `dvh` acompanha;
+     a linha de `vh` acima fica como reserva para quem não o suporta. */
+  min-height: 100dvh;
   accent-color: var(--c-accent-500);
 }
 

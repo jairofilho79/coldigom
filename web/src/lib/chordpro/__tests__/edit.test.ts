@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from '../parse';
+import { serialize } from '../serialize';
 import {
   insertLineAfter,
   lineToText,
@@ -92,5 +93,42 @@ describe('cabeçalho', () => {
     const s = setHeaderField(song(), 'key', 'A');
     expect(setHeaderField(s, 'key', '').header.key).toBeUndefined();
     expect(setHeaderField(s, 'key', '   ').header.key).toBeUndefined();
+  });
+});
+
+describe('linhas cruas acompanham a edição', () => {
+  // A nota ";" do pipeline marca QUAL trecho está em dúvida. Guardá-la por índice
+  // fazia ela derivar a cada edição: inserir antes empurrava a nota para depois da
+  // linha nova, e remover a linha anterior mandava a nota para o fim da cifra.
+  const FONTE = 'linha um\n; recado do pipeline\nlinha dois\n';
+
+  it('sem editar, a nota volta byte a byte no lugar', () => {
+    expect(serialize(parse(FONTE))).toBe(FONTE);
+  });
+
+  it('inserir uma linha antes da nota não desloca a nota', () => {
+    const depois = serialize(insertLineAfter(parse(FONTE), { stanza: 0, line: 0 }));
+    expect(depois).toBe('linha um\n\n; recado do pipeline\nlinha dois\n');
+  });
+
+  it('remover a linha anterior mantém a nota colada ao trecho que ela comenta', () => {
+    const depois = serialize(removeLine(parse(FONTE), { stanza: 0, line: 0 }));
+    expect(depois).toBe('; recado do pipeline\nlinha dois\n');
+  });
+
+  it('separar estrofe leva a nota junto para a estrofe nova', () => {
+    const depois = serialize(splitStanzaAt(parse(FONTE), { stanza: 0, line: 1 }));
+    expect(depois).toContain('; recado do pipeline\nlinha dois');
+  });
+
+  it('substituir a linha que a nota precedia mantém a nota na posição', () => {
+    const depois = serialize(replaceLine(parse(FONTE), { stanza: 0, line: 1 }, 'outra [C]coisa'));
+    expect(depois).toBe('linha um\n; recado do pipeline\noutra [C]coisa\n');
+  });
+
+  it('Song montado à mão continua sem linhas cruas — não inventa nenhuma', () => {
+    const song = parse('a\nb\n');
+    const semCruas = { ...song, rawLines: undefined };
+    expect(removeLine(semCruas, { stanza: 0, line: 0 }).rawLines).toBeUndefined();
   });
 });

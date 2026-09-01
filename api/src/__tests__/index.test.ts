@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SignJWT } from 'jose';
 import { unzipSync } from 'fflate';
 import yaml from 'js-yaml';
@@ -83,7 +83,10 @@ function resolveMockAll(query: string, responses: { all?: { results: unknown[] }
 }
 
 // Mock D1Database
-const createMockD1 = (responses: any = {}) => ({
+/** O material como a API o devolve — só o que estas asserções olham. */
+type MaterialResposta = { id: string; type: string; has_content?: boolean };
+
+const createMockD1 = (responses: Record<string, unknown> = {}) => ({
   prepare: vi.fn((query: string) => ({
     bind: vi.fn((...args: unknown[]) => ({
       all: vi.fn().mockImplementation(async () => {
@@ -134,6 +137,16 @@ function createStatefulMockD1() {
   const praiseTagIds = new Map<string, string[]>();
 
   return {
+    /**
+     * O merge passou a escrever em lote, para ser atômico. O mock executa os
+     * statements do lote em ordem, que é o que o D1 faz — assim as asserções
+     * sobre o estado final continuam valendo.
+     */
+    batch: vi.fn(async (stmts: { run: () => Promise<unknown> }[]) => {
+      const saidas = [];
+      for (const stmt of stmts) saidas.push(await stmt.run());
+      return saidas;
+    }),
     prepare: vi.fn((query: string) => ({
       bind: vi.fn((...args: unknown[]) => ({
         run: vi.fn(async () => {
@@ -200,7 +213,7 @@ function createStatefulMockD1() {
 }
 
 // Mock R2Bucket (head + ranged get, aligned with Worker R2 API)
-const createMockR2 = (object: any = null) => {
+const createMockR2 = (object: R2ObjectBody | null = null) => {
   const objectBody = object?.body ?? null;
   const defaultBytes =
     objectBody instanceof Uint8Array ? objectBody : objectBody ? new Uint8Array(objectBody) : null;
@@ -322,7 +335,7 @@ describe('API Routes', () => {
     });
 
     it('should search praises by YouTube watch URL', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -349,7 +362,7 @@ describe('API Routes', () => {
     });
 
     it('should search praises by youtu.be URL and playlist watch URL', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -377,7 +390,7 @@ describe('API Routes', () => {
     });
 
     it('should keep text search on FTS path for normal queries', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: [mockPraises[0]] }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -435,7 +448,7 @@ describe('API Routes', () => {
     });
 
     it('should rank search matches by number then title then lyrics', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -458,7 +471,7 @@ describe('API Routes', () => {
     });
 
     it('should use natural number order for digit-only search', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -481,7 +494,7 @@ describe('API Routes', () => {
     });
 
     it('should exact-match number when query has leading zeros', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 1 }),
@@ -502,7 +515,7 @@ describe('API Routes', () => {
     });
 
     it('should build valid COLLATE NOCASE order for tonality sort', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -523,7 +536,7 @@ describe('API Routes', () => {
     });
 
     it('should put empty values last for desc sort too', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -543,7 +556,7 @@ describe('API Routes', () => {
     });
 
     it('should use numeric cast for number sort with empty last', async () => {
-      const prepare = vi.fn((query: string) => ({
+      const prepare = vi.fn((_query: string) => ({
         bind: vi.fn().mockReturnThis(),
         all: vi.fn().mockResolvedValue({ results: mockPraises }),
         first: vi.fn().mockResolvedValue({ total: 2 }),
@@ -868,19 +881,26 @@ describe('API Routes', () => {
     it('should return filter options', async () => {
       const mockDB = {
         prepare: vi.fn((query: string) => {
+          // Responde igual com e sem .bind(): a rota passou a montar as
+          // consultas com os filtros aplicados como bindings. E casa pela
+          // tabela, não pelo texto exato do COUNT.
+          const responder = (results: unknown[]) => ({
+            all: vi.fn().mockResolvedValue({ results }),
+            bind: vi.fn(() => ({ all: vi.fn().mockResolvedValue({ results }) })),
+          });
           if (query.includes('DISTINCT rhythm')) {
-            return { all: vi.fn().mockResolvedValue({ results: [{ rhythm: 'Avulsos' }, { rhythm: 'Coletânea' }] }) };
+            return responder([{ rhythm: 'Avulsos' }, { rhythm: 'Coletânea' }]);
           }
           if (query.includes('DISTINCT tonality')) {
-            return { all: vi.fn().mockResolvedValue({ results: [{ tonality: 'C' }, { tonality: 'G' }] }) };
+            return responder([{ tonality: 'C' }, { tonality: 'G' }]);
           }
           if (query.includes('DISTINCT category')) {
-            return { all: vi.fn().mockResolvedValue({ results: [{ category: 'Louvor' }, { category: 'Adoração' }] }) };
+            return responder([{ category: 'Louvor' }, { category: 'Adoração' }]);
           }
-          if (query.includes('COUNT(pt.praise_id)')) {
-            return { all: vi.fn().mockResolvedValue({ results: mockTags.map(t => ({ ...t, count: 1 })) }) };
+          if (query.includes('FROM tags')) {
+            return responder(mockTags.map(t => ({ ...t, count: 1 })));
           }
-          return { all: vi.fn().mockResolvedValue({ results: [] }) };
+          return responder([]);
         }),
       };
       const mockR2 = createMockR2();
@@ -993,9 +1013,9 @@ describe('API Routes', () => {
       expect(res.status).toBe(200);
 
       const json = await res.json();
-      const cifras = json.data.materials.filter((m: any) => m.type === 'chord');
-      expect(cifras.find((m: any) => m.id === 'ch1').has_content).toBe(true);
-      expect(cifras.find((m: any) => m.id === 'ch2').has_content).toBe(false);
+      const cifras = json.data.materials.filter((m: MaterialResposta) => m.type === 'chord');
+      expect(cifras.find((m: MaterialResposta) => m.id === 'ch1').has_content).toBe(true);
+      expect(cifras.find((m: MaterialResposta) => m.id === 'ch2').has_content).toBe(false);
     });
 
     it('consulta o R2 com o prefixo storage/ e só para cifras', async () => {
@@ -1013,7 +1033,7 @@ describe('API Routes', () => {
       const { mockPraise, DB, ASSETS } = praiseWithChords(async () => null);
       const res = await app.request(`/api/praises/${mockPraise.id}`, {}, { DB, ASSETS });
       const json = await res.json();
-      const pdf = json.data.materials.find((m: any) => m.type === 'pdf');
+      const pdf = json.data.materials.find((m: MaterialResposta) => m.type === 'pdf');
       expect(pdf.has_content).toBeUndefined();
     });
 
@@ -1040,7 +1060,7 @@ describe('API Routes', () => {
     it('should handle praise without tags', async () => {
       const mockPraise = { ...mockPraises[0], tag_ids: null };
       const mockDB = {
-        prepare: vi.fn((query: string) => ({
+        prepare: vi.fn((_query: string) => ({
           bind: vi.fn().mockReturnThis(),
           all: vi.fn().mockResolvedValue({ results: [] }),
           first: vi.fn().mockResolvedValue(mockPraise),
@@ -1249,6 +1269,8 @@ describe('API Routes', () => {
         prepare: vi.fn(() => ({
           bind: vi.fn().mockReturnThis(),
           first: vi.fn().mockResolvedValue({ id: chordId, praise_id: praiseId, type: 'chord', r2_key: r2Key }),
+          // O PUT passou a limpar a marca de revisão junto com a gravação.
+          run: vi.fn(async () => ({})),
         })),
       };
       const mockR2 = createMockR2();
@@ -1260,6 +1282,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
           COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
         }
@@ -1284,6 +1307,7 @@ describe('API Routes', () => {
           DB: createMockD1(),
           ASSETS: createMockR2(),
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
           COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
         }
@@ -1307,6 +1331,7 @@ describe('API Routes', () => {
           DB: createMockD1(),
           ASSETS: createMockR2(),
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
           COLDIGOM_UPLOAD_TOKEN: 'token-do-review-app',
         }
@@ -1327,6 +1352,8 @@ describe('API Routes', () => {
               type: 'chord',
               r2_key: r2Key,
             })),
+            // O PUT passou a limpar a marca de revisão junto com a gravação.
+            run: vi.fn(async () => ({})),
           })),
         })),
       };
@@ -1339,6 +1366,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
         }
       );
@@ -1377,6 +1405,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: createMockR2(),
           AUTH_JWT_SECRET: TEST_JWT_SECRET,
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: TEST_WEB_ORIGIN,
         }
       );
@@ -1396,6 +1425,8 @@ describe('API Routes', () => {
               type: 'chord',
               r2_key: r2Key,
             })),
+            // O PUT passou a limpar a marca de revisão junto com a gravação.
+            run: vi.fn(async () => ({})),
           })),
         })),
       };
@@ -1412,6 +1443,7 @@ describe('API Routes', () => {
         DB: mockDB,
         ASSETS: mockR2,
         AUTH_JWT_SECRET: TEST_JWT_SECRET,
+        AUTH_ALLOWED_EMAILS: '*',
         WEB_ORIGIN: TEST_WEB_ORIGIN,
         COLDIGOM_UPLOAD_TOKEN: uploadToken,
       });
@@ -1431,6 +1463,7 @@ describe('API Routes', () => {
         DB: createMockD1(),
         ASSETS: createMockR2(),
         AUTH_JWT_SECRET: TEST_JWT_SECRET,
+        AUTH_ALLOWED_EMAILS: '*',
         WEB_ORIGIN: TEST_WEB_ORIGIN,
       });
       expect(res.status).toBe(401);
@@ -1568,13 +1601,24 @@ describe('API Routes', () => {
     it('returns configuration flags without secrets', async () => {
       const mockDB = createMockD1({});
       const mockR2 = createMockR2();
+      // Deixou de ser público: expunha WEB_ORIGIN, callbackUrl e quais segredos
+      // existem, sem nenhuma tela consumir.
+      const jwt = await new SignJWT({ email: 'admin@test.com', jti: 'j-cfg' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setSubject('sub-admin')
+        .setIssuedAt()
+        .setExpirationTime('2h')
+        .sign(new TextEncoder().encode('0123456789abcdef0123456789abcdef'));
 
-      const res = await app.request('/auth/status', {}, {
+      const res = await app.request('/auth/status', {
+        headers: { cookie: `coldigom_access=${encodeURIComponent(jwt)}` },
+      }, {
         DB: mockDB,
         ASSETS: mockR2,
         GOOGLE_CLIENT_ID: 'client-id',
         GOOGLE_CLIENT_SECRET: 'secret',
         AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+        AUTH_ALLOWED_EMAILS: '*',
         AUTH_BASE_URL: 'https://api.example',
         WEB_ORIGIN: 'https://web.example',
         AUTH_COOKIE_SAMESITE: 'None',
@@ -1597,6 +1641,7 @@ describe('API Routes', () => {
   describe('POST /api/praises', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
@@ -1707,6 +1752,7 @@ describe('API Routes', () => {
   describe('POST /api/tags', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
@@ -1779,6 +1825,7 @@ describe('API Routes', () => {
   describe('POST /api/praises/:id/tags leaf-only', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
@@ -1822,6 +1869,7 @@ describe('API Routes', () => {
   describe('POST /api/praises/:keeperId/merge', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
+      AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
     const keeperId = mockPraises[0].id;
@@ -1869,6 +1917,17 @@ describe('API Routes', () => {
       const assetsDelete = vi.fn().mockResolvedValue(undefined);
 
       const db = {
+        /**
+         * O merge passou a escrever em lote, para ser atômico: o D1 executa a
+         * sequência em transação e reverte tudo se um statement falhar. O mock
+         * executa os statements em ordem, que é o mesmo efeito no caminho feliz
+         * — assim as asserções sobre o estado final continuam valendo.
+         */
+        batch: vi.fn(async (stmts: { run: () => Promise<unknown> }[]) => {
+          const saidas = [];
+          for (const stmt of stmts) saidas.push(await stmt.run());
+          return saidas;
+        }),
         prepare: vi.fn((query: string) => ({
           bind: vi.fn((...args: unknown[]) => ({
             run: vi.fn(async () => {
@@ -2078,6 +2137,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+          AUTH_ALLOWED_EMAILS: '*',
         }
       );
 
@@ -2098,6 +2158,7 @@ describe('API Routes', () => {
           DB: mockDB,
           ASSETS: mockR2,
           AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+          AUTH_ALLOWED_EMAILS: '*',
           WEB_ORIGIN: 'https://good.example',
         }
       );
@@ -2271,3 +2332,241 @@ describe('buildWhereClause', () => {
     expect(result.bindings).toHaveLength(11);
   });
 });
+
+describe('AUTH_ALLOWED_EMAILS — autorização de quem já autenticou', () => {
+  // authRequestInit assina a sessão de admin@test.com.
+  const baseEnv = {
+    AUTH_JWT_SECRET: TEST_JWT_SECRET,
+    WEB_ORIGIN: TEST_WEB_ORIGIN,
+  };
+
+  function tagsDb() {
+    return {
+      prepare: vi.fn(() => ({
+        bind: vi.fn(() => ({
+          run: vi.fn(async () => ({})),
+          first: vi.fn(async () => null),
+          all: vi.fn(async () => ({ results: [] })),
+        })),
+      })),
+    };
+  }
+
+  it('recusa com 500 quando a política não está configurada', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      { ...baseEnv, DB: tagsDb(), ASSETS: createMockR2() }
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it('deixa passar quando a política é "*"', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      { ...baseEnv, AUTH_ALLOWED_EMAILS: '*', DB: tagsDb(), ASSETS: createMockR2() }
+    );
+    expect(res.status).not.toBe(403);
+    expect(res.status).not.toBe(500);
+  });
+
+  it('deixa passar quem está na lista', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      {
+        ...baseEnv,
+        AUTH_ALLOWED_EMAILS: 'outro@exemplo.org,admin@test.com',
+        DB: tagsDb(),
+        ASSETS: createMockR2(),
+      }
+    );
+    expect(res.status).not.toBe(403);
+    expect(res.status).not.toBe(500);
+  });
+
+  it('recusa com 403 quem autenticou mas não está na lista', async () => {
+    const res = await app.request(
+      '/api/tags',
+      await authRequestInit({ name: 'Nova' }),
+      {
+        ...baseEnv,
+        AUTH_ALLOWED_EMAILS: 'so-esse@exemplo.org',
+        DB: tagsDb(),
+        ASSETS: createMockR2(),
+      }
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('o token de upload do review-app continua passando sem política de e-mail', async () => {
+    // O review-app roda sem sessão e sem e-mail; a lista não se aplica a ele.
+    const uploadToken = 'test-upload-token-abc';
+    const mockDB = {
+      prepare: vi.fn(() => ({
+        bind: vi.fn(() => ({
+          first: vi.fn(async () => ({
+            id: 'chord-mat-1',
+            praise_id: 'praise-1',
+            type: 'chord',
+            r2_key: 'storage/assets/praises/praise-1/chord-mat-1.chord',
+          })),
+          run: vi.fn(async () => ({})),
+        })),
+      })),
+    };
+    const res = await app.request(
+      '/api/materials/chord-mat-1/content',
+      {
+        method: 'PUT',
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          authorization: `Bearer ${uploadToken}`,
+        },
+        body: '{title: ViaToken}',
+      },
+      { ...baseEnv, DB: mockDB, ASSETS: createMockR2(), COLDIGOM_UPLOAD_TOKEN: uploadToken }
+    );
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('destino de redirect depois do OAuth', () => {
+  const baseEnv = {
+    AUTH_JWT_SECRET: TEST_JWT_SECRET,
+    AUTH_ALLOWED_EMAILS: '*',
+    WEB_ORIGIN: TEST_WEB_ORIGIN,
+    GOOGLE_CLIENT_ID: 'test-client-id',
+  };
+
+  /** Sessão válida num GET — /auth/drive/connect é GET, não POST. */
+  async function authGet(): Promise<RequestInit> {
+    const jwt = await new SignJWT({ email: 'admin@test.com', name: 'Admin', jti: 'j-drive' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('sub-admin')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(TEST_JWT_SECRET));
+    return {
+      method: 'GET',
+      headers: {
+        origin: TEST_WEB_ORIGIN,
+        cookie: `coldigom_access=${encodeURIComponent(jwt)}`,
+      },
+    };
+  }
+
+  it('/auth/callback não leva para fora do site quando o fluxo falha', async () => {
+    // Sem code/state o callback lança de imediato e cai no catch. O caminho de
+    // erro usava o parâmetro cru, virando trampolim de phishing a partir do
+    // nosso domínio — sem precisar de login nenhum.
+    const res = await app.request(
+      '/auth/callback?redirect=https://evil.example/roubo',
+      {},
+      { ...baseEnv, DB: createMockD1({}), ASSETS: createMockR2() }
+    );
+
+    expect(res.status).toBe(302);
+    const location = res.headers.get('location') ?? '';
+    expect(location).not.toContain('evil.example');
+  });
+
+  it('/auth/drive/connect não guarda destino de fora do site', async () => {
+    // O destino vai para o oauth_pending e volta como redirect do callback.
+    const binds: unknown[][] = [];
+    const db = {
+      prepare: vi.fn(() => ({
+        bind: vi.fn((...args: unknown[]) => {
+          binds.push(args);
+          return { run: vi.fn(async () => ({})), first: vi.fn(async () => null) };
+        }),
+      })),
+    };
+
+    const res = await app.request(
+      '/auth/drive/connect?redirect=https://evil.example/roubo',
+      await authGet(),
+      { ...baseEnv, DB: db, ASSETS: createMockR2() }
+    );
+
+    expect(res.status).toBe(302);
+    const guardado = binds.flat().filter((v): v is string => typeof v === 'string');
+    expect(guardado.some((v) => v.includes('evil.example'))).toBe(false);
+  });
+
+  it('/auth/drive/connect preserva destino absoluto do próprio site', async () => {
+    // O fluxo do Drive volta para uma URL absoluta de propósito; sanitizar para
+    // caminho relativo mandaria o usuário para a origem da API.
+    const binds: unknown[][] = [];
+    const db = {
+      prepare: vi.fn(() => ({
+        bind: vi.fn((...args: unknown[]) => {
+          binds.push(args);
+          return { run: vi.fn(async () => ({})), first: vi.fn(async () => null) };
+        }),
+      })),
+    };
+    const destino = `${TEST_WEB_ORIGIN}/praise/abc`;
+
+    await app.request(
+      `/auth/drive/connect?redirect=${encodeURIComponent(destino)}`,
+      await authGet(),
+      { ...baseEnv, DB: db, ASSETS: createMockR2() }
+    );
+
+    const guardado = binds.flat().filter((v): v is string => typeof v === 'string');
+    expect(guardado).toContain(destino);
+  });
+});
+
+describe('endurecimento da borda', () => {
+  const baseEnv = {
+    AUTH_JWT_SECRET: TEST_JWT_SECRET,
+    AUTH_ALLOWED_EMAILS: '*',
+    WEB_ORIGIN: TEST_WEB_ORIGIN,
+  };
+
+  it('/auth/status não é mais público', async () => {
+    // Devolvia o WEB_ORIGIN inteiro, o callbackUrl e quais segredos existem.
+    // Nenhuma tela do site consome — é endpoint de diagnóstico.
+    const res = await app.request('/auth/status', {}, { ...baseEnv, DB: createMockD1({}), ASSETS: createMockR2() });
+    expect(res.status).toBe(401);
+  });
+
+  it('/auth/status responde para quem está autenticado', async () => {
+    const jwt = await new SignJWT({ email: 'admin@test.com', jti: 'j-status' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('sub-admin')
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(new TextEncoder().encode(TEST_JWT_SECRET));
+
+    const res = await app.request(
+      '/auth/status',
+      { headers: { origin: TEST_WEB_ORIGIN, cookie: `coldigom_access=${encodeURIComponent(jwt)}` } },
+      { ...baseEnv, DB: createMockD1({}), ASSETS: createMockR2() }
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it('token de upload errado no último caractere é recusado', async () => {
+    // Guarda contra comparação por prefixo; a propriedade de tempo constante em
+    // si não é observável por teste.
+    const res = await app.request(
+      '/api/materials/chord-mat-1/content',
+      {
+        method: 'PUT',
+        headers: {
+          'content-type': 'text/plain',
+          origin: TEST_WEB_ORIGIN,
+          authorization: 'Bearer test-upload-token-abd',
+        },
+        body: '{title: X}',
+      },
+      { ...baseEnv, DB: createMockD1(), ASSETS: createMockR2(), COLDIGOM_UPLOAD_TOKEN: 'test-upload-token-abc' }
+    );
+    expect(res.status).toBe(401);
+  });
+});
+

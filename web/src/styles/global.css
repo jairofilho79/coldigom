@@ -9,6 +9,10 @@
    -------------------------------------------------------------------------- */
 .app-shell {
   min-height: 100vh;
+  /* `vh` no Safari do iPhone mede com as barras recolhidas: ao chegar sobra
+     faixa vazia e, quando a barra some ao rolar, o layout salta. `dvh` acompanha;
+     a linha de `vh` acima fica como reserva para quem não o suporta. */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg-base);
@@ -741,12 +745,90 @@
   cursor: pointer;
 }
 
+/* Virou <button> para poder ser alcançado e operado por teclado; era um <span>
+   dentro de uma <tr onClick>, que só existia para o mouse. Os resets abaixo
+   mantêm a aparência de texto que ele sempre teve. */
+/* Faixa de número e marcas de filtro ativo — controles que a barra passou a
+   oferecer no S6. Ritmo e Tom reusam o dropdown que já existia. */
+.filter-number-range {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filter-number-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.filter-number-input {
+  width: 5.5rem;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--bg-surface, transparent);
+  border: 1px solid var(--border-default, currentColor);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.filter-active-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.filter-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-sunken, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--border-default, transparent);
+  border-radius: var(--radius-full, 999px);
+  cursor: pointer;
+}
+
+.filter-active-chip:hover {
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .filter-number-range {
+    width: 100%;
+  }
+
+  .filter-number-input {
+    width: 100%;
+  }
+}
+
 .results-group-name {
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   color: var(--text-primary);
   user-select: none;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.results-group-name:focus-visible {
+  outline: 2px solid var(--c-accent, currentColor);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 3px);
 }
 
 .results-group-child td {
@@ -823,6 +905,12 @@
    -------------------------------------------------------------------------- */
 .pagination {
   display: flex;
+  /* Medido: na página 46 de 92, os 11 itens somam 480px. Sem wrap e com o
+     conteúdo centralizado, o excedente sai pelos dois lados — e a rolagem
+     lateral em LTR só revela o direito. Em 390px o "←" ficava inteiro fora da
+     tela e o "1" quase todo: não havia como voltar uma página nem ir à
+     primeira, em nenhum tamanho de iPhone. */
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: var(--space-1);
@@ -909,6 +997,20 @@
   font-family: var(--font-body);
   font-size: var(--text-sm);
   color: var(--text-tertiary);
+}
+
+/* Texto só para leitor de tela: anuncia estado (carregando, contagem) sem
+   ocupar espaço visual. Não existia; a barra de filtros girava um spinner mudo. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .error-state {
@@ -1403,7 +1505,8 @@
   }
 }
 
-.edit-field label {
+.edit-field label,
+.edit-field-label {
   display: block;
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -2498,6 +2601,10 @@ button.linkish {
   display: block;
   width: 100%;
   min-height: 70vh;
+  /* `vh` no Safari do iPhone mede com as barras recolhidas: ao chegar sobra
+     faixa vazia e, quando a barra some ao rolar, o layout salta. `dvh` acompanha;
+     a linha de `vh` acima fica como reserva para quem não o suporta. */
+  min-height: 70dvh;
   border: none;
   background: #1a1a1a;
 }
@@ -2801,9 +2908,6 @@ button.linkish {
     font-size: var(--text-sm);
   }
 
-  .search-input {
-    font-size: var(--text-sm);
-  }
 
   .detail-header {
     padding: var(--space-5);
@@ -2833,6 +2937,8 @@ button.linkish {
    O vermelho difere entre as paletas porque o mesmo tom não tem o mesmo
    contraste sobre os dois fundos. */
 .cp-scope[data-cp-theme='dark'] {
+  --cp-warn: #ffb020;
+  --cp-foco: var(--c-accent-500);
   --cp-bg: #0f0e13;
   --cp-text: #e7e5e4;
   --cp-dim: #a8a29e;
@@ -2840,6 +2946,9 @@ button.linkish {
   --cp-rule: #2b2a33;
 }
 .cp-scope[data-cp-theme='light'] {
+  /* O amarelo #ffb020 sobre o fundo claro dá 1,63:1, e o anel dourado 2,08:1. */
+  --cp-warn: #8a5a00;
+  --cp-foco: #8a6d3b;
   --cp-bg: #faf6ee;
   --cp-text: #2b2622;
   --cp-dim: #7a726a;
@@ -2848,6 +2957,11 @@ button.linkish {
 }
 
 .cp-scope {
+  /* A célula da cifra é `white-space: pre` de propósito — é o que mantém o
+     acorde em cima da sílaba certa. Uma linha longa então não quebra, e sem
+     rolagem aqui ela empurrava o documento inteiro: medido em 390px, a página
+     ganhava rolagem lateral e o cabeçalho saía do lugar junto. */
+  overflow-x: auto;
   background: var(--cp-bg);
   color: var(--cp-text);
   border-radius: var(--radius-lg);
@@ -2900,6 +3014,10 @@ button.linkish {
 .cp-back:hover { text-decoration: underline; }
 
 .cp-header {
+  /* Medido em 390px com sessão aberta: as ações (switch de revisão + editar +
+     tema) somam 380px indeformáveis, e o título não encolhe abaixo do
+     min-content. O conjunto estourava 118px e o botão de tema saía da tela. */
+  flex-wrap: wrap;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -2936,6 +3054,7 @@ button.linkish {
 /* Marca de revisão humana. O switch fica no cabeçalho da cifra: é decisão
    sobre o que se está lendo, não detalhe de registro. */
 .cp-header-actions {
+  flex-shrink: 1;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -3008,8 +3127,18 @@ button.linkish {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cp-review-track,
-  .cp-review-thumb { transition: none; }
+  /* Cobria só o interruptor de revisão. Ficavam de fora as animações infinitas
+     (`drive-job-pulse` e os dois `spin`, que rodam durante importações longas —
+     exatamente o caso da WCAG 2.2.2 para quem tem distúrbio vestibular), os
+     `fadeIn*` de quase toda seção, o `stagger-children` e a rolagem suave. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .cp-state {
@@ -3160,14 +3289,14 @@ button.linkish {
 
 /* Âmbar, não vermelho: vermelho já é a tinta do acorde no corpo da cifra. */
 .cp-line-row--invalid {
-  border-left-color: #ffb020;
+  border-left-color: var(--cp-warn, #ffb020);
   background: rgba(255, 176, 32, 0.07);
 }
 .cp-line-issue {
   flex: 0 1 auto;
   align-self: center;
   font-size: var(--text-xs);
-  color: #ffb020;
+  color: var(--cp-warn, #ffb020);
 }
 
 /* Três botões por linha, um deles destrutivo ("Remover linha", sem confirmação e sem
@@ -3259,14 +3388,14 @@ button.linkish {
 /* Exceção, não ação primária: âmbar (o mesmo de .cp-line-issue) e contorno tracejado,
    para ler como "isto sai do caminho normal". */
 .cp-edit-force {
-  color: #ffb020;
+  color: var(--cp-warn, #ffb020);
   border-style: dashed;
-  border-color: color-mix(in srgb, #ffb020 45%, var(--border-subtle));
+  border-color: color-mix(in srgb, var(--cp-warn, #ffb020) 45%, var(--border-subtle));
   background: transparent;
 }
 .cp-edit-actions .cp-edit-force:hover:not(:disabled) {
-  color: #ffb020;
-  border-color: #ffb020;
+  color: var(--cp-warn, #ffb020);
+  border-color: var(--cp-warn, #ffb020);
 }
 
 .cp-edit-cancel { color: var(--text-secondary); }
@@ -3276,5 +3405,191 @@ button.linkish {
 .cp-edit-issues {
   margin-left: auto;
   font-size: var(--text-sm);
-  color: #ffb020;
+  color: var(--cp-warn, #ffb020);
+}
+
+/* Arquivos que a API recusaria: um só derruba o lote inteiro, então precisam
+   saltar aos olhos na lista antes de o usuário tentar enviar. */
+.bulk-list-alerta {
+  color: var(--color-danger, #c1121f);
+  font-weight: 600;
+}
+
+.bulk-problema {
+  border-color: color-mix(in srgb, var(--color-danger, #c1121f) 45%, var(--border-subtle));
+  color: var(--color-danger, #c1121f);
+}
+
+.bulk-list-ver-todos {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.detail-aviso {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-subtle, rgba(0, 0, 0, 0.03));
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* O motivo da falha ficava só no console: "sem permissão no Drive",
+   "arquivo grande demais" e "arquivo apagado" eram indistinguíveis, e
+   "Tentar de novo" nos dois primeiros casos nunca ia funcionar. */
+.drive-job-item-erro {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-danger, #c1121f);
+}
+
+/* Saída para o conflito de gravação: detectar e parar deixava a pessoa sem como
+   preservar o próprio trabalho — não há diff, e a edição é linha a linha. */
+.cp-conflito {
+  margin-top: var(--space-4);
+}
+
+.cp-conflito textarea {
+  width: 100%;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--text-xs);
+}
+
+/* --------------------------------------------------------------------------
+   iOS: zoom automático ao focar campo
+   --------------------------------------------------------------------------
+   O Safari do iPhone amplia a página quando o campo focado tem fonte menor que
+   16px, e não desfaz ao sair: o layout desloca e o que estava sendo lido sai de
+   cena. Como esta é uma ferramenta de gestão, quase todo campo é de edição do
+   acervo — o efeito aparecia em toda tela de trabalho.
+
+   `maximum-scale=1` no meta viewport resolveria o zoom e quebraria o pinçar
+   para ampliar, que é recurso de acessibilidade. Subir a fonte é o único
+   caminho que o iOS aceita sem esse custo. `pointer: coarse` limita a mudança a
+   aparelho de toque; no computador os 14px continuam.
+   -------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Área de toque
+   --------------------------------------------------------------------------
+   A diretriz da Apple pede 44x44 CSS px; a WCAG 2.5.8 aceita 24x24 como piso.
+   Medidos abaixo disso: o "x" de limpar a busca (24x24), o "x" de tirar uma
+   coleção do louvor (20x20), os botões +/-/¶ de cada linha do editor de cifra
+   (26x18, com 4px entre eles — e o do meio APAGA a linha), o "Ver" da lista de
+   importação (22x24) e as marcas de filtro ativo (26px de altura).
+
+   Só em aparelho de toque: no computador o alvo é o ponteiro, e inchar tudo
+   estragaria a densidade de uma ferramenta de gestão.
+   -------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .search-clear-btn,
+  .detail-tag-remove,
+  .detail-copy-id-btn,
+  .bulk-remove,
+  .filter-active-chip,
+  .cp-line-actions button,
+  .cp-line-edit-actions button,
+  .sort-order-btn,
+  .auth-btn,
+  .results-group-name {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* O "x" fica com alvo de 44px sem inchar o chip: a caixa cresce para fora. */
+  .detail-tag-remove,
+  .search-clear-btn {
+    margin: -10px;
+    padding: 10px;
+  }
+
+  /* Um alvo de 44px por linha, três lado a lado, não cabe em 320px ao lado do
+     texto da cifra. Abaixo de 640px as ações vão para uma linha própria. */
+  .cp-line-actions {
+    gap: var(--space-2);
+  }
+}
+
+@media (pointer: coarse) and (max-width: 640px) {
+  .cp-line-row {
+    flex-wrap: wrap;
+  }
+
+  .cp-line-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* O anel de foco global é dourado, pensado para o fundo escuro do app: dentro
+   da cifra em tema claro ele cai para 2,08:1 e quem navega por teclado perde o
+   rastro. Aqui ele segue o tema da cifra. */
+.cp-scope :focus-visible {
+  outline: 2px solid var(--cp-foco, var(--c-accent-500));
+}
+
+/* Única regra de `outline: none` do arquivo sem contrapartida em `:focus`. As
+   opções são <button> de verdade: dava para tabular até elas e o foco sumia. */
+.app-select-option:focus-visible {
+  outline: 2px solid var(--c-accent-500);
+  outline-offset: -2px;
+}
+
+/* --------------------------------------------------------------------------
+   Menu de filtro em tela estreita
+   --------------------------------------------------------------------------
+   O menu é `position: absolute; left: 0; min-width: 200px` ancorado no próprio
+   gatilho, sem limite à direita. Medido em 390px: o menu de "Ritmo" abre em
+   x=246 e vai até 446 — 64px além da viewport —, os nomes das opções ficam
+   cortados e a PÁGINA inteira passa a rolar de lado enquanto ele está aberto.
+
+   Nem `left: 0` nem `right: 0` resolvem sozinhos: ancorado à esquerda, o menu
+   dos gatilhos da direita estoura; ancorado à direita, o dos gatilhos da
+   esquerda estoura para o outro lado. Abaixo de 640px o menu deixa de se
+   ancorar no gatilho e passa a ocupar a largura da barra, que sempre cabe.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .filter-dropdown {
+    position: static;
+  }
+
+  .filter-dropdown-menu {
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Respiro das seções em tela estreita
+   --------------------------------------------------------------------------
+   `.detail-section` usa 32px de padding e nunca era reduzido no celular. Em
+   320px isso são 96px de 320 — 30% da tela — só de margem, somando o padding
+   da página. É a causa de o slider de posição do áudio sobrar com 36px de
+   largura para uma faixa de quatro minutos.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .detail-section {
+    padding: var(--space-4);
+  }
+}
+
+/* A trilha do áudio tem 6px de altura, e é ela o alvo de toque real: o
+   `::-webkit-slider-thumb` de 14px é pintura e não aumenta a caixa do input.
+   Em aparelho de toque a caixa cresce e a trilha continua fina, desenhada no
+   `runnable-track`. */
+@media (pointer: coarse) {
+  .audio-player-progress {
+    height: 32px;
+    background: transparent;
+  }
 }

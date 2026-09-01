@@ -12,6 +12,14 @@ export type AuthEnv = {
    * - `Lax`: works when SPA and API are same-site.
    */
   AUTH_COOKIE_SAMESITE?: 'Lax' | 'Strict' | 'None';
+  /**
+   * Quem pode usar a API depois de autenticar. Obrigatória — sem ela ninguém entra.
+   * - `*`: delega à lista de usuários de teste do OAuth no console do Google
+   *   (máx. 100). Vale enquanto o app estiver em modo de teste; se ele for
+   *   PUBLICADO lá, `*` deixa de proteger qualquer coisa.
+   * - CSV de e-mails: só esses entram, independente do que o Google permita.
+   */
+  AUTH_ALLOWED_EMAILS?: string;
 };
 
 type GoogleIdTokenClaims = {
@@ -70,6 +78,23 @@ async function sha256Base64Url(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return base64UrlEncode(new Uint8Array(digest));
+}
+
+/**
+ * Comparação que não vaza informação pelo tempo. Compara os digests, o que de
+ * quebra neutraliza a diferença de comprimento entre os dois valores.
+ */
+export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [da, db] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(a)),
+    crypto.subtle.digest('SHA-256', enc.encode(b)),
+  ]);
+  const x = new Uint8Array(da);
+  const y = new Uint8Array(db);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
 }
 
 /** SHA-256 hex for opaque refresh token lookup in D1 */
@@ -176,6 +201,12 @@ export async function buildGoogleAuthorizeRedirect(params: {
   }
 
   const expiresAt = Math.floor(Date.now() / 1000) + 600;
+  // Varre o vencido no caminho de escrita: só havia DELETE no sucesso do
+  // callback, então toda tentativa abandonada ficava no D1 para sempre.
+  await params.db
+    .prepare(`DELETE FROM oauth_pending WHERE expires_at <= ?`)
+    .bind(Math.floor(Date.now() / 1000))
+    .run();
   await params.db
     .prepare(
       `INSERT OR REPLACE INTO oauth_pending (state, code_verifier, redirect_to, purpose, expires_at) VALUES (?, ?, ?, ?, ?)`
@@ -244,6 +275,27 @@ export async function verifyGoogleIdToken(params: {
 
 export type AuthUser = { sub: string; email?: string; name?: string; picture?: string };
 
+/**
+ * Autenticar responde "quem é você"; isto responde "você pode usar isto".
+ * Sem política configurada a resposta é não: esquecer a variável de ambiente não
+ * pode virar acesso liberado.
+ */
+export function isEmailAllowed(
+  email: string | undefined,
+  allowList: string | undefined
+): boolean {
+  const policy = allowList?.trim();
+  if (!policy) return false;
+  if (policy === '*') return true;
+  const wanted = email?.trim().toLowerCase();
+  if (!wanted) return false;
+  return policy
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(wanted);
+}
+
 export async function signAccessJwt(params: {
   jwtSecret: string;
   user: AuthUser;
@@ -266,25 +318,15 @@ export async function signAccessJwt(params: {
 
 export async function verifyAccessJwt(params: { jwtSecret: string; token: string }): Promise<AuthUser & { jti?: string }> {
   const secret = new TextEncoder().encode(params.jwtSecret);
-  const { payload } = await jwtVerify(params.token, secret);
+  // Algoritmo fixado: a jose já restringe pelo tipo da chave, mas deixar
+  // implícito é o tipo de coisa que uma troca de biblioteca afrouxa em silêncio.
+  const { payload } = await jwtVerify(params.token, secret, { algorithms: ['HS256'] });
   return {
     sub: String(payload.sub),
     email: typeof payload.email === 'string' ? payload.email : undefined,
     name: typeof payload.name === 'string' ? payload.name : undefined,
     picture: typeof payload.picture === 'string' ? payload.picture : undefined,
     jti: typeof payload.jti === 'string' ? payload.jti : undefined,
-  };
-}
-
-/** Legacy long-lived session JWT (7d) — read-only verification for migration */
-export async function verifyLegacySessionJwt(params: { jwtSecret: string; token: string }): Promise<AuthUser> {
-  const secret = new TextEncoder().encode(params.jwtSecret);
-  const { payload } = await jwtVerify(params.token, secret);
-  return {
-    sub: String(payload.sub),
-    email: typeof payload.email === 'string' ? payload.email : undefined,
-    name: typeof payload.name === 'string' ? payload.name : undefined,
-    picture: typeof payload.picture === 'string' ? payload.picture : undefined,
   };
 }
 
@@ -428,6 +470,10 @@ export async function createAuthExchangeCode(params: {
   const code = randomString(32);
   const expiresAt = Math.floor(Date.now() / 1000) + 120;
   await params.db
+    .prepare(`DELETE FROM auth_exchange_codes WHERE expires_at <= ?`)
+    .bind(Math.floor(Date.now() / 1000))
+    .run();
+  await params.db
     .prepare(
       `INSERT INTO auth_exchange_codes (code, access_token, refresh_token, user_json, expires_at) VALUES (?, ?, ?, ?, ?)`
     )
@@ -441,14 +487,23 @@ export async function consumeAuthExchangeCode(
   code: string
 ): Promise<{ accessToken: string; refreshToken: string; user: AuthUser } | null> {
   const now = Math.floor(Date.now() / 1000);
-  const row = await db
+
+  // Marca o uso ANTES de ler, com a condição dentro da própria escrita. Ler,
+  // conferir used_at e só então escrever deixava duas requisições simultâneas
+  // passarem as duas pela conferência: um código de uso único virava reutilizável.
+  const claimed = await db
     .prepare(
-      `SELECT access_token, refresh_token, user_json, used_at FROM auth_exchange_codes WHERE code = ? AND expires_at > ?`
+      `UPDATE auth_exchange_codes SET used_at = ? WHERE code = ? AND used_at IS NULL AND expires_at > ?`
     )
-    .bind(code, now)
-    .first<{ access_token: string; refresh_token: string; user_json: string; used_at: number | null }>();
-  if (!row || row.used_at) return null;
-  await db.prepare(`UPDATE auth_exchange_codes SET used_at = ? WHERE code = ?`).bind(now, code).run();
+    .bind(now, code, now)
+    .run();
+  if (!claimed?.meta?.changes) return null;
+
+  const row = await db
+    .prepare(`SELECT access_token, refresh_token, user_json FROM auth_exchange_codes WHERE code = ?`)
+    .bind(code)
+    .first<{ access_token: string; refresh_token: string; user_json: string }>();
+  if (!row) return null;
   return {
     accessToken: row.access_token,
     refreshToken: row.refresh_token,
@@ -515,6 +570,11 @@ export async function handleOAuthCallback(params: {
 
   const claims = await verifyGoogleIdToken({ idToken: tokenResponse.id_token, clientId: params.clientId });
   if (!claims?.sub) throw new Error('Invalid id_token payload');
+  // O e-mail é o que a allowlist compara; aceitar um não verificado deixaria
+  // alguém entrar com endereço que não provou possuir.
+  if (claims.email && claims.email_verified === false) {
+    throw new Error('Google account email is not verified');
+  }
 
   const user: AuthUser = {
     sub: claims.sub,
@@ -611,28 +671,25 @@ export async function resolveUserFromRequest(params: {
   return resolveUserFromCookies(params);
 }
 
-/** Resolve user from access cookie, legacy session cookie, or null */
+/**
+ * Resolve o usuário pelo cookie de acesso.
+ *
+ * A sessão legada de 7 dias foi depreciada em 2026-04-28: toda ela expirou em
+ * 05/05, e aceitá-la mantinha dois formatos de token indistinguíveis, verificados
+ * com o mesmo segredo e sem nenhuma claim separando um do outro. O cookie
+ * continua sendo limpo, para não deixar lixo em navegador antigo.
+ */
 export async function resolveUserFromCookies(params: {
   request: Request;
   jwtSecret: string;
 }): Promise<AuthUser | null> {
   const access = getCookie(params.request, ACCESS_COOKIE);
-  if (access) {
-    try {
-      return await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: access });
-    } catch {
-      /* fall through */
-    }
+  if (!access) return null;
+  try {
+    return await verifyAccessJwt({ jwtSecret: params.jwtSecret, token: access });
+  } catch {
+    return null;
   }
-  const legacy = getCookie(params.request, LEGACY_SESSION_COOKIE);
-  if (legacy) {
-    try {
-      return await verifyLegacySessionJwt({ jwtSecret: params.jwtSecret, token: legacy });
-    } catch {
-      return null;
-    }
-  }
-  return null;
 }
 
 /** Clear auth cookies without DB (e.g. invalid refresh) */

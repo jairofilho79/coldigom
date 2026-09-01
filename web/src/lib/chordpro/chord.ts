@@ -84,9 +84,12 @@ export function normalizeChord(raw: string): string {
   let out = raw;
   for (const [re, para] of ALIASES) out = out.replace(re, para);
 
-  // "Co" → "C°" só quando o "o" é a qualidade inteira, para não estragar nada mais.
-  const rootMatch = ROOT_RE.exec(out);
-  if (rootMatch && out.slice(rootMatch[0].length) === 'o') out = `${rootMatch[0]}°`;
+  // Havia aqui uma heurística que virava "Co" em "C°", supondo OCR de "°" como "o".
+  // Ela disparava em EXATAMENTE um token em todo o acervo (5590 arquivos): "Do" — que
+  // é o nome português da nota Dó, o único caso genuinamente ambíguo. Ou seja, não
+  // resgatava nada e reinterpretava justamente o que não dava para decidir sozinha.
+  // Este módulo promete "normalizar não é consertar"; agora "Do" volta como não
+  // reconhecido, o revisor vê marcado e decide — e o editor tem botão para inserir "°".
 
   return parseChordToken(out).kind === 'unknown' ? raw : out;
 }

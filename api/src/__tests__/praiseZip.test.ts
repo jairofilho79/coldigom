@@ -219,3 +219,69 @@ describe('buildPraiseZipBytes', () => {
     expect(result).toBeNull();
   });
 });
+
+describe('materialZipEntryName — nome de entrada não escapa da pasta', () => {
+  function material(over: Partial<MaterialRow>): MaterialRow {
+    return { ...mockMaterials[0], ...over };
+  }
+
+  it('sanitiza a extensão vinda do type', () => {
+    // O ZIP é servido por GET /api/praises/:id/download.zip, que é rota PÚBLICA.
+    // O PATCH deixava passar type arbitrário, e materialZipEntryName colava
+    // `.${type}` cru: a entrada do ZIP escapava do diretório de extração.
+    const nome = materialZipEntryName(
+      material({ id: 'mat1', type: '../../../etc/cron.d/x' }),
+      'Partitura',
+      new Set()
+    );
+
+    expect(nome).not.toContain('..');
+    expect(nome).not.toContain('/');
+    expect(nome).not.toContain('\\');
+  });
+
+  it('sanitiza o id, que em linha legada não é necessariamente UUID', () => {
+    const nome = materialZipEntryName(
+      material({ id: '../../roubado', type: 'pdf' }),
+      'Partitura',
+      new Set()
+    );
+
+    expect(nome).not.toContain('..');
+    expect(nome).not.toContain('/');
+    expect(nome.endsWith('.pdf')).toBe(true);
+  });
+
+  it('desempata nomes colididos', () => {
+    // Dois materiais com o mesmo rótulo E o mesmo id (dado legado duplicado):
+    // sem o desempate, a segunda entrada sobrescreveria a primeira no ZIP.
+    const usados = new Set<string>();
+    const m = material({ id: 'mat1', type: 'pdf' });
+
+    expect(materialZipEntryName(m, 'Partitura', usados)).toBe('Partitura-mat1.pdf');
+    expect(materialZipEntryName(m, 'Partitura', usados)).toBe('Partitura-mat1-2.pdf');
+    expect(materialZipEntryName(m, 'Partitura', usados)).toBe('Partitura-mat1-3.pdf');
+  });
+
+  it('cai para bin quando o type não sobra nada depois da sanitização', () => {
+    const nome = materialZipEntryName(material({ id: 'mat1', type: '///' }), 'Partitura', new Set());
+
+    expect(nome).toBe('Partitura-mat1.bin');
+  });
+});
+
+describe('buildPraiseZipBytes — chave do R2 com barra inicial', () => {
+  it('lê o objeto em storage/assets/... e não em storage//assets/...', async () => {
+    const { mockDB, mockR2, pdfBytes } = createZipTestMocks();
+    const original = mockMaterials[0].r2_key;
+    mockMaterials[0].r2_key = `/${original}`;
+
+    try {
+      const result = await buildPraiseZipBytes(mockDB, mockR2, mockPraise.id);
+      const unzipped = unzipSync(result!.bytes);
+      expect(unzipped['Partitura-mat1.pdf']).toEqual(pdfBytes);
+    } finally {
+      mockMaterials[0].r2_key = original;
+    }
+  });
+});

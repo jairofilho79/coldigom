@@ -10,13 +10,18 @@ export default defineConfig({
       // caminho do Drive (~2%). Medir tudo é o ponto de partida honesto.
       include: ['src/**/*.ts'],
       exclude: ['src/__tests__/**'],
-      // Catraca: o piso medido em 2026-08-31. Sobe conforme os setores fecham;
-      // nunca desce. O CI dizia "≥ 95%" sem nenhum limite configurado.
+      // Catraca: sobe a cada setor fechado, nunca desce.
+      // S0 (2026-08-31): 48 / 41 / 53 / 50
+      // S1 (2026-08-31): 52 / 44 / 58 / 54
+      // S2 (2026-08-31): 53 / 46 / 61 / 55
+      // S3 (2026-08-31): 55 / 48 / 63 / 57
+      // S4 (2026-08-31): 58 / 51 / 65 / 59
       thresholds: {
-        statements: 48,
-        branches: 41,
-        functions: 53,
-        lines: 50,
+        // S8: medido 69.42 / 64.94 / 72.09 / 71.76
+        statements: 69,
+        branches: 64,
+        functions: 72,
+        lines: 71,
       },
     },
   },

@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import { Zip, ZipPassThrough, zipSync, type AsyncFlateStreamHandler } from 'fflate';
 import { labelFor, loadMaterialKindLabels } from './materialKindLabels';
+import { storageKeyFor } from './storageKeys';
 
 /** Limite de bytes não comprimidos no ZIP (evita estourar 128 MB do Worker). */
 export const MAX_PRAISE_ZIP_UNCOMPRESSED_BYTES = 80 * 1024 * 1024;
@@ -48,9 +49,30 @@ export function sanitizeFileNamePart(value: string): string {
     .trim();
 }
 
+/**
+ * Parte de nome que NUNCA pode virar caminho: sem separador, sem sequência de
+ * pontos, sem começar por ponto. O ZIP sai por `GET /api/praises/:id/download.zip`,
+ * que é rota PÚBLICA, e é extraído na máquina de quem baixa — uma entrada com
+ * `../` escapa do diretório de extração.
+ */
+export function sanitizeZipNamePart(value: string, fallback: string): string {
+  const limpo = sanitizeFileNamePart(String(value ?? ''))
+    .replace(/[^\p{L}\p{N} ._-]/gu, '-')
+    .replace(/\.{2,}/g, '-')
+    .replace(/^[.\-\s]+/, '')
+    .slice(0, 80)
+    .trim();
+  return limpo || fallback;
+}
+
 export function materialZipExtension(type: string): string {
   if (type === 'youtube' || type === 'chord') return 'txt';
-  return type || 'bin';
+  // O `type` vem do banco e, até o conserto do PATCH, podia ser qualquer string:
+  // colar `.${type}` cru era travessia de caminho num ZIP público. Os tipos
+  // reais do acervo passam por isSafeMaterialType (^[a-z0-9]{1,16}$) e saem daqui
+  // intactos.
+  const limpo = String(type ?? '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
+  return limpo || 'bin';
 }
 
 export function materialZipEntryName(
@@ -58,9 +80,11 @@ export function materialZipEntryName(
   label: string,
   usedNames: Set<string>
 ): string {
-  const safeLabel = sanitizeFileNamePart(label || 'Material');
+  const safeLabel = sanitizeZipNamePart(label, 'Material');
+  // O id também é sanitizado: em linhas legadas ele não é necessariamente UUID.
+  const safeId = sanitizeZipNamePart(material.id, 'material');
   const ext = materialZipExtension(material.type);
-  const base = `${safeLabel}-${material.id}`;
+  const base = `${safeLabel}-${safeId}`;
   let name = `${base}.${ext}`;
   let n = 2;
   while (usedNames.has(name)) {
@@ -147,7 +171,7 @@ export async function estimatePraiseZipUncompressedSize(
   let total = metadataByteLength;
   for (const material of materials) {
     if (!material.r2_key) continue;
-    const head = await assets.head(`storage/${material.r2_key}`);
+    const head = await assets.head(storageKeyFor(material.r2_key));
     if (head?.size) total += head.size;
   }
   for (const material of materials) {
@@ -211,7 +235,7 @@ async function populateStreamingZip(
     const entryName = materialZipEntryName(material, label, usedNames);
 
     if (material.r2_key) {
-      await addR2ObjectToZip(zip, assets, `storage/${material.r2_key}`, entryName);
+      await addR2ObjectToZip(zip, assets, storageKeyFor(material.r2_key), entryName);
       continue;
     }
 
@@ -321,7 +345,7 @@ export async function buildPraiseZipBytes(
     const entryName = materialZipEntryName(material, label, usedNames);
 
     if (material.r2_key) {
-      const object = await assets.get(`storage/${material.r2_key}`);
+      const object = await assets.get(storageKeyFor(material.r2_key));
       if (object) {
         entries[entryName] = new Uint8Array(await object.arrayBuffer());
       }

@@ -57,6 +57,9 @@ ingestion_no_tx.sql
 # Cloudflare migration artifacts (D1 backup, local secrets)
 migration/
 
+# Arquivo vazio que entrou por engano num `git add api` (S2). Não pertence ao repo.
+api/.zshrc
+
 # Kilo CLI internal files
 .kilo/
 
@@ -66,3 +69,6 @@ migration/
 
 # mockups do brainstorming (superpowers)
 .superpowers/
+
+# Rascunhos locais do dono (fora do fluxo do repositório)
+.wip/

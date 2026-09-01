@@ -22,29 +22,49 @@ export function PraiseMergeSelectPage() {
 
   useEffect(() => {
     if (!keeperId) return;
+    // Mesmo padrão da HomePage: duas buscas em voo resolvem em ordem
+    // arbitrária, e a resposta antiga chegando por último repintava a lista
+    // embaixo do termo novo — aqui um clique na linha errada abre direto a
+    // tela de mesclagem, que é destrutiva. A flag protege o estado (inclusive
+    // o "Buscando…", que o `finally` da busca velha apagava); o
+    // AbortController corta a requisição de fato.
+    let cancelado = false;
+    const controle = new AbortController();
+
     const t = setTimeout(() => {
       setLoading(true);
       setError(null);
-      searchPraises({ query: query || undefined, limit: 20 })
+      searchPraises({ query: query || undefined, limit: 20 }, controle.signal)
         .then((res) => {
+          if (cancelado) return;
           setResults(res.data.filter((p) => p.id !== keeperId));
         })
-        .catch((err) => setError(err instanceof Error ? err.message : 'Falha na busca'))
-        .finally(() => setLoading(false));
+        .catch((err) => {
+          if (cancelado) return;
+          setError(err instanceof Error ? err.message : 'Falha na busca');
+        })
+        .finally(() => {
+          if (!cancelado) setLoading(false);
+        });
     }, 300);
-    return () => clearTimeout(t);
+
+    return () => {
+      cancelado = true;
+      controle.abort();
+      clearTimeout(t);
+    };
   }, [query, keeperId]);
 
   if (!keeperId) {
     return (
-      <div className="page-container detail-page">
+      <main className="page-container detail-page">
         <p className="error-state-desc">ID do louvor inválido.</p>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="page-container detail-page">
+    <main className="page-container detail-page">
       <Link to={`/praise/${keeperId}`} className="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m15 18-6-6 6-6" />
@@ -90,6 +110,6 @@ export function PraiseMergeSelectPage() {
           {query ? 'Nenhum louvor encontrado.' : 'Digite na busca para encontrar o duplicado.'}
         </p>
       ) : null}
-    </div>
+    </main>
   );
 }

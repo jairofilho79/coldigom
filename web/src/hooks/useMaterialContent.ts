@@ -30,13 +30,16 @@ export function useMaterialContent(r2Key: string | null): {
     if (!r2Key) return;
 
     let cancelled = false;
+    // A flag protege o estado; o controller corta a requisição de fato, em vez
+    // de deixá-la trafegar até o fim para o resultado ser descartado.
+    const controle = new AbortController();
     const settle = (state: ContentState) => {
       if (!cancelled) setResolved({ key: r2Key, attempt, state });
     };
 
     (async () => {
       try {
-        const response = await fetch(getAssetUrl(r2Key));
+        const response = await fetch(getAssetUrl(r2Key), { signal: controle.signal });
         if (response.status === 404) {
           settle({ status: 'absent' });
           return;
@@ -47,6 +50,9 @@ export function useMaterialContent(r2Key: string | null): {
         }
         settle({ status: 'ready', source: await response.text() });
       } catch (err) {
+        // Aborto é troca de material ou desmontagem, não falha: pintar erro
+        // aqui mostraria "a rede falhou" a quem só clicou em outra cifra.
+        if (controle.signal.aborted) return;
         settle({
           status: 'error',
           message: err instanceof Error ? err.message : 'Falha de rede',
@@ -56,6 +62,7 @@ export function useMaterialContent(r2Key: string | null): {
 
     return () => {
       cancelled = true;
+      controle.abort();
     };
   }, [r2Key, attempt]);
 

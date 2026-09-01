@@ -41,14 +41,18 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wasPlayingRef = useRef(false);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // A faixa é identificada pelo id, não pela posição: a lista encolhe embaixo
+  // do player quando o usuário remove um material, e um índice guardado apontava
+  // para o vazio (player inteiro sumia) ou para a faixa errada (trocava sozinho).
+  const [currentId, setCurrentId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(readStoredVolume);
   const [isMuted, setIsMuted] = useState(false);
 
-  const current = materials[currentIndex];
+  // Se a faixa escolhida saiu da lista, cai na primeira em vez de sumir.
+  const current = materials.find(m => m.id === currentId) ?? materials[0];
   const src = current?.r2_key ? getAssetUrl(current.r2_key) : '';
   const trackName = current?.material_kind_name || 'Áudio';
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
@@ -86,6 +90,12 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
       });
       wasPlayingRef.current = false;
     }
+  }, []);
+
+  /** O navegador recomeça a carregar quando o src troca — zera o relógio junto. */
+  const handleLoadStart = useCallback(() => {
+    setCurrentTime(0);
+    setDuration(0);
   }, []);
 
   const handleTimeUpdate = useCallback(() => {
@@ -133,20 +143,19 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
   }, []);
 
   const selectTrack = useCallback(
-    (index: number) => {
-      if (index === currentIndex) return;
+    (materialId: string) => {
+      if (materialId === current?.id) return;
       wasPlayingRef.current = isPlaying;
-      setCurrentIndex(index);
+      setCurrentId(materialId);
+      // Zerar o relógio é consequência do gesto, não sincronia com sistema
+      // externo: num efeito isso virava render em cascata a cada troca de faixa.
+      setCurrentTime(0);
+      setDuration(0);
     },
-    [currentIndex, isPlaying]
+    [current?.id, isPlaying]
   );
 
-  useEffect(() => {
-    setCurrentTime(0);
-    setDuration(0);
-  }, [currentIndex]);
-
-  if (materials.length === 0 || !current) return null;
+  if (!current) return null;
 
   return (
     <div className="audio-player-card">
@@ -155,6 +164,7 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
         className="audio-player-element"
         src={src}
         preload="metadata"
+        onLoadStart={handleLoadStart}
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onPlay={handlePlay}
@@ -245,18 +255,17 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
           max={1}
           step="0.01"
           value={volume}
-          onChange={e => {
-            onVolumeChange(e);
-            if (isMuted) setIsMuted(false);
-          }}
+          // Só o onVolumeChange decide sobre o mudo: havia um segundo caminho
+          // aqui que desmutava até ao arrastar o volume para zero.
+          onChange={onVolumeChange}
           aria-label="Nível de volume"
         />
       </div>
 
       {materials.length > 1 && (
         <ul className="audio-track-list" aria-label="Faixas de áudio">
-          {materials.map((m, index) => {
-            const isActive = index === currentIndex;
+          {materials.map(m => {
+            const isActive = m.id === current.id;
             const name = m.material_kind_name || 'Áudio';
             return (
               <li
@@ -267,7 +276,12 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
                   <button
                     type="button"
                     className="audio-track-select"
-                    onClick={() => selectTrack(index)}
+                    onClick={() => selectTrack(m.id)}
+                    // Com `admin` o rótulo visível sai daqui (a categoria vira
+                    // editável ao lado) e sobrava só o ícone `aria-hidden`: o
+                    // botão não se anunciava e não havia como trocar de faixa
+                    // por leitor de tela.
+                    aria-label={admin ? `Tocar ${name}` : undefined}
                   >
                     <span className="audio-track-icon" aria-hidden>
                       {isActive && isPlaying ? (

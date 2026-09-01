@@ -29,8 +29,14 @@ export function parseDriveUrl(raw: string): DriveRootRef {
     throw new Error('Invalid Drive URL');
   }
 
+  // Sufixo, não substring: `includes('google.com')` casava com
+  // `evil-google.com.attacker.net`. Não era explorável — o fetch sempre vai
+  // para googleapis.com e o id é restrito a [a-zA-Z0-9_-] — mas é uma checagem
+  // que dava falsa segurança para quem viesse depois.
   const host = url.hostname.toLowerCase();
-  if (!host.includes('google.com') && !host.includes('googledrive.com')) {
+  const dominiosAceitos = ['google.com', 'googledrive.com'];
+  const confiavel = dominiosAceitos.some((d) => host === d || host.endsWith(`.${d}`));
+  if (!confiavel) {
     throw new Error('URL is not a Google Drive link');
   }
 

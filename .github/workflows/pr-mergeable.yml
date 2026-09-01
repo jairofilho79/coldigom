@@ -1,11 +1,13 @@
 name: PR Mergeable
 
 on:
+  # develop é a branch de integração da varredura de refatoração: cada setor
+  # entra por PR nela, e sem listá-la aqui esses PRs passariam sem portão.
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   # A main recebe commit e merge direto; sem isto o portão nunca roda neles.
   push:
-    branches: [main]
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -55,6 +57,12 @@ jobs:
         working-directory: ./api
         run: npm run test:coverage
 
+      # Bloqueante desde já: o lint da api nasceu com 0 erros. Os 25
+      # `no-explicit-any` herdados estão como aviso, e cada setor tipa o seu.
+      - name: Lint
+        working-directory: ./api
+        run: npm run lint
+
   web_build_test_coverage:
     name: Web — build / testes / cobertura
     runs-on: ubuntu-latest
@@ -79,9 +87,8 @@ jobs:
         working-directory: ./web
         run: npm run test:coverage
 
-      # Informativo por ora: 38 erros herdados, todos catalogados e atribuídos
-      # aos setores S5/S6/S7. Vira bloqueante quando o S6 fechar.
-      - name: Lint (informativo)
+      # Bloqueante desde o S7: eram 38 erros herdados no S0, catalogados e
+      # atribuídos por setor. O último saiu com a separação do AuthContext.
+      - name: Lint
         working-directory: ./web
-        continue-on-error: true
         run: npm run lint

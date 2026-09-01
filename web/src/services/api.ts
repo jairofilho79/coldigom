@@ -1,4 +1,6 @@
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
+import { fatiarLote } from '../lib/uploadLimits';
+import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== null
@@ -24,14 +26,27 @@ function getStoredRefreshToken(): string | null {
   }
 }
 
+/**
+ * Escritas guardadas como as leituras já eram. Com armazenamento bloqueado —
+ * Safari privado, cookies desligados — o acesso lança, e estas são chamadas
+ * no caminho de login, que é onde isso derruba a sessão inteira.
+ */
 export function setAuthTokens(accessToken: string, refreshToken: string): void {
-  sessionStorage.setItem(ACCESS_KEY, accessToken);
-  sessionStorage.setItem(REFRESH_KEY, refreshToken);
+  try {
+    sessionStorage.setItem(ACCESS_KEY, accessToken);
+    sessionStorage.setItem(REFRESH_KEY, refreshToken);
+  } catch {
+    /* sessão só em memória: o Bearer desta aba continua valendo */
+  }
 }
 
 export function clearAuthTokens(): void {
-  sessionStorage.removeItem(ACCESS_KEY);
-  sessionStorage.removeItem(REFRESH_KEY);
+  try {
+    sessionStorage.removeItem(ACCESS_KEY);
+    sessionStorage.removeItem(REFRESH_KEY);
+  } catch {
+    /* nada a limpar se nem dá para escrever */
+  }
 }
 
 function authHeaders(): Record<string, string> {
@@ -102,12 +117,26 @@ export async function refreshSession(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/**
+ * `init.signal` é repassado ao fetch e sobrevive à renovação de sessão: sem
+ * isso, o cancelamento se perdia justamente na tentativa que vem depois do 401.
+ */
 async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = false): Promise<T> {
   const headers = {
     ...authHeaders(),
     ...(init?.headers as Record<string, string> | undefined),
   };
-  const response = await fetch(url, { credentials: 'include', ...init, headers });
+  let response: Response;
+  try {
+    response = await fetch(url, { credentials: 'include', ...init, headers });
+  } catch (err) {
+    // Rejeição do próprio fetch não tem `response`, então não passava pelo
+    // tradutor lá embaixo: chegava crua na tela como "Failed to fetch".
+    // Abort é intenção de quem chamou, não falha — sobe como está.
+    if (err instanceof DOMException && err.name === 'AbortError') throw err;
+    console.error('[api] falha de rede', url, err);
+    throw new Error(mensagemDeRede());
+  }
   if (response.status === 401 && !isAfterRefresh && !isAuthPathNoRefresh(url)) {
     const renewed = await refreshSession();
     if (renewed) {
@@ -116,7 +145,10 @@ async function fetchJson<T>(url: string, init?: RequestInit, isAfterRefresh = fa
   }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' })) as { error?: string };
-    throw new Error(error.error || `HTTP ${response.status}`);
+    const bruta = error.error || `HTTP ${response.status}`;
+    // A frase do servidor é para quem investiga; a da tela é para quem usa.
+    console.error('[api]', response.status, url, bruta);
+    throw new Error(mensagemAmigavel(bruta));
   }
   return response.json() as Promise<T>;
 }
@@ -137,7 +169,8 @@ export interface SearchParams {
 }
 
 export async function searchPraises(
-  params: SearchParams = {}
+  params: SearchParams = {},
+  signal?: AbortSignal
 ): Promise<{ data: Praise[]; pagination: PaginationInfo }> {
   const urlParams = new URLSearchParams();
 
@@ -158,7 +191,8 @@ export async function searchPraises(
   if (params.order) urlParams.set('order', params.order);
 
   const response = await fetchJson<ApiResponse<Praise[]>>(
-    `${API_BASE_URL}/api/praises?${urlParams}`
+    `${API_BASE_URL}/api/praises?${urlParams}`,
+    signal ? { signal } : undefined
   );
   return {
     data: response.data,
@@ -166,9 +200,25 @@ export async function searchPraises(
   };
 }
 
-export async function getFilterOptions(): Promise<FilterOptions> {
+/**
+ * Opções de filtro. Aceita os filtros correntes porque a API passou a devolver
+ * só o que ainda produz resultado sob eles — antes as opções eram globais e a
+ * tela oferecia combinação que dava zero.
+ */
+export async function getFilterOptions(params: SearchParams = {}): Promise<FilterOptions> {
+  const urlParams = new URLSearchParams();
+  if (params.query) urlParams.set('q', params.query);
+  if (params.tags?.length) urlParams.set('tags', params.tags.join(','));
+  if (params.rhythm?.length) urlParams.set('rhythm', params.rhythm.join(','));
+  if (params.tonality?.length) urlParams.set('tonality', params.tonality.join(','));
+  if (params.category?.length) urlParams.set('category', params.category.join(','));
+  if (params.materialKinds?.length) urlParams.set('materialKinds', params.materialKinds.join(','));
+  if (params.numberMin !== undefined) urlParams.set('numberMin', params.numberMin.toString());
+  if (params.numberMax !== undefined) urlParams.set('numberMax', params.numberMax.toString());
+
+  const qs = urlParams.toString();
   const response = await fetchJson<FilterOptions>(
-    `${API_BASE_URL}/api/praises/filters`
+    `${API_BASE_URL}/api/praises/filters${qs ? `?${qs}` : ''}`
   );
   return response;
 }
@@ -209,14 +259,20 @@ export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetai
 
 export async function updatePraise(
   id: string,
-  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>
+  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>,
+  /**
+   * `updated_at` que a tela carregou. Vai como `if_updated_at`; se alguém gravou
+   * no meio, o servidor responde 409 em vez de deixar a última escrita vencer em
+   * silêncio. Omitido, a gravação se comporta como sempre — o PLPCG não o manda.
+   */
+  ifUpdatedAt?: string
 ): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${id}`,
     {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(ifUpdatedAt ? { ...updates, if_updated_at: ifUpdatedAt } : updates),
     }
   );
   return response.data;
@@ -318,12 +374,16 @@ export async function deleteMaterial(materialId: string): Promise<PraiseDetail> 
   return response.data;
 }
 
-export async function bulkUploadMaterials(
-  praiseId: string,
-  items: Array<{ file: File; material_kind: string; type: string; file_path_legacy?: string }>
-): Promise<PraiseDetail> {
+type ItemDeLote = {
+  file: File;
+  material_kind: string;
+  type: string;
+  file_path_legacy?: string;
+};
+
+async function enviarUmLote(praiseId: string, itens: ItemDeLote[]): Promise<PraiseDetail> {
   const form = new FormData();
-  const meta = items.map((it, idx) => {
+  const meta = itens.map((it, idx) => {
     const key = `file_${idx}`;
     form.append(key, it.file);
     return {
@@ -340,6 +400,45 @@ export async function bulkUploadMaterials(
     { method: 'POST', body: form }
   );
   return response.data;
+}
+
+/**
+ * Envia os arquivos respeitando o teto de itens por requisição da API.
+ *
+ * Antes, uma pasta de 300 arquivos virava um FormData só: subia inteira pela
+ * rede e só então voltava recusada com "Máximo de 200 arquivos por lote" —
+ * depois da espera, e sem indicação de quais tirar. Agora vai em fatias, cada
+ * uma atômica no servidor, e o erro de uma fatia diz quantos já entraram para
+ * o usuário saber o que sobrou.
+ */
+export async function bulkUploadMaterials(
+  praiseId: string,
+  items: ItemDeLote[],
+  onProgress?: (enviados: number, total: number) => void
+): Promise<PraiseDetail> {
+  const fatias = fatiarLote(items);
+  let ultimo: PraiseDetail | null = null;
+  let enviados = 0;
+
+  for (const fatia of fatias) {
+    try {
+      ultimo = await enviarUmLote(praiseId, fatia);
+    } catch (err) {
+      const motivo = err instanceof Error ? err.message : 'Falha no envio';
+      if (enviados === 0) throw err;
+      throw new Error(
+        `${motivo} — ${enviados} de ${items.length} arquivo(s) já entraram; reenvie só o que faltou.`
+      );
+    }
+    enviados += fatia.length;
+    onProgress?.(enviados, items.length);
+  }
+
+  if (!ultimo) {
+    // Lote vazio: devolve o estado atual em vez de inventar um louvor.
+    return getPraise(praiseId) as Promise<PraiseDetail>;
+  }
+  return ultimo;
 }
 
 export function getDriveConnectUrl(redirectTo: string): string {

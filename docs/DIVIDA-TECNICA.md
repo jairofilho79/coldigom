@@ -1,0 +1,233 @@
+# Dívida técnica e trabalho adiado
+
+Registro do que foi **encontrado e deliberadamente não corrigido** durante a
+varredura de refatoração por setores, com o motivo do adiamento e onde cada
+item deve ser retomado.
+
+Regra: nada some daqui por esquecimento. Ao fechar um item, apague a linha no
+mesmo commit que o resolve — e se decidir que não vale mais a pena, registre a
+decisão em vez de apagar em silêncio.
+
+Última atualização: 2026-08-31, ao fim do S9 — a varredura por setores fecha aqui.
+
+---
+
+## Decisões conscientes de risco aceito
+
+### Refresh token de 30 dias em `sessionStorage`
+**Onde:** `web/src/services/api.ts`
+**O que:** `/auth/refresh` e `/auth/exchange-code` devolvem o refresh token no
+corpo JSON e o cliente guarda em `sessionStorage`. Um XSS em qualquer página
+rouba uma sessão de 30 dias, não de 5 minutos.
+**Por que não foi mexido:** foi assim que o bloqueio de cookie de terceiro no
+Safari/iPhone foi contornado. Mexer reabre exatamente aquele problema.
+**Retomar quando:** houver uma solução de sessão que funcione no Safari sem
+depender de token acessível por JavaScript.
+
+### Autorização delegada à lista de usuários de teste do Google
+**Onde:** `api/wrangler.toml`, variável `AUTH_ALLOWED_EMAILS = "*"`
+**O que:** quem pode escrever é decidido pela lista de usuários de teste do
+OAuth no console do Google (máximo 100), fora do repositório.
+**Risco que permanece:** publicar o app no console do Google — um clique, e a
+coisa natural a fazer para sumir com o aviso de "app não verificado" — remove a
+autorização inteira. Nenhum teste falha, nenhum log muda.
+**Retomar quando:** os perfis de uso existirem. Aí `AUTH_ALLOWED_EMAILS` vira
+uma lista de verdade, ou dá lugar a papéis por usuário.
+
+---
+
+## Adiado com motivo, a fazer
+
+### Contrato estruturado de tags  — setor S6, coordenar com PLPCG
+**Onde:** `api/src/routes/praises.ts` e `api/src/plpcgPraises.ts` (GROUP_CONCAT),
+`web/src/components/ResultsTable.tsx:11` (`split(',')`)
+**O que:** as tags viajam como string concatenada por vírgula e o cliente separa
+por vírgula. Uma tag com vírgula no nome aparece como duas.
+**Já feito:** o `POST /api/tags` recusa vírgula (S2), então não se cria dado
+novo quebrado; a colisão de chaves do React na tabela foi corrigida (S6).
+**O que falta:** tags que **já existam** com vírgula continuam exibidas errado.
+O conserto é devolver as tags como lista estruturada.
+**Por que não foi feito:** muda o formato de resposta que o **PLPCG** também
+consome. Precisa ser coordenado com aquele cliente, ou entrar como campo novo
+aditivo mantendo `tag_ids`/`tag_names` para compatibilidade.
+**Antes de fechar:** conferir no D1 de produção se existe alguma tag com vírgula
+no nome. Se não existir, o risco cai para zero e o item vira só higiene.
+
+### Rate limiting — setor S1, reavaliar
+**Onde:** nenhuma rota tem.
+**Análise feita:** os alvos de força bruta são um código de troca de 32 bytes
+aleatórios com TTL de 120s e um refresh de 48 bytes — inviáveis de adivinhar. O
+login é barrado pela lista do Google. O abuso que importava era `?limit` sem
+teto, e isso foi fechado no S2.
+**Por que não foi feito:** exige binding novo de KV ou Durable Object, com
+configuração de deploy que não dá para testar direito localmente, para um ganho
+pequeno diante do que já está protegido.
+**Retomar quando:** o app for publicado no console do Google, ou o acervo passar
+a receber tráfego anônimo relevante.
+
+---
+
+## Fragilidades conhecidas, sem quebra hoje
+
+### Contagem e listagem usam formas diferentes de consulta
+**Onde:** `api/src/routes/praises.ts`, rota `GET /api/praises`
+**O que:** a listagem tem `LEFT JOIN` e `GROUP BY`; a contagem é
+`COUNT(*) FROM praises p` com a mesma cláusula `WHERE`. Funciona **hoje** porque
+nenhum filtro referencia alias de JOIN. No dia em que um filtrar por coluna de
+`tags`, a contagem quebra em silêncio e a paginação passa a mentir.
+
+### Histórico do navegador poluído por clique de filtro — setor S6
+**Onde:** `web/src/hooks/useFilters.ts`
+**O que:** `setSearchParams` empilha entrada de histórico a cada clique de
+filtro. Depois de mexer em seis filtros, sair da Home exige sete "voltar".
+**Conserto provável:** `replace: true` para mudança de filtro, mantendo push
+para navegação de página.
+
+### Duas chamadas a `setFilters` no mesmo tick se atropelariam
+**Onde:** `web/src/hooks/useFilters.ts`
+**O que:** o updater do react-router aplica sobre os `searchParams` da closure
+do render, não sobre a URL mais recente. Nenhum caminho atual faz isso — risco
+latente, sem repro no código de hoje.
+
+---
+
+## Dívida menor, catalogada
+
+- **Pool do vitest no CI**: os scripts locais (`npm test`, `npm run coverage` da
+  raiz) já passam `--pool=threads`, então o travamento em máquina de
+  desenvolvimento acabou. O `vitest.config.ts` continua no padrão (`forks`), que
+  é o que o CI usa — mudar lá é decisão do dono, e nada hoje pede.
+
+- **`driveImport.ts` em 1,5% e `driveCredentials.ts` em 0% de cobertura**
+  (setor S4): o `driveImport` é o consumidor da fila do Cloudflare, e testá-lo
+  de verdade exige simular `MessageBatch`, retentativas e a fila. O S4 cobriu o
+  que dava sem essa infraestrutura (`driveApi` foi de 4% para 18%, `driveParse`
+  para 81%), mas o caminho de importação em si segue quase sem rede.
+- **`HomePage.test.tsx` mocka o `useFilters` inteiro**, então a integração
+  URL↔busca não é exercitada por ele. Testes novos do S6 cobrem parte disso por
+  fora, mas o buraco original continua.
+- **`FilterBar` refaz `/filters` e `/materials/kinds` a cada montagem**, sem
+  cache: ir ao detalhe de um louvor e voltar rebusca tudo.
+- **Seletor de ordenação inverte a direção em silêncio** ao clicar na opção já
+  selecionada — comportamento surpreendente.
+- **`limit` fixo em 20**, não ajustável pelo usuário nem presente na URL.
+- **Sem busca incremental, sugestões ou histórico de busca** — o campo só
+  dispara no Enter.
+
+---
+
+## Encontrado no S7, adiado com motivo
+
+### Granularidade de segundo no token de escrita concorrente
+**Onde:** `PATCH /api/praises/:id`, campo `if_updated_at`
+**O que:** `datetime('now')` só tem segundos, então duas gravações dentro do
+mesmo segundo não são detectadas. A janela cega é de ~1 s.
+**Por que foi aceito:** o alvo real é duas pessoas com a tela aberta por minutos
+ou horas, não uma corrida de milissegundos. Fechar exigiria trocar o token, e o
+formato de `updated_at` é lido pelo PLPCG.
+**Se um dia importar:** coluna `version INTEGER` incrementada no mesmo UPDATE —
+aditivo, sem mexer no `updated_at`.
+
+### Envio em lote fatiado não é atômico entre as fatias
+**Onde:** `web/src/services/api.ts`, `bulkUploadMaterials`
+**O que:** cada fatia de 200 arquivos é atômica no servidor, mas as fatias são
+requisições independentes. Falhando a terceira de cinco, as duas primeiras já
+entraram. A mensagem de erro diz quantos entraram, e reenviar o que faltou é
+manual.
+**Por que foi aceito:** a alternativa é uma sessão de upload no servidor, com
+estado e limpeza — muito para o ganho, dado que o erro agora é explícito.
+
+---
+
+## Encontrado no S8, adiado com motivo
+
+### Notação brasileira de acorde é recusada pelo validador
+**Onde:** `web/src/lib/chordpro/chord.ts`, `QUALITY_RE`
+**O que:** `A4` (sus4), `A7+` (7M), `Asus`, `Aadd9`, `A6/9`, `Cdim7`, `C9sus4` e
+`A°7` voltam como não reconhecidos. A gramática foi derivada dos 2224 acordes do
+gabarito e é fiel a ele — mas o gabarito são 56 arquivos. São grafias legítimas
+que o revisor vai digitar e o validador vai recusar sem oferecer alias.
+**Por que não foi feito:** ampliar a gramática exige decidir, com o dono do
+acervo, quais grafias são canônicas — e ele já fixou regras de extração antes.
+É conversa, não conserto solitário. O "Salvar assim mesmo" existe justamente
+para o acorde legítimo que a gramática não previu, então ninguém fica travado.
+**Retomar quando:** houver a lista de grafias aceitas, vinda do dono.
+
+### `[A][B]` marca duas barras vermelhas que não existem no PDF
+**Onde:** `web/src/lib/chordpro/parse.ts`, cálculo de `attached`
+**O que:** em dois acordes adjacentes, nenhum encosta em letra — os dois encostam
+no colchete do outro — e ambos saem `attached: true`, que a view pinta como
+barra. Contra a regra "colado ⟺ tinha barra".
+**Por que não foi feito:** zero ocorrências de `][` nos 5590 arquivos do acervo.
+O defeito existe, o dano não. Fechar exige olhar o caractere de texto vizinho
+ignorando colchete de acorde adjacente.
+
+### `hasLyrics` congela no parse e mente depois de qualquer edição
+**Onde:** `web/src/lib/chordpro/types.ts` e `parse.ts`
+**O que:** é calculado uma vez e as operações de `edit.ts` o carregam adiante sem
+recalcular: um Song com zero estrofes pode ter `hasLyrics: true`.
+**Já contornado:** a `ChordProPage` não confia nele — usa `temLinhaDeLetra()`, e o
+comentário lá explica exatamente por quê.
+**O que falta:** virar derivado, ou sair do tipo público. Enquanto estiver lá,
+mente para o próximo chamador.
+
+### `replaceLine` descarta tudo depois da primeira linha
+**Onde:** `web/src/lib/chordpro/edit.ts`
+**O que:** texto com `\n` só tem a primeira linha aproveitada; texto que não forma
+linha vira linha vazia, que na releitura é separador de estrofe e some.
+**Por que não foi feito:** não é explorável pela tela — o campo é `<input>` e o
+editor recusa antes com "Esse texto não forma uma linha de cifra". É o contrato
+da biblioteca que está frouxo, não um bug de produto.
+
+### Deploy de preview do Cloudflare Pages deixa de ser origem confiável
+**Onde:** `api/src/origins.ts`, `api/wrangler.toml`
+**O que:** o S8 corrigiu `isTrustedWebOrigin` — entrada sem curinga passou a exigir
+hostname igual, porque os dois ramos do `if (wildcard)` eram a mesma expressão e
+`https://coldigom-web.pages.dev` confiava em qualquer subdomínio.
+**Efeito colateral:** as URLs de preview do Pages (`<hash>.coldigom-web.pages.dev`)
+deixam de ser aceitas. O CI só publica `--branch=main`, então nenhum fluxo
+automático depende disso; mas abrir um preview à mão e tentar editar vai falhar.
+**Se incomodar:** trocar a entrada por `https://*coldigom-web.pages.dev` no
+`WEB_ORIGIN` — a sintaxe de curinga já existe e já é usada para `*plpcg.com`.
+
+---
+
+## Encontrado no S9, adiado com motivo
+
+### `.results-container` esconde o que não couber, sem oferecer rolagem
+**Onde:** `web/src/styles/global.css`, `.results-container { overflow: hidden }`
+**O que:** acima de 768px a tabela volta a `display: table` sem `overflow-x`,
+dentro de um contêiner que corta. Se o conteúdo passar da largura, some sem
+barra de rolagem e sem gesto que o revele.
+**Por que não foi mexido:** **não reproduziu.** Medi em 844 e 932px (iPhone
+deitado) com dados realistas — nomes longos e três coleções por linha — e a
+tabela coube: `scrollWidth == clientWidth`, nada cortado. O mecanismo existe,
+mas mexer no `overflow` afeta o `border-radius` e o cabeçalho fixo, e eu não
+tinha um caso que falhasse para provar que o conserto conserta.
+**Retomar quando:** aparecer louvor cujas coleções estourem a linha, ou ao
+acrescentar coluna à tabela.
+
+### O cabeçalho fixo da tabela nunca gruda
+**Onde:** `web/src/styles/global.css`, `.results-table thead { position: sticky }`
+**O que:** acima de 768px o ancestral `.results-container` tem `overflow: hidden`
+e vira o contêiner de rolagem do sticky — com a altura exata da tabela, não há
+por onde deslizar. Abaixo de 768px a própria tabela é `overflow-x: auto`, e com
+um eixo `auto` o outro também computa `auto`: o sticky passa a se referenciar ao
+topo da tabela, não ao da tela.
+**Efeito:** rolar 20 linhas no celular deixa a lista sem legenda de coluna.
+**Por que não foi feito:** mesmo conserto e mesmo risco do item acima.
+
+### Alvos de toque entre 24 e 44px
+**O que:** `.tag-chip` (34px), `.filter-dropdown-trigger` (34px),
+`.filter-dropdown-item` (37px), `.auth-btn` (32px) ficam acima do piso de 24px
+da WCAG 2.5.8 e abaixo dos 44px da Apple. Os que estavam **abaixo de 24** foram
+corrigidos no S9.
+**Por que parei aí:** levar todos a 44px muda a densidade da barra de filtros
+inteira, e densidade é decisão de produto numa ferramenta de gestão.
+
+### As regras de toque não são verificáveis em navegador de mesa
+As regras sob `@media (pointer: coarse)` — área de toque e tamanho de fonte dos
+campos — não ativam fora de aparelho de toque. Verifiquei-as reaplicando o
+conteúdo das regras sem a condição, o que prova que fazem o efeito esperado; que
+o iOS as ative e que o resultado seja confortável com o polegar, só o aparelho
+diz.

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ChordProEditor } from '../ChordProEditor';
@@ -289,10 +289,15 @@ describe('erros de acorde', () => {
     expect(container.querySelector('.cp-line-row--invalid')).not.toBeNull();
   });
 
-  it('mostra o motivo', () => {
-    renderEditor('Confio em [Bmm]Deus\n');
-    expect(screen.getByText(/Bmm/)).toBeInTheDocument();
-    expect(screen.getByText(/não é uma qualidade válida/i)).toBeInTheDocument();
+  it('mostra o motivo, com a raiz lida e o pedaço recusado', () => {
+    // `getByText(/Bmm/)` NÃO testava isto: o único elemento com esse texto é o
+    // `<span class="cp-chord">` da linha renderizada, que aparece com validação ou
+    // sem. O motivo de `parseChordToken` não contém "Bmm" — ele nomeia a raiz que
+    // conseguiu ler e o resto que não virou qualidade, e é isso que diz ao revisor
+    // onde está o erro.
+    const { container } = renderEditor('Confio em [Bmm]Deus\n');
+    const aviso = container.querySelector('.cp-line-issue')!;
+    expect(aviso).toHaveTextContent('depois da raiz B, "mm" não é uma qualidade válida');
   });
 
   it('anotação não é marcada como erro', () => {
@@ -313,6 +318,220 @@ describe('o espaçamento sobrevive à confirmação', () => {
     const novo = onChange.mock.calls.at(-1)![0];
     expect(lineToText(novo, { stanza: 0, line: 1 })).toBe('[E]   A linda [A]flor');
     expect(novo.stanzas[0].lines[1].cells[0].text).toBe('   A linda ');
+  });
+});
+
+describe('cifra sem nenhuma linha não é beco sem saída', () => {
+  // `{title: X}\n\n` é o que o pipeline grava quando não consegue extrair a cifra, e
+  // é o que sobra de "+" seguido de "−". O parse devolve `stanzas: []`, o editor
+  // itera sobre lista vazia e não desenha NENHUM botão — o "+" só existe dentro de
+  // uma linha. Sem uma linha, "Salvar" fica travado por falta de letra: nem o título
+  // dava para corrigir, e a única saída era cancelar.
+  const soCabecalho = '{title: X}\n\n';
+
+  it('o botão de adicionar linha existe mesmo sem nenhuma estrofe', () => {
+    renderEditor(soCabecalho);
+    expect(screen.queryByRole('button', { name: /^editar linha/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /adicionar linha/i })).toBeInTheDocument();
+  });
+
+  it('clicar cria a primeira linha, e ela é editável', async () => {
+    const { onChange } = renderEditor(soCabecalho);
+    await userEvent.click(screen.getByRole('button', { name: /adicionar linha/i }));
+
+    const novo = onChange.mock.calls.at(-1)![0];
+    expect(novo.stanzas).toHaveLength(1);
+    expect(novo.stanzas[0].lines).toHaveLength(1);
+    // O cabeçalho continua intacto: criar linha não é reescrever a cifra.
+    expect(novo.header.title).toBe('X');
+
+    await userEvent.click(screen.getByRole('button', { name: /^editar linha 1/i }));
+    const campo = screen.getByRole('textbox', { name: 'Texto da linha' });
+    await userEvent.type(campo, 'Confio em [[A]Deus');
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    const linha = onChange.mock.calls.at(-1)![0].stanzas[0].lines[0];
+    expect(linha.cells[1].chord).toBe('A');
+  });
+
+  it('acrescenta no FIM da cifra, não só depois de uma linha existente', async () => {
+    const { onChange } = renderEditor();
+    await userEvent.click(screen.getByRole('button', { name: /adicionar linha/i }));
+
+    const novo = onChange.mock.calls.at(-1)![0];
+    const ultima = novo.stanzas.at(-1)!;
+    expect(ultima.lines).toHaveLength(3);
+    // A nova é a última, e está vazia — o "+" da linha 2 daria o mesmo, mas só
+    // depois de encontrar a última linha; aqui o botão é um só, no fim do corpo.
+    expect(ultima.lines[2]).toEqual({
+      kind: 'cells',
+      cells: [{ chord: null, attached: false, text: '' }],
+    });
+  });
+});
+
+describe('o foco não cai no <body> a cada mutação estrutural', () => {
+  it('separar estrofe mantém o foco no botão da mesma linha, agora na estrofe nova', async () => {
+    renderEditor();
+    const antes = screen.getAllByRole('button', { name: /separar estrofe/i });
+    await userEvent.click(antes[1]);
+
+    // A `div` que continha o botão desmonta (a linha mudou de estrofe). Sem mover o
+    // foco de propósito ele vai para o `<body>`, e voltar ao ponto exige tabular
+    // desde o topo do documento.
+    const depois = screen.getAllByRole('button', { name: /separar estrofe/i });
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(depois[1]);
+  });
+
+  it('remover a última linha de uma estrofe leva o foco à linha vizinha', async () => {
+    // Duas estrofes de uma linha: remover a segunda apaga a ESTROFE inteira
+    // (`mapStanzas` filtra estrofe vazia) e desmonta a `div` que continha o botão.
+    // (Removendo a PRIMEIRA o foco sobrevive por acidente: as chaves são o índice,
+    // o React reaproveita o nó da primeira `div` e só troca o conteúdo.)
+    renderEditor('a [C]um\n\nb [D]dois\n');
+    const botoes = screen.getAllByRole('button', { name: /remover linha/i });
+    await userEvent.click(botoes[1]);
+
+    const restantes = screen.getAllByRole('button', { name: /remover linha/i });
+    expect(restantes).toHaveLength(1);
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(restantes[0]);
+  });
+
+  it('remover a última linha da cifra inteira leva o foco ao botão de adicionar', async () => {
+    renderEditor('a [C]um\n');
+    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+
+    // Não sobrou linha nenhuma: o único lugar para onde o foco pode ir é o botão
+    // que recria uma — que é justamente o que faltava neste estado.
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /adicionar linha/i })
+    );
+  });
+
+  it('inserir linha leva o foco à linha recém-criada', async () => {
+    renderEditor();
+    await userEvent.click(screen.getAllByRole('button', { name: /inserir linha abaixo/i })[0]);
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /^editar linha 2, vazia/i })
+    );
+  });
+
+  it('adicionar linha no fim leva o foco à linha recém-criada', async () => {
+    renderEditor('a [C]um\n');
+    await userEvent.click(screen.getByRole('button', { name: /adicionar linha/i }));
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /^editar linha 2, vazia/i })
+    );
+  });
+});
+
+describe('cada linha se anuncia pelo que tem dentro', () => {
+  // O `aria-label` SUPRIME o conteúdo do `div`: com um rótulo fixo, uma cifra de 40
+  // linhas se anuncia quarenta vezes igual e não há como saber qual se vai abrir.
+  it('o alvo de edição traz o número e o texto da linha', () => {
+    renderEditor();
+    expect(
+      screen.getByRole('button', { name: 'Editar linha 1: Confio em [A]Deus' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^editar linha 2: \[E\]\s*A linda/i })).toBeInTheDocument();
+  });
+
+  it('os três botões de ação dizem de qual linha são', () => {
+    renderEditor();
+    expect(
+      screen.getByRole('button', { name: 'Inserir linha abaixo da linha 1: Confio em [A]Deus' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Remover linha 1: Confio em [A]Deus' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: 'Separar estrofe aqui, antes da linha 1: Confio em [A]Deus',
+      })
+    ).toBeInTheDocument();
+  });
+
+  it('a numeração é da cifra inteira, não reinicia a cada estrofe', () => {
+    renderEditor('a [C]um\n\nb [D]dois\n');
+    // Sem isso, "linha 1" apareceria duas vezes — o mesmo problema de novo.
+    expect(screen.getByRole('button', { name: 'Editar linha 1: a [C]um' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Editar linha 2: b [D]dois' })).toBeInTheDocument();
+  });
+
+  it('linha vazia se anuncia como vazia, e não como uma linha sem nome', async () => {
+    renderEditor();
+    await userEvent.click(screen.getAllByRole('button', { name: /inserir linha abaixo/i })[0]);
+    expect(screen.getByRole('button', { name: 'Editar linha 2, vazia' })).toBeInTheDocument();
+  });
+});
+
+describe('abrir a linha pelo teclado', () => {
+  it('Enter no alvo da linha abre o campo', async () => {
+    renderEditor();
+    screen.getByRole('button', { name: /^editar linha 1/i }).focus();
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByRole('textbox', { name: 'Texto da linha' })).toHaveValue(
+      'Confio em [A]Deus'
+    );
+  });
+
+  it('Espaço abre e não rola a página', () => {
+    renderEditor();
+    const alvo = screen.getByRole('button', { name: /^editar linha 2/i });
+    alvo.focus();
+    // fireEvent devolve false quando o handler chamou preventDefault — sem isso, o
+    // Espaço rolaria a página junto de abrir a linha.
+    expect(fireEvent.keyDown(alvo, { key: ' ' })).toBe(false);
+    expect(screen.getByRole('textbox', { name: 'Texto da linha' })).toHaveValue(
+      '[E]   A linda [A]flor'
+    );
+  });
+
+  it('outra tecla não abre nada', () => {
+    renderEditor();
+    const alvo = screen.getByRole('button', { name: /^editar linha 1/i });
+    alvo.focus();
+    fireEvent.keyDown(alvo, { key: 'a' });
+    expect(screen.queryByRole('textbox', { name: 'Texto da linha' })).toBeNull();
+  });
+});
+
+describe('a recusa da confirmação é anunciada', () => {
+  it('o aviso vive numa região viva: o foco fica no campo e nada mais muda', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByText(/Confio em/));
+    const campo = screen.getByRole('textbox', { name: 'Texto da linha' });
+    await userEvent.clear(campo);
+    await userEvent.keyboard('{Enter}');
+
+    const aviso = screen.getByText(/não forma uma linha de cifra/i);
+    // Sem `role`/`aria-live`, quem usa leitor de tela conclui que o Enter não fez
+    // nada: o foco não saiu do campo e o valor não mudou.
+    expect(aviso).toHaveAttribute('role', 'status');
+    expect(aviso).toHaveAttribute('aria-live', 'polite');
+    expect(campo).toHaveFocus();
+  });
+});
+
+describe('inserir símbolo sem linha aberta', () => {
+  it('os botões ficam desabilitados e dizem por quê', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByRole('button', { name: /como escrever/i }));
+
+    const inserir = screen.getByRole('button', { name: 'Inserir ø' });
+    // Antes eles pareciam habilitados e não faziam nada: `inserirSimbolo` desiste
+    // em silêncio quando não há linha aberta.
+    expect(inserir).toBeDisabled();
+    expect(inserir).toHaveAccessibleDescription(/abra uma linha/i);
+  });
+
+  it('abrir uma linha habilita', async () => {
+    renderEditor();
+    await userEvent.click(screen.getByRole('button', { name: /como escrever/i }));
+    await userEvent.click(screen.getByText(/Confio em/));
+    expect(screen.getByRole('button', { name: 'Inserir ø' })).toBeEnabled();
   });
 });
 

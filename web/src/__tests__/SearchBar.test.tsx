@@ -68,7 +68,7 @@ describe('SearchBar Component', () => {
     expect(clearButton).toBeTruthy();
   });
 
-  it('should not call onSearch when pressing Enter without changes', () => {
+  it('submete o termo atual ao apertar Enter, mesmo sem ter editado', () => {
     render(<SearchBar onSearch={mockOnSearch} initialValue="initial" />);
     
     const input = screen.getByPlaceholderText(/buscar por nome, letra, autor, id/i);

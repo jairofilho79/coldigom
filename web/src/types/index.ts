@@ -14,12 +14,24 @@ export interface Praise {
   tag_names: string | null;
 }
 
+/** Os tipos que a tela do louvor desenha com apresentação própria. */
+export type KnownMaterialType = 'pdf' | 'mp3' | 'chord' | 'youtube';
+
+/**
+ * O acervo guarda mais que os quatro acima — mid, gestures, txt e link vieram da
+ * ingestão legada, e a importação em lote infere o tipo pela extensão do arquivo.
+ * A API aceita de propósito qualquer `^[a-z0-9]{1,16}$` (api/src/uploadLimits.ts),
+ * então declarar só os quatro fazia o tipo mentir e a tela descartar material real.
+ * O `string & {}` preserva o autocompletar dos quatro conhecidos.
+ */
+export type MaterialType = KnownMaterialType | (string & {});
+
 export interface Material {
   id: string;
   praise_id: string;
   material_kind: string;
   material_kind_name?: string;
-  type: 'pdf' | 'mp3' | 'chord' | 'youtube';
+  type: MaterialType;
   r2_key: string | null;
   url?: string | null;
   file_path_legacy: string;
@@ -47,6 +59,12 @@ export interface PraiseGroupMember {
 }
 
 export interface PraiseDetail extends Praise {
+  /**
+   * Token de versão para detecção de escrita concorrente. Vai de volta como
+   * `if_updated_at` no PATCH; o servidor responde 409 se alguém gravou no meio.
+   * Opcional porque respostas antigas e fixtures não o trazem.
+   */
+  updated_at?: string;
   tags: Tag[];
   materials: Material[];
   group_members: PraiseGroupMember[];
@@ -85,7 +103,19 @@ export interface FilterOptions {
   tags: TagWithCount[];
 }
 
-export type SortField = 'number' | 'name' | 'rhythm' | 'tonality' | 'category' | 'author' | 'created_at';
+/** Espelha VALID_SORT_FIELDS da API. Existe como valor, e não só como tipo,
+ *  porque o `sort` vem da URL, que é editável à mão. */
+export const VALID_SORT_FIELDS = [
+  'number',
+  'name',
+  'rhythm',
+  'tonality',
+  'category',
+  'author',
+  'created_at',
+] as const;
+
+export type SortField = (typeof VALID_SORT_FIELDS)[number];
 
 export interface SortOption {
   field: SortField;
@@ -106,4 +136,5 @@ export const SORT_OPTIONS: SortOption[] = [
   { field: 'tonality', label: 'Tom', ascending: { label: 'Tom (A-Z)', order: 'asc' }, descending: { label: 'Tom (Z-A)', order: 'desc' } },
   { field: 'category', label: 'Categoria', ascending: { label: 'Categoria (A-Z)', order: 'asc' }, descending: { label: 'Categoria (Z-A)', order: 'desc' } },
   { field: 'author', label: 'Autor', ascending: { label: 'Autor (A-Z)', order: 'asc' }, descending: { label: 'Autor (Z-A)', order: 'desc' } },
+  { field: 'created_at', label: 'Cadastro', ascending: { label: 'Mais antigos', order: 'asc' }, descending: { label: 'Mais recentes', order: 'desc' } },
 ];

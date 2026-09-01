@@ -179,3 +179,40 @@ describe('FilterBar Component', () => {
     expect(sortSelect).toBeTruthy();
   });
 });
+
+describe('o que a barra realmente entrega ao serviço', () => {
+  // O `beforeEach` do describe principal não alcança este bloco: sem limpar
+  // aqui, `mock.calls[0]` seria a chamada de OUTRO teste.
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('faixa de número ausente chega como undefined, não como null', async () => {
+    // Este é o teste que faltava. A barra serializa os filtros com
+    // JSON.stringify para comparar mudanças, e JSON.stringify troca `undefined`
+    // por `null` dentro de um array — então o que ela desserializava e repassava
+    // não era o tipo declarado. Em produção isso virava um TypeError síncrono
+    // dentro de getFilterOptions, antes de qualquer fetch: a barra inteira caía
+    // em "não foi possível carregar os filtros", sem nada no console e sem nada
+    // no network. Os testes daqui mockam o serviço, então nada disso aparecia —
+    // o mock aceita null de bom grado. Verificar o TIPO do que sai é o que pega.
+    (getFilterOptions as ReturnType<typeof vi.fn>).mockResolvedValue({
+      rhythms: [], tonalities: [], categories: [], tags: [],
+    });
+    (getMaterialKinds as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+    render(
+      <MemoryRouter>
+        <FilterBar />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => expect(getFilterOptions).toHaveBeenCalled());
+    const chamadas = (getFilterOptions as ReturnType<typeof vi.fn>).mock.calls;
+    const args = chamadas[chamadas.length - 1][0];
+    expect(args.numberMin).toBeUndefined();
+    expect(args.numberMax).toBeUndefined();
+    expect(args.numberMin).not.toBeNull();
+    expect(args.numberMax).not.toBeNull();
+  });
+});

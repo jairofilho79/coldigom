@@ -422,6 +422,45 @@ describe('API Service', () => {
   // O Bearer da sessão é injetado pelo fetchJson em toda chamada. Antes isto era
   // garantido por acidente, pela igualdade exata do init nas asserções acima;
   // agora é explícito — inclusive o caso anônimo, que não pode vazar cabeçalho.
+  describe('getFilterOptions — faixa de número ausente', () => {
+    it('não explode quando numberMin/numberMax chegam como null', async () => {
+      // A FilterBar serializa os filtros com JSON.stringify para comparar
+      // mudanças, e JSON.stringify troca `undefined` por `null` dentro de um
+      // array. Na volta, `numberMin` é null: `null !== undefined` é verdadeiro,
+      // o código chamava `.toString()` e lançava TypeError de forma SÍNCRONA,
+      // antes de qualquer fetch. A barra inteira caía em "Não foi possível
+      // carregar os filtros" sem nada no console e sem nada no network.
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+      });
+
+      await expect(
+        getFilterOptions({
+          numberMin: null as unknown as undefined,
+          numberMax: null as unknown as undefined,
+        })
+      ).resolves.toBeTruthy();
+
+      const url = String(mockFetch.mock.calls[0][0]);
+      expect(url).not.toContain('numberMin');
+      expect(url).not.toContain('numberMax');
+    });
+
+    it('continua mandando a faixa quando ela existe de verdade', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+      });
+
+      await getFilterOptions({ numberMin: 10, numberMax: 20 });
+
+      const url = String(mockFetch.mock.calls[0][0]);
+      expect(url).toContain('numberMin=10');
+      expect(url).toContain('numberMax=20');
+    });
+  });
+
   describe('bulkUploadMaterials', () => {
     function arquivos(quantos: number) {
       return Array.from({ length: quantos }, (_, i) => ({

@@ -42,9 +42,14 @@ export function FilterBar() {
   useEffect(() => {
     let cancelado = false;
     const correntes = JSON.parse(chaveDosFiltros) as [
-      string, string[], string[], string[], string[], string[], number | undefined, number | undefined
+      string, string[], string[], string[], string[], string[], number | null, number | null
     ];
-    const [query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax] = correntes;
+    const [query, tags, rhythm, tonality, category, materialKinds, minCru, maxCru] = correntes;
+    // JSON.stringify troca `undefined` por `null` dentro de um array, então o que
+    // volta daqui não é o mesmo tipo que entrou. Desfaz a troca na fronteira, em
+    // vez de deixar o `null` viajar para dentro do serviço.
+    const numberMin = minCru ?? undefined;
+    const numberMax = maxCru ?? undefined;
 
     Promise.all([
       getFilterOptions({ query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax }),
@@ -300,9 +305,14 @@ export function FilterBar() {
         <div className="filter-section-label">Coleções</div>
         <div className="filter-tags-row">
           {(() => {
-            const roots = filterOptions.tags.filter((t) => !t.parent_id);
+            // `?? []` porque um campo ausente na resposta derrubava a árvore
+            // inteira do React com "Cannot read properties of undefined", e não
+            // só esta barra: a tela ficava em branco. O tipo promete o array,
+            // mas o tipo não é garantia em tempo de execução.
+            const todasAsTags = filterOptions.tags ?? [];
+            const roots = todasAsTags.filter((t) => !t.parent_id);
             const childrenOf = (parentId: string) =>
-              filterOptions.tags.filter((t) => t.parent_id === parentId);
+              todasAsTags.filter((t) => t.parent_id === parentId);
             return roots.flatMap((root) => {
               const children = childrenOf(root.id);
               const chips = [

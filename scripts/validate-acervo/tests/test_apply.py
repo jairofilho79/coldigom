@@ -884,3 +884,136 @@ def test_undo_de_run_id_desconhecido_nao_cria_log_do_nada(tmp_path, monkeypatch)
                  sql_dir=str(tmp_path / "sql"))
     assert r["entradas"] == 0
     assert not os.path.exists(log)
+
+
+def test_undo_nao_desfaz_fusao_que_o_arnes_se_recusou_a_fazer(tmp_path, monkeypatch):
+    # Quebra 1(a): a recusa do próprio sql_para (aqui a de r2_key) grava
+    # "antes" e ok:false, mas run_sql_files NEM É CHAMADO — nada chegou a
+    # produção. Consumir toda entrada com "antes" transformou o --undo em
+    # causa de perda: ele passou a "desfazer" o que nunca aconteceu.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    # só o snapshot tem o r2_key — é ele que _sql_merge lê para recusar
+    snap.execute("UPDATE praise_materials SET r2_key='assets/x.pdf', url=NULL "
+                 "WHERE id='mat-yt'")
+    snap.commit()
+
+    tentou = []
+    monkeypatch.setattr("core.apply.run_sql_files",
+                        lambda arqs, remote=True: tentou.extend(arqs))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    r = aplicar([_merge()], snap, execute=True, log_path=log, remote=False,
+                sql_dir=sql_dir)
+    assert r["falhou"] == 1
+    assert tentou == []  # a recusa é anterior a qualquer escrita
+
+    final = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")][-1]
+    assert final["ok"] is False
+    assert final["escreveu"] is False  # é este campo que o --undo consulta
+    assert final["antes"]["praise"]["id"] == "fonte"  # o "antes" está lá, e não basta
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    assert u["entradas"] == 0
+    assert u["statements"] == 0
+
+
+def test_undo_nao_reverte_louvor_de_entrada_que_nunca_escreveu(tmp_path, monkeypatch):
+    # Quebra 1(a), com o estrago visível: num set_praise_field recusado
+    # (campo fora da lista permitida) o undo reconstruía a linha INTEIRA do
+    # louvor a partir do snapshot, com ON CONFLICT DO UPDATE. A guarda de
+    # "a fonte sumiu" do conserto 1(b) só cobre merge_praise; aqui o que
+    # protege é saber que a entrada nunca executou SQL.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    tentou = []
+    monkeypatch.setattr("core.apply.run_sql_files",
+                        lambda arqs, remote=True: tentou.extend(arqs))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    f = Finding(run_id="r1", detector="x", target_type="praise",
+                target_id="fonte", action="set_praise_field", confidence="alta",
+                field="r2_key", current=None, proposed="nao importa", evidence={})
+    r = aplicar([f], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r["falhou"] == 1
+    assert tentou == []
+
+    # depois da corrida que não escreveu nada, o dono corrige a letra no app
+    prod.execute("UPDATE praises SET lyrics='letra corrigida pelo dono' WHERE id='fonte'")
+    prod.commit()
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='fonte'"
+    ).fetchone()["lyrics"] == "letra corrigida pelo dono"
+
+
+def test_undo_nao_reescreve_fonte_viva_nem_ressuscita_tag_que_o_app_apagou(tmp_path, monkeypatch):
+    # Quebra 1(b): aqui a escrita ACONTECEU (guarda_barrou — o keeper
+    # recebeu a doação e o material migrou), então 1(a) não protege. Mas a
+    # fonte continua viva: o DELETE guardado no-opou, e por isso a fusão não
+    # tocou nem na linha da fonte nem nas tags dela. Reverter a linha inteira
+    # a partir do snapshot destruía a edição do dono, e o INSERT OR IGNORE
+    # das tags ressuscitava tag que o app apagou. A fonte precisa da mesma
+    # guarda simétrica que o keeper já tem: só desfaz o que ainda está como a
+    # fusão deixou.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _run_com_material_novo_em_producao(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    r = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r["falhou"] == 1
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+
+    # o dono mexe na fonte pelo app: corrige a letra e apaga uma tag
+    prod.execute("UPDATE praises SET lyrics='letra corrigida pelo dono' WHERE id='fonte'")
+    prod.execute("DELETE FROM praise_tags WHERE praise_id='fonte' AND tag_id='t-av'")
+    prod.commit()
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='fonte'"
+    ).fetchone()["lyrics"] == "letra corrigida pelo dono"
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='fonte'"
+    ).fetchone()["n"] == 0
+    # e o que a fusão de fato escreveu continua sendo desfeito
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'").fetchone()["lyrics"] is None
+
+
+def test_undo_nao_arranca_material_que_o_app_moveu_depois_da_fusao(tmp_path, monkeypatch):
+    # Quebra 1(b), lado do material: a fusão pendurou mat-yt no keeper. Se o
+    # dono moveu esse material para um terceiro louvor pelo app antes do
+    # --undo, o de volta tem que no-opar — devolver à fonte arrancaria o
+    # material de onde o dono o pôs.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _run_com_material_novo_em_producao(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "keeper"
+
+    prod.execute("INSERT INTO praises (id,name) VALUES ('outro','Outro louvor')")
+    prod.execute("UPDATE praise_materials SET praise_id='outro' WHERE id='mat-yt'")
+    prod.commit()
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "outro"

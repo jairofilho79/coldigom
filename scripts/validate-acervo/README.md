@@ -71,9 +71,28 @@ Testes: `python3 -m pytest tests/ -v`
 - **Só a faixa alta escreve.** `--execute` é recusado com erro se o lote tiver
   qualquer finding fora da faixa alta: D1 manda média e baixa para a fila de
   revisão humana (o P2). Simular qualquer faixa continua liberado.
-- **O `--undo` desfaz também o que falhou pela metade.** É o `antes` gravado
-  no log que torna uma escrita reversível, não o `ok`. E o undo se registra no
-  log, então o finding volta a ser aplicável depois de desfeito.
+- **O `--undo` desfaz o que falhou *pela metade*, não o que falhou *antes de
+  começar*.** Uma escrita é reversível quando o log tem o `antes` **e**
+  registra que o SQL chegou a rodar (`escreveu: true`) — não é o `ok` que
+  decide, mas também não é o `antes` sozinho. Falha depois de o wrangler ter
+  entrado, e `guarda_barrou` (o keeper já recebeu a doação e o material já
+  migrou, mas a fonte continua viva): **desfaz**. Processo morto antes de
+  qualquer SQL, recusa do próprio `apply` (`r2_key`, tag-pai) e finding
+  intocado de um lote que quebrou antes dele:
+  **não desfaz — e é isso que se quer**, porque nada aconteceu em produção e
+  "desfazer" ali seria escrever o snapshot por cima de estado vivo. Nesses
+  casos o `--undo` reporta `0 escritas`.
+- **E o que ele desfaz, desfaz só se produção ainda estiver como a fusão
+  deixou.** Cada peça leva a sua guarda otimista, dos dois lados: coluna doada
+  ao keeper só volta se ainda contém o valor doado; material só volta para a
+  fonte se ainda está pendurado no keeper por esta fusão; a linha da fonte só
+  é reinserida se a fusão de fato a apagou (`ON CONFLICT DO NOTHING`), e as
+  tags dela só voltam se a fonte tinha mesmo sumido. Editou pelo app depois do
+  snapshot, moveu um material, apagou uma tag? O `--undo` no-opa naquela peça
+  em vez de pisar na edição. O preço é uma leitura pontual em produção por
+  fusão desfeita, inclusive na simulação (sem `--execute`).
+- **O undo se registra no log**, então o finding volta a ser aplicável depois
+  de desfeito.
 
 ## Pré-requisitos
 

@@ -219,6 +219,21 @@ def _pos_condicao(f: Finding, remote: bool) -> tuple[bool, dict]:
     return True, {}
 
 
+def _fonte_existe(praise_id: str, remote: bool) -> bool:
+    """A fonte ainda está em produção? Leitura pontual, nunca no snapshot.
+
+    O snapshot é a foto do acervo no momento em que `core.snapshot` rodou;
+    tudo que aconteceu depois — inclusive um `--execute` anterior contra o
+    mesmo snapshot — é invisível para ele. Quem responde "isto ainda existe"
+    é produção.
+    """
+    r = query(
+        f"SELECT COUNT(*) AS n FROM praises WHERE id = {sql_str(praise_id)}",
+        remote=remote,
+    )
+    return bool(r and r[0].get("n"))
+
+
 def sql_para(f: Finding, conn: sqlite3.Connection) -> list[str]:
     if f.action == "merge_praise":
         return _sql_merge(f, conn)
@@ -298,6 +313,25 @@ def _ja_aplicados(log_path: str) -> set[str]:
             elif r.get("ok"):
                 feitos.add(fid)
     return feitos
+
+
+def _reversivel(r: dict) -> bool:
+    """A entrada chegou a mandar SQL para produção?
+
+    Só o que executou SQL é desfazível. Uma entrada com "antes" mas sem
+    escrita — processo morto na linha pendente, recusa do próprio sql_para,
+    finding intocado de um lote que falhou antes dele — não tem nada em
+    produção para reverter; "desfazê-la" seria escrever o snapshot por cima
+    de estado vivo.
+
+    Log gravado por uma versão anterior não traz o campo. Aí a única coisa
+    que se sabe com certeza é que ok:true implica escrita — que é
+    exatamente o critério antigo, e é o conservador: na dúvida, não tocar em
+    produção.
+    """
+    if "escreveu" in r:
+        return bool(r["escreveu"])
+    return bool(r.get("ok"))
 
 
 def aplicar(
@@ -409,17 +443,34 @@ def aplicar(
             # certo — e não haveria com o quê recuperar manualmente esse
             # meio-caminho. _ja_aplicados só conta ok:true, então esta linha
             # "pendente" é ignorada na retomada.
-            pendente = dict(base, ts=time.time(), estado="pendente", antes=antes)
+            #
+            # "escreveu" separa "falhou pela metade" de "falhou antes de
+            # começar" — é essa distinção que decide o que o --undo pode
+            # tocar. Na linha pendente é sempre False: nenhum SQL saiu ainda.
+            # Um processo morto aqui deixa esta linha como a última do
+            # finding, e desfazer() a pula — não há escrita a reverter, só
+            # estado de produção a preservar.
+            pendente = dict(base, ts=time.time(), estado="pendente",
+                            escreveu=False, antes=antes)
             log.write(json.dumps(pendente, ensure_ascii=False) + "\n")
             log.flush()
 
-            entrada = dict(base, ts=time.time(), antes=antes)
+            entrada = dict(base, ts=time.time(), escreveu=False, antes=antes)
             try:
                 stmts = sql_para(f, conn)
                 arquivos = write_sql_chunks(
                     stmts, os.path.join(base_sql, f.run_id),
                     prefix=f.finding_id, per_file=300,
                 )
+                # A partir daqui SQL pode ter chegado a produção — inclusive
+                # se run_sql_files levantar no meio da lista de arquivos.
+                # Marcado ANTES da chamada de propósito: o que torna uma
+                # entrada reversível é ter tentado escrever, não ter
+                # conseguido. Uma recusa do próprio sql_para (r2_key,
+                # tag-pai) nunca chega aqui — e por isso segue com
+                # escreveu=False, que é a verdade: não há nada a desfazer
+                # numa fusão que o arnês se recusou a fazer.
+                entrada["escreveu"] = bool(arquivos)
                 run_sql_files(arquivos, remote=remote)
 
                 # As guardas otimistas do C2 fazem o statement afetar 0
@@ -462,13 +513,18 @@ def desfazer(
     valor de antes e as tags que só chegaram pela união saem. Não restaura
     arquivo do R2 — nenhuma ação do P1 toca no R2, por construção.
     """
-    # É o "antes" que torna uma entrada reversível, não o ok. Consumir só
-    # ok:true deixava sem saída justamente os caminhos de falha em que a
-    # escrita aconteceu pela metade: o guarda_barrou (keeper já recebeu campos
-    # doados e tags, material já migrou, fonte ainda viva — e a retomada
-    # barra de novo para sempre), o except Exception (wrangler caiu no
-    # arquivo 2 de 3) e a linha "pendente" de um processo morto no meio.
-    # Nos três o "antes" já está no disco; desfazer só se recusava a usá-lo.
+    # É o "antes" MAIS o "escreveu" que tornam uma entrada reversível — não o
+    # ok, e não o "antes" sozinho. Consumir só ok:true deixava sem saída os
+    # caminhos em que a escrita aconteceu pela metade: o guarda_barrou (keeper
+    # já recebeu campos doados e tags, material já migrou, fonte ainda viva —
+    # e a retomada barra de novo para sempre) e o except Exception (wrangler
+    # caiu no arquivo 2 de 3). Mas consumir todo "antes" foi longe demais: um
+    # processo morto antes de qualquer SQL, uma recusa do próprio sql_para
+    # (r2_key, tag-pai — run_sql_files nem é chamado) e o finding intocado de
+    # um lote que falhou no anterior também gravam "antes", e neles NADA
+    # aconteceu em produção. "Desfazer" o que nunca foi feito é escrever dado
+    # velho por cima de estado vivo. Só é reversível o que chegou a executar
+    # SQL, e é isso que "escreveu" registra.
     #
     # Uma entrada por finding_id — a última, que é a que descreve o estado
     # mais recente. Consumir "pendente" e final juntos duplicaria cada
@@ -496,12 +552,27 @@ def desfazer(
                 # nunca entra aqui: desfazer um undo seria reaplicar a fusão.
                 chave = r.get("finding_id") or f"__sem_id__{len(por_finding)}"
                 por_finding[chave] = r
-    entradas = list(por_finding.values())
+    # O filtro por "escreveu" vem DEPOIS da dedup, não antes: a última
+    # entrada do finding é a que descreve o que de fato aconteceu. Uma linha
+    # pendente (escreveu=False) seguida da final (escreveu=True) é uma
+    # escrita que rodou; pendente sozinha é um processo morto antes de
+    # escrever.
+    entradas = [r for r in por_finding.values() if _reversivel(r)]
 
     stmts: list[str] = []
     for r in reversed(entradas):
         antes = r.get("antes") or {}
+        eh_merge = r.get("action") == "merge_praise"
+        keeper = antes.get("keeper")
         p = antes.get("praise")
+        # A fonte ainda está em produção? É o que decide o que desta entrada
+        # é reversível: a fusão só apaga a fonte pelo DELETE guardado do fim
+        # do _sql_merge, então uma fonte viva quer dizer que esse DELETE não
+        # pegou (guarda_barrou, ou o wrangler caiu antes dele) — e nada que
+        # dependa dele foi desfeito para se refazer aqui.
+        fonte_sumiu = True
+        if eh_merge and p:
+            fonte_sumiu = not _fonte_existe(p["id"], remote)
         if p:
             # 'INSERT OR REPLACE' é DELETE+INSERT no SQLite. Numa linha que
             # ainda existe — o caso do undo de set_praise_field, que nunca
@@ -515,21 +586,60 @@ def desfazer(
             colnames = ", ".join(cols)
             valores = ", ".join(_lit(p[c]) for c in cols)
             sets = ", ".join(f"{c} = excluded.{c}" for c in outros)
-            stmts.append(
-                f"INSERT INTO praises ({colnames}) VALUES ({valores}) "
-                f"ON CONFLICT(id) DO UPDATE SET {sets};"
-            )
+            if eh_merge:
+                # Guarda simétrica da FONTE, o par da que o keeper já tem: a
+                # fusão nunca faz UPDATE na linha da fonte — ela só some pelo
+                # DELETE guardado do fim do _sql_merge. Então só há linha a
+                # reconstituir quando a linha não está lá. DO NOTHING diz
+                # exatamente isso em SQL: se a fonte ainda existe (o DELETE
+                # no-opou, ou o wrangler caiu antes dele), a linha viva é a
+                # boa — inclusive a edição que o dono fez nela depois do
+                # snapshot — e reescrevê-la com o snapshot seria destruí-la.
+                stmts.append(
+                    f"INSERT INTO praises ({colnames}) VALUES ({valores}) "
+                    f"ON CONFLICT(id) DO NOTHING;"
+                )
+            else:
+                stmts.append(
+                    f"INSERT INTO praises ({colnames}) VALUES ({valores}) "
+                    f"ON CONFLICT(id) DO UPDATE SET {sets};"
+                )
         for m in antes.get("materiais", []):
             # O merged_from_praise_id de antes pode já não ser NULL (uma
             # fusão anterior à que está sendo desfeita). Zerar sempre
             # destruiria essa proveniência — devolve exatamente o valor que
             # estava lá antes desta escrita, não NULL fixo.
+            #
+            # E a mesma guarda simétrica do keeper, aplicada ao material: a
+            # fusão o deixou pendurado no keeper com merged_from apontando
+            # para a fonte. Só volta o que ainda está exatamente assim — se o
+            # app moveu esse material para um terceiro louvor depois, ou se o
+            # UPDATE da ida no-opou, o de volta tem que no-opar também, em
+            # vez de arrancar o material de onde o dono o pôs.
+            if eh_merge and keeper:
+                onde = (f"praise_id = {sql_str(keeper['id'])} AND "
+                        f"merged_from_praise_id = {sql_str(m['praise_id'])}")
+            else:
+                # Fora da fusão nenhuma ação do P1 move material: a guarda é
+                # "continua onde estava", o que faz o statement ser um no-op
+                # estrito quando o app mexeu no material nesse meio-tempo.
+                onde = ("praise_id IS NULL" if m["praise_id"] is None
+                        else f"praise_id = {sql_str(m['praise_id'])}")
             stmts.append(
                 f"UPDATE praise_materials SET praise_id = {sql_str(m['praise_id'])}, "
                 f"merged_from_praise_id = {sql_str(m.get('merged_from_praise_id'))} "
-                f"WHERE id = {sql_str(m['id'])};"
+                f"WHERE id = {sql_str(m['id'])} AND {onde};"
             )
-        if p:
+        # As tags da fonte só desaparecem pela cascata do DELETE do louvor —
+        # a fusão não apaga praise_tags da fonte por conta própria. Logo, com
+        # a fonte ainda em produção, a cascata não rodou e não há tag a
+        # repor: qualquer tag ausente é o app que a apagou, e um
+        # INSERT OR IGNORE aqui a ressuscitaria. Isto não dá para dizer em
+        # SQL como o DO NOTHING acima diz para a linha do louvor (a tag entra
+        # numa tabela em que não há conflito de id a explorar), então a
+        # condição vem de uma leitura pontual em produção — a mesma que
+        # _pos_condicao já usa.
+        if p and fonte_sumiu:
             for t in antes.get("tags", []):
                 stmts.append(
                     "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
@@ -540,21 +650,17 @@ def desfazer(
         # tem que reverter isso também, não só reconstituir a fonte. Os dois
         # dados já vêm de estado_anterior (antes["keeper"] e
         # antes["keeper_tags"]); só faltava usá-los.
-        keeper = antes.get("keeper")
         if keeper:
             # Só as colunas efetivamente doadas nesta fusão — gravadas em
             # antes["doadas"] no momento de aplicar. Reverter a linha
             # inteira do keeper tocaria colunas que a fusão nunca mexeu
-            # (name, group_id, created_at, ...). A fonte, ao contrário, foi
-            # apagada pela própria fusão, então reverter a linha toda a
-            # partir do snapshot é o único caminho — mas não é de graça: uma
-            # edição feita na fonte entre o snapshot e o --execute é destruída
-            # pelo DELETE (que não checa se a fonte mudou) e depois
-            # "restaurada" aqui no valor velho. É o único ponto do módulo em
-            # que uma edição humana pode sumir sem nenhuma guarda perceber.
-            # A janela é curta e a fonte é um louvor só-YouTube, mas o risco
-            # existe — não confunda "não há como preservar" com "não há o que
-            # preservar".
+            # (name, group_id, created_at, ...). A fonte, ao contrário, é
+            # reinserida inteira a partir do snapshot — o que só é aceitável
+            # porque agora isso acontece exclusivamente quando produção
+            # confirmou que ela sumiu (ver a guarda de fonte_sumiu acima):
+            # não há linha viva para preservar, e a única perda possível é
+            # uma edição feita na fonte entre o snapshot e o --execute que a
+            # própria fusão já tinha apagado com o DELETE.
             #
             # Mas "doada no snapshot" não é "doada de fato em produção": a
             # guarda otimista do C2(b) pode ter feito a doação virar no-op
@@ -585,6 +691,9 @@ def desfazer(
                     f"AND tag_id = {sql_str(t)};"
                 )
 
+    # "escritas" aqui são as entradas que de fato mandaram SQL para produção
+    # (as outras já foram filtradas): a linha que o operador lê para decidir
+    # se algo aconteceu não pode contar entrada de log que nunca escreveu.
     print(f"desfazer {run_id}: {len(entradas)} escritas, {len(stmts)} statements")
     if not execute:
         for s in stmts[:10]:

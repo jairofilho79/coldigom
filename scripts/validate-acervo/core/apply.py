@@ -30,6 +30,21 @@ def _vazio(v) -> bool:
     return v is None or str(v).strip() == ""
 
 
+def _lit(v) -> str:
+    """Literal SQL para um valor python já tipado (vindo do log ou de uma linha).
+
+    bool é subclasse de int em Python — isinstance(True, int) é True — então
+    checar bool primeiro evita que um True vire a string 'True' (SQL
+    inválido). SQLite não tem tipo boolean nativo: grava 1/0, que é o que uma
+    coluna INTEGER como is_reviewed já espera.
+    """
+    if isinstance(v, bool):
+        return "1" if v else "0"
+    if isinstance(v, int):
+        return str(v)
+    return sql_str(v)
+
+
 def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
     """Funde a fonte no keeper, em SQL.
 
@@ -64,14 +79,18 @@ def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
 
     stmts: list[str] = []
 
-    # D3 — o keeper manda; a fonte só preenche campo vazio.
-    doacoes = {c: s[c] for c in DOAVEIS if _vazio(k[c]) and not _vazio(s[c])}
-    if doacoes:
-        sets = ", ".join(f"{c} = {sql_str(v)}" for c, v in doacoes.items())
-        stmts.append(
-            f"UPDATE praises SET {sets}, updated_at = datetime('now') "
-            f"WHERE id = {sql_str(keeper)};"
-        )
+    # D3 — o keeper manda; a fonte só preenche campo vazio. Um UPDATE por
+    # campo doado, cada um com a própria guarda otimista no WHERE: o
+    # _vazio(k[c]) acima só valida contra o snapshot, que pode ter horas ou
+    # dias de idade. Sem reafirmar "continua vazio" no WHERE, alguém que
+    # preencheu o campo pelo app entre o snapshot e o --execute teria a
+    # edição sobrescrita pela fusão.
+    for c in DOAVEIS:
+        if _vazio(k[c]) and not _vazio(s[c]):
+            stmts.append(
+                f"UPDATE praises SET {c} = {sql_str(s[c])}, updated_at = datetime('now') "
+                f"WHERE id = {sql_str(keeper)} AND ({c} IS NULL OR trim({c}) = '');"
+            )
 
     # Tags em união: o keeper mantém as dele e recebe as da fonte.
     for t in conn.execute("SELECT tag_id FROM praise_tags WHERE praise_id = ?", (fonte,)):
@@ -87,8 +106,16 @@ def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
             f"WHERE id = {sql_str(m['id'])} AND praise_id = {sql_str(fonte)};"
         )
 
-    # A cascata do praise_tags da fonte é resolvida pelo ON DELETE CASCADE.
-    stmts.append(f"DELETE FROM praises WHERE id = {sql_str(fonte)};")
+    # Guarda contra material criado na fonte depois do snapshot: se sobrou
+    # algum praise_materials com praise_id = fonte que a lista acima não
+    # conhecia (e por isso não moveu nem checou r2_key), o DELETE vira no-op
+    # em vez de apagar o louvor e cascatear a perda silenciosa desse
+    # material — e do objeto no R2, que a checagem de r2_key acima existe
+    # para proteger.
+    stmts.append(
+        f"DELETE FROM praises WHERE id = {sql_str(fonte)} "
+        f"AND NOT EXISTS (SELECT 1 FROM praise_materials WHERE praise_id = {sql_str(fonte)});"
+    )
     return stmts
 
 
@@ -97,9 +124,15 @@ def _sql_set_praise_field(f: Finding, conn: sqlite3.Connection) -> list[str]:
         raise ValueError("set_praise_field sem 'field'")
     if f.field not in DOAVEIS + ("name", "group_id"):
         raise ValueError(f"campo não permitido: {f.field}")
+    # Escrita otimista: o Finding carrega o valor que o detector viu
+    # (current). Só escreve se o campo em produção ainda for esse valor no
+    # momento do --execute, que pode vir horas ou dias depois do snapshot —
+    # senão a escrita pisaria numa edição feita pelo app nesse intervalo.
+    guarda = "IS NULL" if f.current is None else f"= {sql_str(f.current)}"
     return [
         f"UPDATE praises SET {f.field} = {sql_str(f.proposed)}, "
-        f"updated_at = datetime('now') WHERE id = {sql_str(f.target_id)};"
+        f"updated_at = datetime('now') WHERE id = {sql_str(f.target_id)} "
+        f"AND {f.field} {guarda};"
     ]
 
 
@@ -167,8 +200,8 @@ def aplicar(
     remote: bool = True,
     sql_dir: str | None = None,
 ) -> dict:
-    # sql_dir existe para o teste não escrever no out/ de produção: os dois
-    # testes que rodam com execute=True apontam para tmp_path. Em produção
+    # sql_dir existe para o teste não escrever no out/ de produção: os testes
+    # que rodam com execute=True apontam para tmp_path. Em produção
     # (sql_dir=None) o comportamento não muda — os .sql vão para OUT/sql.
     feitos = _ja_aplicados(log_path)
     fila = [f for f in findings if f.finding_id not in feitos]
@@ -201,20 +234,41 @@ def aplicar(
     os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
     with open(log_path, "a", encoding="utf-8") as log:
         for f in fila:
-            entrada = {
+            base = {
                 "finding_id": f.finding_id, "run_id": f.run_id,
                 "detector": f.detector, "action": f.action,
-                "target_id": f.target_id, "ts": time.time(),
+                "target_id": f.target_id,
             }
             try:
                 antes = estado_anterior(f, conn)
+            except Exception as e:
+                entrada = dict(base, ts=time.time(), ok=False,
+                                erro=f"{type(e).__name__}: {e}")
+                log.write(json.dumps(entrada, ensure_ascii=False) + "\n")
+                log.flush()
+                resumo["falhou"] += 1
+                continue
+
+            # Grava o "antes" ANTES de tentar escrever no D1. Um finding
+            # grande vira vários arquivos .sql (per_file=300) e várias
+            # invocações do wrangler em sequência: se a segunda falhar depois
+            # da primeira ter entrado, a escrita fica pela metade. Sem isto,
+            # o "antes" só chegaria ao disco se a escrita inteira desse
+            # certo — e não haveria com o quê recuperar manualmente esse
+            # meio-caminho. _ja_aplicados só conta ok:true, então esta linha
+            # "pendente" é ignorada na retomada.
+            pendente = dict(base, ts=time.time(), estado="pendente", antes=antes)
+            log.write(json.dumps(pendente, ensure_ascii=False) + "\n")
+            log.flush()
+
+            entrada = dict(base, ts=time.time(), antes=antes)
+            try:
                 stmts = sql_para(f, conn)
                 arquivos = write_sql_chunks(
                     stmts, os.path.join(base_sql, f.run_id),
                     prefix=f.finding_id, per_file=300,
                 )
                 run_sql_files(arquivos, remote=remote)
-                entrada["antes"] = antes
                 entrada["statements"] = len(stmts)
                 entrada["ok"] = True
                 resumo["aplicado"] += 1
@@ -227,40 +281,94 @@ def aplicar(
     return resumo
 
 
-def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True) -> dict:
+def desfazer(
+    run_id: str,
+    log_path: str,
+    execute: bool,
+    remote: bool = True,
+    sql_dir: str | None = None,
+) -> dict:
     """Reconstitui o estado anterior das escritas de um run_id.
 
-    Reinsere o louvor apagado, devolve os materiais e repõe as tags. Não
-    restaura arquivo do R2 — nenhuma ação do P1 toca no R2, por construção.
+    Reinsere o louvor apagado, devolve os materiais e repõe as tags — e, numa
+    fusão, também desfaz o que ela fez no keeper: os campos doados voltam ao
+    valor de antes e as tags que só chegaram pela união saem. Não restaura
+    arquivo do R2 — nenhuma ação do P1 toca no R2, por construção.
     """
     entradas = []
-    with open(log_path, encoding="utf-8") as f:
-        for linha in f:
-            linha = linha.strip()
-            if not linha:
-                continue
-            r = json.loads(linha)
-            if r.get("ok") and r.get("run_id") == run_id:
-                entradas.append(r)
+    if os.path.exists(log_path):
+        with open(log_path, encoding="utf-8") as f:
+            for linha in f:
+                linha = linha.strip()
+                if not linha:
+                    continue
+                try:
+                    r = json.loads(linha)
+                except json.JSONDecodeError:
+                    # Linha truncada é o sintoma de um processo morto no meio
+                    # do log.write — e é exatamente depois desse tipo de
+                    # crash que alguém roda --undo. A ferramenta de
+                    # emergência não pode falhar na única situação em que é
+                    # necessária.
+                    continue
+                if r.get("ok") and r.get("run_id") == run_id:
+                    entradas.append(r)
 
     stmts: list[str] = []
     for r in reversed(entradas):
         antes = r.get("antes") or {}
         p = antes.get("praise")
         if p:
-            cols = ", ".join(p.keys())
-            vals = ", ".join(sql_str(v) if not isinstance(v, int) else str(v) for v in p.values())
-            stmts.append(f"INSERT OR REPLACE INTO praises ({cols}) VALUES ({vals});")
+            # 'INSERT OR REPLACE' é DELETE+INSERT no SQLite. Numa linha que
+            # ainda existe — o caso do undo de set_praise_field, que nunca
+            # apaga o louvor — isso dispara o ON DELETE CASCADE de verdade
+            # (a FK real do D1 é praise_materials.praise_id/praise_tags.praise_id
+            # -> praises(id) ON DELETE CASCADE) e some com materiais e tags
+            # do próprio louvor que só devia levar um campo de volta. Upsert
+            # atualiza a linha no lugar, sem apagar nada.
+            cols = list(p.keys())
+            outros = [c for c in cols if c != "id"]
+            colnames = ", ".join(cols)
+            valores = ", ".join(_lit(p[c]) for c in cols)
+            sets = ", ".join(f"{c} = excluded.{c}" for c in outros)
+            stmts.append(
+                f"INSERT INTO praises ({colnames}) VALUES ({valores}) "
+                f"ON CONFLICT(id) DO UPDATE SET {sets};"
+            )
         for m in antes.get("materiais", []):
+            # O merged_from_praise_id de antes pode já não ser NULL (uma
+            # fusão anterior à que está sendo desfeita). Zerar sempre
+            # destruiria essa proveniência — devolve exatamente o valor que
+            # estava lá antes desta escrita, não NULL fixo.
             stmts.append(
                 f"UPDATE praise_materials SET praise_id = {sql_str(m['praise_id'])}, "
-                f"merged_from_praise_id = NULL WHERE id = {sql_str(m['id'])};"
+                f"merged_from_praise_id = {sql_str(m.get('merged_from_praise_id'))} "
+                f"WHERE id = {sql_str(m['id'])};"
             )
-        for t in antes.get("tags", []):
-            stmts.append(
-                "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
-                f"({sql_str(p['id'] if p else '')}, {sql_str(t)});"
-            )
+        if p:
+            for t in antes.get("tags", []):
+                stmts.append(
+                    "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
+                    f"({sql_str(p['id'])}, {sql_str(t)});"
+                )
+
+        # Uma fusão também mexe no keeper (doa campo, une tag) — desfazer
+        # tem que reverter isso também, não só reconstituir a fonte. Os dois
+        # dados já vêm de estado_anterior (antes["keeper"] e
+        # antes["keeper_tags"]); só faltava usá-los.
+        keeper = antes.get("keeper")
+        if keeper:
+            kcols = [c for c in keeper.keys() if c != "id"]
+            ksets = ", ".join(f"{c} = {_lit(keeper[c])}" for c in kcols)
+            stmts.append(f"UPDATE praises SET {ksets} WHERE id = {sql_str(keeper['id'])};")
+
+            tags_antes_do_keeper = set(antes.get("keeper_tags", []))
+            tags_que_vieram_da_fonte = set(antes.get("tags", []))
+            for t in tags_que_vieram_da_fonte - tags_antes_do_keeper:
+                stmts.append(
+                    f"DELETE FROM praise_tags WHERE praise_id = {sql_str(keeper['id'])} "
+                    f"AND tag_id = {sql_str(t)};"
+                )
 
     print(f"desfazer {run_id}: {len(entradas)} escritas, {len(stmts)} statements")
     if not execute:
@@ -268,10 +376,11 @@ def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True) -> 
             print("   ", s)
         return {"entradas": len(entradas), "statements": len(stmts), "executado": False}
 
-    # Nenhum teste exercita desfazer(execute=True) escrevendo — nenhuma
-    # ressalva de sql_dir aqui, mas o caminho vai para OUT/sql como em
-    # produção, igual ao aplicar() sem sql_dir.
-    arquivos = write_sql_chunks(stmts, os.path.join(OUT, "sql", f"undo-{run_id}"),
+    # sql_dir existe pelo mesmo motivo que em aplicar(): o teste não pode
+    # escrever .sql de verdade no out/ de produção. Default (None) preserva
+    # o comportamento em produção — os .sql vão para OUT/sql/undo-<run_id>.
+    base_sql = sql_dir or os.path.join(OUT, "sql")
+    arquivos = write_sql_chunks(stmts, os.path.join(base_sql, f"undo-{run_id}"),
                                prefix="undo", per_file=300)
     run_sql_files(arquivos, remote=remote)
     return {"entradas": len(entradas), "statements": len(stmts), "executado": True}

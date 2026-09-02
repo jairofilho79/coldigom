@@ -230,6 +230,54 @@ def test_substring_casa_quando_os_dois_nomes_passam_do_minimo(tmp_path):
     assert findings[0].confidence == "media"
 
 
+def test_nome_minimo_e_seis_barra_nomes_genericos_curtos(tmp_path):
+    """NOME_MINIMO = 6, não 8 nem 5 — fronteira medida no acervo real.
+
+    'deus' (4) e 'creia' (5) são os únicos nomes de louvor do acervo com
+    menos de 6 caracteres normalizados, e são palavras genéricas que casam
+    por acidente dentro de dezenas de títulos — por isso continuam de fora do
+    casamento por substring mesmo abaixo do limiar.
+
+    Este teste morre se alguém baixar a constante para 5: 'creia' (5 >= 5)
+    passaria a casar com 'creia no senhor'.
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Deus", None)
+    _acervo(conn, "ac1", "Deus é fiel sempre", None)
+    _so_yt(conn, "yt2", "Creia", None)
+    _acervo(conn, "ac2", "Creia no Senhor", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert findings == []
+
+
+def test_nome_minimo_e_seis_deixa_passar_nomes_proprios_reais(tmp_path):
+    """Os nomes reais de 7 caracteres normalizados que motivaram baixar de 8.
+
+    'algemas' e 'salmo 5' são nomes próprios do acervo, não palavra genérica
+    — de 6 para cima o acervo só tem nome próprio e título específico. Com
+    NOME_MINIMO = 8 os dois perdiam o candidato por um caractere.
+
+    Este teste morre se alguém devolver a constante para 8: os dois deixariam
+    de casar por substring e a fonte cairia em 'sem candidato'.
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Algemas", None)
+    _acervo(conn, "ac1", "Vem, meu filho Algemas", None)
+    _so_yt(conn, "yt2", "Salmo 5", None)
+    _acervo(conn, "ac2", "À minha Voz, ó Deus, Atende Salmo 5", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert {f.target_id for f in findings} == {"yt1", "yt2"}
+    proposto = {f.target_id: f.proposed for f in findings}
+    assert proposto["yt1"] == "ac1"
+    assert proposto["yt2"] == "ac2"
+
+
 def test_achado_2_nomes_identicos_casam_independente_de_tamanho(tmp_path):
     """Achado 2b: Nomes idênticos casam sempre, mesmo que sejam muito curtos.
 

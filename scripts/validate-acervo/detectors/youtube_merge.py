@@ -24,7 +24,19 @@ SHINGLE = 8
 # o menor dos dois nomes. Exigi-la só do candidato deixava passar exatamente
 # o caso que este comentário descreve: fonte 'Fé' dentro de candidato 'Fé do
 # coração' (13 >= 8) casava. Nome idêntico não passa por aqui: casa sempre.
-NOME_MINIMO = 8
+#
+# O valor é 6, não 8 — medido no acervo, não escolhido de olho. Com 8, dois
+# casamentos legítimos morriam por um caractere: 'Algemas' → 'Vem, meu filho
+# Algemas' e 'Salmo 5' → 'À minha Voz, ó Deus, Atende Salmo 5' (os dois com
+# nome normalizado de 7 caracteres; o segundo é quase certamente o mesmo
+# louvor — a letra da fonte começa com "À minha voz, ó Deus atende"). Varrendo
+# o acervo inteiro, os ÚNICOS nomes de louvor com menos de 6 caracteres
+# normalizados são 'deus' (4) e 'creia' (5) — palavras genéricas, que casam
+# por acidente dentro de dezenas de títulos. De 6 para cima só há nome
+# próprio e título específico: 'lazaro', 'sansao', 'bencao', 'coroai',
+# 'estevao', 'algemas', 'salmo 5'. O caso que motiva a guarda ('fe' dentro de
+# 'fe do coracao') continua barrado: 'fe' tem 2 caracteres.
+NOME_MINIMO = 6
 
 
 def so_youtube(conn: sqlite3.Connection) -> list[sqlite3.Row]:

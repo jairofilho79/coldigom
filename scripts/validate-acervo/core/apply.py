@@ -1,0 +1,318 @@
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sqlite3
+import sys
+import time
+
+from core.d1 import run_sql_files, sql_str, write_sql_chunks
+from core.findings import Finding, read_findings
+from core.paths import OUT, SNAPSHOT_DB, ensure_out
+from core.snapshot import conectar
+
+LOG_PADRAO = os.path.join(OUT, "apply_log.jsonl")
+
+# Campos que a fonte pode doar ao keeper numa fusão. 'name' fica de fora: o
+# nome do keeper é o nome que o acervo já usa.
+DOAVEIS = ("number", "author", "rhythm", "tonality", "category", "lyrics")
+
+FASE_DA_ACAO = {
+    "delete_material": "Fase 3",
+    "set_material_kind": "Fase 2",
+    "move_material": "Fase 3B",
+    "set_group_id": "Fase 7",
+}
+
+
+def _vazio(v) -> bool:
+    return v is None or str(v).strip() == ""
+
+
+def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
+    """Funde a fonte no keeper, em SQL.
+
+    Por que SQL e não o endpoint POST /api/praises/:id/merge: aquele endpoint
+    exige JWT de sessão (api/src/middleware.ts:88), e o único token que um
+    script tem é o COLDIGOM_UPLOAD_TOKEN, aceito só em PUT .../content.
+
+    O endpoint também apaga objetos órfãos do R2, coisa que SQL não faz. Por
+    isso a fusão é recusada se algum material da fonte tiver r2_key: na Fase 1
+    nenhum tem (os 25 são links de YouTube), e deixar isso implícito seria um
+    vazamento silencioso quando outra fase reusar esta função.
+    """
+    fonte = f.target_id
+    keeper = f.proposed
+    if not keeper:
+        raise ValueError("merge_praise sem keeper em 'proposed'")
+
+    materiais = conn.execute(
+        "SELECT id, r2_key FROM praise_materials WHERE praise_id = ?", (fonte,)
+    ).fetchall()
+    com_r2 = [m["id"] for m in materiais if not _vazio(m["r2_key"])]
+    if com_r2:
+        raise ValueError(
+            f"fusão recusada: {len(com_r2)} material(is) da fonte têm r2_key "
+            f"({com_r2[0]}...). SQL não limpa o R2 — use o endpoint com JWT."
+        )
+
+    k = conn.execute("SELECT * FROM praises WHERE id = ?", (keeper,)).fetchone()
+    s = conn.execute("SELECT * FROM praises WHERE id = ?", (fonte,)).fetchone()
+    if k is None or s is None:
+        raise ValueError(f"louvor ausente no snapshot: keeper={keeper} fonte={fonte}")
+
+    stmts: list[str] = []
+
+    # D3 — o keeper manda; a fonte só preenche campo vazio.
+    doacoes = {c: s[c] for c in DOAVEIS if _vazio(k[c]) and not _vazio(s[c])}
+    if doacoes:
+        sets = ", ".join(f"{c} = {sql_str(v)}" for c, v in doacoes.items())
+        stmts.append(
+            f"UPDATE praises SET {sets}, updated_at = datetime('now') "
+            f"WHERE id = {sql_str(keeper)};"
+        )
+
+    # Tags em união: o keeper mantém as dele e recebe as da fonte.
+    for t in conn.execute("SELECT tag_id FROM praise_tags WHERE praise_id = ?", (fonte,)):
+        stmts.append(
+            "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
+            f"({sql_str(keeper)}, {sql_str(t['tag_id'])});"
+        )
+
+    for m in materiais:
+        stmts.append(
+            f"UPDATE praise_materials SET praise_id = {sql_str(keeper)}, "
+            f"merged_from_praise_id = {sql_str(fonte)} "
+            f"WHERE id = {sql_str(m['id'])} AND praise_id = {sql_str(fonte)};"
+        )
+
+    # A cascata do praise_tags da fonte é resolvida pelo ON DELETE CASCADE.
+    stmts.append(f"DELETE FROM praises WHERE id = {sql_str(fonte)};")
+    return stmts
+
+
+def _sql_set_praise_field(f: Finding, conn: sqlite3.Connection) -> list[str]:
+    if not f.field:
+        raise ValueError("set_praise_field sem 'field'")
+    if f.field not in DOAVEIS + ("name", "group_id"):
+        raise ValueError(f"campo não permitido: {f.field}")
+    return [
+        f"UPDATE praises SET {f.field} = {sql_str(f.proposed)}, "
+        f"updated_at = datetime('now') WHERE id = {sql_str(f.target_id)};"
+    ]
+
+
+def sql_para(f: Finding, conn: sqlite3.Connection) -> list[str]:
+    if f.action == "merge_praise":
+        return _sql_merge(f, conn)
+    if f.action == "set_praise_field":
+        return _sql_set_praise_field(f, conn)
+    fase = FASE_DA_ACAO.get(f.action, "uma fase futura")
+    raise NotImplementedError(
+        f"ação '{f.action}' chega com a {fase}; o P1 implementa só "
+        f"merge_praise e set_praise_field"
+    )
+
+
+def estado_anterior(f: Finding, conn: sqlite3.Connection) -> dict:
+    """Tudo que é preciso para reconstituir o que a escrita desfez."""
+    def linha(r) -> dict | None:
+        return dict(r) if r is not None else None
+
+    antes: dict = {
+        "praise": linha(conn.execute(
+            "SELECT * FROM praises WHERE id = ?", (f.target_id,)).fetchone()),
+        "materiais": [dict(r) for r in conn.execute(
+            "SELECT * FROM praise_materials WHERE praise_id = ?", (f.target_id,))],
+        "tags": [r["tag_id"] for r in conn.execute(
+            "SELECT tag_id FROM praise_tags WHERE praise_id = ?", (f.target_id,))],
+    }
+    if f.action == "merge_praise" and f.proposed:
+        antes["keeper"] = linha(conn.execute(
+            "SELECT * FROM praises WHERE id = ?", (f.proposed,)).fetchone())
+        antes["keeper_tags"] = [r["tag_id"] for r in conn.execute(
+            "SELECT tag_id FROM praise_tags WHERE praise_id = ?", (f.proposed,))]
+    return antes
+
+
+def _ja_aplicados(log_path: str) -> set[str]:
+    """Só finding_id com ok:true conta como aplicado.
+
+    Falha é reenviada de propósito: a retomada tem que consertar o que quebrou,
+    não pular por cima dele.
+    """
+    feitos: set[str] = set()
+    if not os.path.exists(log_path):
+        return feitos
+    with open(log_path, encoding="utf-8") as f:
+        for linha in f:
+            linha = linha.strip()
+            if not linha:
+                continue
+            try:
+                r = json.loads(linha)
+            except json.JSONDecodeError:
+                continue
+            if r.get("ok") and r.get("finding_id"):
+                feitos.add(r["finding_id"])
+    return feitos
+
+
+def aplicar(
+    findings: list[Finding],
+    conn: sqlite3.Connection,
+    execute: bool,
+    log_path: str = LOG_PADRAO,
+    remote: bool = True,
+    sql_dir: str | None = None,
+) -> dict:
+    # sql_dir existe para o teste não escrever no out/ de produção: os dois
+    # testes que rodam com execute=True apontam para tmp_path. Em produção
+    # (sql_dir=None) o comportamento não muda — os .sql vão para OUT/sql.
+    feitos = _ja_aplicados(log_path)
+    fila = [f for f in findings if f.finding_id not in feitos]
+    resumo = {
+        "recebidos": len(findings),
+        "ja_aplicado": len(findings) - len(fila),
+        "simulado": 0,
+        "aplicado": 0,
+        "falhou": 0,
+    }
+
+    if not execute:
+        # Portão da simulação: nada é escrito, e nenhuma credencial é lida.
+        # O SQL é gerado assim mesmo, para o dry-run mostrar o payload real.
+        for f in fila:
+            try:
+                stmts = sql_para(f, conn)
+            except (ValueError, NotImplementedError) as e:
+                print(f"  RECUSADO {f.finding_id} ({f.action}): {e}")
+                resumo["falhou"] += 1
+                continue
+            resumo["simulado"] += 1
+            if resumo["simulado"] <= 3:
+                print(f"\n--- exemplo: {f.detector} / {f.target_id} ({f.confidence}) ---")
+                for s in stmts:
+                    print("   ", s)
+        return resumo
+
+    base_sql = sql_dir or os.path.join(OUT, "sql")
+    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
+    with open(log_path, "a", encoding="utf-8") as log:
+        for f in fila:
+            entrada = {
+                "finding_id": f.finding_id, "run_id": f.run_id,
+                "detector": f.detector, "action": f.action,
+                "target_id": f.target_id, "ts": time.time(),
+            }
+            try:
+                antes = estado_anterior(f, conn)
+                stmts = sql_para(f, conn)
+                arquivos = write_sql_chunks(
+                    stmts, os.path.join(base_sql, f.run_id),
+                    prefix=f.finding_id, per_file=300,
+                )
+                run_sql_files(arquivos, remote=remote)
+                entrada["antes"] = antes
+                entrada["statements"] = len(stmts)
+                entrada["ok"] = True
+                resumo["aplicado"] += 1
+            except Exception as e:
+                entrada["ok"] = False
+                entrada["erro"] = f"{type(e).__name__}: {e}"
+                resumo["falhou"] += 1
+            log.write(json.dumps(entrada, ensure_ascii=False) + "\n")
+            log.flush()
+    return resumo
+
+
+def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True) -> dict:
+    """Reconstitui o estado anterior das escritas de um run_id.
+
+    Reinsere o louvor apagado, devolve os materiais e repõe as tags. Não
+    restaura arquivo do R2 — nenhuma ação do P1 toca no R2, por construção.
+    """
+    entradas = []
+    with open(log_path, encoding="utf-8") as f:
+        for linha in f:
+            linha = linha.strip()
+            if not linha:
+                continue
+            r = json.loads(linha)
+            if r.get("ok") and r.get("run_id") == run_id:
+                entradas.append(r)
+
+    stmts: list[str] = []
+    for r in reversed(entradas):
+        antes = r.get("antes") or {}
+        p = antes.get("praise")
+        if p:
+            cols = ", ".join(p.keys())
+            vals = ", ".join(sql_str(v) if not isinstance(v, int) else str(v) for v in p.values())
+            stmts.append(f"INSERT OR REPLACE INTO praises ({cols}) VALUES ({vals});")
+        for m in antes.get("materiais", []):
+            stmts.append(
+                f"UPDATE praise_materials SET praise_id = {sql_str(m['praise_id'])}, "
+                f"merged_from_praise_id = NULL WHERE id = {sql_str(m['id'])};"
+            )
+        for t in antes.get("tags", []):
+            stmts.append(
+                "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
+                f"({sql_str(p['id'] if p else '')}, {sql_str(t)});"
+            )
+
+    print(f"desfazer {run_id}: {len(entradas)} escritas, {len(stmts)} statements")
+    if not execute:
+        for s in stmts[:10]:
+            print("   ", s)
+        return {"entradas": len(entradas), "statements": len(stmts), "executado": False}
+
+    # Nenhum teste exercita desfazer(execute=True) escrevendo — nenhuma
+    # ressalva de sql_dir aqui, mas o caminho vai para OUT/sql como em
+    # produção, igual ao aplicar() sem sql_dir.
+    arquivos = write_sql_chunks(stmts, os.path.join(OUT, "sql", f"undo-{run_id}"),
+                               prefix="undo", per_file=300)
+    run_sql_files(arquivos, remote=remote)
+    return {"entradas": len(entradas), "statements": len(stmts), "executado": True}
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--from", dest="src", nargs="+", help="arquivos findings.jsonl")
+    ap.add_argument("--execute", action="store_true")
+    ap.add_argument("--undo", dest="undo", default="", help="run_id a desfazer")
+    ap.add_argument("--faixa", default="alta",
+                    help="só aplica esta faixa; 'todas' ignora o filtro")
+    ap.add_argument("--log", default=LOG_PADRAO)
+    ap.add_argument("--db", default=SNAPSHOT_DB)
+    ap.add_argument("--local", action="store_true")
+    args = ap.parse_args(argv)
+
+    ensure_out()
+    remote = not args.local
+
+    if args.undo:
+        desfazer(args.undo, args.log, args.execute, remote=remote)
+        return 0
+
+    if not args.src:
+        print("faltou --from <findings.jsonl>", file=sys.stderr)
+        return 2
+
+    findings: list[Finding] = []
+    for caminho in args.src:
+        findings.extend(read_findings(caminho))
+    if args.faixa != "todas":
+        findings = [f for f in findings if f.confidence == args.faixa]
+
+    conn = conectar(args.db)
+    modo = "APLICANDO" if args.execute else "SIMULAÇÃO — nada será escrito"
+    print(f"{modo}: {len(findings)} findings na faixa '{args.faixa}'")
+    resumo = aplicar(findings, conn, args.execute, args.log, remote=remote)
+    print(f"\n{resumo}")
+    return 1 if resumo["falhou"] else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

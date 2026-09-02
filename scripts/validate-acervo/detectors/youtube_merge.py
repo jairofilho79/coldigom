@@ -28,13 +28,14 @@ def so_youtube(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     return conn.execute(
         """SELECT p.id, p.name, p.lyrics,
                   (SELECT m.url FROM praise_materials m
-                    WHERE m.praise_id = p.id LIMIT 1) AS url
+                    WHERE m.praise_id = p.id
+                    ORDER BY m.id LIMIT 1) AS url
              FROM praises p
             WHERE EXISTS (SELECT 1 FROM praise_materials m WHERE m.praise_id = p.id)
               AND NOT EXISTS (SELECT 1 FROM praise_materials m
                                WHERE m.praise_id = p.id AND m.type <> 'youtube')
             ORDER BY p.name"""
-    ).fetchall()
+    ).fetchall()  # ORDER BY m.id na subconsulta garante determinismo da evidência
 
 
 def candidatos(conn: sqlite3.Connection) -> list[sqlite3.Row]:

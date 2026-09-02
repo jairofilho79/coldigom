@@ -46,7 +46,10 @@ class Ink:
 def red_mask(img: Image.Image) -> np.ndarray:
     a = np.asarray(img).astype(int)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    return (r > 120) & (r - g > 55) & (r - b > 45) & (g < 150) & (b < 150)
+    # vermelho cheio (acordes) ou vermelho pálido de barra fina anti-serrilhada; papel e preto ficam de fora
+    strong = (r > 120) & (r - g > 55) & (r - b > 45) & (g < 150) & (b < 150)
+    pale = (r > 130) & (r - g > 22) & (r - b > 12) & (g < 215)
+    return strong | pale
 
 
 def dark_thin_marks(img: Image.Image, scale: float, line_h_pt: float, mask_red: np.ndarray) -> list[Repeat]:
@@ -102,7 +105,7 @@ def measure(img: Image.Image, scale: float, line_h_pt: float) -> Ink:
         area = int((mask[sl] & (lab[sl] > 0)).sum())
         if area < 3:
             continue
-        if (x1 - x0) <= max(3, 0.2 * lh) and (y1 - y0) >= 2 * (x1 - x0):
+        if (x1 - x0) <= max(4, 0.28 * lh) and (y1 - y0) >= 2.5 * (x1 - x0):
             thin.append((x0, y0, x1, y1))
         else:
             fat.append((x0, y0, x1, y1))

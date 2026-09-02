@@ -42,8 +42,16 @@ def build_job(item: dict, out_dir: str) -> dict:
     stitch(page, region).save(os.path.join(out_dir, "crop.png"))
     open(os.path.join(out_dir, "skeleton.txt"), "w", encoding="utf-8").write(sk_mod.render_text(sk) + "\n")
     cat0 = pm.catalog_for(str(target)) or pm.catalog_for(str(target).zfill(3))
-    key = (cat0.tonality if cat0 and cat0.tonality else pm.tonality).strip()
-    rhythm = (cat0.rhythm if cat0 and cat0.rhythm else pm.rhythm).strip()
+    # tom e ritmo: a própria página manda (linha "Tonalidade: X  Ritmo: Y"); catálogo e acervo são reserva
+    meta_text = " ".join(l.text for l in region.lines if l.role == "meta")
+    m_key = re.search(r"tonalidade\s*:?\s*([A-G](?:#|b)?m?)\b", meta_text, re.I)
+    m_rh = re.search(r"ritmo\s*:?\s*([A-Za-zÀ-ú][A-Za-zÀ-ú ]{2,24}?)(?:\s{2,}|\s*$|\s+(?:tonalidade|\d))", meta_text, re.I)
+    page_key = m_key.group(1) if m_key else ""
+    page_rhythm = m_rh.group(1).strip() if m_rh else ""
+    key = (page_key or (cat0.tonality if cat0 and cat0.tonality else pm.tonality)).strip()
+    rhythm = (page_rhythm or (cat0.rhythm if cat0 and cat0.rhythm else pm.rhythm)).strip()
+    res["header_sources"] = {"page_key": page_key, "page_rhythm": page_rhythm, "acervo_key": pm.tonality, "acervo_rhythm": pm.rhythm,
+                             "diverge": bool((page_key and pm.tonality and page_key != pm.tonality) or (page_rhythm and pm.rhythm and page_rhythm.lower() != pm.rhythm.lower()))}
     artist_line = next((l.text.strip() for l in region.lines if l.role == "meta" and re.search(r"m[uú]s\.|le[ti]\.", l.text, re.I)), "")
     artist = re.sub(r"^[\d\s]*\(|\)\s*$", "", artist_line).strip()
     header = ["{title: " + pm.name.strip() + "}", "{subtitle: " + str(target) + "}"]

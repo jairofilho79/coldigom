@@ -266,7 +266,7 @@ def weave_line(l: LyricLine) -> str:
         head = l.text.split(":", 1)[0] + ":" if ":" in l.text else l.text
         return head + " " + " ".join("[" + c.name + "]" for c in l.chords)
     text = l.text
-    marks = sorted(l.chords, key=lambda c: c.pos, reverse=True)
+    marks = sorted(l.chords, key=lambda c: (c.pos, c.x), reverse=True)
     for c in marks:
         tok = "[" + c.name + "]"
         pos = min(max(c.pos, 0), len(text))

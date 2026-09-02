@@ -49,6 +49,39 @@ def red_mask(img: Image.Image) -> np.ndarray:
     return (r > 120) & (r - g > 55) & (r - b > 45) & (g < 150) & (b < 150)
 
 
+def dark_thin_marks(img: Image.Image, scale: float, line_h_pt: float, mask_red: np.ndarray) -> list[Repeat]:
+    """Traços verticais pretos e altos (colchete de 'bis'), encadeados na vertical. Coordenadas em pt."""
+    lh = line_h_pt * scale
+    gray = np.asarray(img.convert("L"))
+    dark = (gray < 150) & ~mask_red
+    lab, n = ndimage.label(dark)
+    thin = []
+    for sl in ndimage.find_objects(lab):
+        if sl is None:
+            continue
+        w, h = sl[1].stop - sl[1].start, sl[0].stop - sl[0].start
+        if w <= max(3, 0.2 * lh) and h >= max(2, 0.12 * lh) and h >= 1.5 * w:
+            thin.append(((sl[1].start + sl[1].stop) / 2, sl[0].start, sl[0].stop))
+    thin.sort()
+    chains: list[list] = []
+    for x, y0, y1 in thin:
+        for ch in chains:
+            cx = sum(c[0] for c in ch) / len(ch)
+            cy0, cy1 = min(c[1] for c in ch), max(c[2] for c in ch)
+            if abs(cx - x) < 0.2 * lh and y0 - cy1 < 0.8 * lh and cy0 - y1 < 0.8 * lh:
+                ch.append((x, y0, y1))
+                break
+        else:
+            chains.append([(x, y0, y1)])
+    out = []
+    for ch in chains:
+        x = sum(c[0] for c in ch) / len(ch)
+        y0, y1 = min(c[1] for c in ch), max(c[2] for c in ch)
+        if y1 - y0 >= 1.5 * lh:
+            out.append(Repeat(x / scale, y0 / scale, y1 / scale))
+    return out
+
+
 def measure(img: Image.Image, scale: float, line_h_pt: float) -> Ink:
     """Componentes da máscara vermelha, sem fechamento morfológico (que grudava barra em acorde vizinho).
 
@@ -112,6 +145,7 @@ def measure(img: Image.Image, scale: float, line_h_pt: float) -> Ink:
     chords = _group_glyphs(glyph_boxes, line_h_pt)
     bars = _merge_bars(bars, line_h_pt)
     bars.sort(key=lambda b: (b.y0, b.x))
+    repeats += dark_thin_marks(img, scale, line_h_pt, mask)
     return Ink(bars, chords, repeats, mask)
 
 

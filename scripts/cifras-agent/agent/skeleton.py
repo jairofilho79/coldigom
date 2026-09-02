@@ -67,11 +67,18 @@ def _red_fraction(page: Page, ink: Ink, l: Line) -> float:
 
 
 def _char_pos(l: Line, x: float, cleaned_idx: list[int]) -> int:
-    """Posição de caractere (na string limpa) onde cai um x. cleaned_idx[i] = índice original do char limpo i."""
+    """Posição de caractere (na string limpa) onde cai um x: o primeiro char que começa na barra ou à direita dela."""
     chars = l.chars
+    if not cleaned_idx:
+        return 0
+    widths = sorted(chars[oi].x1 - chars[oi].x0 for oi in cleaned_idx if not chars[oi].c.isspace())
+    cw = widths[len(widths) // 2] if widths else 3.0
+    tol = 0.4 * cw
     for ci, oi in enumerate(cleaned_idx):
         c = chars[oi]
-        if x < (c.x0 + c.x1) / 2:
+        if c.c.isspace():
+            continue
+        if c.x0 >= x - tol:
             return ci
     return len(cleaned_idx)
 
@@ -80,11 +87,14 @@ def _clean_line(l: Line, bars: list[Bar], lh: float) -> tuple[str, list[int]]:
     """Remove da camada de texto o char que o OCR inventou para a barra ('|', 'l', 'I', 'J'...): no máximo um por barra."""
     drop: set[int] = set()
     for b in bars:
-        best, bi = 0.3 * lh, -1
+        best, bi = 0.18 * lh, -1
         for i, c in enumerate(l.chars):
             if c.c not in BAR_LIKE or i in drop:
                 continue
-            d = abs(b.x - (c.x0 + c.x1) / 2)
+            # o char inventado começa na barra (ou é um traço estreito centrado nela)
+            d = abs(b.x - c.x0)
+            if (c.x1 - c.x0) < 0.3 * lh:
+                d = min(d, abs(b.x - (c.x0 + c.x1) / 2))
             if d < best:
                 best, bi = d, i
         if bi >= 0:
@@ -145,6 +155,15 @@ def build(page: Page, region: HymnRegion, ink: Ink) -> Skeleton:
     bars = [b for b in ink.bars if inside(b.x, (b.y0 + b.y1) / 2)]
     glyphs = [g for g in ink.chords if inside((g.x0 + g.x1) / 2, g.yc)]
     repeats = [r for r in ink.repeats if inside(r.x, (r.y0 + r.y1) / 2)]
+    # colchete de repetição: traço à direita do fim do texto de alguma linha de letra, e não em cima de letra
+    def right_of_text(r) -> bool:
+        for l in lyric:
+            if l.y0 - 0.3 * lh <= (r.y0 + r.y1) / 2 <= l.y1 + 0.3 * lh or (r.y0 < l.y1 and r.y1 > l.y0):
+                te = max((c.x1 for c in l.chars if not c.c.isspace()), default=l.x1)
+                if r.x > te + 0.3 * lh:
+                    return True
+        return False
+    repeats = [r for r in repeats if right_of_text(r) and (r.y1 - r.y0) >= 0.7 * lh]
 
     used_bars: set[int] = set()
     used_glyphs: set[int] = set()
@@ -228,7 +247,7 @@ def build(page: Page, region: HymnRegion, ink: Ink) -> Skeleton:
             chords[loser].bar = None
             chords[loser].pos = _char_pos(l, chords[loser].x, idxmap)
             owner[b] = winner
-        in_repeat = any(r.y0 - 0.3 * lh <= l.yc <= r.y1 + 0.3 * lh for r in repeats) or bool(rep_marks) \
+        in_repeat = any(min(r.y1, l.y1) - max(r.y0, l.y0) > 0.3 * lh for r in repeats) or bool(rep_marks) \
             or any(abs(b.yc - l.yc) < 1.6 * lh and b.col == l.col for b in bis_lines)
         ll = LyricLine(idx, text, l.text.rstrip(), bar_pos, chords, round(l.y0, 1), round(l.y1, 1),
                        kind="inline" if inline else "lyric", repeat=in_repeat)
@@ -237,6 +256,51 @@ def build(page: Page, region: HymnRegion, ink: Ink) -> Skeleton:
         out.append(ll)
         prev_bottom[l.col] = l.y1
     return Skeleton(region.number, region.title, out, len(glyphs) - len(used_glyphs), len(bars) - len(used_bars), len(repeats))
+
+
+def weave_line(l: LyricLine) -> str:
+    """Tece a linha ChordPro a partir das posições medidas: colado na barra, solto entre espaços."""
+    if l.kind == "section":
+        return "{comment: " + l.text + "}"
+    if l.kind == "inline":
+        head = l.text.split(":", 1)[0] + ":" if ":" in l.text else l.text
+        return head + " " + " ".join("[" + c.name + "]" for c in l.chords)
+    text = l.text
+    marks = sorted(l.chords, key=lambda c: c.pos, reverse=True)
+    for c in marks:
+        tok = "[" + c.name + "]"
+        pos = min(max(c.pos, 0), len(text))
+        if c.bar is not None:
+            # colado: antes do char da barra, sem espaço à direita; espaço à esquerda só se não havia
+            text = text[:pos] + tok + text[pos:]
+        else:
+            left = text[:pos].rstrip()
+            right = text[pos:].lstrip()
+            if not left:
+                text = tok + " " + right
+            elif not right:
+                text = left + " " + tok
+            else:
+                text = left + " " + tok + " " + right
+    return text
+
+
+def weave(sk: Skeleton, header: list[str]) -> str:
+    out = list(header) + [""]
+    prev_kind = None
+    prev_y1 = None
+    for l in sk.lines:
+        # estrofe nova quando o salto vertical é maior que 1.6 linhas
+        if prev_y1 is not None and l.kind != "section" and l.y0 - prev_y1 > 1.6 * max(1.0, (l.y1 - l.y0)) and out and out[-1] != "":
+            out.append("")
+        if l.kind == "section" and out and out[-1] != "":
+            out.append("")
+        if l.repeat and (prev_kind is None or not prev_kind[1]):
+            out.append("[*2x]")
+        out.append(weave_line(l))
+        prev_kind = (l.kind, l.repeat)
+        prev_y1 = l.y1
+    return "\n".join(out).rstrip() + "\n"
 
 
 def render_text(sk: Skeleton) -> str:

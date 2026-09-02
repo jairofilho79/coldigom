@@ -172,13 +172,15 @@ def _merge_same_baseline(page: Page) -> None:
         ls.sort(key=lambda l: (l.y0, l.x0))
         cur: Optional[Line] = None
         for l in ls:
-            if cur is not None and col != "full" and abs(cur.yc - l.yc) < 0.35 * lh and l.x0 >= cur.x1 - 2 and abs(cur.size - l.size) < 3:
-                gap = " " if not cur.text.endswith(" ") else ""
-                cur.text = cur.text.rstrip() + " " + l.text
-                if gap:
-                    cur.chars.append(Char(" ", cur.x1, l.x0))
-                cur.chars.extend(l.chars)
-                cur.x1, cur.y0, cur.y1 = max(cur.x1, l.x1), min(cur.y0, l.y0), max(cur.y1, l.y1)
+            overlap = min(cur.x1, l.x1) - max(cur.x0, l.x0) if cur is not None else 0
+            if cur is not None and col != "full" and abs(cur.yc - l.yc) < 0.35 * lh and overlap < 0.3 * min(cur.x1 - cur.x0, l.x1 - l.x0) and abs(cur.size - l.size) < 3:
+                chars = sorted(cur.chars + [Char(" ", 0, 0)] + l.chars, key=lambda c: c.x0 if c.c != " " or c.x0 else 0)
+                # reconstrói na ordem de x, com um espaço entre as duas partes
+                left, right = (cur, l) if cur.x0 <= l.x0 else (l, cur)
+                chars = list(left.chars) + [Char(" ", left.x1, right.x0)] + list(right.chars)
+                cur.chars = chars
+                cur.text = "".join(c.c for c in chars)
+                cur.x0, cur.x1, cur.y0, cur.y1 = min(cur.x0, l.x0), max(cur.x1, l.x1), min(cur.y0, l.y0), max(cur.y1, l.y1)
             else:
                 if cur is not None:
                     merged.append(cur)

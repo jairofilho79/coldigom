@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -40,6 +41,19 @@ def build_job(item: dict, out_dir: str) -> dict:
     check = canonical_check([l.text for l in sk.lines if l.kind == "lyric"], canon)
     stitch(page, region).save(os.path.join(out_dir, "crop.png"))
     open(os.path.join(out_dir, "skeleton.txt"), "w", encoding="utf-8").write(sk_mod.render_text(sk) + "\n")
+    cat0 = pm.catalog_for(str(target)) or pm.catalog_for(str(target).zfill(3))
+    key = (cat0.tonality if cat0 and cat0.tonality else pm.tonality).strip()
+    rhythm = (cat0.rhythm if cat0 and cat0.rhythm else pm.rhythm).strip()
+    artist_line = next((l.text.strip() for l in region.lines if l.role == "meta" and re.search(r"m[uú]s\.|le[ti]\.", l.text, re.I)), "")
+    artist = re.sub(r"^[\d\s]*\(|\)\s*$", "", artist_line).strip()
+    header = ["{title: " + pm.name.strip() + "}", "{subtitle: " + str(target) + "}"]
+    if key:
+        header.append("{key: " + key + "}")
+    if rhythm:
+        header.append("{rhythm: " + rhythm + "}")
+    if artist:
+        header.append("{artist: " + artist + "}")
+    open(os.path.join(out_dir, "draft.chordpro"), "w", encoding="utf-8").write(sk_mod.weave(sk, header))
     json.dump(sk.as_dict(), open(os.path.join(out_dir, "skeleton.json"), "w"), ensure_ascii=False, indent=1)
     cat = pm.catalog_for(str(target))
     ctx = [f"# Louvor {target}: {pm.name}", "",
@@ -47,7 +61,8 @@ def build_job(item: dict, out_dir: str) -> dict:
            f"- ritmo (acervo): {pm.rhythm}", f"- autor (acervo): {pm.author}", f"- edição: {item.get('kind')}"]
     if cat:
         ctx += [f"- catálogo da página: tonalidade {cat.tonality}, ritmo {cat.rhythm}, instrumentos {cat.instruments}"]
-    ctx += ["", "## Letra canônica do acervo (referência, não fonte)", ""] + canon
+    ctx += ["", "O cabeçalho do draft.chordpro já vem preenchido com o acervo: não o altere.",
+            "", "## Letra canônica do acervo (referência, não fonte)", ""] + canon
     open(os.path.join(out_dir, "context.md"), "w", encoding="utf-8").write("\n".join(ctx) + "\n")
     gp = gold_path(item.get("job_id", "")) if item.get("job_id") else None
     if gp:

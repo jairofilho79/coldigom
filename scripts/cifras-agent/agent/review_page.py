@@ -39,6 +39,7 @@ def collect(root: str) -> list[dict]:
             "page": _b64_jpeg(os.path.join(d, "overlay.jpg"), 720) if os.path.exists(os.path.join(d, "overlay.jpg")) else "",
             "crop": _b64_jpeg(os.path.join(d, "crop.png"), 900, 85) if os.path.exists(os.path.join(d, "crop.png")) else "",
             "candidate": _read(os.path.join(d, "candidate.chordpro")),
+            "draft": _read(os.path.join(d, "draft.chordpro")),
             "skeleton": _read(os.path.join(d, "skeleton.txt")),
             "gold": _read(os.path.join(d, "gold.chordpro")),
             "notes": _read(os.path.join(d, "reader_notes.json")),
@@ -90,10 +91,10 @@ main{padding:18px 24px 60px;min-width:0}
 .box img{width:100%;display:block;border:1px solid var(--line)}
 .scroll{max-height:78vh;overflow:auto}
 .cifra{font:13.5px/1.35 "IBM Plex Sans",sans-serif;white-space:pre;overflow-x:auto}
-.cifra .ln{display:flex;flex-wrap:nowrap;min-height:2.6em;align-items:flex-end}
-.cifra .ln.blank{min-height:1em}
-.cifra .seg{display:inline-flex;flex-direction:column;align-items:flex-start}
-.cifra .ch{color:var(--red);font-weight:600;font-size:12.5px;line-height:1.1;min-height:1.2em;padding-right:.35em}
+.cifra .ln{display:block;padding-top:1.35em;line-height:1.3;white-space:pre}
+.cifra .ln.blank{min-height:1em;padding-top:0}
+.cifra .seg{position:relative;display:inline;white-space:pre}
+.cifra .ch{position:absolute;left:0;top:-1.25em;color:var(--red);font-weight:600;font-size:12.5px;line-height:1;white-space:nowrap}
 .cifra .ly{white-space:pre}
 .cifra .bar{display:inline-block;width:1.5px;height:1.05em;background:var(--red);vertical-align:-2px;margin-right:1px}
 .cifra .dir{color:var(--muted);font:12px "IBM Plex Mono",monospace}
@@ -159,7 +160,8 @@ function renderCifra(text){
       const touchRight=s.ch&&s.ly&&!/^\s/.test(s.ly);
       const touchLeft=s.ch&&prev&&prev.ly&&!/\s$/.test(prev.ly);
       const glued=touchRight||touchLeft;
-      html+='<span class="seg"><span class="ch">'+esc(s.ch)+'</span><span class="ly">'+(glued&&s.ch?'<i class="bar"></i>':'')+esc(s.ly)+'</span></span>';
+      const ly = s.ly || (s.ch ? ' ' : '');
+      html+='<span class="seg">'+(s.ch?'<span class="ch">'+esc(s.ch)+'</span>':'')+'<span class="ly">'+(glued&&s.ch?'<i class="bar"></i>':'')+esc(ly)+'</span></span>';
     }
     out.push('<div class="ln">'+html+'</div>');
   }
@@ -187,9 +189,10 @@ function renderItem(i){
   <div class="cols">
     <div class="box"><h3>Página do PDF (recorte marcado)</h3><div class="scroll"><img src="${it.page}" alt="página com recorte"></div></div>
     <div class="box"><h3>Crop que o leitor viu</h3><div class="scroll">${it.crop?'<img src="'+it.crop+'" alt="crop">':'<div class="meta">sem crop</div>'}</div></div>
-    <div class="box"><h3>Extração</h3><div class="tabs"><button class="on" data-t="cifra">Cifra</button><button data-t="raw">ChordPro</button><button data-t="sk">Esqueleto medido</button>${it.gold?'<button data-t="gold">Diff × gabarito</button>':''}${it.notes?'<button data-t="notes">Notas do leitor</button>':''}</div>
+    <div class="box"><h3>Extração</h3><div class="tabs"><button class="on" data-t="cifra">Cifra</button><button data-t="raw">ChordPro</button><button data-t="draft">Rascunho da geometria</button><button data-t="sk">Esqueleto medido</button>${it.gold?'<button data-t="gold">Diff × gabarito</button>':''}${it.notes?'<button data-t="notes">Notas do leitor</button>':''}</div>
       <div class="scroll" id="tab-cifra"><div class="cifra">${renderCifra(it.candidate)}</div></div>
       <div class="scroll" id="tab-raw" hidden><pre class="raw">${esc(it.candidate)}</pre></div>
+      <div class="scroll" id="tab-draft" hidden><pre class="raw">${esc(it.draft)}</pre></div>
       <div class="scroll" id="tab-sk" hidden><pre class="raw">${esc(it.skeleton)}</pre></div>
       ${it.gold?'<div class="scroll" id="tab-gold" hidden><div class="diff">'+diffLines(it.gold,it.candidate)+'</div></div>':''}
       ${it.notes?'<div class="scroll" id="tab-notes" hidden><pre class="raw">'+esc(it.notes)+'</pre></div>':''}
@@ -201,7 +204,7 @@ function renderItem(i){
     <fieldset><legend>Extração</legend><label class="ok"><input type="radio" name="ext" value="ok" ${v.ext==='ok'?'checked':''}>certa</label><label class="bad"><input type="radio" name="ext" value="erro" ${v.ext==='erro'?'checked':''}>com erro</label></fieldset>
     <div><legend style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">O que está errado (linha, acorde, letra)</legend><textarea id="note">${esc(v.note||'')}</textarea></div>
   </div>`;
-  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));['cifra','raw','sk','gold','notes'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.hidden=(t!==b.dataset.t);});}));
+  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));['cifra','raw','draft','sk','gold','notes'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.hidden=(t!==b.dataset.t);});}));
   document.querySelectorAll('.verdict input').forEach(r=>r.addEventListener('change',()=>{const vv=verdicts[it.id]||{};vv[r.name]=r.value;verdicts[it.id]=vv;save();}));
   document.getElementById('note').addEventListener('input',e=>{const vv=verdicts[it.id]||{};vv.note=e.target.value;verdicts[it.id]=vv;save();});
 }

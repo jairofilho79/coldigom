@@ -1210,3 +1210,83 @@ def test_recusa_posterior_nao_ressuscita_entrada_anterior_que_nao_escreveu(tmp_p
     assert prod.execute(
         "SELECT lyrics FROM praises WHERE id='fonte'"
     ).fetchone()["lyrics"] == "EDICAO DO DONO"
+
+
+def _wrangler_fora_do_ar(sql, remote=True):
+    """core.d1.query falso que reproduz o wrangler deslogado/sem rede.
+
+    core.d1.query roda o wrangler com check=True, então uma leitura que falha
+    levanta de dentro do laço de desfazer(). Aqui a exceção é a mesma classe
+    que o subprocess levanta.
+    """
+    import subprocess
+    raise subprocess.CalledProcessError(1, ["wrangler", "d1", "execute"])
+
+
+def test_undo_sobrevive_a_leitura_de_producao_que_falha(tmp_path, monkeypatch):
+    # A leitura de produção do desfazer() não tinha lado seguro: wrangler
+    # deslogado, offline ou D1 fora do ar e a exceção subia de dentro do laço
+    # que monta os statements, matando o --undo inteiro — inclusive a
+    # simulação (a coisa que o operador roda primeiro) e inclusive a entrada
+    # de set_praise_field do mesmo run, que não precisa de leitura nenhuma.
+    # A ferramenta de emergência não pode falhar justo quando é necessária.
+    snap, prod = _mundo_dois_bancos(tmp_path, keepers=("keeper", "kB"))
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    spf = Finding(run_id="r1", detector="letra_dup", target_type="praise",
+                  target_id="kB", action="set_praise_field", confidence="alta",
+                  field="author", current=None, proposed="Autor Novo",
+                  evidence={})
+    r = aplicar([_merge(), spf], snap, execute=True, log_path=log, remote=False,
+                sql_dir=sql_dir)
+    assert r["aplicado"] == 2
+    assert prod.execute("SELECT author FROM praises WHERE id='kB'").fetchone()["author"] == "Autor Novo"
+
+    # e agora o wrangler cai — só a LEITURA; a escrita do undo continua indo
+    # para o sqlite local, como em produção iria para o D1 pelos .sql
+    monkeypatch.setattr("core.apply.query", _wrangler_fora_do_ar)
+
+    # a simulação não explode mais
+    sim = desfazer("r1", log, execute=False, remote=False, sql_dir=sql_dir)
+    assert sim["statements"] > 0
+    assert [i["finding_id"] for i in sim["indecidiveis"]] == [_merge().finding_id]
+
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    # a entrada que não dependia de leitura nenhuma foi desfeita
+    assert prod.execute("SELECT author FROM praises WHERE id='kB'").fetchone()["author"] is None
+    assert u["entradas"] == 1
+
+    # da fusão, nada foi enviado: sem a resposta, reinserir a linha da fonte
+    # apagaria a evidência que decide as tags (e o material não pode voltar
+    # para uma fonte que talvez não exista — a FK é real). A entrada continua
+    # desfazível, e o operador é avisado nominalmente.
+    assert len(u["indecidiveis"]) == 1
+    i = u["indecidiveis"][0]
+    assert i["finding_id"] == _merge().finding_id
+    assert i["target_id"] == "fonte"
+    assert "CalledProcessError" in i["erro"]
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is None
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "keeper"
+    # e o undo não mentiu no log: só o que foi desfeito virou "desfeito"
+    linhas = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")]
+    desfeitos = [l["finding_id"] for l in linhas if l.get("estado") == "desfeito"]
+    assert desfeitos == [spf.finding_id]
+
+    # com o wrangler de volta, o mesmo --undo completa o que faltou
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    u2 = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    assert u2["indecidiveis"] == []
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "fonte"
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='fonte'").fetchone()["n"] == 1
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'").fetchone()["lyrics"] is None

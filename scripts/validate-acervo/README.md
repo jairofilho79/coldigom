@@ -114,6 +114,16 @@ Testes: `python3 -m pytest tests/ -v`
   snapshot, moveu um material, apagou uma tag? O `--undo` no-opa naquela peça
   em vez de pisar na edição. O preço é uma leitura pontual em produção por
   fusão desfeita, inclusive na simulação (sem `--execute`).
+- **E se essa leitura falhar, o `--undo` não morre: ele adia aquela entrada.**
+  Wrangler deslogado, sem rede, D1 fora do ar — a exceção matava o `--undo`
+  inteiro, inclusive a simulação e inclusive as entradas do mesmo run que não
+  precisam de leitura nenhuma. Agora a entrada da fusão fica **inteira** de
+  fora (reinserir a linha da fonte apagaria a evidência que decide as tags, e
+  o material não pode voltar para uma fonte que talvez não exista — a FK é
+  real), o resto do run é desfeito normalmente, e o `--undo` **diz
+  nominalmente** quais entradas não pôde decidir e por quê. Elas não entram no
+  `desfeito` do log e continuam desfazíveis: basta rodar o `--undo` de novo
+  com o wrangler no ar.
 - **O undo se registra no log**, então o finding volta a ser aplicável depois
   de desfeito.
 

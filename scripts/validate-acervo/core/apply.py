@@ -631,6 +631,12 @@ def desfazer(
     entradas = [r for r in por_finding.values() if _reversivel(r)]
 
     stmts: list[str] = []
+    # Entradas cuja leitura de produção falhou: nada delas foi gerado, e o
+    # operador precisa saber quais são e por quê.
+    indecidiveis: list[dict] = []
+    # Só as entradas que viraram statements contam como desfeitas — é o que
+    # o operador lê e é o que vai para a linha "desfeito" do log.
+    desfeitas: list[dict] = []
     for r in reversed(entradas):
         antes = r.get("antes") or {}
         eh_merge = r.get("action") == "merge_praise"
@@ -643,7 +649,46 @@ def desfazer(
         # dependa dele foi desfeito para se refazer aqui.
         fonte_sumiu = True
         if eh_merge and p:
-            fonte_sumiu = not _fonte_existe(p["id"], remote)
+            try:
+                fonte_sumiu = not _fonte_existe(p["id"], remote)
+            except Exception as e:
+                # Lado seguro para a leitura. core.d1.query roda o wrangler
+                # com check=True: deslogado, sem rede ou D1 fora do ar, ela
+                # levanta — e antes disto a exceção subia de dentro deste
+                # laço e matava o --undo inteiro, inclusive a simulação (a
+                # coisa que o operador roda primeiro) e inclusive as entradas
+                # do mesmo run que não precisam de leitura nenhuma (um
+                # set_praise_field vizinho). Problema de rede com o wrangler
+                # é justamente uma das causas do meio-caminho que o --undo
+                # existe para limpar: a ferramenta de emergência não pode
+                # falhar na única situação em que é necessária.
+                #
+                # Sem resposta, a pergunta não pode ser respondida por
+                # chute: "a fonte sumiu" ressuscitaria tag que o app apagou;
+                # "a fonte existe" deixaria de repor a tag que a cascata
+                # levou. Então esta ENTRADA inteira fica de fora — não só o
+                # bloco de tags — por duas razões que ligam as peças dela à
+                # resposta que faltou:
+                #   1. reinserir a linha da fonte APAGA A EVIDÊNCIA: depois
+                #      dela, produção responde "a fonte existe" para sempre,
+                #      e um --undo posterior com o wrangler no ar nunca mais
+                #      conseguiria decidir as tags. Meio undo aqui é um undo
+                #      que não pode ser completado depois.
+                #   2. o material só pode voltar para a fonte se a linha da
+                #      fonte estiver lá — a FK real do D1 é
+                #      praise_materials.praise_id -> praises(id). Sem a
+                #      reinserção, o UPDATE do material erraria por FK e
+                #      derrubaria o arquivo .sql inteiro do undo.
+                # As outras entradas do run seguem normalmente; esta é
+                # relatada no fim e continua desfazível numa próxima rodada,
+                # porque nada dela foi enviado.
+                indecidiveis.append({
+                    "finding_id": r.get("finding_id"),
+                    "target_id": r.get("target_id"),
+                    "erro": f"{type(e).__name__}: {e}",
+                })
+                continue
+        desfeitas.append(r)
         if p:
             # 'INSERT OR REPLACE' é DELETE+INSERT no SQLite. Numa linha que
             # ainda existe — o caso do undo de set_praise_field, que nunca
@@ -765,11 +810,23 @@ def desfazer(
     # "escritas" aqui são as entradas que de fato mandaram SQL para produção
     # (as outras já foram filtradas): a linha que o operador lê para decidir
     # se algo aconteceu não pode contar entrada de log que nunca escreveu.
-    print(f"desfazer {run_id}: {len(entradas)} escritas, {len(stmts)} statements")
+    print(f"desfazer {run_id}: {len(desfeitas)} escritas, {len(stmts)} statements")
+    # Falha alta e específica: o operador tem que sair daqui sabendo o que
+    # NÃO foi desfeito, em vez de ler o resumo acima como "está tudo
+    # desfeito". Silêncio aqui seria pior que a exceção que este bloco
+    # substituiu.
+    if indecidiveis:
+        print(f"  {len(indecidiveis)} entrada(s) NÃO DECIDIDA(S) — a leitura "
+              f"de produção falhou e NADA delas foi enviado:")
+        for i in indecidiveis:
+            print(f"    {i['finding_id']} (fonte {i['target_id']}): {i['erro']}")
+        print("  Rode o --undo de novo com o wrangler no ar: estas entradas "
+              "continuam desfazíveis, e as já desfeitas no-opam.")
     if not execute:
         for s in stmts[:10]:
             print("   ", s)
-        return {"entradas": len(entradas), "statements": len(stmts), "executado": False}
+        return {"entradas": len(desfeitas), "statements": len(stmts),
+                "indecidiveis": indecidiveis, "executado": False}
 
     # sql_dir existe pelo mesmo motivo que em aplicar(): o teste não pode
     # escrever .sql de verdade no out/ de produção. Default (None) preserva
@@ -785,10 +842,11 @@ def desfazer(
     # de mão única, com saída só editando o .jsonl na mão. A entrada não
     # carrega "antes", então um --undo seguinte não a consome (desfazer um
     # undo seria reaplicar a fusão).
-    if not entradas:
-        return {"entradas": 0, "statements": len(stmts), "executado": True}
+    if not desfeitas:
+        return {"entradas": 0, "statements": len(stmts),
+                "indecidiveis": indecidiveis, "executado": True}
     with open(log_path, "a", encoding="utf-8") as log:
-        for r in entradas:
+        for r in desfeitas:
             log.write(json.dumps({
                 "finding_id": r.get("finding_id"),
                 "run_id": run_id,
@@ -799,7 +857,8 @@ def desfazer(
                 "estado": "desfeito",
             }, ensure_ascii=False) + "\n")
         log.flush()
-    return {"entradas": len(entradas), "statements": len(stmts), "executado": True}
+    return {"entradas": len(desfeitas), "statements": len(stmts),
+            "indecidiveis": indecidiveis, "executado": True}
 
 
 def main(argv=None) -> int:

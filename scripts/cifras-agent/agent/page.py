@@ -175,8 +175,9 @@ def _merge_same_baseline(page: Page) -> None:
         cur: Optional[Line] = None
         for l in ls:
             overlap = min(cur.x1, l.x1) - max(cur.x0, l.x0) if cur is not None else 0
-            adjacent = cur is not None and (0 <= l.x0 - cur.x1 < 3 * lh or 0 <= cur.x0 - l.x1 < 3 * lh)
-            same_base = cur is not None and (abs(cur.yc - l.yc) < 0.35 * lh or (adjacent and abs(cur.yc - l.yc) < 0.55 * lh))
+            bisish = re.search(r"\bbis\b", l.text, re.I) or (cur is not None and re.search(r"\bbis\b", cur.text, re.I))
+            adjacent = cur is not None and not bisish and (0 <= l.x0 - cur.x1 < 3 * lh or 0 <= cur.x0 - l.x1 < 3 * lh)
+            same_base = cur is not None and not bisish and (abs(cur.yc - l.yc) < 0.35 * lh or (adjacent and abs(cur.yc - l.yc) < 0.55 * lh))
             if same_base and col != "full" and overlap < 0.3 * min(cur.x1 - cur.x0, l.x1 - l.x0) and abs(cur.size - l.size) < 3:
                 chars = sorted(cur.chars + [Char(" ", 0, 0)] + l.chars, key=lambda c: c.x0 if c.c != " " or c.x0 else 0)
                 # reconstrói na ordem de x, com um espaço entre as duas partes
@@ -239,7 +240,8 @@ def _find_headers(page: Page, expected: Optional[set[str]]) -> list[Header]:
         for nxt in order[i + 1: i + 3]:
             letters = re.sub(r"[^A-Za-zÀ-ú]", "", nxt.text)
             if nxt.col == h.line.col and len(letters) >= 4 and sum(c.isupper() for c in letters) >= 0.5 * len(letters) \
-                    and nxt.y0 - h.line.y1 < 1.2 * (h.line.y1 - h.line.y0) and not TONALIDADE_RE.search(nxt.text):
+                    and nxt.y0 - h.line.y1 < 1.2 * (h.line.y1 - h.line.y0) and not TONALIDADE_RE.search(nxt.text) \
+                    and not META_RE.search(nxt.text) and "(" not in nxt.text[:3] and not re.search(r"\b[A-Z]\.[A-Z]\.", nxt.text):
                 nxt.role = "header"
                 h.title = (h.title + " " + nxt.text.strip()).strip()
             else:

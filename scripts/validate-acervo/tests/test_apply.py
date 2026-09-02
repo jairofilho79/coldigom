@@ -10,36 +10,57 @@ from core.findings import Finding
 from core.snapshot import conectar
 
 
-def _mundo(tmp_path):
-    conn = conectar(str(tmp_path / "snap.sqlite"))
-    conn.executescript(
-        """
-        CREATE TABLE praises (id TEXT PRIMARY KEY, name TEXT, number TEXT, author TEXT,
-                              rhythm TEXT, tonality TEXT, category TEXT, lyrics TEXT,
-                              group_id TEXT, created_at TEXT, updated_at TEXT);
-        CREATE TABLE praise_materials (id TEXT PRIMARY KEY, praise_id TEXT, material_kind TEXT,
-                              type TEXT, r2_key TEXT, file_path_legacy TEXT,
-                              source_material_id TEXT, merged_from_praise_id TEXT, url TEXT,
-                              created_at TEXT, is_reviewed INTEGER, reviewed_at TEXT,
-                              reviewed_by TEXT,
-                              FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE);
-        CREATE TABLE tags (id TEXT PRIMARY KEY, name TEXT, parent_id TEXT);
-        CREATE TABLE praise_tags (praise_id TEXT, tag_id TEXT, PRIMARY KEY (praise_id, tag_id),
-                              FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE);
-        """
-    )
+ESQUEMA = """
+    CREATE TABLE praises (id TEXT PRIMARY KEY, name TEXT, number TEXT, author TEXT,
+                          rhythm TEXT, tonality TEXT, category TEXT, lyrics TEXT,
+                          group_id TEXT, created_at TEXT, updated_at TEXT);
+    CREATE TABLE praise_materials (id TEXT PRIMARY KEY, praise_id TEXT, material_kind TEXT,
+                          type TEXT, r2_key TEXT, file_path_legacy TEXT,
+                          source_material_id TEXT, merged_from_praise_id TEXT, url TEXT,
+                          created_at TEXT, is_reviewed INTEGER, reviewed_at TEXT,
+                          reviewed_by TEXT,
+                          FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE);
+    CREATE TABLE tags (id TEXT PRIMARY KEY, name TEXT, parent_id TEXT);
+    CREATE TABLE praise_tags (praise_id TEXT, tag_id TEXT, PRIMARY KEY (praise_id, tag_id),
+                          FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE);
+"""
+
+
+def _povoar(conn, keepers=("keeper",)):
+    """Uma fonte só-YouTube com letra, material e tag, mais os keepers vazios."""
+    conn.executescript(ESQUEMA)
     # A FK real do D1 vem com ON DELETE CASCADE e o D1 roda com
     # PRAGMA foreign_keys = 1 — sem isto aqui, um teste que confia numa
     # cascata (ou que confia na AUSÊNCIA de uma) não reproduz produção.
     conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("INSERT INTO praises (id,name,lyrics) VALUES ('keeper','Medo tens',NULL)")
-    conn.execute("INSERT INTO praises (id,name,lyrics) VALUES ('fonte','Medo tens','Medo tens que o tentador')")
+    for k in keepers:
+        conn.execute("INSERT INTO praises (id,name,lyrics) VALUES (?,'Medo tens',NULL)", (k,))
+    conn.execute("INSERT INTO praises (id,name,lyrics) VALUES "
+                 "('fonte','Medo tens','Medo tens que o tentador')")
     conn.execute("INSERT INTO praise_materials (id,praise_id,type,material_kind,url) "
                  "VALUES ('mat-yt','fonte','youtube','k-audio','https://youtu.be/x')")
     conn.execute("INSERT INTO tags VALUES ('t-av','Avulsos',NULL)")
     conn.execute("INSERT INTO praise_tags VALUES ('fonte','t-av')")
     conn.commit()
     return conn
+
+
+def _mundo(tmp_path):
+    return _povoar(conectar(str(tmp_path / "snap.sqlite")))
+
+
+def _mundo_dois_bancos(tmp_path, keepers=("keeper",)):
+    """Snapshot e produção em ARQUIVOS separados, como na vida real.
+
+    Os testes antigos usam a MESMA conexão para os dois papéis, e isso cega a
+    suíte para a classe inteira de "o estado envelheceu entre o snapshot e o
+    --execute" — que é o eixo central do design. Com uma conexão só, o
+    segundo finding de um lote já lê a fonte apagada e é recusado por
+    "louvor ausente no snapshot", mascarando o estrago.
+    """
+    snap = _povoar(conectar(str(tmp_path / "snap.sqlite")), keepers)
+    prod = _povoar(conectar(str(tmp_path / "prod.sqlite")), keepers)
+    return snap, prod
 
 
 def _merge() -> Finding:
@@ -550,3 +571,276 @@ def test_undo_do_keeper_reverte_coluna_doada_quando_producao_ainda_tem_o_valor_d
     assert conn.execute(
         "SELECT lyrics FROM praises WHERE id='keeper'"
     ).fetchone()["lyrics"] is None
+
+
+def _merge_faixa(faixa: str, keeper: str) -> Finding:
+    """Finding de fusão da mesma fonte para um keeper qualquer, numa faixa qualquer.
+
+    O field entra no finding_id, então dois candidatos da mesma fonte não
+    colidem — é assim que o detector emite a faixa média.
+    """
+    return Finding(
+        run_id="r1", detector="youtube_merge", target_type="praise",
+        target_id="fonte", praise_id="fonte", action="merge_praise",
+        confidence=faixa, proposed=keeper, field=f"keeper:{keeper}",
+        evidence={"keeper": keeper},
+    )
+
+
+def test_execute_recusa_faixa_media_e_nao_escreve_nada(tmp_path, monkeypatch):
+    # C1: na faixa média o detector emite um finding por candidato da MESMA
+    # fonte (7 candidatos numa das fontes reais). Cada finding lê o snapshot,
+    # que não muda durante o lote: o primeiro funde de verdade e os outros
+    # doam letra/autor e as tags da fonte para keepers que nunca foram
+    # fundidos com nada — e a pós-condição devolve ok:true, porque ela só
+    # pergunta se a fonte sumiu. D1 manda a faixa média para a fila de
+    # revisão humana (o P2); até ela existir, --execute é recusado.
+    snap, prod = _mundo_dois_bancos(tmp_path, keepers=("kA", "kB"))
+    escreveu = []
+
+    def _nao_devia_rodar(arquivos, remote=True):
+        escreveu.extend(arquivos)
+
+    monkeypatch.setattr("core.apply.run_sql_files", _nao_devia_rodar)
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+
+    with pytest.raises(ValueError, match="faixa"):
+        aplicar([_merge_faixa("media", "kA"), _merge_faixa("media", "kB")],
+                snap, execute=True, log_path=log, remote=False,
+                sql_dir=str(tmp_path / "sql"))
+
+    # A recusa é anterior a qualquer escrita: nem SQL, nem log, nem estrago
+    # em produção. kB é o keeper que a faixa média contaminaria.
+    assert escreveu == []
+    assert not os.path.exists(log)
+    for k in ("kA", "kB"):
+        linha = prod.execute("SELECT lyrics FROM praises WHERE id=?", (k,)).fetchone()
+        assert linha["lyrics"] is None
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='kB'").fetchone()["n"] == 0
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+
+
+def test_execute_recusa_lote_misto_inteiro(tmp_path):
+    # A recusa é do lote, não do finding: um lote 'todas' com uma alta no
+    # meio não escreve a alta e engole o resto em silêncio.
+    snap, _prod = _mundo_dois_bancos(tmp_path, keepers=("kA", "kB"))
+    log = str(tmp_path / "apply_log.jsonl")
+    with pytest.raises(ValueError, match="media"):
+        aplicar([_merge_faixa("alta", "kA"), _merge_faixa("media", "kB")],
+                snap, execute=True, log_path=log, remote=False,
+                sql_dir=str(tmp_path / "sql"))
+    assert not os.path.exists(log)
+
+
+def test_simulacao_da_faixa_media_continua_liberada(tmp_path):
+    # A recusa é do --execute, não da simulação: inspecionar o payload de
+    # qualquer faixa continua sendo a forma de olhar o que o detector propôs.
+    snap, _prod = _mundo_dois_bancos(tmp_path, keepers=("kA", "kB"))
+    r = aplicar([_merge_faixa("media", "kA"), _merge_faixa("media", "kB")],
+                snap, execute=False, log_path=str(tmp_path / "apply_log.jsonl"),
+                remote=False)
+    assert r["simulado"] == 2
+    assert r["aplicado"] == 0
+
+
+def _run_com_material_novo_em_producao(prod):
+    """run_sql_files falso que reproduz a corrida do C2(a) em produção.
+
+    Alguém anexa um material novo à fonte pelo app bem no instante do
+    --execute: o DELETE guardado vira no-op e a fusão fica pela metade.
+    """
+    def _run(arquivos, remote=True):
+        prod.execute(
+            "INSERT INTO praise_materials (id,praise_id,type,material_kind) "
+            "VALUES ('mat-novo','fonte','pdf','partitura')"
+        )
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                prod.executescript(f.read())
+        prod.commit()
+    return _run
+
+
+def test_undo_desfaz_fusao_pela_metade_do_guarda_barrou(tmp_path, monkeypatch):
+    # C2: quando a guarda otimista barra no meio do lote, o keeper já recebeu
+    # os campos doados e as tags e o material já migrou, mas a fonte continua
+    # viva. Antes, desfazer() só consumia entradas com ok truthy, então o
+    # --undo reportava "0 escritas" na única situação em que havia o que
+    # desfazer, e a retomada barrava de novo para sempre: travado.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _run_com_material_novo_em_producao(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    r = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r["falhou"] == 1
+
+    # o estrago pela metade, confirmado em produção antes de desfazer
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] == "Medo tens que o tentador"
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "keeper"
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    assert u["entradas"] == 1
+    assert u["statements"] > 0
+
+    # tudo de volta: material na fonte, keeper limpo, tag da união removida
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "fonte"
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'").fetchone()["lyrics"] is None
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='keeper'").fetchone()["n"] == 0
+    # e o material que chegou pelo app no meio do caminho continua na fonte
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-novo'"
+    ).fetchone()["praise_id"] == "fonte"
+
+
+def test_undo_desfaz_escrita_interrompida_por_excecao(tmp_path, monkeypatch):
+    # Mesma raiz do C2 pelo outro caminho: o wrangler cai depois de já ter
+    # rodado parte dos statements. ok:false, mas o 'antes' está no log — e é
+    # o 'antes' que torna a entrada reversível, não o sucesso.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+
+    def _roda_e_explode(arquivos, remote=True):
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                prod.executescript(f.read())
+        prod.commit()
+        raise RuntimeError("wrangler caiu depois de escrever")
+
+    monkeypatch.setattr("core.apply.run_sql_files", _roda_e_explode)
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    r = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r["falhou"] == 1
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is None
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    assert u["entradas"] == 1
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "fonte"
+
+
+def test_undo_continua_idempotente_com_entrada_sem_ok(tmp_path, monkeypatch):
+    # Desfazer duas vezes tem que dar no mesmo: os statements do undo são
+    # idempotentes e a guarda simétrica do keeper no-opa na segunda volta.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _run_com_material_novo_em_producao(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    fonte = prod.execute("SELECT * FROM praises WHERE id='fonte'").fetchone()
+    assert fonte["lyrics"] == "Medo tens que o tentador"
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "fonte"
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'").fetchone()["lyrics"] is None
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='fonte'").fetchone()["n"] == 1
+
+
+def test_undo_nao_reverte_coluna_doada_editada_depois_mesmo_em_entrada_falha(tmp_path, monkeypatch):
+    # A guarda simétrica do undo continua valendo para as entradas que só
+    # agora passaram a ser desfeitas: se produção já não tem o valor que esta
+    # fusão doou, o undo não pisa na edição humana.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _run_com_material_novo_em_producao(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+
+    # depois da fusão meio-feita, o dono corrige a letra do keeper pelo app
+    prod.execute("UPDATE praises SET lyrics = 'letra revisada no app' WHERE id='keeper'")
+    prod.commit()
+
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] == "letra revisada no app"
+
+
+def test_undo_se_registra_no_log_e_permite_reaplicar(tmp_path, monkeypatch):
+    # I1: sem a entrada "desfeito" no log, _ja_aplicados continuava vendo o
+    # ok:true da aplicação e pulava o finding em silêncio ('ja_aplicado: 1',
+    # que lê como sucesso). O --undo virava porta de mão única.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    r1 = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r1["aplicado"] == 1
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+
+    linhas = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")]
+    assert linhas[-1]["estado"] == "desfeito"
+    assert linhas[-1]["finding_id"] == _merge().finding_id
+    assert "antes" not in linhas[-1]  # um undo não se desfaz
+
+    r2 = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r2["ja_aplicado"] == 0
+    assert r2["aplicado"] == 1
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is None
+
+
+def test_merge_recusa_tag_pai_que_so_a_fonte_tem(tmp_path):
+    # I2: a API recusa com 400 associar tag-pai que vem só da fonte
+    # (api/src/routes/praises.ts). A fusão por SQL contornava o invariante em
+    # silêncio — mesma classe de vazamento que a recusa por r2_key previne.
+    conn = _mundo(tmp_path)
+    conn.execute("INSERT INTO tags VALUES ('t-filha','Sub de Avulsos','t-av')")
+    conn.commit()
+    with pytest.raises(ValueError, match="tag-pai"):
+        sql_para(_merge(), conn)
+
+
+def test_merge_aceita_tag_pai_que_o_keeper_ja_tem(tmp_path):
+    # Mesmo raciocínio do endpoint: tag-pai que o keeper JÁ tem não é
+    # associação nova, é dado preexistente — recusar mataria a fusão inteira
+    # de um louvor por causa de uma subtag criada depois.
+    conn = _mundo(tmp_path)
+    conn.execute("INSERT INTO tags VALUES ('t-filha','Sub de Avulsos','t-av')")
+    conn.execute("INSERT INTO praise_tags VALUES ('keeper','t-av')")
+    conn.commit()
+    junto = "\n".join(sql_para(_merge(), conn))
+    assert "DELETE FROM praises WHERE id = 'fonte'" in junto
+
+
+def test_undo_de_run_id_desconhecido_nao_cria_log_do_nada(tmp_path, monkeypatch):
+    # Nada a desfazer é nada a registrar: um --undo com run_id errado não
+    # pode inventar um apply_log.jsonl vazio onde não havia nenhum.
+    monkeypatch.setattr("core.apply.run_sql_files", lambda arqs, remote=True: None)
+    log = str(tmp_path / "nem-existe" / "apply_log.jsonl")
+    r = desfazer("r-inexistente", log, execute=True, remote=False,
+                 sql_dir=str(tmp_path / "sql"))
+    assert r["entradas"] == 0
+    assert not os.path.exists(log)

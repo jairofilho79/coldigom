@@ -18,6 +18,12 @@ LOG_PADRAO = os.path.join(OUT, "apply_log.jsonl")
 # nome do keeper é o nome que o acervo já usa.
 DOAVEIS = ("number", "author", "rhythm", "tonality", "category", "lyrics")
 
+# A única faixa que o apply pode escrever. D1 do spec manda média e baixa
+# para uma fila de revisão humana (o P2), que ainda não existe — e o detector
+# emite um finding por candidato na faixa média, então um lote de média
+# escreveria os metadados e as tags da mesma fonte em vários keepers.
+FAIXA_QUE_ESCREVE = "alta"
+
 FASE_DA_ACAO = {
     "delete_material": "Fase 3",
     "set_material_kind": "Fase 2",
@@ -77,6 +83,35 @@ def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
     if k is None or s is None:
         raise ValueError(f"louvor ausente no snapshot: keeper={keeper} fonte={fonte}")
 
+    # Mesma recusa da r2_key, pelo mesmo motivo, aplicada às tags: o endpoint
+    # de merge do app (api/src/routes/praises.ts) devolve 400 quando uma tag
+    # que vem SÓ da fonte é tag-pai ("Cannot attach a parent tag; use a
+    # subtag"). Tag que o keeper já tem não conta — é dado preexistente, e é
+    # assim que o endpoint também raciocina. A fusão por SQL não passa por
+    # esse invariante, então precisa reafirmá-lo aqui: hoje não há tag-pai no
+    # acervo, mas o app deixa criar subtag a qualquer momento e a primeira
+    # fase que reusar esta função herdaria o vazamento silencioso.
+    tags_da_fonte = [
+        t["tag_id"] for t in
+        conn.execute("SELECT tag_id FROM praise_tags WHERE praise_id = ?", (fonte,))
+    ]
+    tags_do_keeper = {
+        t["tag_id"] for t in
+        conn.execute("SELECT tag_id FROM praise_tags WHERE praise_id = ?", (keeper,))
+    }
+    pais = [
+        t for t in tags_da_fonte
+        if t not in tags_do_keeper
+        and conn.execute(
+            "SELECT 1 FROM tags WHERE parent_id = ? LIMIT 1", (t,)).fetchone()
+    ]
+    if pais:
+        raise ValueError(
+            f"fusão recusada: {len(pais)} tag(s) da fonte são tag-pai "
+            f"({pais[0]}...). A API recusa associar tag-pai com 400 — "
+            f"use uma subtag."
+        )
+
     stmts: list[str] = []
 
     # D3 — o keeper manda; a fonte só preenche campo vazio. Um UPDATE por
@@ -93,10 +128,10 @@ def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
             )
 
     # Tags em união: o keeper mantém as dele e recebe as da fonte.
-    for t in conn.execute("SELECT tag_id FROM praise_tags WHERE praise_id = ?", (fonte,)):
+    for t in tags_da_fonte:
         stmts.append(
             "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
-            f"({sql_str(keeper)}, {sql_str(t['tag_id'])});"
+            f"({sql_str(keeper)}, {sql_str(t)});"
         )
 
     for m in materiais:
@@ -233,10 +268,15 @@ def estado_anterior(f: Finding, conn: sqlite3.Connection) -> dict:
 
 
 def _ja_aplicados(log_path: str) -> set[str]:
-    """Só finding_id com ok:true conta como aplicado.
+    """Só finding_id com ok:true conta como aplicado — e um undo o desconta.
 
     Falha é reenviada de propósito: a retomada tem que consertar o que quebrou,
     não pular por cima dele.
+
+    O log é cronológico, então basta varrer na ordem: ok:true marca o finding
+    como feito, e a entrada "desfeito" que o --undo grava depois o desmarca.
+    Sem isso, desfazer viraria porta de mão única — o finding continuaria
+    "aplicado" para sempre e só editar o .jsonl na mão permitiria reaplicar.
     """
     feitos: set[str] = set()
     if not os.path.exists(log_path):
@@ -250,8 +290,13 @@ def _ja_aplicados(log_path: str) -> set[str]:
                 r = json.loads(linha)
             except json.JSONDecodeError:
                 continue
-            if r.get("ok") and r.get("finding_id"):
-                feitos.add(r["finding_id"])
+            fid = r.get("finding_id")
+            if not fid:
+                continue
+            if r.get("estado") == "desfeito":
+                feitos.discard(fid)
+            elif r.get("ok"):
+                feitos.add(fid)
     return feitos
 
 
@@ -263,6 +308,27 @@ def aplicar(
     remote: bool = True,
     sql_dir: str | None = None,
 ) -> dict:
+    # Portão de faixa: só a alta escreve, e a recusa é do mesmo tipo da
+    # recusa por r2_key — erro, não aviso. Na faixa média o detector emite um
+    # finding por candidato da MESMA fonte (7 candidatos numa delas hoje), e
+    # cada finding lê o snapshot, que não muda durante o lote: o primeiro
+    # funde de verdade e os outros doam author/lyrics e as tags da fonte para
+    # keepers que nunca foram fundidos com nada — com ok:true, porque a
+    # pós-condição só pergunta se a fonte sumiu. A simulação continua livre
+    # (o early-return dela vem depois, e é o que permite inspecionar o
+    # payload de qualquer faixa).
+    if execute:
+        fora = sorted({f.confidence for f in findings if f.confidence != FAIXA_QUE_ESCREVE})
+        if fora:
+            n = sum(1 for f in findings if f.confidence != FAIXA_QUE_ESCREVE)
+            raise ValueError(
+                f"--execute recusado: {n} finding(s) fora da faixa "
+                f"'{FAIXA_QUE_ESCREVE}' (faixas no lote: {', '.join(fora)}). "
+                f"D1 manda a faixa média para a fila de revisão humana, que é "
+                f"o P2 e ainda não existe. Simule à vontade (sem --execute); "
+                f"para escrever, rode com --faixa {FAIXA_QUE_ESCREVE}."
+            )
+
     # sql_dir existe para o teste não escrever no out/ de produção: os testes
     # que rodam com execute=True apontam para tmp_path. Em produção
     # (sql_dir=None) o comportamento não muda — os .sql vão para OUT/sql.
@@ -373,7 +439,19 @@ def desfazer(
     valor de antes e as tags que só chegaram pela união saem. Não restaura
     arquivo do R2 — nenhuma ação do P1 toca no R2, por construção.
     """
-    entradas = []
+    # É o "antes" que torna uma entrada reversível, não o ok. Consumir só
+    # ok:true deixava sem saída justamente os caminhos de falha em que a
+    # escrita aconteceu pela metade: o guarda_barrou (keeper já recebeu campos
+    # doados e tags, material já migrou, fonte ainda viva — e a retomada
+    # barra de novo para sempre), o except Exception (wrangler caiu no
+    # arquivo 2 de 3) e a linha "pendente" de um processo morto no meio.
+    # Nos três o "antes" já está no disco; desfazer só se recusava a usá-lo.
+    #
+    # Uma entrada por finding_id — a última, que é a que descreve o estado
+    # mais recente. Consumir "pendente" e final juntos duplicaria cada
+    # statement; como todos são idempotentes isso não corromperia nada, mas
+    # dobraria o SQL enviado sem ganho nenhum.
+    por_finding: dict[str, dict] = {}
     if os.path.exists(log_path):
         with open(log_path, encoding="utf-8") as f:
             for linha in f:
@@ -389,8 +467,13 @@ def desfazer(
                     # emergência não pode falhar na única situação em que é
                     # necessária.
                     continue
-                if r.get("ok") and r.get("run_id") == run_id:
-                    entradas.append(r)
+                if r.get("run_id") != run_id or not r.get("antes"):
+                    continue
+                # A entrada que o próprio --undo grava não tem "antes", então
+                # nunca entra aqui: desfazer um undo seria reaplicar a fusão.
+                chave = r.get("finding_id") or f"__sem_id__{len(por_finding)}"
+                por_finding[chave] = r
+    entradas = list(por_finding.values())
 
     stmts: list[str] = []
     for r in reversed(entradas):
@@ -440,8 +523,15 @@ def desfazer(
             # antes["doadas"] no momento de aplicar. Reverter a linha
             # inteira do keeper tocaria colunas que a fusão nunca mexeu
             # (name, group_id, created_at, ...). A fonte, ao contrário, foi
-            # apagada — não há estado de produção a preservar ali, então
-            # reverter a linha toda continua certo.
+            # apagada pela própria fusão, então reverter a linha toda a
+            # partir do snapshot é o único caminho — mas não é de graça: uma
+            # edição feita na fonte entre o snapshot e o --execute é destruída
+            # pelo DELETE (que não checa se a fonte mudou) e depois
+            # "restaurada" aqui no valor velho. É o único ponto do módulo em
+            # que uma edição humana pode sumir sem nenhuma guarda perceber.
+            # A janela é curta e a fonte é um louvor só-YouTube, mas o risco
+            # existe — não confunda "não há como preservar" com "não há o que
+            # preservar".
             #
             # Mas "doada no snapshot" não é "doada de fato em produção": a
             # guarda otimista do C2(b) pode ter feito a doação virar no-op
@@ -485,6 +575,27 @@ def desfazer(
     arquivos = write_sql_chunks(stmts, os.path.join(base_sql, f"undo-{run_id}"),
                                prefix="undo", per_file=300)
     run_sql_files(arquivos, remote=remote)
+
+    # O undo tem que se registrar. Sem esta entrada, _ja_aplicados continua
+    # vendo o ok:true da aplicação e pula o finding em silêncio na próxima
+    # rodada ("ja_aplicado: 1", que lê como sucesso): o --undo viraria porta
+    # de mão única, com saída só editando o .jsonl na mão. A entrada não
+    # carrega "antes", então um --undo seguinte não a consome (desfazer um
+    # undo seria reaplicar a fusão).
+    if not entradas:
+        return {"entradas": 0, "statements": len(stmts), "executado": True}
+    with open(log_path, "a", encoding="utf-8") as log:
+        for r in entradas:
+            log.write(json.dumps({
+                "finding_id": r.get("finding_id"),
+                "run_id": run_id,
+                "detector": r.get("detector"),
+                "action": r.get("action"),
+                "target_id": r.get("target_id"),
+                "ts": time.time(),
+                "estado": "desfeito",
+            }, ensure_ascii=False) + "\n")
+        log.flush()
     return {"entradas": len(entradas), "statements": len(stmts), "executado": True}
 
 
@@ -520,7 +631,12 @@ def main(argv=None) -> int:
     conn = conectar(args.db)
     modo = "APLICANDO" if args.execute else "SIMULAÇÃO — nada será escrito"
     print(f"{modo}: {len(findings)} findings na faixa '{args.faixa}'")
-    resumo = aplicar(findings, conn, args.execute, args.log, remote=remote)
+    try:
+        resumo = aplicar(findings, conn, args.execute, args.log, remote=remote)
+    except ValueError as e:
+        # Recusa de portão (faixa fora da alta): erro alto e nada escrito.
+        print(f"\nRECUSADO: {e}", file=sys.stderr)
+        return 2
     print(f"\n{resumo}")
     return 1 if resumo["falhou"] else 0
 

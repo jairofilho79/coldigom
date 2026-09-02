@@ -18,7 +18,12 @@ Todas verificadas contra o repositório em 2026-09-02. Nenhuma é negociável.
 - **Não criar `requirements.txt`, `pyproject.toml` nem venv.** O repo não tem nenhum, de propósito. Dependências são stdlib + o que já está no site-packages do sistema.
 - **HTTP é `urllib.request`, nunca `requests`.** O repo inteiro segue isso.
 - **CLI é `argparse`, sem subcomandos.** Um módulo = um verbo. Assinatura `def main(argv=None) -> int:`, terminando em `if __name__ == "__main__": sys.exit(main())`.
-- **`--execute` é o único portão de escrita.** O *early return* da simulação vem **antes** de ler qualquer credencial ou abrir qualquer conexão de escrita.
+- **`--execute` é o único portão de escrita.** O *early return* da simulação vem
+  **antes** de qualquer escrita. Uma exceção deliberada, aberta na revisão final:
+  a simulação do `--undo` **lê** produção (somente leitura) para saber o que a
+  fusão de fato deixou lá. Sem essa leitura o plano exibido seria construído
+  sobre o snapshot e mentiria — e o valor inteiro da simulação é dizer a verdade
+  sobre o que aconteceria. Escrita nenhuma acontece sem `--execute`.
 - **`json.dump(..., ensure_ascii=False, indent=1)`** em todo lugar.
 - **`ROOT` derivado de `__file__`**, nunca hardcoded. Copie o gesto de `scripts/cifras-agent/agent/acervo.py:11`.
 - **Log append-only `.jsonl` com `flush()` por item.** Releitura filtrando `ok: true` dá retomada.

@@ -170,27 +170,61 @@ def test_achado_1_field_keeper_discrimina_finding_id_de_multiplos_candidatos_med
     assert len(finding_ids) == 2, f"Esperava 2 finding_ids distintos, got {finding_ids}"
 
 
-def test_achado_2_nome_minimo_8_mata_substring_em_nomes_curtos(tmp_path):
-    """Achado 2: NOME_MINIMO = 8 impede substring matching quando o alvo
-    tem nome normalizado < 8 caracteres.
+def test_nome_minimo_barra_substring_quando_a_FONTE_tem_nome_curto(tmp_path):
+    """NOME_MINIMO guarda o MENOR dos dois nomes, não só o do candidato.
 
-    Uma fonte com nome muito curto ('Fé') e um alvo com nome contendo
-    a fonte como substring ('Fé do coração') casariam por substring matching
-    se o alvo tivesse nome normalizado >= 8. Como tem, casam. Com NOME_MINIMO=999,
-    não casariam.
+    O caso que a constante existe para matar é o do comentário em
+    youtube_merge.py: fonte de nome curto ('Fé') dentro de dezenas de títulos
+    longos. A guarda antiga só media o candidato, então 'fe' (2) dentro de
+    'fe do coracao' (13 >= 8) casava — exatamente o que ela devia impedir.
+
+    Este teste mata o mutante NOME_MINIMO = 0: com o limiar zerado, 'fe' volta
+    a casar por substring e aparece um finding.
     """
     conn = _mundo(tmp_path)
     # Fonte com nome muito curto, letra vazia para depender só de nome
     _so_yt(conn, "yt1", "Fé", None)
-    # Alvo com nome contendo "Fé" como substring, e nome normalizado >= 8
-    # "fe do coracao" tem 13 caracteres (contando espaços)
+    # Alvo longo que CONTÉM o nome da fonte como substring
     _acervo(conn, "ac1", "Fé do coração", None)
+    conn.commit()
+
+    findings, motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert findings == []
+    assert "sem candidato" in motivos.tabela()
+
+
+def test_nome_minimo_barra_substring_quando_o_CANDIDATO_tem_nome_curto(tmp_path):
+    """O outro lado do mesmo casamento continua guardado.
+
+    Espelho do teste acima: agora quem tem nome curto é o candidato ('Fé') e
+    quem é longo é a fonte ('Fé do coração'). Também não pode casar — e este
+    é o lado que a guarda antiga já cobria, então o teste é de regressão.
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Fé do coração", None)
+    _acervo(conn, "ac1", "Fé", None)
     conn.commit()
 
     findings, _motivos, _alvos = detectar(conn, run_id="r1")
 
-    # Com NOME_MINIMO=8, casam por substring matching
-    # "fe do coracao" (13 >= 8) contém "fe", então casam
+    assert findings == []
+
+
+def test_substring_casa_quando_os_dois_nomes_passam_do_minimo(tmp_path):
+    """A guarda não pode matar o casamento por substring que é legítimo.
+
+    Os dois nomes normalizados têm >= 8 caracteres, e um contém o outro:
+    'medo tens' dentro de 'medo tens que o tentador'. Continua casando (faixa
+    média, porque só o nome testemunha).
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Medo tens", None)
+    _acervo(conn, "ac1", "Medo tens que o tentador", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
     assert len(findings) == 1
     assert findings[0].proposed == "ac1"
     assert findings[0].confidence == "media"

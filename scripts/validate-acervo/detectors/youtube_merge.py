@@ -20,6 +20,10 @@ DETECTOR = "youtube_merge"
 SHINGLE = 8
 
 # Nome curto casa por acidente. 'Fé' está dentro de dezenas de títulos.
+# A guarda vale para os DOIS lados do casamento por substring — ou seja, para
+# o menor dos dois nomes. Exigi-la só do candidato deixava passar exatamente
+# o caso que este comentário descreve: fonte 'Fé' dentro de candidato 'Fé do
+# coração' (13 >= 8) casava. Nome idêntico não passa por aqui: casa sempre.
 NOME_MINIMO = 8
 
 
@@ -76,7 +80,8 @@ def detectar(conn: sqlite3.Connection, run_id: str):
         por_letra = {cid for cid, sh in sh_de.items() if s and (s & sh)}
         por_nome = {
             cid for cid, cn in nome_de.items()
-            if cn and (cn == n or (len(cn) >= NOME_MINIMO and (cn in n or n in cn)))
+            if cn and (cn == n or (min(len(cn), len(n)) >= NOME_MINIMO
+                                   and (cn in n or n in cn)))
         }
 
         ambos = por_letra & por_nome

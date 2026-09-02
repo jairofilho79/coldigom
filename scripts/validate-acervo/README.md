@@ -48,8 +48,12 @@ Testes: `python3 -m pytest tests/ -v`
   a proposta do detector. Com a proposta à vista, a métrica vira concordância.
 - **O CSV de classificação não é gabarito.** Ele mesmo chutou o kind a partir
   do nome do arquivo. É uma testemunha como as outras.
-- **Nome do arquivo manda sobre a pasta.** Medido: há arquivos guardados na
-  pasta do louvor errado cujo nome diz o louvor certo, e o banco já corrigiu.
+- **O banco manda sobre o CSV.** É o que `core/reconcile.py` implementa: o
+  vínculo do D1 vence, e `nome_arquivo`/`pasta` viajam junto só como evidência
+  para o humano. A observação empírica por trás disso — há arquivo guardado na
+  pasta do louvor errado cujo *nome* diz o louvor certo, e o banco já tinha
+  corrigido — motiva a regra, mas não é ela: não existe no código nenhuma
+  comparação entre nome do arquivo e pasta.
 - **Sem candidato não quer dizer louvor novo.** O detector reporta e para.
 - **A fusão por SQL é recusada se a fonte tiver `r2_key`.** SQL não limpa o
   R2; o endpoint com JWT limpa. Na Fase 1 nenhum tem, mas deixar implícito
@@ -57,7 +61,11 @@ Testes: `python3 -m pytest tests/ -v`
 
 ## Pré-requisitos
 
-- `wrangler` logado (o `api/wrangler.toml` é gitignored e precisa existir)
+- `wrangler` logado. O `api/wrangler.toml` precisa existir — e, ao contrário do
+  que o `.gitignore` sugere, ele **está rastreado no git** (entrou no índice
+  antes da regra de ignore). Ou seja, `account_id` e `database_id` estão
+  versionados; segredo de verdade vai por `wrangler secret put`, nunca nesse
+  arquivo.
 - A árvore original em `/Volumes/SSD 2TB SD/assets2`, ou `COLDIGOM_ASSETS2`
   apontando para ela
 - Python 3.9+; nada a instalar além do que já está no sistema

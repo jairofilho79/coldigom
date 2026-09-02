@@ -7,7 +7,7 @@ import sqlite3
 import sys
 import time
 
-from core.d1 import run_sql_files, sql_str, write_sql_chunks
+from core.d1 import query, run_sql_files, sql_str, write_sql_chunks
 from core.findings import Finding, read_findings
 from core.paths import OUT, SNAPSHOT_DB, ensure_out
 from core.snapshot import conectar
@@ -136,6 +136,54 @@ def _sql_set_praise_field(f: Finding, conn: sqlite3.Connection) -> list[str]:
     ]
 
 
+def _pos_condicao(f: Finding, remote: bool) -> tuple[bool, dict]:
+    """Confirma contra produção que a escrita realmente aconteceu.
+
+    O wrangler sai com código 0 mesmo quando um UPDATE/DELETE afeta 0 linhas
+    — é exatamente o que as guardas otimistas do C2 fazem quando o estado em
+    produção já mudou desde o snapshot. `wrangler d1 execute --file` nem
+    devolve linhas afetadas por statement (a saída mistura texto de
+    progresso com o JSON), então contar isso no arquivo não dá; em vez
+    disso, uma consulta pontual (a mesma `core.d1.query` já usa
+    `--command --json`, que devolve `meta.changes` de forma confiável)
+    confirma o resultado direto na fonte da verdade. Sem isto, um finding
+    cuja guarda barrou seria gravado como ok:true e _ja_aplicados nunca mais
+    o retomaria — a escrita passaria a falhar em silêncio.
+
+    Uma consulta por finding: para merge_praise as duas checagens (fonte
+    sumiu, nenhum material preso nela) vêm combinadas num único SELECT.
+    """
+    if f.action == "merge_praise":
+        fonte = f.target_id
+        r = query(
+            "SELECT "
+            f"(SELECT COUNT(*) FROM praises WHERE id = {sql_str(fonte)}) AS fonte_existe, "
+            f"(SELECT COUNT(*) FROM praise_materials WHERE praise_id = {sql_str(fonte)}) "
+            "AS materiais_presos",
+            remote=remote,
+        )
+        linha = r[0] if r else {"fonte_existe": 1, "materiais_presos": 0}
+        if linha.get("fonte_existe") or linha.get("materiais_presos"):
+            return False, {"motivo": "fonte ou material ainda presos em produção", "encontrado": linha}
+        return True, {}
+
+    if f.action == "set_praise_field":
+        r = query(
+            f"SELECT {f.field} AS valor FROM praises WHERE id = {sql_str(f.target_id)}",
+            remote=remote,
+        )
+        if not r:
+            return False, {"motivo": "louvor não encontrado em produção"}
+        encontrado = r[0].get("valor")
+        if encontrado != f.proposed:
+            return False, {"motivo": "campo não bate com o proposto", "encontrado": encontrado}
+        return True, {}
+
+    # Ações de fase futura nunca chegam aqui: sql_para já teria levantado
+    # NotImplementedError antes de qualquer tentativa de escrita.
+    return True, {}
+
+
 def sql_para(f: Finding, conn: sqlite3.Connection) -> list[str]:
     if f.action == "merge_praise":
         return _sql_merge(f, conn)
@@ -166,6 +214,17 @@ def estado_anterior(f: Finding, conn: sqlite3.Connection) -> dict:
             "SELECT * FROM praises WHERE id = ?", (f.proposed,)).fetchone())
         antes["keeper_tags"] = [r["tag_id"] for r in conn.execute(
             "SELECT tag_id FROM praise_tags WHERE praise_id = ?", (f.proposed,))]
+        # O undo do keeper só pode tocar as colunas que esta fusão de fato
+        # doou — calculado aqui, no momento de aplicar, contra o mesmo
+        # snapshot que _sql_merge vai usar para decidir a doação (mesma
+        # conexão, sem escrita entre uma leitura e a outra). Gravar isso no
+        # log em vez de re-derivar na hora do desfazer evita reverter
+        # colunas que a fusão nunca tocou (name, group_id, created_at, ...).
+        if antes["keeper"] and antes["praise"]:
+            antes["doadas"] = [
+                c for c in DOAVEIS
+                if _vazio(antes["keeper"][c]) and not _vazio(antes["praise"][c])
+            ]
     return antes
 
 
@@ -269,9 +328,24 @@ def aplicar(
                     prefix=f.finding_id, per_file=300,
                 )
                 run_sql_files(arquivos, remote=remote)
-                entrada["statements"] = len(stmts)
-                entrada["ok"] = True
-                resumo["aplicado"] += 1
+
+                # As guardas otimistas do C2 fazem o statement afetar 0
+                # linhas quando o estado em produção já não bate mais com o
+                # snapshot — e o wrangler sai com código 0 nesse caso do
+                # mesmo jeito. Sem confirmar a pós-condição contra produção,
+                # isso viraria ok:true e o finding nunca mais seria
+                # retomado: a escrita passaria a falhar em silêncio em vez
+                # de falhar alto.
+                ok_pos, evidencia = _pos_condicao(f, remote=remote)
+                if not ok_pos:
+                    entrada["ok"] = False
+                    entrada["estado"] = "guarda_barrou"
+                    entrada["evidencia"] = evidencia
+                    resumo["falhou"] += 1
+                else:
+                    entrada["statements"] = len(stmts)
+                    entrada["ok"] = True
+                    resumo["aplicado"] += 1
             except Exception as e:
                 entrada["ok"] = False
                 entrada["erro"] = f"{type(e).__name__}: {e}"
@@ -358,9 +432,20 @@ def desfazer(
         # antes["keeper_tags"]); só faltava usá-los.
         keeper = antes.get("keeper")
         if keeper:
-            kcols = [c for c in keeper.keys() if c != "id"]
-            ksets = ", ".join(f"{c} = {_lit(keeper[c])}" for c in kcols)
-            stmts.append(f"UPDATE praises SET {ksets} WHERE id = {sql_str(keeper['id'])};")
+            # Só as colunas efetivamente doadas nesta fusão — gravadas em
+            # antes["doadas"] no momento de aplicar. Reverter a linha
+            # inteira do keeper tocaria colunas que a fusão nunca mexeu
+            # (name, group_id, created_at, ...); e usar o valor do
+            # snapshot para elas destruiria qualquer edição feita pelo app
+            # depois do snapshot, inclusive numa coluna doada que a guarda
+            # otimista do C2(b) tinha acabado de proteger durante o
+            # --execute. A fonte, ao contrário, foi apagada — não há
+            # estado de produção a preservar ali, então reverter a linha
+            # toda continua certo.
+            doadas = antes.get("doadas") or []
+            if doadas:
+                ksets = ", ".join(f"{c} = {_lit(keeper[c])}" for c in doadas)
+                stmts.append(f"UPDATE praises SET {ksets} WHERE id = {sql_str(keeper['id'])};")
 
             tags_antes_do_keeper = set(antes.get("keeper_tags", []))
             tags_que_vieram_da_fonte = set(antes.get("tags", []))

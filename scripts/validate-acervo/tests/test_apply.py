@@ -51,18 +51,35 @@ def _merge() -> Finding:
     )
 
 
-def _executar_no_conn(conn):
+def _executar_no_conn(conn, chamadas=None):
     """run_sql_files falso: aplica os .sql gerados direto na mesma conexão.
 
-    Usado só nos testes de undo que precisam do efeito real no banco (não
-    dá pra verificar cascata de FK olhando só o texto do SQL). Nunca toca o
-    wrangler nem a rede.
+    Usado nos testes que precisam do efeito real no banco (não dá pra
+    verificar cascata de FK, nem pós-condição, olhando só o texto do SQL).
+    Nunca toca o wrangler nem a rede. `chamadas`, se passado, recebe os
+    caminhos dos arquivos .sql que teriam ido para o wrangler.
     """
     def _run(arquivos, remote=True):
+        if chamadas is not None:
+            chamadas.extend(arquivos)
         for caminho in arquivos:
             with open(caminho, encoding="utf-8") as f:
                 conn.executescript(f.read())
         conn.commit()
+    return _run
+
+
+def _query_no_conn(conn):
+    """core.d1.query falso: roda o SELECT direto na mesma conexão sqlite.
+
+    aplicar(execute=True) sempre confirma a pós-condição contra "produção"
+    depois de escrever (I5) — nos testes, "produção" é esta mesma conexão.
+    Nunca toca o wrangler nem a rede.
+    """
+    def _run(sql, remote=True):
+        cur = conn.execute(sql)
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, row)) for row in cur.fetchall()]
     return _run
 
 
@@ -126,6 +143,7 @@ def test_estado_anterior_guarda_o_suficiente_para_desfazer(tmp_path):
     assert antes["materiais"][0]["id"] == "mat-yt"
     assert antes["tags"] == ["t-av"]
     assert antes["keeper"]["id"] == "keeper"
+    assert antes["doadas"] == ["lyrics"]  # I6: única coluna que esta fusão doa
 
 
 def test_dry_run_nao_escreve_arquivo_sql_nem_log(tmp_path):
@@ -140,9 +158,14 @@ def test_dry_run_nao_escreve_arquivo_sql_nem_log(tmp_path):
 def test_execute_escreve_pendente_e_ok_por_finding(tmp_path, monkeypatch):
     # Uma linha "pendente" (com o antes) antes de tentar escrever, e uma
     # linha "ok" depois — não mais uma linha só (ver I1 no fix round 1).
+    # A escrita precisa acontecer de verdade (não só registrar o nome do
+    # arquivo): desde I5, aplicar() confirma a pós-condição contra
+    # "produção" antes de gravar ok:true, e essa checagem só passa se a
+    # fonte de fato sumiu.
     conn = _mundo(tmp_path)
     executados = []
-    monkeypatch.setattr("core.apply.run_sql_files", lambda arqs, remote=True: executados.extend(arqs))
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn, executados))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     r = aplicar([_merge()], conn, execute=True, log_path=log, remote=False,
                 sql_dir=str(tmp_path / "sql"))
@@ -154,13 +177,15 @@ def test_execute_escreve_pendente_e_ok_por_finding(tmp_path, monkeypatch):
     assert pendente["estado"] == "pendente"
     assert pendente["antes"]["praise"]["id"] == "fonte"
     assert final["ok"] is True
+    assert "estado" not in final  # pós-condição cumprida: não é "guarda_barrou"
     assert final["run_id"] == "r1"
     assert final["antes"]["praise"]["id"] == "fonte"
 
 
 def test_rodar_de_novo_pula_o_que_ja_foi_aplicado(tmp_path, monkeypatch):
     conn = _mundo(tmp_path)
-    monkeypatch.setattr("core.apply.run_sql_files", lambda arqs, remote=True: None)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     sql_dir = str(tmp_path / "sql")
     aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
@@ -277,6 +302,7 @@ def test_undo_de_set_praise_field_nao_apaga_materiais_nem_tags(tmp_path, monkeyp
     # louvor.
     conn = _mundo(tmp_path)
     monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     sql_dir = str(tmp_path / "sql")
 
@@ -307,6 +333,7 @@ def test_undo_de_merge_restaura_fonte_materiais_e_campos_e_tags_do_keeper(tmp_pa
     # também — não só reconstituir a fonte.
     conn = _mundo(tmp_path)
     monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     sql_dir = str(tmp_path / "sql")
 
@@ -350,6 +377,7 @@ def test_undo_preserva_merged_from_praise_id_anterior(tmp_path, monkeypatch):
     conn.execute("UPDATE praise_materials SET merged_from_praise_id='fusao-anterior' WHERE id='mat-yt'")
     conn.commit()
     monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     sql_dir = str(tmp_path / "sql")
 
@@ -372,6 +400,7 @@ def test_undo_ignora_linha_corrompida_no_meio_do_log(tmp_path, monkeypatch):
     # necessária.
     conn = _mundo(tmp_path)
     monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     sql_dir = str(tmp_path / "sql")
 
@@ -383,3 +412,72 @@ def test_undo_ignora_linha_corrompida_no_meio_do_log(tmp_path, monkeypatch):
     r = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
     assert r["entradas"] == 1
     assert conn.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+
+
+def test_pos_condicao_barrada_grava_ok_false_e_guarda_barrou(tmp_path, monkeypatch):
+    # I5: se a guarda otimista do C2(a) fizer o DELETE afetar 0 linhas (a
+    # fonte ganhou material novo entre o snapshot e a escrita), o wrangler
+    # sai com código 0 do mesmo jeito. Sem checar a pós-condição contra
+    # produção, isso viraria ok:true e o finding nunca mais seria
+    # retomado — a fusão ficaria pela metade (campos doados, tags e
+    # materiais movidos, mas a fonte viva) registrada como sucesso.
+    conn = _mundo(tmp_path)
+
+    def _run_com_material_novo(arquivos, remote=True):
+        # simula a corrida: o material novo chega em produção bem no
+        # instante em que o "wrangler" roda os statements — a guarda do
+        # DELETE vai no-opar quando chegar nele.
+        conn.execute(
+            "INSERT INTO praise_materials (id,praise_id,type,material_kind) "
+            "VALUES ('mat-novo','fonte','pdf','partitura')"
+        )
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                conn.executescript(f.read())
+        conn.commit()
+
+    monkeypatch.setattr("core.apply.run_sql_files", _run_com_material_novo)
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+
+    log = str(tmp_path / "apply_log.jsonl")
+    r = aplicar([_merge()], conn, execute=True, log_path=log, remote=False,
+                sql_dir=str(tmp_path / "sql"))
+    assert r["aplicado"] == 0
+    assert r["falhou"] == 1
+
+    linhas = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")]
+    final = linhas[-1]
+    assert final["ok"] is False
+    assert final["estado"] == "guarda_barrou"
+    assert "evidencia" in final
+
+    # a fonte continua existindo — a guarda barrou de verdade, não é só o
+    # log que diz isso
+    assert conn.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+
+
+def test_undo_do_keeper_toca_so_colunas_doadas_nesta_fusao(tmp_path, monkeypatch):
+    # I6: o undo revertia a linha inteira do keeper com dado do snapshot —
+    # inclusive colunas que a fusão nunca tocou. Uma edição feita pelo app
+    # numa coluna não-doada, depois da fusão, tem que sobreviver ao --undo.
+    conn = _mundo(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+
+    # depois da fusão, alguém edita pelo app uma coluna do keeper que a
+    # fusão NUNCA doa ('name' não está em DOAVEIS) — o undo não pode mexer
+    # nela, mesmo divergindo do valor que o snapshot tinha.
+    conn.execute(
+        "UPDATE praises SET name = 'nome editado no app depois da fusao' WHERE id='keeper'"
+    )
+    conn.commit()
+
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    keeper = conn.execute("SELECT * FROM praises WHERE id='keeper'").fetchone()
+    assert keeper["name"] == "nome editado no app depois da fusao"  # intocado
+    assert keeper["lyrics"] is None  # a coluna doada foi revertida normalmente

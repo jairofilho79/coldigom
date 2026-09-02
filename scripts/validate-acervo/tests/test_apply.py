@@ -1290,3 +1290,67 @@ def test_undo_sobrevive_a_leitura_de_producao_que_falha(tmp_path, monkeypatch):
         "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='fonte'").fetchone()["n"] == 1
     assert prod.execute(
         "SELECT lyrics FROM praises WHERE id='keeper'").fetchone()["lyrics"] is None
+
+
+class _ProcessoMorto(BaseException):
+    """O kill que não passa pelo `except Exception` de aplicar()."""
+
+
+def test_processo_morto_na_linha_pendente_nao_desfaz_nada(tmp_path, monkeypatch):
+    # A linha "pendente" grava escreveu=False porque nenhum SQL saiu ainda, e
+    # é isso que protege o caso literal do comentário do código: processo
+    # morto entre a linha pendente e a final, deixando a pendente como a
+    # última — e a única — entrada do finding.
+    #
+    # O mutante (pendente com escreveu=True) não é equivalente. Em
+    # merge_praise as guardas otimistas o absorvem, mas set_praise_field não
+    # tem a guarda da fonte: a linha volta com ON CONFLICT DO UPDATE SET e o
+    # undo reescreve o louvor INTEIRO com o snapshot, destruindo a edição que
+    # o dono fez pelo app depois do crash — exatamente o que o --undo existe
+    # para não fazer.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+
+    def _morre_antes_de_qualquer_sql(*a, **kw):
+        # BaseException escapa do `except Exception` de aplicar(), como um
+        # kill de verdade: nenhuma entrada final é gravada. (Um
+        # KeyboardInterrupt literal derrubaria a sessão do pytest inteira.)
+        raise _ProcessoMorto("processo morto")
+
+    # sql_para é a primeira coisa depois da linha pendente e não é usada
+    # por desfazer(), então o patch morre com a aplicação.
+    monkeypatch.setattr("core.apply.sql_para", _morre_antes_de_qualquer_sql)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    f = Finding(run_id="r1", detector="letra_dup", target_type="praise",
+                target_id="fonte", action="set_praise_field", confidence="alta",
+                field="lyrics", current="Medo tens que o tentador",
+                proposed="letra nova", evidence={})
+    with pytest.raises(_ProcessoMorto):
+        aplicar([f], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+
+    linhas = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")]
+    # só a pendente foi parar no log — a asserção que importa não é o texto
+    # dela, e sim o que o --undo faz com produção logo abaixo.
+    assert [l.get("estado") for l in linhas] == ["pendente"]
+    # produção intocada: o crash foi antes de qualquer SQL
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='fonte'"
+    ).fetchone()["lyrics"] == "Medo tens que o tentador"
+
+    # o dono, sem saber do crash, edita o louvor pelo app
+    prod.execute("UPDATE praises SET lyrics='EDICAO DO DONO', author='Autor do App' "
+                 "WHERE id='fonte'")
+    prod.commit()
+
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    # a edição do dono continua de pé: o undo não escreveu o snapshot por
+    # cima de estado vivo
+    linha = prod.execute("SELECT * FROM praises WHERE id='fonte'").fetchone()
+    assert linha["lyrics"] == "EDICAO DO DONO"
+    assert linha["author"] == "Autor do App"
+    assert u["entradas"] == 0
+    assert u["statements"] == 0

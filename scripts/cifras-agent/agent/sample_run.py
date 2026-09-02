@@ -1,0 +1,80 @@
+"""Gera jobs (crop, esqueleto, contexto) para uma lista de materiais. Uso: python3 -m agent.sample_run sample.json out/round1"""
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import sys
+
+from PIL import Image
+
+from . import skeleton as sk_mod
+from .acervo import canonical_lines, gold_path, load_praise, resolve
+from .crop import canonical_check, lyric_lines_of, overlay, segment_hymns, stitch
+from .ink import measure
+from .page import load_page
+
+
+def build_job(item: dict, out_dir: str) -> dict:
+    pdf = resolve(item["pdf"])
+    pm = load_praise(pdf)
+    # o número do acervo manda (o antigo pipeline errava de louvor por número de vizinho)
+    target = (pm.number or str(item.get("hymn") or "")).lstrip("0") or "0"
+    page = load_page(pdf, page_no=item.get("page", 0), expected_numbers=pm.catalog_numbers() or None)
+    regions = segment_hymns(page)
+    region = next((r for r in regions if r.number.lstrip("0") == target), None)
+    res = {"job_id": item.get("job_id"), "hymn": str(target), "title": pm.name, "kind": item.get("kind"),
+           "pdf": item["pdf"], "headers_found": [(h.number, h.title, h.line.col) for h in page.headers],
+           "gutter": round(page.gutter, 1), "columns": page.columns}
+    os.makedirs(out_dir, exist_ok=True)
+    page.img.convert("RGB").resize((page.img.width // 2, page.img.height // 2)).save(os.path.join(out_dir, "page.jpg"), quality=80)
+    overlay(page, regions).resize((page.img.width // 2, page.img.height // 2)).save(os.path.join(out_dir, "overlay.jpg"), quality=80)
+    if region is None:
+        res["status"] = "crop_failed"
+        res["error"] = f"louvor {target} não encontrado; cabeçalhos: {res['headers_found']}"
+        json.dump(res, open(os.path.join(out_dir, "job.json"), "w"), ensure_ascii=False, indent=1)
+        return res
+    ink = measure(page.img, page.scale, page.line_height())
+    sk = sk_mod.build(page, region, ink)
+    canon = canonical_lines(pm.lyrics)
+    check = canonical_check([l.text for l in sk.lines if l.kind == "lyric"], canon)
+    stitch(page, region).save(os.path.join(out_dir, "crop.png"))
+    open(os.path.join(out_dir, "skeleton.txt"), "w", encoding="utf-8").write(sk_mod.render_text(sk) + "\n")
+    json.dump(sk.as_dict(), open(os.path.join(out_dir, "skeleton.json"), "w"), ensure_ascii=False, indent=1)
+    cat = pm.catalog_for(str(target))
+    ctx = [f"# Louvor {target}: {pm.name}", "",
+           f"- praise_number: {pm.number}", f"- praise_name: {pm.name}", f"- tonalidade (acervo): {pm.tonality}",
+           f"- ritmo (acervo): {pm.rhythm}", f"- autor (acervo): {pm.author}", f"- edição: {item.get('kind')}"]
+    if cat:
+        ctx += [f"- catálogo da página: tonalidade {cat.tonality}, ritmo {cat.rhythm}, instrumentos {cat.instruments}"]
+    ctx += ["", "## Letra canônica do acervo (referência, não fonte)", ""] + canon
+    open(os.path.join(out_dir, "context.md"), "w", encoding="utf-8").write("\n".join(ctx) + "\n")
+    gp = gold_path(item.get("job_id", "")) if item.get("job_id") else None
+    if gp:
+        shutil.copy(gp, os.path.join(out_dir, "gold.chordpro"))
+    res.update({"status": "ready", "crosses_column": region.crosses_column, "rects": [r.as_dict() for r in region.rects],
+                "lyric_lines": len(sk.lines), "bars": sum(len(l.bars) for l in sk.lines),
+                "chords": sum(len(l.chords) for l in sk.lines), "unknown_chords": sum(1 for l in sk.lines for c in l.chords if c.name == "?"),
+                "unassigned_chords": sk.unassigned_chords, "unassigned_bars": sk.unassigned_bars,
+                "canonical": {k: v for k, v in check.items() if k != "unmatched_crop_lines"}, "has_gold": bool(gp)})
+    json.dump(res, open(os.path.join(out_dir, "job.json"), "w"), ensure_ascii=False, indent=1)
+    return res
+
+
+def main() -> None:
+    items = json.load(open(sys.argv[1]))
+    root = sys.argv[2]
+    for it in items:
+        name = it.get("stem") or it["hymn"]
+        try:
+            r = build_job(it, os.path.join(root, name))
+        except Exception as e:  # noqa: BLE001
+            r = {"status": "error", "error": repr(e), "job_id": it.get("job_id")}
+            os.makedirs(os.path.join(root, name), exist_ok=True)
+            json.dump(r, open(os.path.join(root, name, "job.json"), "w"), ensure_ascii=False, indent=1)
+        flag = r.get("status")
+        print(f"{flag:12s} {name[:48]:48s} cross={r.get('crosses_column')} lines={r.get('lyric_lines')} bars={r.get('bars')} chords={r.get('chords')} ?={r.get('unknown_chords')} canon={ (r.get('canonical') or {}).get('coverage') } foreign={len((r.get('canonical') or {}).get('foreign_lines', []))} {r.get('error','')}")
+
+
+if __name__ == "__main__":
+    main()

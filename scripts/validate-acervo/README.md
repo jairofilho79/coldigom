@@ -71,14 +71,28 @@ Testes: `python3 -m pytest tests/ -v`
 - **Só a faixa alta escreve.** `--execute` é recusado com erro se o lote tiver
   qualquer finding fora da faixa alta: D1 manda média e baixa para a fila de
   revisão humana (o P2). Simular qualquer faixa continua liberado.
+- **Uma fusão cuja fonte já não existe em produção é recusada, não
+  bem-sucedida.** A pós-condição aceita "a fonte sumiu" como prova de que a
+  fusão aconteceu — e ela pode ter sumido numa fusão *anterior*. Sem essa
+  recusa, dois `--execute` contra o **mesmo snapshot** (mexer numa constante do
+  detector e re-rodar, com o `--db out/snapshot.sqlite` do default) doavam
+  `author`/`lyrics` e as tags de uma fonte já fundida para um segundo keeper,
+  que nunca foi fundido com nada — com `ok:true`. O portão de alvo repetido não
+  alcança isso: ele é por lote, e o perigo atravessa lotes. Então a pergunta
+  vai para **produção**, por finding, antes de escrever. Recusar um replay
+  legítimo é falha segura; o replay honesto pelo log já é filtrado antes, pelo
+  `finding_id` com `ok:true`.
+- **Refazer o snapshot entre dois `--execute` é o certo**, e agora não é mais
+  o que separa o acervo de um estrago: com o snapshot velho, o finding do
+  segundo lote nasce de um estado que já não existe e a recusa acima o pega.
 - **O `--undo` desfaz o que falhou *pela metade*, não o que falhou *antes de
   começar*.** Uma escrita é reversível quando o log tem o `antes` **e**
   registra que o SQL chegou a rodar (`escreveu: true`) — não é o `ok` que
   decide, mas também não é o `antes` sozinho. Falha depois de o wrangler ter
   entrado, e `guarda_barrou` (o keeper já recebeu a doação e o material já
   migrou, mas a fonte continua viva): **desfaz**. Processo morto antes de
-  qualquer SQL, recusa do próprio `apply` (`r2_key`, tag-pai) e finding
-  intocado de um lote que quebrou antes dele:
+  qualquer SQL, recusa do próprio `apply` (`r2_key`, tag-pai, fonte que já não
+  existe em produção) e finding intocado de um lote que quebrou antes dele:
   **não desfaz — e é isso que se quer**, porque nada aconteceu em produção e
   "desfazer" ali seria escrever o snapshot por cima de estado vivo. Nesses
   casos o `--undo` reporta `0 escritas`.

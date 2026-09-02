@@ -219,6 +219,42 @@ def _pos_condicao(f: Finding, remote: bool) -> tuple[bool, dict]:
     return True, {}
 
 
+def _pre_condicao(f: Finding, remote: bool) -> tuple[bool, dict]:
+    """Confirma em PRODUÇÃO que a fusão ainda tem o que fundir.
+
+    _pos_condicao aceita "a fonte sumiu" como prova de que esta fusão
+    aconteceu. Não é: ela pode ter sumido numa fusão anterior. Dois
+    --execute contra o MESMO snapshot — a sequência de quem mexe numa
+    constante do detector e re-roda, e o snapshot é o default `--db
+    out/snapshot.sqlite` — bastam para o estrago do C1 atravessar lotes:
+    o lote 1 funde fonte->kA de verdade; o lote 2, com um finding só (o
+    portão de alvo repetido é por lote e não dispara), lê a fonte VIVA no
+    snapshot velho e doa author/lyrics e as tags dela para kB, que nunca
+    foi fundido com nada. Os UPDATEs de material e o DELETE no-opam, a
+    pós-condição pergunta "a fonte sumiu?", a resposta é sim — por causa do
+    lote 1 — e a entrada fica ok:true.
+
+    A raiz é ler o estado no snapshot e concluir sobre produção. Então a
+    pergunta vai para produção, antes de escrever: a fonte ainda existe? Se
+    não existe, esta fusão já foi feita (por este arnês ou pelo app) e o
+    que sobrou dela é só a metade que ainda casa por acidente — recusar é a
+    falha segura. Recusar um replay legítimo não custa nada: o replay
+    honesto pelo log já é filtrado antes, por _ja_aplicados.
+
+    Diferente dos portões de lote de aplicar(), esta checagem é por finding
+    e vale ENTRE lotes, que é justamente onde o portão de lote não alcança.
+    """
+    if f.action != "merge_praise":
+        return True, {}
+    if not _fonte_existe(f.target_id, remote=remote):
+        return False, {
+            "motivo": "a fonte já não existe em produção — esta fusão já foi "
+                      "feita, ou foi feita por outro caminho",
+            "fonte": f.target_id,
+        }
+    return True, {}
+
+
 def _fonte_existe(praise_id: str, remote: bool) -> bool:
     """A fonte ainda está em produção? Leitura pontual, nunca no snapshot.
 
@@ -430,6 +466,21 @@ def aplicar(
             except Exception as e:
                 entrada = dict(base, ts=time.time(), ok=False,
                                 erro=f"{type(e).__name__}: {e}")
+                log.write(json.dumps(entrada, ensure_ascii=False) + "\n")
+                log.flush()
+                resumo["falhou"] += 1
+                continue
+
+            # Pré-condição contra produção, antes de gerar SQL, antes da
+            # linha "pendente" e antes de qualquer escrita: uma fusão cuja
+            # fonte já não existe recusa, em vez de "ter sucesso" doando os
+            # metadados dela para um keeper que nunca foi fundido. Fecha a
+            # raiz que o portão de alvo repetido só fecha dentro de um lote.
+            ok_pre, evidencia = _pre_condicao(f, remote=remote)
+            if not ok_pre:
+                entrada = dict(base, ts=time.time(), ok=False, escreveu=False,
+                               estado="fonte_ausente", evidencia=evidencia,
+                               antes=antes)
                 log.write(json.dumps(entrada, ensure_ascii=False) + "\n")
                 log.flush()
                 resumo["falhou"] += 1

@@ -226,6 +226,10 @@ def test_falha_na_escrita_grava_pendente_com_antes_antes_de_tentar(tmp_path, mon
         raise RuntimeError("wrangler caiu no meio do lote")
 
     monkeypatch.setattr("core.apply.run_sql_files", _explode)
+    # A pré-condição da quebra 2 pergunta a produção se a fonte ainda
+    # existe antes de escrever; sem este patch o teste sairia para o
+    # wrangler de verdade.
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
     log = str(tmp_path / "apply_log.jsonl")
     r = aplicar([_merge()], conn, execute=True, log_path=log, remote=False,
                 sql_dir=str(tmp_path / "sql"))
@@ -1017,3 +1021,101 @@ def test_undo_nao_arranca_material_que_o_app_moveu_depois_da_fusao(tmp_path, mon
     assert prod.execute(
         "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
     ).fetchone()["praise_id"] == "outro"
+
+
+def test_segundo_execute_contra_o_mesmo_snapshot_recusa_fonte_ja_fundida(tmp_path, monkeypatch):
+    # Quebra 2: o mecanismo do C1 sobrevivia inteiro entre dois --execute
+    # contra o MESMO snapshot — a sequência de quem mexe numa constante do
+    # detector e re-roda (o snapshot é o default --db out/snapshot.sqlite).
+    # O lote 1 funde fonte->kA de verdade. O lote 2 tem um finding só, então
+    # o portão de alvo repetido (que é por lote) não dispara: _sql_merge lê a
+    # fonte VIVA no snapshot velho e doa lyrics e as tags dela para kB, que
+    # nunca foi fundido com nada. Os UPDATEs de material e o DELETE no-opam,
+    # e _pos_condicao pergunta só "a fonte sumiu?" — sim, no lote ANTERIOR —
+    # então gravava ok:true nos dois. A raiz não é o portão de lote; é
+    # concluir sobre produção a partir do snapshot.
+    snap, prod = _mundo_dois_bancos(tmp_path, keepers=("kA", "kB"))
+    escritos = []
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod, escritos))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    # lote 1: a fusão legítima
+    r1 = aplicar([_merge_faixa("alta", "kA")], snap, execute=True, log_path=log,
+                 remote=False, sql_dir=sql_dir)
+    assert r1["aplicado"] == 1
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is None
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='kA'"
+    ).fetchone()["lyrics"] == "Medo tens que o tentador"
+    escritos.clear()
+
+    # lote 2: MESMO snapshot (não refeito), keeper diferente. finding_id
+    # diferente, então _ja_aplicados não pega — é por isso que o replay pelo
+    # log não cobre este caso.
+    f2 = _merge_faixa("alta", "kB")
+    assert f2.finding_id != _merge_faixa("alta", "kA").finding_id
+    r2 = aplicar([f2], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+
+    assert r2["ja_aplicado"] == 0  # o log não salva este caso
+    assert r2["aplicado"] == 0
+    assert r2["falhou"] == 1
+    assert escritos == []  # a recusa é anterior a qualquer escrita
+
+    # kB continua sendo o louvor vazio que sempre foi
+    kb = prod.execute("SELECT * FROM praises WHERE id='kB'").fetchone()
+    assert kb["lyrics"] is None
+    assert kb["author"] is None
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='kB'").fetchone()["n"] == 0
+    # e o material continua onde a fusão legítima o pôs
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "kA"
+
+    final = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")][-1]
+    assert final["ok"] is False
+    assert final["estado"] == "fonte_ausente"
+    # e nada a desfazer: a recusa não escreveu, então o --undo não a toca
+    assert final["escreveu"] is False
+
+
+def test_fusao_com_a_fonte_viva_em_producao_continua_passando(tmp_path, monkeypatch):
+    # A pré-condição da quebra 2 não pode virar um portão que recusa o
+    # caminho feliz: com a fonte de pé em produção, a fusão escreve como
+    # sempre escreveu.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    r = aplicar([_merge()], snap, execute=True,
+                log_path=str(tmp_path / "apply_log.jsonl"), remote=False,
+                sql_dir=str(tmp_path / "sql"))
+    assert r["aplicado"] == 1
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is None
+
+
+def test_pre_condicao_nao_recusa_fusao_com_a_fonte_apagada_so_no_snapshot(tmp_path, monkeypatch):
+    # A pergunta é para PRODUÇÃO, não para o snapshot: uma fonte que o
+    # snapshot não tem mais (porque o snapshot foi refeito) mas que produção
+    # ainda tem não é o caso perigoso — e, do outro lado, um snapshot velho
+    # cheio de fontes já fundidas não autoriza nada. Aqui a fonte só existe
+    # em produção, e quem recusa é o próprio _sql_merge por não achá-la no
+    # snapshot — não a pré-condição, que passa.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    snap.execute("DELETE FROM praise_materials WHERE praise_id='fonte'")
+    snap.execute("DELETE FROM praises WHERE id='fonte'")
+    snap.commit()
+    escritos = []
+    monkeypatch.setattr("core.apply.run_sql_files",
+                        lambda arqs, remote=True: escritos.extend(arqs))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+
+    r = aplicar([_merge()], snap, execute=True, log_path=log, remote=False,
+                sql_dir=str(tmp_path / "sql"))
+    assert r["falhou"] == 1
+    assert escritos == []
+    final = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")][-1]
+    assert final.get("estado") != "fonte_ausente"
+    assert "louvor ausente no snapshot" in final["erro"]

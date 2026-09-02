@@ -12,17 +12,24 @@ python3 -m core.snapshot                    # espelha o D1 + indexa a árvore or
 python3 -m core.reconcile                   # Fase 0 — liga material ao arquivo original
 python3 -m detectors.youtube_merge          # Fase 1 — emite findings e o formulário
 
-# simula (padrão) e depois aplica a faixa alta
+# 1. simula (padrão) — nada é escrito, nenhuma credencial é lida
 python3 -m core.apply --from out/youtube_merge/findings.jsonl --faixa alta
-python3 -m core.apply --from out/youtube_merge/findings.jsonl --faixa alta --execute
 
-# mede contra o gabarito que você preencheu
+# 2. mede contra o gabarito que você preencheu (saída != 0 = não aplique)
 python3 -m core.gold --from out/youtube_merge/findings.jsonl \
                      --gabarito out/youtube_merge/gabarito.tsv
+
+# 3. só então aplica, e só a faixa alta
+python3 -m core.apply --from out/youtube_merge/findings.jsonl --faixa alta --execute
 
 # desfaz uma corrida inteira
 python3 -m core.apply --undo <run_id> --execute
 ```
+
+**A ordem dos três passos é o portão de promoção (spec §5.2), não estilo.**
+Simular, medir com o gabarito preenchido, e só então aplicar. `core.gold`
+sai com código != 0 tanto quando a faixa alta erra quanto quando não há
+veredito nenhum para medir — gabarito em branco não é gabarito zerado.
 
 Testes: `python3 -m pytest tests/ -v`
 
@@ -58,6 +65,15 @@ Testes: `python3 -m pytest tests/ -v`
 - **A fusão por SQL é recusada se a fonte tiver `r2_key`.** SQL não limpa o
   R2; o endpoint com JWT limpa. Na Fase 1 nenhum tem, mas deixar implícito
   viraria vazamento silencioso na primeira fase que reusasse a função.
+- **A fusão por SQL é recusada se a fonte trouxer uma tag-pai nova.** A API
+  devolve 400 nesse caso; o SQL contornaria o invariante em silêncio. Mesma
+  recusa, mesmo motivo da `r2_key`.
+- **Só a faixa alta escreve.** `--execute` é recusado com erro se o lote tiver
+  qualquer finding fora da faixa alta: D1 manda média e baixa para a fila de
+  revisão humana (o P2). Simular qualquer faixa continua liberado.
+- **O `--undo` desfaz também o que falhou pela metade.** É o `antes` gravado
+  no log que torna uma escrita reversível, não o `ok`. E o undo se registra no
+  log, então o finding volta a ser aplicável depois de desfeito.
 
 ## Pré-requisitos
 

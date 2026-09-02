@@ -329,6 +329,29 @@ def aplicar(
                 f"para escrever, rode com --faixa {FAIXA_QUE_ESCREVE}."
             )
 
+        # Portão de alvo repetido: mesma recusa, mesmo motivo do portão de
+        # faixa acima. O perigo real não é a faixa em si — é dois findings
+        # escrevendo sobre a MESMA fonte (target_id) no mesmo lote. Hoje a
+        # Fase 1 só está a salvo por acidente: D2 exige candidato único, então
+        # a faixa alta tem no máximo um finding por fonte por construção. Um
+        # detector futuro que emita duas propostas de faixa alta para a
+        # mesma fonte reabre o problema inteiro — cada finding lê o
+        # snapshot, que não muda durante o lote, então o segundo escreveria
+        # em cima de um estado que o primeiro já apagou (a fonte já sumiu,
+        # ou o keeper já recebeu doação e tags), com ok:true nos dois.
+        contagem: dict[str, int] = {}
+        for f in findings:
+            contagem[f.target_id] = contagem.get(f.target_id, 0) + 1
+        repetidos = sorted(tid for tid, n in contagem.items() if n > 1)
+        if repetidos:
+            raise ValueError(
+                f"--execute recusado: alvo(s) repetido(s) no lote "
+                f"({', '.join(repetidos)}). Dois findings escrevendo sobre a "
+                f"mesma fonte no mesmo lote: cada um lê o snapshot, que não "
+                f"muda durante o lote, então o segundo escreveria em cima de "
+                f"um estado que a primeira escrita já tornou obsoleto."
+            )
+
     # sql_dir existe para o teste não escrever no out/ de produção: os testes
     # que rodam com execute=True apontam para tmp_path. Em produção
     # (sql_dir=None) o comportamento não muda — os .sql vão para OUT/sql.

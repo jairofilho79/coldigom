@@ -645,6 +645,46 @@ def test_simulacao_da_faixa_media_continua_liberada(tmp_path):
     assert r["aplicado"] == 0
 
 
+def test_execute_recusa_alvo_repetido_no_lote(tmp_path, monkeypatch):
+    # Conserto 2: o portão de faixa sozinho não basta. Dois findings de
+    # faixa ALTA — a única que passa pelo portão de faixa — propondo
+    # keepers diferentes para a MESMA fonte ('fonte', repetida via
+    # _merge_faixa) é exatamente o cenário que D2 hoje impede por
+    # construção (candidato único), mas que um detector futuro pode voltar
+    # a emitir. Sem o portão de alvo repetido, o primeiro finding fundiria
+    # a fonte de verdade e o segundo leria o mesmo snapshot (já obsoleto)
+    # para doar letra/tags da fonte a um keeper que nunca foi fundido —
+    # com ok:true nos dois, como o portão de faixa já documentava para a
+    # média.
+    snap, prod = _mundo_dois_bancos(tmp_path, keepers=("kA", "kB"))
+    escreveu = []
+
+    def _nao_devia_rodar(arquivos, remote=True):
+        escreveu.extend(arquivos)
+
+    monkeypatch.setattr("core.apply.run_sql_files", _nao_devia_rodar)
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+
+    with pytest.raises(ValueError, match="fonte"):
+        aplicar([_merge_faixa("alta", "kA"), _merge_faixa("alta", "kB")],
+                snap, execute=True, log_path=log, remote=False,
+                sql_dir=str(tmp_path / "sql"))
+
+    # A recusa é anterior a qualquer escrita: nem SQL, nem log, nem estrago
+    # em produção — nos dois keepers e na fonte, que continua viva.
+    assert escreveu == []
+    assert not os.path.exists(log)
+    for k in ("kA", "kB"):
+        linha = prod.execute("SELECT lyrics FROM praises WHERE id=?", (k,)).fetchone()
+        assert linha["lyrics"] is None
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='kA'").fetchone()["n"] == 0
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='kB'").fetchone()["n"] == 0
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+
+
 def _run_com_material_novo_em_producao(prod):
     """run_sql_files falso que reproduz a corrida do C2(a) em produção.
 

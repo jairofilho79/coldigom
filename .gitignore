@@ -72,3 +72,6 @@ api/.zshrc
 
 # Rascunhos locais do dono (fora do fluxo do repositório)
 .wip/
+
+# Worktrees criados pelo Claude Code (scratch, nunca versionado)
+.claude/worktrees/

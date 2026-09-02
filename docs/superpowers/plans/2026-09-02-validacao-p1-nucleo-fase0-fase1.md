@@ -43,7 +43,12 @@ Todas verificadas contra o repositório em 2026-09-02. Nenhuma é negociável.
 
 - **A Fase 1 não toca em R2.** Os 25 louvores têm `r2_key` NULL e `url` preenchida. Por isso é seguro escrever por `wrangler d1 execute --remote` sem replicar a limpeza de órfãos que o endpoint `POST /api/praises/:keeperId/merge` faz.
 - **Só `PUT /api/materials/:id/content` aceita o `COLDIGOM_UPLOAD_TOKEN`.** `merge`, `PATCH` e `DELETE` exigem JWT de sessão (`api/src/middleware.ts:88`). Por isso o P1 escreve por SQL, não por HTTP.
-- **A faixa alta da Fase 1 tem só 5 casos** (medido contra os 25 reais, com a regra D2 estrita). Portanto o gabarito da Fase 1 é **os 25 inteiros**, não uma amostra de 50, e o portão é **zero erro na faixa alta** — não os ≥98% de D10, que precisam de amostra maior. Isto está registrado como desvio deliberado de D10 e vale só para esta fase.
+- **A faixa alta da Fase 1 tem 3 casos** (medido contra os 25 reais pelo detector, com a regra D2 estrita).
+  A estimativa anterior deste plano dizia 5; era minha, e estava errada — o script de viabilidade
+  classificava como alta com interseção **não-vazia**, enquanto a D2 exige **unicidade**. "Medo tens"
+  e "Se paz, a mais doce" têm dois registros de praise idênticos cada um no acervo (mesmo número,
+  mesmo nome, mesmo md5 de letra normalizada), então a interseção não é única e a D2 os rebaixa,
+  corretamente, para `media`. Isso corrobora o problema de louvores duplicados da Fase 7. Portanto o gabarito da Fase 1 é **os 25 inteiros**, não uma amostra de 50, e o portão é **zero erro na faixa alta** — não os ≥98% de D10, que precisam de amostra maior. Isto está registrado como desvio deliberado de D10 e vale só para esta fase.
 - **`scripts/pdf-to-chordpro/geom/` não está no working tree** — existe só em `stash@{0}` (commit de untracked `824cecf`). O P1 não depende dele. As Fases 2 e 5a dependem, e extrair o `geom/` para um lugar estável é **pré-requisito daquelas fases**, não desta.
 
 ---

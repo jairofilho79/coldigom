@@ -577,10 +577,10 @@ def desfazer(
     # velho por cima de estado vivo. Só é reversível o que chegou a executar
     # SQL, e é isso que "escreveu" registra.
     #
-    # Uma entrada por finding_id — a última, que é a que descreve o estado
-    # mais recente. Consumir "pendente" e final juntos duplicaria cada
-    # statement; como todos são idempotentes isso não corromperia nada, mas
-    # dobraria o SQL enviado sem ganho nenhum.
+    # Uma entrada por finding_id — a última QUE ESCREVEU, que é a que
+    # descreve o que existe em produção para desfazer. Consumir "pendente" e
+    # final juntos duplicaria cada statement; como todos são idempotentes
+    # isso não corromperia nada, mas dobraria o SQL enviado sem ganho nenhum.
     por_finding: dict[str, dict] = {}
     if os.path.exists(log_path):
         with open(log_path, encoding="utf-8") as f:
@@ -602,12 +602,32 @@ def desfazer(
                 # A entrada que o próprio --undo grava não tem "antes", então
                 # nunca entra aqui: desfazer um undo seria reaplicar a fusão.
                 chave = r.get("finding_id") or f"__sem_id__{len(por_finding)}"
+                anterior = por_finding.get(chave)
+                # ARMADILHA QUE JÁ MORDEU: "a última entrada do finding domina
+                # as anteriores" é falso. Uma recusa que NUNCA ESCREVEU não
+                # domina uma escrita que ACONTECEU. O caso real: o wrangler
+                # aplica o arquivo inteiro e morre ao reportar (entrada
+                # ok:false, escreveu:true, fusão completa em produção); o
+                # operador faz o gesto de retomada que o README documenta e
+                # roda o findings de novo; a pré-condição de fonte viva
+                # recusa — corretamente — e grava uma entrada
+                # estado=fonte_ausente com "antes" e escreveu:false. Se essa
+                # recusa sombreasse a escrita anterior, o --undo imprimiria
+                # "0 escritas" — a mesma frase que o README ensina a ler como
+                # "nada aconteceu em produção" — para uma fusão que apagou o
+                # louvor-fonte num acervo sem lixeira. Ou seja: retomar
+                # destruiria a reversibilidade.
+                #
+                # Então a dedup guarda a última entrada que escreveu, e só
+                # cai para a última entrada quando nenhuma escreveu (aí o
+                # filtro abaixo descarta o finding inteiro, que é o certo).
+                if anterior is not None and _reversivel(anterior) and not _reversivel(r):
+                    continue
                 por_finding[chave] = r
-    # O filtro por "escreveu" vem DEPOIS da dedup, não antes: a última
-    # entrada do finding é a que descreve o que de fato aconteceu. Uma linha
-    # pendente (escreveu=False) seguida da final (escreveu=True) é uma
-    # escrita que rodou; pendente sozinha é um processo morto antes de
-    # escrever.
+    # O filtro por "escreveu" ainda vem DEPOIS da dedup: uma linha pendente
+    # (escreveu=False) seguida da final (escreveu=True) é uma escrita que
+    # rodou — a dedup acima já fica com a final; pendente sozinha é um
+    # processo morto antes de escrever, e cai aqui.
     entradas = [r for r in por_finding.values() if _reversivel(r)]
 
     stmts: list[str] = []

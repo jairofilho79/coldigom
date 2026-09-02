@@ -96,6 +96,15 @@ Testes: `python3 -m pytest tests/ -v`
   **não desfaz — e é isso que se quer**, porque nada aconteceu em produção e
   "desfazer" ali seria escrever o snapshot por cima de estado vivo. Nesses
   casos o `--undo` reporta `0 escritas`.
+- **Uma recusa posterior não apaga uma escrita anterior.** O log tem várias
+  entradas por finding, e o `--undo` fica com a última **que escreveu**, não
+  com a última. Sem isso, a retomada documentada acima (rodar o mesmo
+  `findings` de novo depois de uma falha) destruía a reversibilidade: o
+  wrangler que aplica tudo e morre ao reportar deixa `escreveu: true`, a
+  retomada grava por cima uma recusa da pré-condição de fonte viva com
+  `escreveu: false`, e o `--undo` passava a dizer `0 escritas` — a frase que
+  se lê como "nada aconteceu" — para uma fusão completa num acervo sem
+  lixeira.
 - **E o que ele desfaz, desfaz só se produção ainda estiver como a fusão
   deixou.** Cada peça leva a sua guarda otimista, dos dois lados: coluna doada
   ao keeper só volta se ainda contém o valor doado; material só volta para a

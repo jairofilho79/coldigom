@@ -1119,3 +1119,94 @@ def test_pre_condicao_nao_recusa_fusao_com_a_fonte_apagada_so_no_snapshot(tmp_pa
     final = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")][-1]
     assert final.get("estado") != "fonte_ausente"
     assert "louvor ausente no snapshot" in final["erro"]
+
+
+def test_retomada_apos_falha_ao_reportar_nao_apaga_o_undo_da_fusao(tmp_path, monkeypatch):
+    # A dedup por finding_id guardava a ÚLTIMA entrada e só depois filtrava
+    # por "escreveu" — o que pressupõe que a última entrada domina as
+    # anteriores. Não domina: uma recusa que nunca escreveu não apaga uma
+    # escrita que aconteceu.
+    #
+    # A cena real: o wrangler aplica o arquivo inteiro e morre ao reportar
+    # (timeout de rede depois de o D1 ter aplicado). A fusão está COMPLETA em
+    # produção e a entrada fica ok=False, escreveu=True. O operador faz o
+    # gesto de retomada que o README documenta — roda o mesmo findings de
+    # novo — e a pré-condição de fonte viva recusa, corretamente, gravando
+    # estado=fonte_ausente com escreveu=False. Antes do conserto, essa recusa
+    # sombreava a escrita e o --undo imprimia "0 escritas": a fonte não
+    # voltava, num acervo sem lixeira.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+
+    def _aplica_e_morre_ao_reportar(arquivos, remote=True):
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                prod.executescript(f.read())
+        prod.commit()
+        raise RuntimeError("timeout ao ler a resposta do wrangler")
+
+    monkeypatch.setattr("core.apply.run_sql_files", _aplica_e_morre_ao_reportar)
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    r1 = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r1["falhou"] == 1
+    # a fusão aconteceu inteira, apesar do ok:false
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is None
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] == "Medo tens que o tentador"
+
+    # a retomada honesta: mesmo findings, mesmo snapshot. _ja_aplicados não
+    # pula (a entrada é ok:false de propósito) e a pré-condição recusa.
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod))
+    r2 = aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert r2["falhou"] == 1
+    ultima = [json.loads(l) for l in open(log, encoding="utf-8").read().strip().split("\n")][-1]
+    assert ultima["estado"] == "fonte_ausente"
+    assert ultima["escreveu"] is False
+
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    # o que manda é a entrada que escreveu, não a recusa que veio depois
+    assert u["entradas"] == 1
+    assert u["statements"] > 0
+    assert prod.execute("SELECT id FROM praises WHERE id='fonte'").fetchone() is not None
+    assert prod.execute(
+        "SELECT praise_id FROM praise_materials WHERE id='mat-yt'"
+    ).fetchone()["praise_id"] == "fonte"
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'").fetchone()["lyrics"] is None
+    assert prod.execute(
+        "SELECT COUNT(*) n FROM praise_tags WHERE praise_id='fonte'").fetchone()["n"] == 1
+
+
+def test_recusa_posterior_nao_ressuscita_entrada_anterior_que_nao_escreveu(tmp_path, monkeypatch):
+    # O contrapeso do teste acima: guardar "a última que escreveu" não pode
+    # virar "guardar qualquer entrada anterior". Se NENHUMA entrada do
+    # finding escreveu — recusa do próprio sql_para (r2_key) seguida da
+    # recusa da pré-condição —, o finding continua fora do undo.
+    snap, prod = _mundo_dois_bancos(tmp_path)
+    for c in (snap, prod):
+        c.execute("UPDATE praise_materials SET r2_key='pdf/x.pdf' WHERE id='mat-yt'")
+        c.commit()
+    escritos = []
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(prod, escritos))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(prod))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    aplicar([_merge()], snap, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert escritos == []  # a recusa por r2_key é anterior a qualquer escrita
+
+    # o dono edita a fonte pelo app depois da recusa
+    prod.execute("UPDATE praises SET lyrics='EDICAO DO DONO' WHERE id='fonte'")
+    prod.commit()
+
+    u = desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+    assert u["entradas"] == 0
+    assert u["statements"] == 0
+    assert prod.execute(
+        "SELECT lyrics FROM praises WHERE id='fonte'"
+    ).fetchone()["lyrics"] == "EDICAO DO DONO"

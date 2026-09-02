@@ -54,6 +54,11 @@ def build_job(item: dict, out_dir: str) -> dict:
                              "diverge": bool((page_key and pm.tonality and page_key != pm.tonality) or (page_rhythm and pm.rhythm and page_rhythm.lower() != pm.rhythm.lower()))}
     artist_line = next((l.text.strip() for l in region.lines if l.role == "meta" and re.search(r"m[uú]s\.|le[ti]\.", l.text, re.I)), "")
     artist = re.sub(r"^[\d\s]*\(|\)\s*$", "", artist_line).strip()
+    artist = re.sub(r"\bI\s*M[uú]s", "/ Mús", artist)
+    artist = re.sub(r"\s*/\s*", " / ", artist)
+    artist = re.sub(r"M[uú]s\b\.?", "Mús.", artist)
+    artist = re.sub(r"\bLe[ti]\b\.?", "Let.", artist)
+    artist = re.sub(r"\s+", " ", artist).strip()
     header = ["{title: " + pm.name.strip() + "}", "{subtitle: " + str(target) + "}"]
     if key:
         header.append("{key: " + key + "}")

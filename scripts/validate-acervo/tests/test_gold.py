@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from core.findings import Finding
-from core.gold import escrever_formulario, ler_gabarito, medir, sortear
+from core.findings import Finding, write_findings
+from core.gold import escrever_formulario, ler_gabarito, main, medir, sortear
 
 
 def _f(tid: str, faixa: str, proposto: str) -> Finding:
@@ -87,3 +87,55 @@ def test_medir_conta_alvo_que_o_dono_disse_nenhum_e_o_detector_propos():
 def test_medir_ignora_finding_que_nao_esta_no_gabarito():
     r = medir({"a1": "k1"}, [_f("a1", "alta", "k1"), _f("zz", "alta", "k2")])
     assert r["alta"]["total"] == 1
+
+
+def _gabarito(tmp_path, linhas: str) -> str:
+    caminho = str(tmp_path / "gabarito.tsv")
+    open(caminho, "w", encoding="utf-8").write(
+        "target_id\tnome\tletra\turl\tveredito\n" + linhas)
+    return caminho
+
+
+def _findings_jsonl(tmp_path, findings) -> str:
+    caminho = str(tmp_path / "findings.jsonl")
+    write_findings(findings, caminho)
+    return caminho
+
+
+def test_portao_nao_passa_com_gabarito_vazio(tmp_path, monkeypatch):
+    """C3: zero veredito não é zero erro.
+
+    O formulário nasce vazio por construção (veredito = ""), e o plano lê
+    saída 0 como "pode aplicar". Sem esta guarda, um gold rodado antes de
+    preencher o gabarito libera a fusão destrutiva sem nenhuma medição — o
+    portão de promoção (§5.2) passando por vacuidade.
+    """
+    monkeypatch.setattr("core.gold.OUT", str(tmp_path))
+    src = _findings_jsonl(tmp_path, [_f("a1", "alta", "k1")])
+    gab = _gabarito(tmp_path, "a1\tMedo tens\t...\t...\t\n")
+    assert main(["--from", src, "--gabarito", gab]) != 0
+
+
+def test_portao_nao_passa_com_veredito_so_de_outra_faixa(tmp_path, monkeypatch):
+    # Gabarito preenchido, mas nenhuma linha da faixa que vai escrever: a
+    # faixa alta continua sem medição, então o portão continua não avaliado.
+    monkeypatch.setattr("core.gold.OUT", str(tmp_path))
+    src = _findings_jsonl(tmp_path, [_f("a1", "alta", "k1"), _f("m1", "media", "k2")])
+    gab = _gabarito(tmp_path, "m1\tOutro\t...\t...\tk2\n")
+    assert main(["--from", src, "--gabarito", gab]) != 0
+
+
+def test_portao_passa_com_faixa_alta_medida_e_sem_erro(tmp_path, monkeypatch):
+    # O caminho feliz continua valendo: há veredito da faixa alta e ele bate
+    # com a proposta do detector.
+    monkeypatch.setattr("core.gold.OUT", str(tmp_path))
+    src = _findings_jsonl(tmp_path, [_f("a1", "alta", "k1")])
+    gab = _gabarito(tmp_path, "a1\tMedo tens\t...\t...\tk1\n")
+    assert main(["--from", src, "--gabarito", gab]) == 0
+
+
+def test_portao_reprova_erro_na_faixa_alta(tmp_path, monkeypatch):
+    monkeypatch.setattr("core.gold.OUT", str(tmp_path))
+    src = _findings_jsonl(tmp_path, [_f("a1", "alta", "k1")])
+    gab = _gabarito(tmp_path, "a1\tMedo tens\t...\t...\tNENHUM\n")
+    assert main(["--from", src, "--gabarito", gab]) != 0

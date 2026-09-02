@@ -19,7 +19,7 @@ def sortear(findings: list[Finding], n: int, seed: int = 42) -> list[Finding]:
     """Amostra estratificada por faixa, reprodutível pela semente.
 
     Estratificar importa porque as faixas têm tamanhos muito diferentes: uma
-    amostra uniforme de 50 sobre um lote onde a faixa alta tem 5 casos não
+    amostra uniforme de 50 sobre um lote onde a faixa alta tem 3 casos não
     mede a faixa alta.
     """
     por_faixa: dict[str, list[Finding]] = {f: [] for f in FAIXAS}
@@ -132,8 +132,20 @@ def main(argv=None) -> int:
     print(f"\nmétrica: {caminho}")
 
     # Portão da Fase 1 (desvio deliberado de D10, registrado no plano): a
-    # faixa alta tem 5 casos, então o critério é zero erro, não >=98%.
+    # faixa alta tem 3 casos, então o critério é zero erro, não >=98%.
+    #
+    # Zero veredito não é zero erro. O formulário nasce vazio por construção
+    # (escrever_formulario grava veredito = ""), então sem esta guarda um
+    # gold rodado antes de preencher o gabarito devolveria 0 — e o plano lê
+    # saída 0 como "pode aplicar". Um portão que não pode ser avaliado não é
+    # um portão que passa.
     alta = r["alta"]
+    if alta["total"] == 0:
+        print("\nPORTÃO NÃO AVALIADO: nenhum veredito da faixa alta no "
+              "gabarito. Preencha a coluna 'veredito' do TSV antes de "
+              "aplicar qualquer coisa — sem medição não há promoção (§5.2).",
+              file=sys.stderr)
+        return 3
     return 0 if alta["erros"] == 0 else 1
 
 

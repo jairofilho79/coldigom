@@ -220,11 +220,15 @@ def estado_anterior(f: Finding, conn: sqlite3.Connection) -> dict:
         # conexão, sem escrita entre uma leitura e a outra). Gravar isso no
         # log em vez de re-derivar na hora do desfazer evita reverter
         # colunas que a fusão nunca tocou (name, group_id, created_at, ...).
+        # Mapa coluna -> valor doado (o valor da fonte), não só a lista de
+        # nomes: o valor doado é o que o undo precisa para reafirmar, coluna
+        # a coluna, que produção ainda contém o que esta fusão escreveu ali
+        # antes de reverter — ver o guard em desfazer().
         if antes["keeper"] and antes["praise"]:
-            antes["doadas"] = [
-                c for c in DOAVEIS
+            antes["doadas"] = {
+                c: antes["praise"][c] for c in DOAVEIS
                 if _vazio(antes["keeper"][c]) and not _vazio(antes["praise"][c])
-            ]
+            }
     return antes
 
 
@@ -435,17 +439,30 @@ def desfazer(
             # Só as colunas efetivamente doadas nesta fusão — gravadas em
             # antes["doadas"] no momento de aplicar. Reverter a linha
             # inteira do keeper tocaria colunas que a fusão nunca mexeu
-            # (name, group_id, created_at, ...); e usar o valor do
-            # snapshot para elas destruiria qualquer edição feita pelo app
-            # depois do snapshot, inclusive numa coluna doada que a guarda
-            # otimista do C2(b) tinha acabado de proteger durante o
-            # --execute. A fonte, ao contrário, foi apagada — não há
-            # estado de produção a preservar ali, então reverter a linha
-            # toda continua certo.
-            doadas = antes.get("doadas") or []
-            if doadas:
-                ksets = ", ".join(f"{c} = {_lit(keeper[c])}" for c in doadas)
-                stmts.append(f"UPDATE praises SET {ksets} WHERE id = {sql_str(keeper['id'])};")
+            # (name, group_id, created_at, ...). A fonte, ao contrário, foi
+            # apagada — não há estado de produção a preservar ali, então
+            # reverter a linha toda continua certo.
+            #
+            # Mas "doada no snapshot" não é "doada de fato em produção": a
+            # guarda otimista do C2(b) pode ter feito a doação virar no-op
+            # (alguém preencheu a coluna do keeper pelo app entre o
+            # snapshot e o --execute). Sem guarda simétrica aqui, o undo
+            # reverteria a coluna para o vazio do snapshot mesmo assim,
+            # destruindo a mesma edição que o C2(b) acabou de proteger no
+            # caminho de ida — o mesmo tipo de auto-contradição do C1/I6.
+            # Por isso cada coluna doada leva o próprio UPDATE, guardado
+            # contra o valor que a fonte doou (gravado junto de "doadas"):
+            # só reverte se produção ainda tiver exatamente o que esta
+            # fusão escreveu ali. <valor do snapshot do keeper>, do lado do
+            # SET, é por definição vazio/NULL — é o que fez a coluna entrar
+            # em "doadas".
+            doadas = antes.get("doadas") or {}
+            for c, valor_doado in doadas.items():
+                guarda = "IS NULL" if valor_doado is None else f"= {sql_str(valor_doado)}"
+                stmts.append(
+                    f"UPDATE praises SET {c} = {_lit(keeper[c])} "
+                    f"WHERE id = {sql_str(keeper['id'])} AND {c} {guarda};"
+                )
 
             tags_antes_do_keeper = set(antes.get("keeper_tags", []))
             tags_que_vieram_da_fonte = set(antes.get("tags", []))

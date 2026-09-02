@@ -143,7 +143,8 @@ def test_estado_anterior_guarda_o_suficiente_para_desfazer(tmp_path):
     assert antes["materiais"][0]["id"] == "mat-yt"
     assert antes["tags"] == ["t-av"]
     assert antes["keeper"]["id"] == "keeper"
-    assert antes["doadas"] == ["lyrics"]  # I6: única coluna que esta fusão doa
+    # I6: mapa coluna -> valor doado, não só a lista de nomes (fix round 3)
+    assert antes["doadas"] == {"lyrics": "Medo tens que o tentador"}
 
 
 def test_dry_run_nao_escreve_arquivo_sql_nem_log(tmp_path):
@@ -481,3 +482,71 @@ def test_undo_do_keeper_toca_so_colunas_doadas_nesta_fusao(tmp_path, monkeypatch
     keeper = conn.execute("SELECT * FROM praises WHERE id='keeper'").fetchone()
     assert keeper["name"] == "nome editado no app depois da fusao"  # intocado
     assert keeper["lyrics"] is None  # a coluna doada foi revertida normalmente
+
+
+def _run_edita_keeper_antes_de_aplicar(conn):
+    """run_sql_files falso que simula a corrida do C2(b) dentro do próprio
+    'wrangler': alguém preenche keeper.lyrics pelo app bem entre o SQL ter
+    sido gerado (assumindo keeper vazio) e ele rodar de verdade — a guarda
+    otimista embutida no próprio statement gerado barra a doação.
+    """
+    def _run(arquivos, remote=True):
+        conn.execute("UPDATE praises SET lyrics = 'letra editada no app' WHERE id='keeper'")
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                conn.executescript(f.read())
+        conn.commit()
+    return _run
+
+
+def test_undo_do_keeper_nao_reverte_coluna_doada_editada_pelo_app_depois_da_fusao(tmp_path, monkeypatch):
+    # Residual do I6 (fix round 3): antes["doadas"] guardava o que a fusão
+    # PRETENDIA doar no snapshot, não o que a guarda do C2(b) de fato deixou
+    # passar em produção. Auto-contradição: a guarda protege a edição
+    # humana no caminho de ida (a doação vira no-op) e, sem guarda simétrica
+    # no undo, o --undo destrói a mesma edição na volta, revertendo para o
+    # vazio do snapshot mesmo assim.
+    conn = _mundo(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _run_edita_keeper_antes_de_aplicar(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+
+    # a guarda do C2(b), embutida no próprio statement gerado, barrou a
+    # doação — confirma antes de desfazer.
+    assert conn.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] == "letra editada no app"
+
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    # o undo não pode ter tocado 'lyrics': produção já não tinha o valor
+    # que a fusão doou (a doação nem aconteceu de verdade em produção).
+    assert conn.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] == "letra editada no app"
+
+
+def test_undo_do_keeper_reverte_coluna_doada_quando_producao_ainda_tem_o_valor_doado(tmp_path, monkeypatch):
+    # Caminho normal (fix round 3): quando ninguém interferiu, a coluna
+    # doada ainda tem exatamente o valor que a fusão escreveu — a guarda
+    # simétrica do undo passa e a coluna é revertida ao vazio do snapshot,
+    # como antes.
+    conn = _mundo(tmp_path)
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    assert conn.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] == "Medo tens que o tentador"
+
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    assert conn.execute(
+        "SELECT lyrics FROM praises WHERE id='keeper'"
+    ).fetchone()["lyrics"] is None

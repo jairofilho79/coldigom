@@ -10,7 +10,7 @@ import sys
 from PIL import Image
 
 from . import skeleton as sk_mod
-from .acervo import canonical_lines, gold_path, load_praise, resolve
+from .acervo import canonical_lines, gold_path, load_praise, normalize_rhythm, resolve
 from .crop import canonical_check, lyric_lines_of, overlay, segment_hymns, stitch
 from .ink import measure
 from .page import load_page
@@ -47,7 +47,7 @@ def build_job(item: dict, out_dir: str) -> dict:
     m_key = re.search(r"tonalidade\s*:?\s*([A-G](?:#|b)?m?)\b", meta_text, re.I)
     m_rh = re.search(r"ritmo\s*:?\s*([A-Za-zÀ-ú][A-Za-zÀ-ú ]{2,24}?)(?:\s{2,}|\s*$|\s+(?:tonalidade|\d))", meta_text, re.I)
     page_key = m_key.group(1) if m_key else ""
-    page_rhythm = m_rh.group(1).strip() if m_rh else ""
+    page_rhythm = normalize_rhythm(m_rh.group(1)) if m_rh else ""
     key = (page_key or (cat0.tonality if cat0 and cat0.tonality else pm.tonality)).strip()
     rhythm = (page_rhythm or (cat0.rhythm if cat0 and cat0.rhythm else pm.rhythm)).strip()
     res["header_sources"] = {"page_key": page_key, "page_rhythm": page_rhythm, "acervo_key": pm.tonality, "acervo_rhythm": pm.rhythm,

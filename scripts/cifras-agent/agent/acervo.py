@@ -90,6 +90,43 @@ def canonical_lines(lyrics: str) -> list[str]:
     return out
 
 
+_rhythms: Optional[list[str]] = None
+
+
+def rhythm_vocabulary() -> list[str]:
+    """Ritmos que existem no acervo (metadata.yml), para normalizar a leitura OCR da linha 'Ritmo:'."""
+    global _rhythms
+    if _rhythms is None:
+        import glob
+        vals: dict[str, int] = {}
+        for p in glob.glob(os.path.join(ROOT, "storage", "assets", "praises", "*", "metadata.yml")):
+            try:
+                for line in open(p, encoding="utf-8"):
+                    if line.startswith("praise_rhythm:"):
+                        v = line.split(":", 1)[1].strip().strip("'\"")
+                        if v:
+                            vals[v] = vals.get(v, 0) + 1
+                        break
+            except OSError:
+                continue
+        _rhythms = [k for k, _ in sorted(vals.items(), key=lambda kv: -kv[1]) if len(k) >= 3]
+    return _rhythms
+
+
+def normalize_rhythm(raw: str) -> str:
+    """Casa o texto OCR com um ritmo conhecido (≥ 0,75 de similaridade); vazio se não casar."""
+    import difflib
+    r = raw.strip()
+    if not r:
+        return ""
+    best, bv = "", 0.0
+    for v in rhythm_vocabulary():
+        sc = difflib.SequenceMatcher(None, r.lower().replace(" ", ""), v.lower().replace(" ", "")).ratio()
+        if sc > bv:
+            best, bv = v, sc
+    return best if bv >= 0.75 else ""
+
+
 _gold_index: Optional[dict[str, str]] = None
 
 

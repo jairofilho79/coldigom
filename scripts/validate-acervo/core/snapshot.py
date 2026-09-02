@@ -40,6 +40,21 @@ def md5(caminho: str) -> str:
     return h.hexdigest()
 
 
+def _limpo(v):
+    """Tira espaço nas pontas de um valor do CSV, preservando ausência.
+
+    O motivo não é estética: material_kind_csv com espaço sobrando ("Choir ")
+    faz uma fase futura comparar contra o kind do banco ("Choir") e achar uma
+    divergência que não existe. file_path com espaço sobrando também erra o
+    match contra a árvore — o strip é da string inteira, não por segmento,
+    porque nomes de pasta no meio do caminho (ex.: "Coletânea ") podem ter
+    espaço no fim sem que isso seja sujeira: nenhum arquivo real da árvore
+    tem espaço nas pontas do caminho inteiro. Campo ausente (None) continua
+    None — só valor presente sofre strip, senão ausência viraria string vazia.
+    """
+    return v.strip() if v is not None else None
+
+
 def carregar_csvmap(conn: sqlite3.Connection, csv_path: str) -> int:
     """Carrega files_classification.csv.
 
@@ -57,9 +72,9 @@ def carregar_csvmap(conn: sqlite3.Connection, csv_path: str) -> int:
     with open(csv_path, newline="", encoding="utf-8") as f:
         for d in csv.DictReader(f):
             linhas.append((
-                d.get("file_path"), d.get("material_kind"), d.get("praise_tags"),
-                d.get("praise_number"), d.get("praise_name"), d.get("praise_id"),
-                d.get("to_convert"), d.get("praise_material_id"),
+                _limpo(d.get("file_path")), _limpo(d.get("material_kind")), _limpo(d.get("praise_tags")),
+                _limpo(d.get("praise_number")), _limpo(d.get("praise_name")), _limpo(d.get("praise_id")),
+                _limpo(d.get("to_convert")), _limpo(d.get("praise_material_id")),
             ))
     conn.executemany("INSERT INTO csvmap VALUES (?,?,?,?,?,?,?,?)", linhas)
     conn.execute("CREATE INDEX ix_csvmap_mid ON csvmap(praise_material_id)")

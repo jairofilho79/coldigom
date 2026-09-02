@@ -37,6 +37,29 @@ def test_carregar_csvmap_le_as_colunas_certas(tmp_path):
     assert linhas[0]["praise_id"] == "pra-1"
 
 
+def test_carregar_csvmap_tira_espaco_das_pontas_e_preserva_ausencia(tmp_path):
+    # material_kind_csv com espaço sobrando faria uma fase futura comparar
+    # "Choir " com "Choir" do banco e achar uma divergência que não existe.
+    # Campo ausente (sem coluna na linha) precisa continuar None, não virar
+    # string vazia — só valor presente sofre strip.
+    csv_path = tmp_path / "files_classification.csv"
+    csv_path.write_text(
+        "file_path,material_kind,praise_tags,praise_number,praise_name,praise_id,to_convert,praise_material_id\n"
+        "  GLTM/Louvor/Choir.pdf  , Choir ,\"Avulsos\",012,Louvor,pra-1\n",
+        encoding="utf-8",
+    )
+    conn = _conn(tmp_path)
+    n = carregar_csvmap(conn, str(csv_path))
+    assert n == 1
+    r = conn.execute(
+        "SELECT file_path, material_kind_csv, to_convert, praise_material_id FROM csvmap"
+    ).fetchone()
+    assert r["file_path"] == "GLTM/Louvor/Choir.pdf"
+    assert r["material_kind_csv"] == "Choir"
+    assert r["to_convert"] is None
+    assert r["praise_material_id"] is None
+
+
 def test_indexar_arvore_ignora_ocultos_e_extensao_fora_da_lista(tmp_path):
     raiz = tmp_path / "assets"
     (raiz / "Louvor").mkdir(parents=True)

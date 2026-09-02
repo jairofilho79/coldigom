@@ -58,6 +58,16 @@ def skeleton_from_json(d: dict) -> Skeleton:
     return Skeleton(d["number"], d["title"], lines, d["unassigned_chords"], d["unassigned_bars"], d["repeats"])
 
 
+EXPECT = os.path.join(os.path.dirname(__file__), "..", "bench", "expectations.json")
+
+
+def expectations_for(name: str) -> list[str]:
+    if not os.path.exists(EXPECT):
+        return []
+    d = json.load(open(EXPECT, encoding="utf-8"))
+    return [x for x in d.get(name, []) if isinstance(x, str)]
+
+
 def run(root: str) -> list[dict]:
     rows = []
     for name in sorted(os.listdir(root)):
@@ -81,13 +91,16 @@ def run(root: str) -> list[dict]:
         gp = os.path.join(d, "gold.chordpro")
         if os.path.exists(gp):
             row["gold"] = compare(cand, open(gp, encoding="utf-8").read())
+        exp = expectations_for(name)
+        if exp:
+            row["expect"] = {"ok": sum(1 for e in exp if e in cand), "total": len(exp), "missing": [e for e in exp if e not in cand]}
         rows.append(row)
     return rows
 
 
 def main() -> None:
     rows = run(sys.argv[1])
-    print(f"{'job':44s} ok  V0 V1 V4 V3 V2 | f1    seq   lyric glue  exact")
+    print(f"{'job':44s} ok  V0 V1 V4 V3 V2 | f1    seq   lyric glue  exact | dono")
     for r in rows:
         v = r.get("verify")
         if not v:
@@ -96,7 +109,9 @@ def main() -> None:
         flags = " ".join(("ok" if c["ok"] else "XX") for c in v["checks"])
         g = r.get("gold")
         gs = f"{g['chord_f1']:.3f} {g['chord_seq']:.3f} {g['lyric']:.3f} {g['glue']:.3f} {g['exact_body']}" if g else ""
-        print(f"{r['job'][:44]:44s} {'ok' if v['ok'] else 'XX'}  {flags} | {gs}")
+        e = r.get("expect")
+        es = f"{e['ok']}/{e['total']}" if e else ""
+        print(f"{r['job'][:44]:44s} {'ok' if v['ok'] else 'XX'}  {flags} | {gs:38s} | {es}")
     json.dump(rows, open(os.path.join(sys.argv[1], "bench.json"), "w"), ensure_ascii=False, indent=1)
 
 

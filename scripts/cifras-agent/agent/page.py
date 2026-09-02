@@ -198,8 +198,14 @@ def _merge_same_baseline(page: Page) -> None:
 
 def _mark_running_and_footer(page: Page) -> None:
     H = page.height
+    # cabeçalho corrido só acima do primeiro cabeçalho de louvor da coluna (louvor no topo da coluna tem metadados lá)
+    first_header: dict[str, float] = {}
     for l in page.lines:
-        if l.y1 < 0.05 * H and not HEADER_RE.match(l.text) and not any(is_chord(normalize(t)) for t in l.text.split()):
+        if HEADER_RE.match(l.text):
+            first_header[l.col] = min(first_header.get(l.col, 1e9), l.y0)
+    for l in page.lines:
+        above_header = l.y1 <= first_header.get(l.col, 1e9) + 1
+        if l.y1 < 0.05 * H and above_header and not HEADER_RE.match(l.text) and not any(is_chord(normalize(t)) for t in l.text.split()):
             l.role = "running"
         elif l.y0 > 0.945 * H and PAGE_NUMBER_RE.match(l.text):
             l.role = "footer"

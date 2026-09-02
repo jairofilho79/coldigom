@@ -1,6 +1,7 @@
 # Validação do acervo de louvores — design
 
 Data: 2026-09-02 · Estado: proposta aprovada em conversa, aguardando revisão do spec
+Revisão 2: §7.3 reescrita depois que o dono derrubou o discriminador com os casos 527 e 609
 
 ## 1. O problema
 
@@ -31,7 +32,7 @@ gestures 254 · midi 126 · outros 5.
 | 5a | Letra ausente, com `.chord` ou Cifra | ~50 louvores |
 | 5b | Letra ausente, com `Coro` | 268 louvores |
 | 6 | Kind/louvor de áudio errado | 6 divergências CSV↔banco; resto só o sinal acústico decide |
-| **7** | **Louvores duplicados** | **39 pares com ≥80% do acervo compartilhado byte-a-byte** |
+| **7** | **Louvores duplicados, relacionados, e material vazado entre arranjos** | **39 pares com ≥80% do acervo compartilhado byte-a-byte**; só 8 de 1.696 louvores usam `group_id` |
 
 Excedente removível na Fase 3 (byte-a-byte, já provado): **3.732 materiais**.
 
@@ -76,7 +77,9 @@ viram confronto entre testemunhas.
 | D8 | Áudio sem nome original: **sinal acústico determinístico**, não ASR |
 | D9 | **Rotulagem cega**: o dono rotula ~50 casos sem ver a saída do agente; o agente é medido contra isso |
 | D10 | Portão de promoção: **precisão ≥ 98% na faixa alta**, com **zero erro destrutivo** na amostra |
-| D11 | **Coletânea (ICM 2018) vs PES (arranjos novos) são o mesmo louvor em arranjos diferentes.** Relacionam por `group_id`, **nunca fundem** |
+| D11 | **Coletânea (ICM 2018) vs PES (arranjos novos) são o mesmo louvor em arranjos diferentes.** Relacionam por `group_id`, **nunca fundem**. Confirmado com contraexemplos: 527 (material do PES vazado para o registro da Coletânea) e 609 (três arranjos reais: Coletânea, PES e adaptação de 2024) |
+| D12 | Quando a decisão depender de conhecimento tácito do dono, o detector marca **faixa de discussão**, **segue adiante** e o caso é resolvido em conversa. Detector nunca trava esperando resposta |
+| D13 | A Fase 7 **nunca funde automaticamente**, em nenhuma faixa. `set_group_id` (aditivo, reversível) pode ser automático; `merge_praise` (destrutivo) não |
 
 ## 4. Arquitetura
 
@@ -93,7 +96,8 @@ scripts/validate-acervo/
     queue.py         empurra média/baixa para validation_findings no D1
   detectors/
     youtube_merge.py     Fase 1
-    praise_dup.py        Fase 7
+    praise_dup.py        Fase 7 (relacionar / propor fusão)
+    material_leak.py     Fase 7 — material de um arranjo pendurado em outro (caso 527)
     material_dup.py      Fases 3A / 3B / 3C
     pdf_kind.py          Fase 2
     metadata.py          Fase 4
@@ -140,10 +144,18 @@ Ações possíveis: `delete_material` · `set_material_kind` · `set_praise_fiel
 | **alta** | duas testemunhas independentes concordam, nenhuma discorda | aplica direto, com log reversível |
 | **média** | uma testemunha forte, nenhuma discordando | fila de revisão |
 | **baixa** | testemunhas discordam, ou só heurística | fila de revisão, no fim |
+| **discussão** | o detector reconhece que a decisão depende de conhecimento tácito do dono | **fila de discussão** — não trava a fase |
 
 Toda testemunha é nomeada na evidência: hash do arquivo, nome original, pasta
 original, CSV de classificação, texto impresso no PDF, sinal acústico, letra do
 acervo, tags do louvor.
+
+**A faixa de discussão** (D12) existe porque parte do acervo depende de história
+que não está em lugar nenhum do dado — qual arranjo é de qual coletânea, o que
+uma adaptação de 2024 deveria conter. O detector marca `discussao`, **segue
+adiante**, e o caso é resolvido em conversa com o dono. A decisão tomada ali
+vira regra ou gabarito e volta para o detector. Um detector **nunca bloqueia**
+esperando essa resposta.
 
 ### 5.2 Portão de promoção
 
@@ -185,9 +197,9 @@ CREATE TABLE validation_findings (
   field          TEXT,
   current_value  TEXT,
   proposed_value TEXT,
-  confidence     TEXT NOT NULL,           -- alta | media | baixa
+  confidence     TEXT NOT NULL,           -- alta | media | baixa | discussao
   evidence       TEXT NOT NULL,           -- JSON
-  status         TEXT NOT NULL DEFAULT 'pendente',  -- pendente|aprovado|rejeitado|aplicado
+  status         TEXT NOT NULL DEFAULT 'pendente',  -- pendente|discussao|aprovado|rejeitado|aplicado
   decided_at     TEXT,
   decided_by     TEXT,
   decision_note  TEXT,
@@ -251,30 +263,56 @@ palavras — descartá-lo foi um erro que a exploração pegou).
   tenta extrair a letra da descrição do vídeo.
 - **baixa / sem candidato**: louvor legítimo novo. Reporta e não toca.
 
-### 7.3 Fase 7 — Louvores duplicados
+### 7.3 Fase 7 — Louvores relacionados e duplicados
 
-**Três desfechos, não dois** — é a fase de maior risco.
+**Esta fase nunca funde automaticamente, em nenhuma faixa de confiança.**
 
-| Desfecho | Quando | Ação |
-|---|---|---|
-| Duplicata | as **partes** (instrumentos e vozes) são byte-idênticas | `merge_praise` |
-| Arranjos distintos | as partes existem nos dois e são **diferentes** | `set_group_id` — relaciona, **nunca funde** (D11) |
-| Nada | evidência insuficiente | reporta |
+#### O discriminador que foi proposto e derrubado
 
-**O discriminador**, medido e validado: compare só as partes instrumentais e
-vocais, **ignorando `Chord Chart*`, `Lyrics`, `Audio` e `Gestures`** — que são
-derivados ou avulsos e caem numa cópia só. Nos 39 pares fortes medidos, o
-não-compartilhado é sempre `Chord Chart I/II` + `Sheet Music` (arquivos que o
-pipeline de cifras gerou depois, em uma das cópias) e `Audio` avulso; as partes
-estão 100% compartilhadas. Logo, são duplicatas — não arranjos.
+A primeira versão deste spec propunha: se as **partes** (instrumentos e vozes)
+forem byte-idênticas entre dois louvores, é duplicata, funde. Nos 39 pares
+medidos a regra parecia perfeita — o não-compartilhado era sempre
+`Chord Chart I/II` + `Sheet Music` + `Audio` avulso, e as partes estavam 100%
+compartilhadas.
+
+**O dono derrubou a regra com dois contraexemplos reais:**
+
+- **527 — Regozijai-vos.** O registro com tag `Coletânea` deveria ter só
+  `Sheet Music`, `Chord Chart I` e `Chord Chart II`, e nenhum áudio: todo o resto
+  é do arranjo **PES**, e vazou para o registro errado. As partes são
+  byte-idênticas nos dois **porque foram copiadas indevidamente** — e os louvores
+  são legitimamente distintos. A regra mandaria fundir: erro destrutivo.
+- **609 — Senhor, Meu Deus, Quando Eu Maravilhado.** Tem de verdade três
+  arranjos distintos: `Coletânea`, `PES` e uma adaptação especial de 2024.
+
+**A lição, que vale para a fase inteira: identidade de material não prova nada
+sobre os louvores.** Ela é compatível com três mundos — duplicata de registro,
+vazamento de material entre arranjos, e arranjos legítimos distintos.
+
+Uma segunda regra também foi testada e **rejeitada**: "louvor com tag `Coletânea`
+só tem Partitura e Cifra". A espinha (`Chord Chart I` + `Chord Chart II` +
+`Sheet Music`) aparece em 99% dos 1.037 louvores só-Coletânea, mas apenas **17%**
+têm *somente* isso e **53% têm áudio**. Não é automatizável.
+
+#### O desenho que sobrevive
+
+A assimetria que resolve: `set_group_id` é **aditivo e reversível** — relacionar
+dois louvores não destrói nada, e desfazer é limpar uma coluna. `merge_praise`
+**apaga um louvor**.
+
+| Desfecho | Quando | Ação | Faixa máxima |
+|---|---|---|---|
+| Relacionar | mesmo louvor, arranjos distintos (nome/número batem, tags de coleção diferem) | `set_group_id` | **alta — automático** |
+| Fundir | duplicata de registro de verdade | `merge_praise` | **nunca automático — fila de discussão** |
+| Material vazado | material de um arranjo pendurado no registro de outro (caso 527) | `move_material` ou `delete_material` | **fila de discussão** |
+| Nada | evidência insuficiente | reporta | — |
+
+`set_group_id` automático é ganho puro: a feature de relacionar existe e só 8 de
+1.696 louvores a usam.
 
 Volume: 39 pares com ≥80% de cobertura; ~68 com nome idêntico em qualquer
 cobertura. `Regozijai-vos` está cadastrado três vezes. Sete pares têm o **mesmo
 nome e o mesmo número de coletânea** (413, 199, 042, 649, 510, 609, 477).
-
-Risco explícito: `Coletânea` vs `Coletânea+PES` é o padrão dominante nos pares.
-Toda fusão dessa fase passa pela fila, mesmo em faixa alta, até o portão da
-seção 5.2 ser batido com amostra rotulada às cegas.
 
 ### 7.4 Fase 3 — Materiais duplicados
 
@@ -358,7 +396,8 @@ Sem ASR (D8).
 
 | Risco | Mitigação |
 |---|---|
-| Fundir arranjos distintos como duplicata | Discriminador da 7.3 + toda fusão pela fila até o portão ser batido |
+| Fundir arranjos distintos como duplicata | **A Fase 7 não funde automaticamente (D13).** O discriminador por identidade de partes foi testado e derrubado pelo caso 527 — ver 7.3 |
+| Regra de coleção tratada como automática | Testada e rejeitada: só 17% dos louvores só-Coletânea têm apenas Partitura e Cifra; 53% têm áudio |
 | Apagar material que não é duplicata | Só byte-a-byte idêntico apaga; 3C nunca apaga; árvore local é rede de segurança |
 | `DELETE` remove do R2 sem lixeira | Log com `r2_key` + caminho local; sobrevivente confirmado presente antes de apagar |
 | CSV tratado como gabarito | Fixado na 5.1: é testemunha, não verdade |
@@ -388,7 +427,7 @@ Oito fases não cabem num plano de implementação só. A decomposição em plan
 |---|---|---|
 | **P1** | Fase 0 + núcleo (`snapshot`, `reconcile`, `findings`, `apply`, `gold`) + Fase 1 | O núcleo só se prova construindo um detector de ponta a ponta. A Fase 1 é o menor (25 casos), o mais reversível e o que exercita a ação mais perigosa (`merge_praise`). Sai daqui o primeiro número de precisão real |
 | **P2** | Fila de revisão: migração `017`, endpoints, tela no web | Só faz sentido depois que P1 produzir findings de verdade para a tela mostrar |
-| **P3** | Fase 7 + Fase 3 (A, B, C) | Mesma máquina de fusão da Fase 1, agora com o discriminador arranjo-vs-duplicata; e a Fase 3 depende da 7 ter rodado |
+| **P3** | Fase 7 (`set_group_id` automático + fila de discussão para fusão e material vazado) + Fase 3 (A, B, C) | A Fase 7 não funde sozinha (D13); a Fase 3 depende da 7 ter rodado |
 | **P4** | Fase 2 | Depende do `geom/` como biblioteca |
 | **P5** | Fase 4 + 5a | Compartilham a leitura de `Partitura`/`Coro`/Cifra |
 | **P6** | Fase 5b | Treino próprio, por D7 |

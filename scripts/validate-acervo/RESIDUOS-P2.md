@@ -65,6 +65,26 @@ O ledger de execução (`.superpowers/sdd/`) é scratch e some; isto aqui fica.
   (`core/gold.py`). 200 caracteres já dão contexto; cortar no último espaço
   ficaria mais limpo.
 
+- **Recall perdido na Fase 1: `Salmo 130` é `Do fundo de um abismo`, e o
+  detector não listou.** Medido no gabarito de 2026-09-03 (o dono respondeu às
+  cegas; `gabaritos/youtube_merge/`). O nome não casa por substring e as duas
+  letras não compartilham nenhum shingle de 8 palavras. É o único órfão dos 25
+  cuja resposta certa ficou fora da lista — os 7 "sem candidato" eram mesmo
+  `NENHUM`, 7 em 7. Um detector por título-de-salmo ou um shingle menor com
+  guarda de nome cobre isso; fica para o P2.
+
+- **O gabarito da Fase 1, medido:** faixa alta 3/3 (100 %, zero falso
+  positivo); faixa média 11/29 (37,9 %, dentro do teto estrutural acima). O
+  formulário cego funcionou: o dono devolveu 25 vereditos sem ver a proposta.
+
+- **`author` das fontes só-YouTube contém a primeira linha da letra.** Nos 3
+  casos da faixa alta, todos: `'Estevão avistou os céus abertos:'`, `'Os céus
+  declaram a glória de Deus,'`, `'Prostrado estou'`. Vem da importação do
+  YouTube. A fusão doa `author` quando o keeper está vazio, então o lixo
+  migraria. Na Fase 1 o dono limpou à mão antes do `--execute`; para as
+  próximas fases vale um detector `author_e_letra` (P2) e/ou uma guarda na
+  doação: não doar `author` que seja prefixo normalizado de `lyrics`.
+
 ## Cosméticos
 
 - `core/reconcile.py`: `main()` sem teste direto — nem a cobertura nem o retorno

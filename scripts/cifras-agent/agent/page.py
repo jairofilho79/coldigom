@@ -10,6 +10,8 @@ import fitz  # PyMuPDF
 import numpy as np
 from PIL import Image
 
+from .chords import is_chord, normalize
+
 HEADER_RE = re.compile(r"^\s*(\d{1,4})\s*[-–—]+\s*(\S.*?)\s*$")
 TONALIDADE_RE = re.compile(r"tonalidade", re.I)
 META_RE = re.compile(r"^\s*(tonalidade|ritmo|instrumentos|introdu[cç][aã]o|final|fim|\(|le[ti]\.|\d{2,5}\s*\()|\bm[uú]s\.|\ble[ti]\.", re.I)
@@ -108,7 +110,7 @@ def _text_lines(page: fitz.Page) -> list[Line]:
             for s in l["spans"]:
                 for ch in s["chars"]:
                     chars.append(Char(ch["c"], ch["bbox"][0], ch["bbox"][2]))
-                if s["chars"]:
+                if s["chars"] and s["size"] < 20:
                     sizes.append(s["size"])
             text = "".join(c.c for c in chars)
             if not text.strip():
@@ -173,7 +175,10 @@ def _merge_same_baseline(page: Page) -> None:
         cur: Optional[Line] = None
         for l in ls:
             overlap = min(cur.x1, l.x1) - max(cur.x0, l.x0) if cur is not None else 0
-            if cur is not None and col != "full" and abs(cur.yc - l.yc) < 0.35 * lh and overlap < 0.3 * min(cur.x1 - cur.x0, l.x1 - l.x0) and abs(cur.size - l.size) < 3:
+            bisish = re.search(r"\bbis\b", l.text, re.I) or (cur is not None and re.search(r"\bbis\b", cur.text, re.I))
+            adjacent = cur is not None and not bisish and (0 <= l.x0 - cur.x1 < 3 * lh or 0 <= cur.x0 - l.x1 < 3 * lh)
+            same_base = cur is not None and not bisish and (abs(cur.yc - l.yc) < 0.35 * lh or (adjacent and abs(cur.yc - l.yc) < 0.55 * lh))
+            if same_base and col != "full" and overlap < 0.3 * min(cur.x1 - cur.x0, l.x1 - l.x0) and abs(cur.size - l.size) < 3:
                 chars = sorted(cur.chars + [Char(" ", 0, 0)] + l.chars, key=lambda c: c.x0 if c.c != " " or c.x0 else 0)
                 # reconstrói na ordem de x, com um espaço entre as duas partes
                 left, right = (cur, l) if cur.x0 <= l.x0 else (l, cur)
@@ -193,8 +198,14 @@ def _merge_same_baseline(page: Page) -> None:
 
 def _mark_running_and_footer(page: Page) -> None:
     H = page.height
+    # cabeçalho corrido só acima do primeiro cabeçalho de louvor da coluna (louvor no topo da coluna tem metadados lá)
+    first_header: dict[str, float] = {}
     for l in page.lines:
-        if l.y1 < 0.035 * H:
+        if HEADER_RE.match(l.text):
+            first_header[l.col] = min(first_header.get(l.col, 1e9), l.y0)
+    for l in page.lines:
+        above_header = l.y1 <= first_header.get(l.col, 1e9) + 1
+        if l.y1 < 0.05 * H and above_header and not HEADER_RE.match(l.text) and not any(is_chord(normalize(t)) for t in l.text.split()):
             l.role = "running"
         elif l.y0 > 0.945 * H and PAGE_NUMBER_RE.match(l.text):
             l.role = "footer"
@@ -231,6 +242,16 @@ def _find_headers(page: Page, expected: Optional[set[str]]) -> list[Header]:
     hs.sort(key=lambda h: ({"left": 0, "right": 1}[h.line.col], h.line.y0))
     for h in hs:
         h.line.role = "header"
+        i = order.index(h.line)
+        for nxt in order[i + 1: i + 3]:
+            letters = re.sub(r"[^A-Za-zÀ-ú]", "", nxt.text)
+            if nxt.col == h.line.col and len(letters) >= 4 and sum(c.isupper() for c in letters) >= 0.5 * len(letters) \
+                    and nxt.y0 - h.line.y1 < 1.2 * (h.line.y1 - h.line.y0) and not TONALIDADE_RE.search(nxt.text) \
+                    and not META_RE.search(nxt.text) and "(" not in nxt.text[:3] and not re.search(r"\b[A-Z]\.[A-Z]\.", nxt.text):
+                nxt.role = "header"
+                h.title = (h.title + " " + nxt.text.strip()).strip()
+            else:
+                break
     return hs
 
 

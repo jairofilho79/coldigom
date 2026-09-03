@@ -1,8 +1,53 @@
 {
  "_comentario": "Trechos que o dono confirmou à mão na rodada 1 (2026-09-02). Cada entrada: job → lista de substrings que o candidate.chordpro precisa conter.",
- "00-6-perdoa-me-senhor": ["[*2x]\nPor isso [D]vou clamar"],
- "00-707-eu-confio-emti-senhor": ["[E] Je[A]sus! [E/G#]", "[F#m] A[A/E]brigo se[Bm]guro, [E] Je[A]sus!", "[D7/C]te hon[C]rar"],
- "00-86-em-teu-nome": ["[A7]Se- [D]nhor", "[A]Tu me [D]guias, me auxilias", "A [A]minha alma em [A7] teu a[D]mor"],
- "02-68-vem-para-o-meio-aguas-da-salvacao": ["[D#7]Esse povo [G]segue e al[D]cança salva[G]ção."],
- "00-254-olhai-para-o-alto-d": ["{rhythm: Básico}"]
+ "00-6-perdoa-me-senhor": [
+  "[*2x]\nPor isso [D]vou clamar [E/D]",
+  "{artist: Let. / Mús. J.J.G.}",
+  "Introdução: [A] [Bm] [C#m] [F#sus4] [F#] [Bm] [B] [Esus4] [E]"
+ ],
+ "00-707-eu-confio-emti-senhor": [
+  "[E] Je[A]sus! [E/G#]",
+  "[F#m] A[A/E]brigo se[Bm]guro, [E] Je[A]sus!",
+  "[D7/C]te hon[C]rar",
+  "Mesmo [C]quando tudo [D]não vai bem",
+  "[D]Prove[Em]dor [G/D]que não falha[C]rá"
+ ],
+ "00-86-em-teu-nome": [
+  "[A7]Se- [D]nhor",
+  "[A]Tu me [D]guias, me auxilias",
+  "A [A]minha alma em [A7] teu a[D]mor",
+  "Em meu [A]peito, bem [A7]sem [D]fim!",
+  "Ouço a [A]voz do [A7]tenta[D]dor,"
+ ],
+ "02-68-vem-para-o-meio-aguas-da-salvacao": [
+  "[D#7]Esse povo [G]segue e al[D]cança salva[G]ção.",
+  "Mergulha nessas [A]águas da salva[D7]ção"
+ ],
+ "00-254-olhai-para-o-alto-d": [
+  "{rhythm: Básico}",
+  "Meu [A]coração engran[D]dece ao Se[A]nhor",
+  "ha[F#m]bita - [Bm]ção",
+  "Reju[F#m]bila, [C#m] povo [D]meu",
+  "E [Bm]vós podereis levan[E]tar",
+  "E [A]procla[E]mar que sou [A]Rei"
+ ],
+ "01-344-confio-em-deus": [
+  "E pela [Bm]sua [B7]mão me guia[E]rá",
+  "E em seu ex[Bm]cel - [E7]so a[A]mor.",
+  "Com ele i[E]rei e sem nenhum te[A]mor",
+  "E pela [A]mão me condu[A7]zi - [D]rá,"
+ ],
+ "01-64-eu-vou-contar-uma-historia": [
+  "{rhythm: Country}",
+  "Eu vou [D]contar uma história"
+ ],
+ "02-242-se-esta-noite-deus-pedir-tua-alma": [
+  "tua [Am]alma, [Gm] [C7]",
+  "pra quem se[C]rá? [Dm] [C7]",
+  "Instrumentos: [Dm] [B7] [C] [A7] [Dm] [G] [C]"
+ ],
+ "02-453-quando-dobro-os-meus-joelhos": [
+  "O meu [C]coração trans[D]borda de [Bm]gratidão; [Em]",
+  "Final: [Em] Eu quero [Am]prosseguir con[D]tigo até o [G]fim."
+ ]
 }

@@ -113,6 +113,38 @@ def rhythm_vocabulary() -> list[str]:
     return _rhythms
 
 
+_categories: Optional[list[str]] = None
+
+
+def category_vocabulary() -> list[str]:
+    """Categorias do acervo (praise_category): aparecem como cabeçalho corrido das páginas."""
+    global _categories
+    if _categories is None:
+        import glob
+        vals: set[str] = set()
+        for p in glob.glob(os.path.join(ROOT, "storage", "assets", "praises", "*", "metadata.yml")):
+            try:
+                for line in open(p, encoding="utf-8"):
+                    if line.startswith("praise_category:"):
+                        v = line.split(":", 1)[1].strip().strip("'\"")
+                        if len(v) >= 4:
+                            vals.add(v)
+                        break
+            except OSError:
+                continue
+        _categories = sorted(vals)
+    return _categories
+
+
+def looks_like_category(text: str) -> bool:
+    import difflib
+    from .page import norm_text
+    t = norm_text(text)
+    if len(t) < 4:
+        return False
+    return any(difflib.SequenceMatcher(None, t, norm_text(v)).ratio() >= 0.8 for v in category_vocabulary())
+
+
 def normalize_rhythm(raw: str) -> str:
     """Casa o texto OCR com um ritmo conhecido (≥ 0,75 de similaridade); vazio se não casar."""
     import difflib

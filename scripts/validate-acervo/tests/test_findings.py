@@ -8,6 +8,7 @@ from core.findings import (
     Finding,
     Motivos,
     finding_id,
+    promovido,
     read_findings,
     write_findings,
 )
@@ -93,3 +94,16 @@ def test_motivos_conta_e_tabela_mostra_o_porque():
     assert "já revisado por humano" in tabela
     assert "2" in tabela
     assert m.total() == 3
+
+
+def test_promovido_vira_alta_mantem_o_id_e_registra_o_motivo():
+    f = Finding(run_id="r1", detector="d", target_type="praise", target_id="t",
+                action="merge_praise", confidence="media", proposed="k",
+                evidence={"letra": True})
+    p = promovido(f, {"por": "gabarito", "origem": "g.tsv"})
+    assert p.confidence == "alta"
+    assert p.finding_id == f.finding_id
+    assert p.evidence == {"letra": True, "promocao": {"por": "gabarito", "origem": "g.tsv"}}
+    # o original nao muda: quem chamou ainda tem o finding de faixa media
+    assert f.confidence == "media"
+    assert "promocao" not in f.evidence

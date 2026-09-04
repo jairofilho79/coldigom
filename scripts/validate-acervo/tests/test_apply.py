@@ -131,10 +131,16 @@ def test_merge_nao_sobrescreve_campo_preenchido_do_keeper(tmp_path):
 
 
 def test_merge_leva_as_tags_da_fonte_em_uniao(tmp_path):
+    # A única tag da fonte no _mundo padrão é Avulsos, que TAGS_NAO_DOADAS
+    # passou a barrar (ver test_fusao_nao_doa_a_tag_avulsos_mas_doa_as_outras)
+    # — então esta prova de união genérica usa uma tag que não é Avulsos.
     conn = _mundo(tmp_path)
+    conn.execute("INSERT INTO tags VALUES ('t-nt','Natal',NULL)")
+    conn.execute("INSERT INTO praise_tags VALUES ('fonte','t-nt')")
+    conn.commit()
     junto = "\n".join(sql_para(_merge(), conn))
     assert "INSERT OR IGNORE INTO praise_tags" in junto
-    assert "'keeper', 't-av'" in junto
+    assert "'keeper', 't-nt'" in junto
 
 
 def test_merge_recusa_fonte_com_material_em_r2(tmp_path):
@@ -1354,3 +1360,86 @@ def test_processo_morto_na_linha_pendente_nao_desfaz_nada(tmp_path, monkeypatch)
     assert linha["author"] == "Autor do App"
     assert u["entradas"] == 0
     assert u["statements"] == 0
+
+
+def test_fusao_nao_doa_author_que_e_a_primeira_linha_da_letra(tmp_path):
+    # Importacao do YouTube grava a primeira linha da letra no author. Fase 1:
+    # 3 de 3 fontes. O keeper vazio recebia isso como autor.
+    conn = _mundo(tmp_path)
+    conn.execute("UPDATE praises SET author = 'Medo tens que o tentador,' WHERE id = 'fonte'")
+    conn.commit()
+    junto = "\n".join(sql_para(_merge(), conn))
+    assert "SET author" not in junto
+
+
+def test_fusao_doa_author_de_verdade(tmp_path):
+    conn = _mundo(tmp_path)
+    conn.execute("UPDATE praises SET author = 'Silas Cezar' WHERE id = 'fonte'")
+    conn.commit()
+    junto = "\n".join(sql_para(_merge(), conn))
+    assert "SET author = 'Silas Cezar'" in junto
+
+
+def test_fusao_nao_doa_a_tag_avulsos_mas_doa_as_outras(tmp_path):
+    conn = _mundo(tmp_path)
+    conn.execute("INSERT INTO tags VALUES ('t-nt','Natal',NULL)")
+    conn.execute("INSERT INTO praise_tags VALUES ('fonte','t-nt')")
+    conn.commit()
+    junto = "\n".join(sql_para(_merge(), conn))
+    assert "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('keeper', 't-nt')" in junto
+    assert "VALUES ('keeper', 't-av')" not in junto
+
+
+def test_undo_nao_tira_do_keeper_uma_avulsos_que_ele_ja_tinha(tmp_path, monkeypatch):
+    # A guarda nao doa Avulsos; o undo nao pode 'devolver' uma que nao foi doada.
+    conn = _mundo(tmp_path)
+    conn.execute("INSERT INTO praise_tags VALUES ('keeper','t-av')")
+    conn.commit()
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+    log = str(tmp_path / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "sql")
+
+    aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    desfazer("r1", log, execute=True, remote=False, sql_dir=sql_dir)
+
+    tags_keeper = {r["tag_id"] for r in conn.execute(
+        "SELECT tag_id FROM praise_tags WHERE praise_id='keeper'")}
+    assert tags_keeper == {"t-av"}
+    tags_fonte = {r["tag_id"] for r in conn.execute(
+        "SELECT tag_id FROM praise_tags WHERE praise_id='fonte'")}
+    assert tags_fonte == {"t-av"}
+
+
+def test_estado_anterior_doadas_nao_registra_author_que_e_a_letra(tmp_path, monkeypatch):
+    # estado_anterior grava antes["doadas"] para o undo saber o que reverter.
+    # Tem que usar a MESMA guarda de _sql_merge — senao o log afirma uma
+    # doacao que a fusao nunca escreveu (o comentario em estado_anterior
+    # promete "o mesmo snapshot que _sql_merge vai usar para decidir").
+    conn = _mundo(tmp_path / "a")
+    conn.execute("UPDATE praises SET author = 'Medo tens que o tentador,' WHERE id = 'fonte'")
+    conn.commit()
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+    log = str(tmp_path / "a" / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "a" / "sql")
+    aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    with open(log, encoding="utf-8") as f:
+        linhas = [l for l in f if l.strip()]
+    entrada = json.loads(linhas[-1])
+    assert "author" not in entrada["antes"]["doadas"]
+
+    # Caso positivo, para nao esconder um "sempre exclui author": author de
+    # verdade continua indo para o log, numa fusao fresca e independente.
+    conn2 = _mundo(tmp_path / "b")
+    conn2.execute("UPDATE praises SET author = 'Silas Cezar' WHERE id = 'fonte'")
+    conn2.commit()
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn2))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn2))
+    log2 = str(tmp_path / "b" / "apply_log.jsonl")
+    sql_dir2 = str(tmp_path / "b" / "sql")
+    aplicar([_merge()], conn2, execute=True, log_path=log2, remote=False, sql_dir=sql_dir2)
+    with open(log2, encoding="utf-8") as f:
+        linhas2 = [l for l in f if l.strip()]
+    entrada2 = json.loads(linhas2[-1])
+    assert "author" in entrada2["antes"]["doadas"]

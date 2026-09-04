@@ -68,6 +68,21 @@ def read_findings(caminho: str) -> list[Finding]:
     return out
 
 
+def promovido(f: Finding, motivo: dict) -> Finding:
+    """Cópia do finding na faixa alta, com o motivo gravado na evidência.
+
+    A faixa alta é a única que o apply escreve, e a única forma legítima de
+    um finding de faixa média chegar lá é uma decisão humana — o veredito do
+    gabarito hoje, a fila de revisão amanhã. As duas passam por aqui. O
+    finding_id não muda: é o mesmo achado, com mais uma testemunha, e o log
+    do apply continua reconhecendo replays por ele.
+    """
+    d = asdict(f)
+    d["confidence"] = "alta"
+    d["evidence"] = {**f.evidence, "promocao": dict(motivo)}
+    return Finding(**d)
+
+
 class Motivos:
     """Contador de exclusões, com a frase-motivo em português.
 

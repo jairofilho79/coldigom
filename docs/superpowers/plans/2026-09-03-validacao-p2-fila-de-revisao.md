@@ -1627,7 +1627,7 @@ describe('ValidationQueuePage', () => {
     await user.click(screen.getByLabelText('Selecionar f1'));
     await user.click(screen.getByLabelText('Selecionar f2'));
     await user.click(screen.getByRole('button', { name: 'Rejeitar 2' }));
-    await waitFor(() => expect(bulkDecideValidationFindings).toHaveBeenCalledWith({ ids: ['f1', 'f2'], status: 'rejeitado', decision_note: undefined }));
+    await waitFor(() => expect(bulkDecideValidationFindings).toHaveBeenCalledWith({ ids: ['f1', 'f2'], status: 'rejeitado' }));
   });
 });
 ```

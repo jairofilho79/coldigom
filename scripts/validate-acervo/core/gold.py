@@ -7,7 +7,7 @@ import os
 import random
 import sys
 
-from core.findings import FAIXAS, Finding, read_findings
+from core.findings import FAIXAS, Finding, promovido, read_findings, write_findings
 from core.paths import OUT, ensure_out
 
 COLUNAS = ("target_id", "nome", "letra", "url", "veredito")
@@ -100,10 +100,28 @@ def medir(gabarito: dict[str, str], findings: list[Finding]) -> dict:
     return r
 
 
+def promover(gabarito: dict[str, str], findings: list[Finding], origem: str) -> list[Finding]:
+    """Os findings fora da faixa alta cujo alvo o dono confirmou.
+
+    'Confirmou' é igualdade estrita entre a proposta e o veredito. NENHUM e
+    veredito diferente ficam de fora. Quem já é alta não precisa de
+    promoção — e pode já ter sido aplicado pelo portão.
+    """
+    out: list[Finding] = []
+    for f in findings:
+        if f.confidence == "alta":
+            continue
+        if gabarito.get(f.target_id) == f.proposed:
+            out.append(promovido(f, {"por": "gabarito", "origem": origem}))
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--from", dest="src", nargs="+", required=True)
     ap.add_argument("--gabarito", default="", help="TSV preenchido; sem ele, só mede o que houver")
+    ap.add_argument("--promover", default="",
+                    help="grava aqui, como findings de faixa alta, os que o dono confirmou no gabarito")
     args = ap.parse_args(argv)
 
     ensure_out()
@@ -130,6 +148,11 @@ def main(argv=None) -> int:
     with open(caminho, "w", encoding="utf-8") as f:
         json.dump(r, f, ensure_ascii=False, indent=1)
     print(f"\nmétrica: {caminho}")
+
+    if args.promover:
+        promovidos = promover(gabarito, findings, origem=os.path.basename(args.gabarito))
+        write_findings(promovidos, args.promover)
+        print(f"promovidos pelo gabarito: {len(promovidos)} -> {args.promover}")
 
     # Portão da Fase 1 (desvio deliberado de D10, registrado no plano): a
     # faixa alta tem 3 casos, então o critério é zero erro, não >=98%.

@@ -99,6 +99,22 @@ describe('ValidationQueuePage', () => {
     await waitFor(() => expect(listValidationFindings).toHaveBeenCalledTimes(2));
   });
 
+  it('falha parcial em "aprovar e rejeitar os outros" mostra o erro e recarrega mesmo assim', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'u1', email: 'admin@test.com' });
+    vi.mocked(listValidationFindings).mockResolvedValue({
+      data: DOIS_CANDIDATOS, pagination: { page: 1, limit: 100, total: 2, totalPages: 1 },
+    });
+    vi.mocked(decideValidationFinding).mockResolvedValue({ ...DOIS_CANDIDATOS[0], status: 'aprovado' });
+    vi.mocked(bulkDecideValidationFindings).mockRejectedValue(new Error('falhou o lote'));
+    renderPage();
+    const linha = (await screen.findByText('Medo tens que o tentador')).closest('tr')!;
+    await user.click(within(linha).getByRole('button', { name: 'Aprovar e rejeitar os outros 1' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('falhou o lote');
+    expect(screen.getByText('Medo tens que o tentador')).toBeInTheDocument();
+    await waitFor(() => expect(listValidationFindings).toHaveBeenCalledTimes(2));
+  });
+
   it('lote: selecionar dois e rejeitar chama o bulk', async () => {
     const user = userEvent.setup();
     vi.mocked(getMe).mockResolvedValueOnce({ sub: 'u1', email: 'admin@test.com' });

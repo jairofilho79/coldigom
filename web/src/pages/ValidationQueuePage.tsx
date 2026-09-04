@@ -94,11 +94,19 @@ export function ValidationQueuePage() {
 
   async function executar(acao: () => Promise<unknown>) {
     setError(null);
+    let falha: string | null = null;
     try {
       await acao();
-      await carregar();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha ao gravar a decisão');
+      falha = e instanceof Error ? e.message : 'Falha ao gravar a decisão';
+      setError(falha);
+    } finally {
+      // carregar() começa limpando o próprio erro — se a decisão falhou mas a
+      // recarga em si teve sucesso, o erro da decisão precisa sobreviver a essa
+      // limpeza, senão a tela mente sobre o servidor: o achado já mudou lá, mas
+      // some qualquer sinal de que a operação de lote não terminou.
+      await carregar();
+      if (falha) setError(falha);
     }
   }
 

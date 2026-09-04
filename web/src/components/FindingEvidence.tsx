@@ -2,8 +2,17 @@ import { useEffect, useState } from 'react';
 import { getPraise } from '../services/api';
 import type { PraiseDetail, ValidationFinding } from '../types';
 
+function urlSegura(v: string): boolean {
+  try {
+    const u = new URL(v);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function Valor({ chave, valor }: { chave: string; valor: unknown }) {
-  if (chave === 'url' && typeof valor === 'string') {
+  if (chave === 'url' && typeof valor === 'string' && urlSegura(valor)) {
     return <a href={valor} target="_blank" rel="noopener noreferrer">{valor}</a>;
   }
   return <>{typeof valor === 'string' ? valor : JSON.stringify(valor)}</>;

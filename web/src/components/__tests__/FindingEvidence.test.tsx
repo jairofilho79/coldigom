@@ -47,4 +47,10 @@ describe('FindingEvidence', () => {
     render(<FindingEvidence finding={{ ...BASE, action: 'set_praise_field', proposed_value: null, evidence: '{quebrado' }} />);
     expect(screen.getByText('{quebrado')).toBeInTheDocument();
   });
+
+  it('url que não é http(s) não vira link', () => {
+    render(<FindingEvidence finding={{ ...BASE, action: 'set_praise_field', proposed_value: null, evidence: { url: 'javascript:alert(1)' } }} />);
+    expect(screen.getByText('javascript:alert(1)')).toBeInTheDocument();
+    expect(screen.queryByRole('link')).toBeNull();
+  });
 });

@@ -15,8 +15,9 @@ export default defineConfig({
       // S0 (2026-08-31): 65 / 60 / 63 / 66
       // S6 (2026-08-31): 67 / 62 / 64 / 69
       // S5 (2026-08-31): 68 / 63 / 64 / 70
+      // P2 (2026-09-03): fila de revisão — 79.39 / 72.41 / 76.63 / 81.79
       thresholds: {
-        // S8: medido 79.10 / 72.33 / 76.97 / 81.52
+        // P2: medido 79.39 / 72.41 / 76.63 / 81.79
         statements: 79,
         branches: 72,
         functions: 76,

@@ -3640,3 +3640,17 @@ button.linkish {
 .vf-row--aplicado td { color: var(--text-tertiary); }
 .vf-evidence-row td { background: var(--bg-inset); }
 .vf-evidence-raw { margin: 0; font-family: var(--font-mono); font-size: var(--text-xs); white-space: pre-wrap; }
+
+.vf-evidence { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-2) 0; }
+.vf-ev { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--text-xs); }
+.vf-ev-par { display: contents; }
+.vf-ev dt { color: var(--text-tertiary); }
+.vf-ev dd { margin: 0; color: var(--text-primary); word-break: break-word; }
+.vf-compare { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+@media (max-width: 720px) { .vf-compare { grid-template-columns: 1fr; } }
+.vf-compare-col { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-3); min-width: 0; }
+.vf-compare-papel { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: var(--space-1); }
+.vf-compare-nome { font-family: var(--font-display); font-size: var(--text-lg); }
+.vf-compare-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); margin: var(--space-1) 0 var(--space-2); }
+.vf-compare-letra { margin: 0; white-space: pre-wrap; font-family: var(--font-body); font-size: var(--text-sm); line-height: var(--leading-relaxed); max-height: 320px; overflow: auto; }
+.vf-compare-erro { color: var(--c-error); font-size: var(--text-xs); }

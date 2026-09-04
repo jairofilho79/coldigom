@@ -167,3 +167,11 @@ def test_main_promover_grava_o_arquivo_e_nao_muda_o_portao(tmp_path):
     lidos = read_findings(saida)
     assert [(f.target_id, f.confidence) for f in lidos] == [("m1", "alta")]
     assert lidos[0].evidence["promocao"]["origem"] == "g.tsv"
+
+
+def test_promover_nao_promove_sem_veredito():
+    # Guarda contra None: um finding com proposed=None cujo alvo nao tem veredito
+    # no gabarito NAO deve ser promovido (None == None seria True sem a guarda)
+    f = Finding(run_id="r1", detector="d", target_type="praise", target_id="t",
+                action="merge_praise", confidence="media", proposed=None, evidence={})
+    assert promover({}, [f], origem="g.tsv") == []

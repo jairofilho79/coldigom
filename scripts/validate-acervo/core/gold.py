@@ -111,8 +111,10 @@ def promover(gabarito: dict[str, str], findings: list[Finding], origem: str) -> 
     for f in findings:
         if f.confidence == "alta":
             continue
-        if gabarito.get(f.target_id) == f.proposed:
-            out.append(promovido(f, {"por": "gabarito", "origem": origem}))
+        esperado = gabarito.get(f.target_id)
+        if esperado is None or esperado != f.proposed:
+            continue
+        out.append(promovido(f, {"por": "gabarito", "origem": origem}))
     return out
 
 

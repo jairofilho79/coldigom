@@ -9,6 +9,7 @@ import time
 
 from core.d1 import query, run_sql_files, sql_str, write_sql_chunks
 from core.findings import Finding, read_findings
+from core.normalize import norm_letra
 from core.paths import OUT, SNAPSHOT_DB, ensure_out
 from core.snapshot import conectar
 
@@ -17,6 +18,21 @@ LOG_PADRAO = os.path.join(OUT, "apply_log.jsonl")
 # Campos que a fonte pode doar ao keeper numa fusão. 'name' fica de fora: o
 # nome do keeper é o nome que o acervo já usa.
 DOAVEIS = ("number", "author", "rhythm", "tonality", "category", "lyrics")
+
+# Tags que nunca migram da fonte para o keeper numa fusão. 'Avulsos' marca
+# o louvor que não está na Coletânea; um órfão só-YouTube nasce Avulsos por
+# ser importado, não por ser avulso. Na Fase 1 a união de tags pôs Avulsos em
+# dois louvores numerados da Coletânea e o dono teve que tirar à mão.
+TAGS_NAO_DOADAS = ("Avulsos",)
+
+
+def _author_e_letra(author, lyrics) -> bool:
+    """Author que é a primeira linha da letra é artefato da importação do
+    YouTube, não autor. Medido na Fase 1: 3 de 3 fontes só-YouTube."""
+    a = norm_letra(author)
+    l = norm_letra(lyrics)
+    return bool(a) and bool(l) and l.startswith(a)
+
 
 # A única faixa que o apply pode escrever. D1 do spec manda média e baixa
 # para uma fila de revisão humana (o P2), que ainda não existe — e o detector
@@ -122,13 +138,19 @@ def _sql_merge(f: Finding, conn: sqlite3.Connection) -> list[str]:
     # edição sobrescrita pela fusão.
     for c in DOAVEIS:
         if _vazio(k[c]) and not _vazio(s[c]):
+            if c == "author" and _author_e_letra(s["author"], s["lyrics"]):
+                continue
             stmts.append(
                 f"UPDATE praises SET {c} = {sql_str(s[c])}, updated_at = datetime('now') "
                 f"WHERE id = {sql_str(keeper)} AND ({c} IS NULL OR trim({c}) = '');"
             )
 
-    # Tags em união: o keeper mantém as dele e recebe as da fonte.
+    # Tags em união: o keeper mantém as dele e recebe as da fonte — menos as
+    # que marcam a fonte como o que ela era (TAGS_NAO_DOADAS).
+    nome_da_tag = {t["id"]: t["name"] for t in conn.execute("SELECT id, name FROM tags")}
     for t in tags_da_fonte:
+        if nome_da_tag.get(t) in TAGS_NAO_DOADAS:
+            continue
         stmts.append(
             "INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES "
             f"({sql_str(keeper)}, {sql_str(t)});"

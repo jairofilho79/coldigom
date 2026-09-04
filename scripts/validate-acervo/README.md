@@ -24,6 +24,15 @@ python3 -m core.apply --from out/youtube_merge/findings.jsonl --faixa alta --exe
 
 # desfaz uma corrida inteira
 python3 -m core.apply --undo <run_id> --execute
+
+# a fila de revisão (P2): média e baixa vão para o D1, a tela decide, o apply escreve
+python3 -m core.queue --empurrar out/youtube_merge/findings.jsonl \
+                      --gabarito gabaritos/youtube_merge/gabarito.preenchido.tsv \
+                      --apply-log out/apply_log.jsonl
+python3 -m core.queue --puxar-aprovados out/fila/aprovados.jsonl
+python3 -m core.apply --from out/fila/aprovados.jsonl --faixa alta            # simula
+python3 -m core.apply --from out/fila/aprovados.jsonl --faixa alta --execute  # escreve
+python3 -m core.queue --marcar-aplicados out/apply_log.jsonl
 ```
 
 **A ordem dos três passos é o portão de promoção (spec §5.2), não estilo.**
@@ -45,6 +54,7 @@ Testes: `python3 -m pytest tests/ -v`
 | `core/reconcile.py` | Fase 0 — liga cada material ao arquivo original |
 | `core/apply.py` | a única porta de escrita. Simula por padrão |
 | `core/gold.py` | sorteio, formulário cego, precisão por faixa |
+| `core/queue.py` | a fila de revisão: empurra findings para o D1, puxa os aprovados como faixa alta, marca os aplicados |
 | `detectors/youtube_merge.py` | Fase 1 — louvores cujo único material é do YouTube |
 
 ## As regras que não são óbvias no código
@@ -126,6 +136,10 @@ Testes: `python3 -m pytest tests/ -v`
   com o wrangler no ar.
 - **O undo se registra no log**, então o finding volta a ser aplicável depois
   de desfeito.
+- **Uma decisão humana é a única promoção para a faixa alta.** O veredito do
+  gabarito e o `aprovado` da fila passam pela mesma `findings.promovido()`, e
+  o `finding_id` não muda. `aplicado` na fila é marcado só pelo
+  `--marcar-aplicados`, lendo o log do apply.
 
 ## Pré-requisitos
 

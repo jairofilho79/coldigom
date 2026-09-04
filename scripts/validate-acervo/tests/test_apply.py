@@ -1409,3 +1409,37 @@ def test_undo_nao_tira_do_keeper_uma_avulsos_que_ele_ja_tinha(tmp_path, monkeypa
     tags_fonte = {r["tag_id"] for r in conn.execute(
         "SELECT tag_id FROM praise_tags WHERE praise_id='fonte'")}
     assert tags_fonte == {"t-av"}
+
+
+def test_estado_anterior_doadas_nao_registra_author_que_e_a_letra(tmp_path, monkeypatch):
+    # estado_anterior grava antes["doadas"] para o undo saber o que reverter.
+    # Tem que usar a MESMA guarda de _sql_merge — senao o log afirma uma
+    # doacao que a fusao nunca escreveu (o comentario em estado_anterior
+    # promete "o mesmo snapshot que _sql_merge vai usar para decidir").
+    conn = _mundo(tmp_path / "a")
+    conn.execute("UPDATE praises SET author = 'Medo tens que o tentador,' WHERE id = 'fonte'")
+    conn.commit()
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn))
+    log = str(tmp_path / "a" / "apply_log.jsonl")
+    sql_dir = str(tmp_path / "a" / "sql")
+    aplicar([_merge()], conn, execute=True, log_path=log, remote=False, sql_dir=sql_dir)
+    with open(log, encoding="utf-8") as f:
+        linhas = [l for l in f if l.strip()]
+    entrada = json.loads(linhas[-1])
+    assert "author" not in entrada["antes"]["doadas"]
+
+    # Caso positivo, para nao esconder um "sempre exclui author": author de
+    # verdade continua indo para o log, numa fusao fresca e independente.
+    conn2 = _mundo(tmp_path / "b")
+    conn2.execute("UPDATE praises SET author = 'Silas Cezar' WHERE id = 'fonte'")
+    conn2.commit()
+    monkeypatch.setattr("core.apply.run_sql_files", _executar_no_conn(conn2))
+    monkeypatch.setattr("core.apply.query", _query_no_conn(conn2))
+    log2 = str(tmp_path / "b" / "apply_log.jsonl")
+    sql_dir2 = str(tmp_path / "b" / "sql")
+    aplicar([_merge()], conn2, execute=True, log_path=log2, remote=False, sql_dir=sql_dir2)
+    with open(log2, encoding="utf-8") as f:
+        linhas2 = [l for l in f if l.strip()]
+    entrada2 = json.loads(linhas2[-1])
+    assert "author" in entrada2["antes"]["doadas"]

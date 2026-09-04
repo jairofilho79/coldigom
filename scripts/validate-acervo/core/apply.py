@@ -325,17 +325,21 @@ def estado_anterior(f: Finding, conn: sqlite3.Connection) -> dict:
         # O undo do keeper só pode tocar as colunas que esta fusão de fato
         # doou — calculado aqui, no momento de aplicar, contra o mesmo
         # snapshot que _sql_merge vai usar para decidir a doação (mesma
-        # conexão, sem escrita entre uma leitura e a outra). Gravar isso no
-        # log em vez de re-derivar na hora do desfazer evita reverter
-        # colunas que a fusão nunca tocou (name, group_id, created_at, ...).
-        # Mapa coluna -> valor doado (o valor da fonte), não só a lista de
-        # nomes: o valor doado é o que o undo precisa para reafirmar, coluna
-        # a coluna, que produção ainda contém o que esta fusão escreveu ali
+        # conexão, sem escrita entre uma leitura e a outra), com a MESMA
+        # guarda que _sql_merge aplica a "author" — senão este dict lista
+        # uma doação que a fusão nunca escreveu. Gravar isso no log em vez
+        # de re-derivar na hora do desfazer evita reverter colunas que a
+        # fusão nunca tocou (name, group_id, created_at, ...). Mapa coluna
+        # -> valor doado (o valor da fonte), não só a lista de nomes: o
+        # valor doado é o que o undo precisa para reafirmar, coluna a
+        # coluna, que produção ainda contém o que esta fusão escreveu ali
         # antes de reverter — ver o guard em desfazer().
         if antes["keeper"] and antes["praise"]:
             antes["doadas"] = {
                 c: antes["praise"][c] for c in DOAVEIS
                 if _vazio(antes["keeper"][c]) and not _vazio(antes["praise"][c])
+                and not (c == "author" and _author_e_letra(
+                    antes["praise"]["author"], antes["praise"]["lyrics"]))
             }
     return antes
 

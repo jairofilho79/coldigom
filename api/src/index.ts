@@ -15,6 +15,7 @@ import { registerHealthRoutes } from './routes/health';
 import { registerMaterialsRoutes } from './routes/materials';
 import { registerPraisesRoutes } from './routes/praises';
 import { registerTagsRoutes } from './routes/tags';
+import { registerValidationRoutes } from './routes/validation';
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
@@ -64,6 +65,7 @@ registerAuthRoutes(app);
 registerPraisesRoutes(app);
 registerMaterialsRoutes(app);
 registerTagsRoutes(app);
+registerValidationRoutes(app);
 registerDriveRoutes(app);
 registerAssetsRoutes(app);
 registerHealthRoutes(app);

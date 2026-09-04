@@ -1380,6 +1380,19 @@ def test_fusao_doa_author_de_verdade(tmp_path):
     assert "SET author = 'Silas Cezar'" in junto
 
 
+def test_fusao_nao_doa_author_que_e_a_primeira_linha_de_uma_letra_longa(tmp_path):
+    # O caso real da Fase 1: a letra tem varias linhas e o author e so a
+    # primeira. Prefixo, nao igualdade — e uma linha do meio nao conta.
+    conn = _mundo(tmp_path)
+    conn.execute("UPDATE praises SET lyrics = 'Medo tens que o tentador\nte va vencer?\nSegunda estrofe aqui', "
+                 "author = 'Medo tens que o tentador' WHERE id = 'fonte'")
+    conn.commit()
+    assert "SET author" not in "\n".join(sql_para(_merge(), conn))
+    conn.execute("UPDATE praises SET author = 'te va vencer?' WHERE id = 'fonte'")
+    conn.commit()
+    assert "SET author = 'te va vencer?'" in "\n".join(sql_para(_merge(), conn))
+
+
 def test_fusao_nao_doa_a_tag_avulsos_mas_doa_as_outras(tmp_path):
     conn = _mundo(tmp_path)
     conn.execute("INSERT INTO tags VALUES ('t-nt','Natal',NULL)")

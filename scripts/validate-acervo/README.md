@@ -29,6 +29,7 @@ python3 -m core.apply --undo <run_id> --execute
 python3 -m core.queue --empurrar out/youtube_merge/findings.jsonl \
                       --gabarito gabaritos/youtube_merge/gabarito.preenchido.tsv \
                       --apply-log out/apply_log.jsonl
+python3 -m core.snapshot                   # o acervo mudou desde o push — refaz o espelho antes de aplicar
 python3 -m core.queue --puxar-aprovados out/fila/aprovados.jsonl
 python3 -m core.apply --from out/fila/aprovados.jsonl --faixa alta            # simula
 python3 -m core.apply --from out/fila/aprovados.jsonl --faixa alta --execute  # escreve

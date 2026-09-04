@@ -29,7 +29,8 @@ def linha_de(f: Finding, decisao: tuple[str, str, str] | None) -> dict:
         "confidence": f.confidence,
         "evidence": json.dumps(f.evidence, ensure_ascii=False),
         "status": status,
-        "decided_at": time.strftime("%Y-%m-%d %H:%M:%S") if decisao else None,
+        # UTC, como o datetime('now') do D1 e da API — a tela mostra o valor cru.
+        "decided_at": time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) if decisao else None,
         "decided_by": quem, "decision_note": nota,
     }
 

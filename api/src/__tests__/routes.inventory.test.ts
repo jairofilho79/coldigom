@@ -61,6 +61,8 @@ const ROTAS_ESPERADAS = [
   'GET /api/tags',
   'POST /api/tags',
   'POST /api/tags',
+  'GET /api/validation/findings',
+  'GET /api/validation/findings',
   'GET /api/drive/status',
   'GET /api/drive/status',
   'POST /api/drive/scans',

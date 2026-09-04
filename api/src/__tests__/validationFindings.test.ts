@@ -100,3 +100,64 @@ describe('GET /api/validation/findings', () => {
     expect(corpo.data[0].evidence).toBe('{nao é json');
   });
 });
+
+describe('PATCH /api/validation/findings/:id', () => {
+  it('grava status, nota, quem e quando, e devolve a linha relida', async () => {
+    const depois = { ...FINDING, status: 'rejeitado', decision_note: 'não é o mesmo louvor', decided_by: 'admin@test.com', decided_at: '2026-09-03 21:00:00' };
+    const { db, chamadas } = dbFila({ linhas: [FINDING], changes: 1, depois });
+    const res = await pedir('/api/validation/findings/f1', {
+      method: 'PATCH', body: JSON.stringify({ status: 'rejeitado', decision_note: 'não é o mesmo louvor' }),
+    }, db);
+    expect(res.status).toBe(200);
+    const corpo = (await res.json()) as { data: Linha };
+    expect(corpo.data.status).toBe('rejeitado');
+    expect(corpo.data.decision_note).toBe('não é o mesmo louvor');
+    const update = chamadas.find((c) => c.sql.startsWith('UPDATE validation_findings'))!;
+    expect(update.sql).toContain("decided_at = datetime('now')");
+    expect(update.sql).toContain("status <> 'aplicado'");
+    expect(update.bindings).toEqual(['rejeitado', 'não é o mesmo louvor', 'admin@test.com', 'f1']);
+  });
+
+  it("recusa 'aplicado': é o script que marca, quando a escrita aconteceu", async () => {
+    const { db, chamadas } = dbFila({ linhas: [FINDING] });
+    const res = await pedir('/api/validation/findings/f1', { method: 'PATCH', body: JSON.stringify({ status: 'aplicado' }) }, db);
+    expect(res.status).toBe(400);
+    expect(chamadas.some((c) => c.sql.startsWith('UPDATE'))).toBe(false);
+  });
+
+  it('status desconhecido e nota que não é string dão 400', async () => {
+    const { db } = dbFila({ linhas: [FINDING] });
+    expect((await pedir('/api/validation/findings/f1', { method: 'PATCH', body: JSON.stringify({ status: 'feito' }) }, db)).status).toBe(400);
+    expect((await pedir('/api/validation/findings/f1', { method: 'PATCH', body: JSON.stringify({ status: 'aprovado', decision_note: 7 }) }, db)).status).toBe(400);
+  });
+
+  it('linha inexistente é 404; linha já aplicada é 409', async () => {
+    const sumiu = dbFila({ linhas: [], changes: 0, depois: null });
+    expect((await pedir('/api/validation/findings/nada', { method: 'PATCH', body: JSON.stringify({ status: 'aprovado' }) }, sumiu.db)).status).toBe(404);
+    const aplicada = dbFila({ linhas: [{ ...FINDING, status: 'aplicado' }], changes: 0, depois: { ...FINDING, status: 'aplicado' } });
+    expect((await pedir('/api/validation/findings/f1', { method: 'PATCH', body: JSON.stringify({ status: 'aprovado' }) }, aplicada.db)).status).toBe(409);
+  });
+});
+
+describe('POST /api/validation/findings/bulk', () => {
+  it('decide em lote num batch só e conta o que mudou', async () => {
+    const { db, chamadas } = dbFila({ changes: 1 });
+    const res = await pedir('/api/validation/findings/bulk', {
+      method: 'POST', body: JSON.stringify({ ids: ['f1', 'f2', 'f3'], status: 'rejeitado', decision_note: 'lote' }),
+    }, db);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ data: { atualizados: 3 } });
+    expect(db.batch).toHaveBeenCalledTimes(1);
+    expect(chamadas.filter((c) => c.sql.startsWith('UPDATE validation_findings'))).toHaveLength(3);
+    expect(chamadas[0].bindings).toEqual(['rejeitado', 'lote', 'admin@test.com', 'f1']);
+  });
+
+  it('valida ids (1..100, strings) e recusa aplicado', async () => {
+    const { db } = dbFila();
+    const post = (body: unknown) => pedir('/api/validation/findings/bulk', { method: 'POST', body: JSON.stringify(body) }, db);
+    expect((await post({ ids: [], status: 'aprovado' })).status).toBe(400);
+    expect((await post({ ids: [1], status: 'aprovado' })).status).toBe(400);
+    expect((await post({ ids: Array.from({ length: 101 }, (_, i) => `f${i}`), status: 'aprovado' })).status).toBe(400);
+    expect((await post({ ids: ['f1'], status: 'aplicado' })).status).toBe(400);
+  });
+});

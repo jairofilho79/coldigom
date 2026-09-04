@@ -1,4 +1,4 @@
-import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
+import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
 import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
 
@@ -589,6 +589,44 @@ export async function createTag(body: { name: string; parent_id?: string | null 
     }
   );
   return response.data;
+}
+
+// ---------- fila de revisão da validação (spec §6) ----------
+
+export async function listValidationFindings(
+  params: FindingListParams = {},
+  signal?: AbortSignal
+): Promise<{ data: ValidationFinding[]; pagination: PaginationInfo }> {
+  const q = new URLSearchParams();
+  if (params.detector) q.set('detector', params.detector);
+  if (params.confidence) q.set('confidence', params.confidence);
+  if (params.status) q.set('status', params.status);
+  if (params.praise_id) q.set('praise_id', params.praise_id);
+  q.set('page', String(params.page ?? 1));
+  q.set('limit', String(params.limit ?? 100));
+  const r = await fetchJson<ApiResponse<ValidationFinding[]>>(
+    `${API_BASE_URL}/api/validation/findings?${q}`,
+    signal ? { signal } : undefined
+  );
+  return { data: r.data, pagination: r.pagination! };
+}
+
+export async function decideValidationFinding(id: string, decision: FindingDecision): Promise<ValidationFinding> {
+  const r = await fetchJson<ApiResponse<ValidationFinding>>(
+    `${API_BASE_URL}/api/validation/findings/${encodeURIComponent(id)}`,
+    { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(decision) }
+  );
+  return r.data;
+}
+
+export async function bulkDecideValidationFindings(
+  body: { ids: string[] } & FindingDecision
+): Promise<{ atualizados: number }> {
+  const r = await fetchJson<ApiResponse<{ atualizados: number }>>(
+    `${API_BASE_URL}/api/validation/findings/bulk`,
+    { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  return r.data;
 }
 
 export type AuthUser = { sub: string; email?: string; name?: string; picture?: string };

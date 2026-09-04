@@ -100,3 +100,41 @@ O ledger de execução (`.superpowers/sdd/`) é scratch e some; isto aqui fica.
   8, 6 e 0 dá **faixa alta idêntica** nas três.
 - `_lit` não aplicado em dois pontos (colunas TEXT, risco nulo); log serializa
   `antes` duas vezes; `trim()` do SQL vs `str.strip()` do Python.
+
+## Adiados pelo P2 (2026-09-03)
+
+O P2 fechou com a fila de revisão de ponta a ponta (migração 017, três
+endpoints, a tela `/validacao`, `core/queue.py`) e com as 11 fusões da Fase 1
+confirmadas no gabarito aplicadas em produção pela promoção por veredito. O
+que ficou para depois:
+
+- **`desfazer` não filtra `TAGS_NAO_DOADAS`** (`core/apply.py`, reversão das
+  tags do keeper). A fusão nunca doa `Avulsos`, mas o undo calcula "tags que
+  vieram da fonte − tags que o keeper tinha" sem o filtro e emite um DELETE
+  de `Avulsos` no keeper — no-op, salvo se alguém tiver posto `Avulsos` no
+  keeper à mão entre o `--execute` e o `--undo`. Corrigir exige o nome da tag
+  no caminho do undo (o log só tem ids): ou gravar `tags_doadas` no `antes`
+  (chave nova, compatível com logs antigos), ou consultar `tags` ao desfazer.
+
+- **`/validacao` não tem ponto de entrada.** A rota existe
+  (`web/src/App.tsx`); nada linka para ela. Onde o link entra (HomePage? um
+  menu de administração?) é decisão do dono e toca o setor S6.
+
+- **Linha da fila fica `pendente` para um achado aplicado por fora.** Um
+  finding empurrado como `pendente` e depois aplicado pelo caminho do
+  gabarito (`gold --promover` → `apply`) só vira `aplicado` se alguém rodar
+  `--marcar-aplicados` com o log. `--empurrar --apply-log` cobre a carga
+  inicial; depois disso é disciplina de operador.
+
+- **`empurrar` conta tentativas, não inserções.** Com `INSERT OR IGNORE`, um
+  re-push imprime os mesmos números do primeiro. Para distinguir, contar as
+  linhas antes e depois.
+
+- **`promovido` sobrescreve `evidence["promocao"]`.** Um finding promovido
+  duas vezes (gabarito e depois fila) perde a primeira testemunha. Nenhum
+  fluxo atual faz isso.
+
+- **Cosméticos da tela:** o filtro de detector dispara uma requisição por
+  tecla; o `aria-label` do checkbox lê o id; o `atualizados` do lote é
+  descartado; e a coluna da fonte de uma fusão já aplicada mostra "não foi
+  possível carregar", porque a fonte foi apagada — honesto, não quebrado.

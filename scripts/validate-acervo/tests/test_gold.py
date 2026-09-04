@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from core.findings import Finding, write_findings
-from core.gold import escrever_formulario, ler_gabarito, main, medir, sortear
+from core.findings import Finding, read_findings, write_findings
+from core.gold import escrever_formulario, ler_gabarito, main, medir, promover, sortear
 
 
 def _f(tid: str, faixa: str, proposto: str) -> Finding:
@@ -139,3 +139,39 @@ def test_portao_reprova_erro_na_faixa_alta(tmp_path, monkeypatch):
     src = _findings_jsonl(tmp_path, [_f("a1", "alta", "k1")])
     gab = _gabarito(tmp_path, "a1\tMedo tens\t...\t...\tNENHUM\n")
     assert main(["--from", src, "--gabarito", gab]) != 0
+
+
+def test_promover_so_o_que_o_dono_confirmou_e_so_fora_da_alta():
+    fs = [_f("a1", "alta", "k1"),    # ja e alta: nao entra
+          _f("m1", "media", "k1"),   # confirmado: entra
+          _f("m2", "media", "k9"),   # dono apontou outro: nao entra
+          _f("m3", "media", "k3"),   # dono disse NENHUM: nao entra
+          _f("m4", "baixa", "k4")]   # confirmado na baixa: entra
+    gab = {"a1": "k1", "m1": "k1", "m2": "k2", "m3": "NENHUM", "m4": "k4"}
+    out = promover(gab, fs, origem="g.tsv")
+    assert [(f.target_id, f.confidence) for f in out] == [("m1", "alta"), ("m4", "alta")]
+    assert out[0].evidence["promocao"] == {"por": "gabarito", "origem": "g.tsv"}
+    assert out[0].finding_id == fs[1].finding_id
+
+
+def test_main_promover_grava_o_arquivo_e_nao_muda_o_portao(tmp_path):
+    src = str(tmp_path / "f.jsonl")
+    gab = str(tmp_path / "g.tsv")
+    saida = str(tmp_path / "p.jsonl")
+    write_findings([_f("a1", "alta", "k1"), _f("m1", "media", "k1")], src)
+    open(gab, "w", encoding="utf-8").write(
+        "target_id\tnome\tletra\turl\tveredito\n"
+        "a1\t\t\t\tk1\n"
+        "m1\t\t\t\tk1\n")
+    assert main(["--from", src, "--gabarito", gab, "--promover", saida]) == 0
+    lidos = read_findings(saida)
+    assert [(f.target_id, f.confidence) for f in lidos] == [("m1", "alta")]
+    assert lidos[0].evidence["promocao"]["origem"] == "g.tsv"
+
+
+def test_promover_nao_promove_sem_veredito():
+    # Guarda contra None: um finding com proposed=None cujo alvo nao tem veredito
+    # no gabarito NAO deve ser promovido (None == None seria True sem a guarda)
+    f = Finding(run_id="r1", detector="d", target_type="praise", target_id="t",
+                action="merge_praise", confidence="media", proposed=None, evidence={})
+    assert promover({}, [f], origem="g.tsv") == []

@@ -89,6 +89,14 @@ para navegação de página.
 do render, não sobre a URL mais recente. Nenhum caminho atual faz isso — risco
 latente, sem repro no código de hoje.
 
+### Fila de revisão: candidatos do mesmo louvor podem cair em páginas diferentes
+
+`GET /api/validation/findings` ordena por `praise_id, id` e pagina por 100. Um louvor com N candidatos
+cuja posição atravessa a fronteira da página aparece cortado na tela `/validacao` — o botão
+"Aprovar e rejeitar os outros" só vê os irmãos da página atual. Hoje a maior fila (Fase 1) tem 29
+achados e cabe numa página. **Retomar quando:** alguma fase empurrar mais de 100 achados de uma vez
+(Fase 3 vai). Correção provável: paginar por louvor, não por achado.
+
 ---
 
 ## Dívida menor, catalogada

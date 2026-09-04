@@ -32,6 +32,12 @@ A migração `003` corrige rótulos (Score → Grade, Sheet Music → Partitura,
 
 Ambiente local: troque `--remote` por `--local` se estiver usando D1 local.
 
+### Fila de revisão da validação (P2)
+
+```bash
+npx wrangler d1 execute coldigom --remote --file=migrations/017_validation_findings.sql   # fila de revisão da validação
+```
+
 ## 2. Ingestão
 
 | Comando | Ação |

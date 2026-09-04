@@ -1,0 +1,2 @@
+UPDATE praise_materials SET praise_id = 'b9c5f8af-e131-4e3d-9551-a61fb3e94f37', merged_from_praise_id = '05bc470c-ac34-4737-b31e-12706f70f671' WHERE id = '6158f3a3-3bc2-453a-8c72-31f8220aacbf' AND praise_id = '05bc470c-ac34-4737-b31e-12706f70f671';
+DELETE FROM praises WHERE id = '05bc470c-ac34-4737-b31e-12706f70f671' AND NOT EXISTS (SELECT 1 FROM praise_materials WHERE praise_id = '05bc470c-ac34-4737-b31e-12706f70f671');

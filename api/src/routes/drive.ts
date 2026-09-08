@@ -1,7 +1,12 @@
 import type { AuthUser } from '../auth';
 import { enqueueDriveMessages } from '../driveImport';
 import { getDriveAccessToken, listDriveTree } from '../driveApi';
-import { getDriveRefreshToken, hasDriveCredentials } from '../driveCredentials';
+import {
+  deleteDriveCredentials,
+  getDriveRefreshToken,
+  hasDriveCredentials,
+  isInvalidDriveGrant,
+} from '../driveCredentials';
 import { parseDriveUrl } from '../driveParse';
 import type { App } from '../env';
 import { erroDeCategoriaDesconhecida, materialKindsForaDoCatalogo } from '../materialKindLabels';
@@ -104,6 +109,15 @@ export function registerDriveRoutes(app: App): void {
       )
         .bind(message.slice(0, 2000), nowSec(), scanId)
         .run();
+      // Refresh morto (expirado, revogado, ou emitido por outro segredo): a fila
+      // já apagava a credencial nesse caso, mas esta rota devolvia o corpo cru do
+      // Google num 502. A linha ficava no D1, /api/drive/status continuava
+      // dizendo "conectado" e o painel nunca reoferecia o botão de autorizar —
+      // beco sem saída até alguém mexer no banco.
+      if (isInvalidDriveGrant(err)) {
+        await deleteDriveCredentials(c.env.DB, user.sub);
+        return c.json({ error: 'Drive not connected', code: 'drive_not_connected' }, 403);
+      }
       console.error('drive scan failed', message);
       return c.json({ error: message || 'Drive scan failed' }, 502);
     }

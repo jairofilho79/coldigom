@@ -13,6 +13,7 @@ import { PainelPastaLocal } from '../components/PainelPastaLocal';
 import { StatusImportacaoDrive } from '../components/StatusImportacaoDrive';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { groupMaterialsByType, materialDisplayName } from '../lib/materials';
+import { pedeReconexaoDoDrive } from '../services/mensagensDeErro';
 import {
   folderNameFromFiles,
   scanFolderFilesAsync,
@@ -468,7 +469,7 @@ export function PraiseDetailPage() {
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       const message = err instanceof Error ? err.message : 'Falha ao ler o Google Drive';
-      if (/not connected/i.test(message) || /drive_not_connected/i.test(message)) {
+      if (pedeReconexaoDoDrive(message)) {
         setDriveConnected(false);
         irAutorizarDrive();
         return;
@@ -1695,7 +1696,7 @@ export function PraiseDetailPage() {
                         });
                       } catch (err) {
                         const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
-                        if (/not connected|não está conectado/i.test(message)) {
+                        if (pedeReconexaoDoDrive(message)) {
                           irAutorizarDrive();
                           return;
                         }

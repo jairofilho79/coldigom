@@ -25,6 +25,11 @@ Projeto OAuth que o Coldigom já usa: [Google Cloud Console](https://console.clo
    - `https://www.googleapis.com/auth/drive.readonly` ← **novo (obrigatório)**
 3. Se o app estiver em **Testando**: adicionar seu e-mail (e quem for testar) em **Usuários de teste**
 4. Produção pública depois exige verificação do Google (escopo sensível). Em Testando, só test users funcionam.
+5. **Em Testando o refresh token do Drive vence em 7 dias.** Depois disso o Google responde
+   `invalid_grant` a qualquer renovação e a importação para até alguém reconectar o Drive.
+   A API detecta isso, apaga a credencial guardada e devolve `drive_not_connected`, então o
+   painel reoferece "Conectar Google Drive" — mas quem usa toda semana vai reautorizar toda
+   semana. Para acabar com o vencimento, publique o app (**Em produção**) no console.
 
 ### A3. Credenciais (mesmo Client ID)
 

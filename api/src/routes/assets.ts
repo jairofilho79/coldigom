@@ -72,6 +72,11 @@ export function registerAssetsRoutes(app: App): void {
     const contentTypes: Record<string, string> = {
       pdf: 'application/pdf',
       mp3: 'audio/mpeg',
+      m4a: 'audio/mp4',
+      aac: 'audio/aac',
+      wav: 'audio/wav',
+      ogg: 'audio/ogg',
+      flac: 'audio/flac',
       mid: 'audio/midi',
       midi: 'audio/midi',
       // charset explícito: as cifras têm acentos ("Comigo Habita, Ó Deus") e sem

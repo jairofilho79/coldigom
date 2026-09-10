@@ -1,6 +1,6 @@
 import type { AuthUser } from '../auth';
 import { enqueueDriveMessages } from '../driveImport';
-import { getDriveAccessToken, listDriveTree } from '../driveApi';
+import { downloadDriveFile, getDriveAccessToken, listDriveTree } from '../driveApi';
 import {
   deleteDriveCredentials,
   getDriveRefreshToken,
@@ -22,6 +22,40 @@ export function registerDriveRoutes(app: App): void {
     const user = c.get('user') as AuthUser;
     const connected = await hasDriveCredentials(c.env.DB, user.sub);
     return c.json({ connected });
+  });
+
+  app.get('/api/drive/files/:fileId/download', requireAuth, async (c) => {
+    const user = c.get('user') as AuthUser;
+    const fileId = c.req.param('fileId');
+    if (!fileId) return c.json({ error: 'Missing fileId' }, 400);
+
+    const jwtSecret = c.env.AUTH_JWT_SECRET;
+    const clientId = c.env.GOOGLE_CLIENT_ID;
+    if (!jwtSecret || !clientId) return c.json({ error: 'Auth not configured' }, 500);
+
+    const refresh = await getDriveRefreshToken({ db: c.env.DB, userSub: user.sub, jwtSecret });
+    if (!refresh) return c.json({ error: 'Drive not connected', code: 'drive_not_connected' }, 403);
+
+    try {
+      const accessToken = await getDriveAccessToken({
+        clientId,
+        clientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: refresh,
+      });
+
+      const downloaded = await downloadDriveFile(accessToken, fileId);
+
+      c.header('Content-Type', downloaded.contentType || 'application/octet-stream');
+      c.header('Cross-Origin-Resource-Policy', 'cross-origin');
+      return c.body(downloaded.bytes);
+    } catch (err) {
+      if (isInvalidDriveGrant(err)) {
+        await deleteDriveCredentials(c.env.DB, user.sub);
+        return c.json({ error: 'Drive not connected', code: 'drive_not_connected' }, 403);
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      return c.json({ error: msg || 'Download failed' }, 502);
+    }
   });
 
   app.post('/api/drive/scans', requireAuth, async (c) => {

@@ -69,6 +69,8 @@ const ROTAS_ESPERADAS = [
   'PATCH /api/validation/findings/:id',
   'GET /api/drive/status',
   'GET /api/drive/status',
+  'GET /api/drive/files/:fileId/download',
+  'GET /api/drive/files/:fileId/download',
   'POST /api/drive/scans',
   'POST /api/drive/scans',
   'GET /api/drive/scans/:id',

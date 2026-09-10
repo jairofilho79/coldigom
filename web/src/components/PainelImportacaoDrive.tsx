@@ -27,6 +27,9 @@ export function PainelImportacaoDrive({
   materialKindOptions,
   onKindChange,
   onRemove,
+  onConvertToMp3,
+  onConvertAllToMp3,
+  converting,
   acaoDoLote,
   children,
 }: {
@@ -44,6 +47,9 @@ export function PainelImportacaoDrive({
   materialKindOptions: Array<{ value: string; label: string }>;
   onKindChange: (index: number, material_kind: string) => void;
   onRemove: (index: number) => void;
+  onConvertToMp3?: (index: number) => void;
+  onConvertAllToMp3?: () => void;
+  converting?: boolean;
   /** Ação sobre o lote mapeado — só aparece com o scan concluído. */
   acaoDoLote?: ReactNode;
   /** Conteúdo livre no fim do painel: o acompanhamento do job, no modo edição. */
@@ -105,6 +111,9 @@ export function PainelImportacaoDrive({
             materialKindOptions={materialKindOptions}
             onKindChange={onKindChange}
             onRemove={onRemove}
+            onConvertToMp3={onConvertToMp3}
+            onConvertAllToMp3={onConvertAllToMp3}
+            converting={converting}
           />
           {acaoDoLote}
         </>

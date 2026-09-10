@@ -1,0 +1,819 @@
+{
+  "summary": {
+    "playlists": 3,
+    "material_kind": "4a21d073-1726-41a3-bca7-77550f91e02a",
+    "applied": true,
+    "totals": {
+      "materials_new": 24,
+      "praises_created": 1,
+      "skipped_exists_early": 10,
+      "skipped_exists_late": 0,
+      "skipped_deduped_in_playlist": 0,
+      "skipped_title_filter": 2,
+      "skipped_unparseable": 0
+    },
+    "playlists_detail": [
+      {
+        "playlist_id": "PLFElx3O_dMZteEGBvIxsYT_vyoNTjmDo7",
+        "summary": {
+          "playlist_total": 14,
+          "materials_new": 12,
+          "praises_created": 0,
+          "lyrics_filled": 0,
+          "skipped_exists_early": 2,
+          "skipped_exists_late": 0,
+          "skipped_deduped_in_playlist": 0,
+          "skipped_title_filter": 0,
+          "skipped_unparseable": 0,
+          "sql_statements": 12
+        }
+      },
+      {
+        "playlist_id": "PLFElx3O_dMZul1_Vn18NgHnOSb-1OpCnB",
+        "summary": {
+          "playlist_total": 10,
+          "materials_new": 6,
+          "praises_created": 1,
+          "lyrics_filled": 0,
+          "skipped_exists_early": 2,
+          "skipped_exists_late": 0,
+          "skipped_deduped_in_playlist": 0,
+          "skipped_title_filter": 2,
+          "skipped_unparseable": 0,
+          "sql_statements": 8
+        }
+      },
+      {
+        "playlist_id": "PLMjaVIGlga9acYsDTmioqTxtEZotOzI5A",
+        "summary": {
+          "playlist_total": 12,
+          "materials_new": 6,
+          "praises_created": 0,
+          "lyrics_filled": 0,
+          "skipped_exists_early": 6,
+          "skipped_exists_late": 0,
+          "skipped_deduped_in_playlist": 0,
+          "skipped_title_filter": 0,
+          "skipped_unparseable": 0,
+          "sql_statements": 6
+        }
+      }
+    ]
+  },
+  "reports": [
+    {
+      "playlist_url": "https://www.youtube.com/playlist?list=PLFElx3O_dMZteEGBvIxsYT_vyoNTjmDo7",
+      "playlist_id": "PLFElx3O_dMZteEGBvIxsYT_vyoNTjmDo7",
+      "material_kind": "4a21d073-1726-41a3-bca7-77550f91e02a",
+      "materials_new": [
+        {
+          "material_id": "a8c45b2e-281b-4017-a1d6-7c029c620f01",
+          "praise_id": "b045daec-dae1-4129-b3d0-6084e0af5e38",
+          "praise_name": "Conheçamos e prossigamos",
+          "has_pes": true,
+          "tags": [
+            "Avulsos",
+            "CIAs",
+            "PES"
+          ],
+          "vid": "agVz_Cnh5eU",
+          "url": "https://www.youtube.com/watch?v=agVz_Cnh5eU",
+          "song": "Conheçamos e prossigamos",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "4b9d2b23-971b-4c3d-a929-a0c257e8271e",
+          "praise_id": "715b33fd-5286-4213-b4a2-37fb99474e76",
+          "praise_name": "Cristo é vitória",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "iBitJsgmQhM",
+          "url": "https://www.youtube.com/watch?v=iBitJsgmQhM",
+          "song": "Cristo é vitória",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "d74d1882-729a-4355-8829-4c40f48fde54",
+          "praise_id": "e91c543b-87ae-4d4b-87f7-f797ead73144",
+          "praise_name": "Dobro os meus joelhos",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "d4pGmzPK9-Q",
+          "url": "https://www.youtube.com/watch?v=d4pGmzPK9-Q",
+          "song": "Dobro os meus joelhos",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "9a1e5cae-bf5a-4ba0-9ee3-41888744e243",
+          "praise_id": "6d93eebc-01fd-47f9-bb8a-2ffacf16f2c8",
+          "praise_name": "Dá-me um coração cheio do teu amor",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "JZvpjg4Q_uA",
+          "url": "https://www.youtube.com/watch?v=JZvpjg4Q_uA",
+          "song": "Dá-me um coração cheio do teu amor",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "07c05ab9-24c5-4161-9241-8a4935ecd233",
+          "praise_id": "eab1163a-1c6a-4878-9136-2e965fb558ba",
+          "praise_name": "Estou aqui pra confessar",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "hQN6WYLRNoM",
+          "url": "https://www.youtube.com/watch?v=hQN6WYLRNoM",
+          "song": "Estou aqui pra confessar",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "4a895cf0-11a6-4c5b-8720-d85ec8267d7c",
+          "praise_id": "f195d8ee-fc27-40e0-9c0a-fa13d80a882e",
+          "praise_name": "Fui lavado no sangue do Cordeiro",
+          "has_pes": true,
+          "tags": [
+            "Avulsos",
+            "CIAs",
+            "PES"
+          ],
+          "vid": "RaHuDHmaZu0",
+          "url": "https://www.youtube.com/watch?v=RaHuDHmaZu0",
+          "song": "Fui lavado no sangue do Cordeiro",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "4f3d5344-5ed6-4105-b7d8-9d3c27a0e52f",
+          "praise_id": "1ee4adcd-34fb-41d6-834d-2be5ea1fd538",
+          "praise_name": "Jesus voltará pra me buscar! (Maranata)",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "i2FxB2KmSz0",
+          "url": "https://www.youtube.com/watch?v=i2FxB2KmSz0",
+          "song": "Jesus voltará pra me buscar",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "5ff1efbd-3de4-48ce-a534-cb6b9103c501",
+          "praise_id": "9288d5b3-4153-410c-b851-9414b6458505",
+          "praise_name": "Muito em breve o Rei vem",
+          "has_pes": true,
+          "tags": [
+            "Avulsos",
+            "CIAs",
+            "PES"
+          ],
+          "vid": "OToltEExFPI",
+          "url": "https://www.youtube.com/watch?v=OToltEExFPI",
+          "song": "Muito em breve o Rei vem",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "9b98ceba-b0d9-4b94-b2d7-8c4d8e48448e",
+          "praise_id": "3c366df7-52c9-4d64-9ffb-03e6d4699e3e",
+          "praise_name": "Tenho no meu coração",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "Hfye9ZrSPd0",
+          "url": "https://www.youtube.com/watch?v=Hfye9ZrSPd0",
+          "song": "Tenho no meu coração",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "268faa5d-e381-47ef-9934-59d15ce6a749",
+          "praise_id": "51ae5898-8189-4b0b-89ac-515869e2e7d4",
+          "praise_name": "Tenho um coração alegre",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "rImEh9JbLMc",
+          "url": "https://www.youtube.com/watch?v=rImEh9JbLMc",
+          "song": "Tenho um coração alegre",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "db1e5de7-53b2-4d25-86ca-c94fccc5f31a",
+          "praise_id": "15e5425e-8d04-40c0-82e0-36e96f082ebd",
+          "praise_name": "Você sabe o que é salvação",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "tdeV7x8MQOs",
+          "url": "https://www.youtube.com/watch?v=tdeV7x8MQOs",
+          "song": "Você sabe o que é salvação",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "2186ac5c-4b42-4a45-81fb-fe501bd07df5",
+          "praise_id": "7a734986-54c0-4461-935e-6f6591838b47",
+          "praise_name": "É tão triste não ver a luz (Cego bastimeu)",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "NrFgkqpXhSs",
+          "url": "https://www.youtube.com/watch?v=NrFgkqpXhSs",
+          "song": "É tão triste não ver a luz - Bartimeu",
+          "views": 0,
+          "created_praise": false
+        }
+      ],
+      "praises_created": [],
+      "lyrics_filled": [],
+      "skipped_exists": [],
+      "skipped_exists_early": [
+        {
+          "vid": "xNtFogdMwuY",
+          "title": "SOU UMA CRIANÇA FELIZ 2025 - Gestos CIAs EBD ICM",
+          "song": "SOU UMA CRIANÇA FELIZ",
+          "url": "https://www.youtube.com/watch?v=xNtFogdMwuY",
+          "existing_url": "https://www.youtube.com/watch?v=xNtFogdMwuY",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "lctUHBJf_7g",
+          "title": "Todo poderoso és - Gestos CIAs EBD ICM 2024",
+          "song": "Todo poderoso és",
+          "url": "https://www.youtube.com/watch?v=lctUHBJf_7g",
+          "existing_url": "https://www.youtube.com/watch?v=lctUHBJf_7g",
+          "reason": "already_in_d1"
+        }
+      ],
+      "skipped_title_filter": [],
+      "skipped_unparseable": [],
+      "matched": [
+        {
+          "vid": "agVz_Cnh5eU",
+          "song": "Conheçamos e prossigamos",
+          "praise_id": "b045daec-dae1-4129-b3d0-6084e0af5e38",
+          "praise_name": "Conheçamos e prossigamos",
+          "created": false
+        },
+        {
+          "vid": "iBitJsgmQhM",
+          "song": "Cristo é vitória",
+          "praise_id": "715b33fd-5286-4213-b4a2-37fb99474e76",
+          "praise_name": "Cristo é vitória",
+          "created": false
+        },
+        {
+          "vid": "d4pGmzPK9-Q",
+          "song": "Dobro os meus joelhos",
+          "praise_id": "e91c543b-87ae-4d4b-87f7-f797ead73144",
+          "praise_name": "Dobro os meus joelhos",
+          "created": false
+        },
+        {
+          "vid": "JZvpjg4Q_uA",
+          "song": "Dá-me um coração cheio do teu amor",
+          "praise_id": "6d93eebc-01fd-47f9-bb8a-2ffacf16f2c8",
+          "praise_name": "Dá-me um coração cheio do teu amor",
+          "created": false
+        },
+        {
+          "vid": "hQN6WYLRNoM",
+          "song": "Estou aqui pra confessar",
+          "praise_id": "eab1163a-1c6a-4878-9136-2e965fb558ba",
+          "praise_name": "Estou aqui pra confessar",
+          "created": false
+        },
+        {
+          "vid": "RaHuDHmaZu0",
+          "song": "Fui lavado no sangue do Cordeiro",
+          "praise_id": "f195d8ee-fc27-40e0-9c0a-fa13d80a882e",
+          "praise_name": "Fui lavado no sangue do Cordeiro",
+          "created": false
+        },
+        {
+          "vid": "i2FxB2KmSz0",
+          "song": "Jesus voltará pra me buscar",
+          "praise_id": "1ee4adcd-34fb-41d6-834d-2be5ea1fd538",
+          "praise_name": "Jesus voltará pra me buscar! (Maranata)",
+          "created": false
+        },
+        {
+          "vid": "OToltEExFPI",
+          "song": "Muito em breve o Rei vem",
+          "praise_id": "9288d5b3-4153-410c-b851-9414b6458505",
+          "praise_name": "Muito em breve o Rei vem",
+          "created": false
+        },
+        {
+          "vid": "Hfye9ZrSPd0",
+          "song": "Tenho no meu coração",
+          "praise_id": "3c366df7-52c9-4d64-9ffb-03e6d4699e3e",
+          "praise_name": "Tenho no meu coração",
+          "created": false
+        },
+        {
+          "vid": "rImEh9JbLMc",
+          "song": "Tenho um coração alegre",
+          "praise_id": "51ae5898-8189-4b0b-89ac-515869e2e7d4",
+          "praise_name": "Tenho um coração alegre",
+          "created": false
+        },
+        {
+          "vid": "tdeV7x8MQOs",
+          "song": "Você sabe o que é salvação",
+          "praise_id": "15e5425e-8d04-40c0-82e0-36e96f082ebd",
+          "praise_name": "Você sabe o que é salvação",
+          "created": false
+        },
+        {
+          "vid": "NrFgkqpXhSs",
+          "song": "É tão triste não ver a luz - Bartimeu",
+          "praise_id": "7a734986-54c0-4461-935e-6f6591838b47",
+          "praise_name": "É tão triste não ver a luz (Cego bastimeu)",
+          "created": false
+        }
+      ],
+      "unmatched_created": [],
+      "stats": {
+        "error": 0,
+        "metadata_errors": 12,
+        "metadata_fallback_used": 12,
+        "unlisted": 0,
+        "short": 0,
+        "kept_raw": 12,
+        "deduped_in_playlist": 0
+      },
+      "summary": {
+        "playlist_total": 14,
+        "materials_new": 12,
+        "praises_created": 0,
+        "lyrics_filled": 0,
+        "skipped_exists_early": 2,
+        "skipped_exists_late": 0,
+        "skipped_deduped_in_playlist": 0,
+        "skipped_title_filter": 0,
+        "skipped_unparseable": 0,
+        "sql_statements": 12
+      }
+    },
+    {
+      "playlist_url": "https://www.youtube.com/playlist?list=PLFElx3O_dMZul1_Vn18NgHnOSb-1OpCnB",
+      "playlist_id": "PLFElx3O_dMZul1_Vn18NgHnOSb-1OpCnB",
+      "material_kind": "4a21d073-1726-41a3-bca7-77550f91e02a",
+      "materials_new": [
+        {
+          "material_id": "b6ebc8bc-0714-4577-9aff-8f1dd8e05e94",
+          "praise_id": "bb38bd5c-8f92-4557-8f08-8a5b3b097be5",
+          "praise_name": "Clama, ó igreja",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "228HXg9DXyc",
+          "url": "https://www.youtube.com/watch?v=228HXg9DXyc",
+          "song": "Clama ó igreja",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "8392042a-b40b-4256-99ed-2fa4062dac3a",
+          "praise_id": "d8a7b948-6ba4-4164-a452-f5e7a07e2c62",
+          "praise_name": "Fala ao meu coração, Jesus",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "1goExKnuJI8",
+          "url": "https://www.youtube.com/watch?v=1goExKnuJI8",
+          "song": "Fala ao meu coração Jesus",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "bb6597cb-67f1-483e-b1a8-01477b982114",
+          "praise_id": "1ee4adcd-34fb-41d6-834d-2be5ea1fd538",
+          "praise_name": "Jesus voltará pra me buscar! (Maranata)",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "PPUMEjll3Oo",
+          "url": "https://www.youtube.com/watch?v=PPUMEjll3Oo",
+          "song": "Maranata (Jesus Breve virá)",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "76a80d22-43ab-44ac-97d3-e7d30925deaf",
+          "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+          "praise_name": "O Espírito do Senhor vem sobre mim",
+          "has_pes": true,
+          "tags": [
+            "Avulsos",
+            "CIAs",
+            "PES"
+          ],
+          "vid": "IvGuPfmPQ6I",
+          "url": "https://www.youtube.com/watch?v=IvGuPfmPQ6I",
+          "song": "O Espírito do Senhor vem sobre mim",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "a7ad59d5-b738-4ea5-af42-001500228d0f",
+          "praise_id": "fe296940-517d-4128-9595-5dab5b5cf038",
+          "praise_name": "Sei que na cruz seu sangue verteu",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "TK-hSoeJlGI",
+          "url": "https://www.youtube.com/watch?v=TK-hSoeJlGI",
+          "song": "Sei que na cruz",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "3fcd2880-546e-466b-ad2a-79d1bab55b9e",
+          "praise_id": "e802920d-ad78-4d10-a4a6-395bc3d5a438",
+          "praise_name": "Sou o Santo Verdadeiro",
+          "has_pes": false,
+          "tags": [
+            "Avulsos"
+          ],
+          "vid": "H_44w2lHddU",
+          "url": "https://www.youtube.com/watch?v=H_44w2lHddU",
+          "song": "Sou o Santo Verdadeiro",
+          "views": 0,
+          "created_praise": true
+        }
+      ],
+      "praises_created": [
+        {
+          "id": "e802920d-ad78-4d10-a4a6-395bc3d5a438",
+          "name": "Sou o Santo Verdadeiro",
+          "vid": "H_44w2lHddU",
+          "author": null
+        }
+      ],
+      "lyrics_filled": [],
+      "skipped_exists": [],
+      "skipped_exists_early": [
+        {
+          "vid": "ho64P8NzGfc",
+          "title": "Deus falou comigo - Gestos CIAs EBD ICM",
+          "song": "Deus falou comigo",
+          "url": "https://www.youtube.com/watch?v=ho64P8NzGfc",
+          "existing_url": "https://www.youtube.com/watch?v=ho64P8NzGfc",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "OToltEExFPI",
+          "title": "Muito em breve o Rei vem -  Gestos CIAs EBD ICM",
+          "song": "Muito em breve o Rei vem",
+          "url": "https://www.youtube.com/watch?v=OToltEExFPI",
+          "existing_url": "https://www.youtube.com/watch?v=OToltEExFPI",
+          "reason": "already_in_d1"
+        }
+      ],
+      "skipped_title_filter": [
+        {
+          "vid": "zfQNcFYaFlQ",
+          "title": "NA",
+          "reason": "title_filter"
+        },
+        {
+          "vid": "IwieSuRSD54",
+          "title": "NA",
+          "reason": "title_filter"
+        }
+      ],
+      "skipped_unparseable": [],
+      "matched": [
+        {
+          "vid": "228HXg9DXyc",
+          "song": "Clama ó igreja",
+          "praise_id": "bb38bd5c-8f92-4557-8f08-8a5b3b097be5",
+          "praise_name": "Clama, ó igreja",
+          "created": false
+        },
+        {
+          "vid": "1goExKnuJI8",
+          "song": "Fala ao meu coração Jesus",
+          "praise_id": "d8a7b948-6ba4-4164-a452-f5e7a07e2c62",
+          "praise_name": "Fala ao meu coração, Jesus",
+          "created": false
+        },
+        {
+          "vid": "PPUMEjll3Oo",
+          "song": "Maranata (Jesus Breve virá)",
+          "praise_id": "1ee4adcd-34fb-41d6-834d-2be5ea1fd538",
+          "praise_name": "Jesus voltará pra me buscar! (Maranata)",
+          "created": false
+        },
+        {
+          "vid": "IvGuPfmPQ6I",
+          "song": "O Espírito do Senhor vem sobre mim",
+          "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+          "praise_name": "O Espírito do Senhor vem sobre mim",
+          "created": false
+        },
+        {
+          "vid": "TK-hSoeJlGI",
+          "song": "Sei que na cruz",
+          "praise_id": "fe296940-517d-4128-9595-5dab5b5cf038",
+          "praise_name": "Sei que na cruz seu sangue verteu",
+          "created": false
+        },
+        {
+          "vid": "H_44w2lHddU",
+          "song": "Sou o Santo Verdadeiro",
+          "praise_id": "e802920d-ad78-4d10-a4a6-395bc3d5a438",
+          "praise_name": "Sou o Santo Verdadeiro",
+          "created": true
+        }
+      ],
+      "unmatched_created": [
+        {
+          "vid": "H_44w2lHddU",
+          "title": "Sou o Santo Verdadeiro - Gestos CIAs EBD ICM",
+          "song": "Sou o Santo Verdadeiro",
+          "views": 0,
+          "description": "",
+          "url": "https://www.youtube.com/watch?v=H_44w2lHddU"
+        }
+      ],
+      "stats": {
+        "error": 0,
+        "metadata_errors": 6,
+        "metadata_fallback_used": 6,
+        "unlisted": 0,
+        "short": 0,
+        "kept_raw": 6,
+        "deduped_in_playlist": 0
+      },
+      "summary": {
+        "playlist_total": 10,
+        "materials_new": 6,
+        "praises_created": 1,
+        "lyrics_filled": 0,
+        "skipped_exists_early": 2,
+        "skipped_exists_late": 0,
+        "skipped_deduped_in_playlist": 0,
+        "skipped_title_filter": 2,
+        "skipped_unparseable": 0,
+        "sql_statements": 8
+      }
+    },
+    {
+      "playlist_url": "https://www.youtube.com/playlist?list=PLMjaVIGlga9acYsDTmioqTxtEZotOzI5A",
+      "playlist_id": "PLMjaVIGlga9acYsDTmioqTxtEZotOzI5A",
+      "material_kind": "4a21d073-1726-41a3-bca7-77550f91e02a",
+      "materials_new": [
+        {
+          "material_id": "b676f0bd-f216-4bc3-bb13-2c497aa545af",
+          "praise_id": "32e2ed2b-5540-4d99-8702-3c5797ef2213",
+          "praise_name": "Com o Espírito de Deus em minha vida",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "5L9ItXgZY7c",
+          "url": "https://www.youtube.com/watch?v=5L9ItXgZY7c",
+          "song": "Com o Espírito de Deus em minha vida",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "8a3ee045-a7eb-428d-8482-e73b291ac0c1",
+          "praise_id": "01cd300a-558c-4498-b301-d0139bc15467",
+          "praise_name": "Como uma folha ao vento",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "TDodj1Uzwe4",
+          "url": "https://www.youtube.com/watch?v=TDodj1Uzwe4",
+          "song": "Como uma folha ao vento",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "4d1bbecc-f170-481f-9d97-cb82bf8f6879",
+          "praise_id": "c81cbace-c9e2-420b-a4db-e265a94add6b",
+          "praise_name": "Cria em mim, ó Deus",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "BgjWR42NrSk",
+          "url": "https://www.youtube.com/watch?v=BgjWR42NrSk",
+          "song": "Cria em mim, ó Deus",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "039f8463-ef8b-4f07-85fd-438bdd7038ba",
+          "praise_id": "987ff3c9-b524-4f2d-8148-26d006c4a654",
+          "praise_name": "Maranata! Vem, Senhor Jesus",
+          "has_pes": false,
+          "tags": [
+            "CIAs",
+            "Coletânea"
+          ],
+          "vid": "rnIlmeByHpk",
+          "url": "https://www.youtube.com/watch?v=rnIlmeByHpk",
+          "song": "Maranata! Vem, Senhor Jesus",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "db6401f2-591d-445d-a982-72272b14e3d4",
+          "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+          "praise_name": "O Espírito do Senhor vem sobre mim",
+          "has_pes": true,
+          "tags": [
+            "Avulsos",
+            "CIAs",
+            "PES"
+          ],
+          "vid": "qkaSZCjsptQ",
+          "url": "https://www.youtube.com/watch?v=qkaSZCjsptQ",
+          "song": "O Espírito do Senhor",
+          "views": 0,
+          "created_praise": false
+        },
+        {
+          "material_id": "20df93f4-d3d3-469f-8f74-2130f3889e86",
+          "praise_id": "5a41b043-c5db-4580-98ec-00ab9c74ce66",
+          "praise_name": "Quem tem ouvidos",
+          "has_pes": true,
+          "tags": [
+            "Avulsos",
+            "CIAs",
+            "PES"
+          ],
+          "vid": "nDxgxtoPSMg",
+          "url": "https://www.youtube.com/watch?v=nDxgxtoPSMg",
+          "song": "Quem tem ouvidos",
+          "views": 0,
+          "created_praise": false
+        }
+      ],
+      "praises_created": [],
+      "lyrics_filled": [],
+      "skipped_exists": [],
+      "skipped_exists_early": [
+        {
+          "vid": "viArWo8ywHU",
+          "title": "[GESTOS - 2026] - Louvor: Estou aqui pra confessar - Igreja Cristã Maranata",
+          "song": "Estou aqui pra confessar",
+          "url": "https://www.youtube.com/watch?v=viArWo8ywHU",
+          "existing_url": "https://www.youtube.com/watch?v=viArWo8ywHU",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "7D7J_YcTOcs",
+          "title": "Quero ser fiel a ti, Jesus (Jesus está vivo) - Gestos CIAs 2022 - Instituto ICM",
+          "song": "Quero ser fiel a ti, Jesus (Jesus está vivo)",
+          "url": "https://www.youtube.com/watch?v=7D7J_YcTOcs",
+          "existing_url": "https://www.youtube.com/watch?v=7D7J_YcTOcs",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "piaNuKE9CmQ",
+          "title": "Eu clamo, eu oro - Gestos CIAs 2022 - Instituto ICM",
+          "song": "Eu clamo, eu oro",
+          "url": "https://www.youtube.com/watch?v=piaNuKE9CmQ",
+          "existing_url": "https://www.youtube.com/watch?v=piaNuKE9CmQ",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "yL_nRC2GA-w",
+          "title": "Andai na minha presença -  Gestos CIAs 2022 - Instituto ICM",
+          "song": "Andai na minha presença",
+          "url": "https://www.youtube.com/watch?v=yL_nRC2GA-w",
+          "existing_url": "https://www.youtube.com/watch?v=yL_nRC2GA-w",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "E21-HAKxVls",
+          "title": "[GESTOS CRIANÇAS 2017] - LOUVOR: Do Alto Céu",
+          "song": "Do Alto Céu",
+          "url": "https://www.youtube.com/watch?v=E21-HAKxVls",
+          "existing_url": "https://www.youtube.com/watch?v=E21-HAKxVls",
+          "reason": "already_in_d1"
+        },
+        {
+          "vid": "n4omnxIcxwI",
+          "title": "[GESTOS CRIANÇAS 2017] - LOUVOR: Dá-me Um Coração Humilde e Reto",
+          "song": "Dá-me Um Coração Humilde e Reto",
+          "url": "https://www.youtube.com/watch?v=n4omnxIcxwI",
+          "existing_url": "https://www.youtube.com/watch?v=n4omnxIcxwI",
+          "reason": "already_in_d1"
+        }
+      ],
+      "skipped_title_filter": [],
+      "skipped_unparseable": [],
+      "matched": [
+        {
+          "vid": "5L9ItXgZY7c",
+          "song": "Com o Espírito de Deus em minha vida",
+          "praise_id": "32e2ed2b-5540-4d99-8702-3c5797ef2213",
+          "praise_name": "Com o Espírito de Deus em minha vida",
+          "created": false
+        },
+        {
+          "vid": "TDodj1Uzwe4",
+          "song": "Como uma folha ao vento",
+          "praise_id": "01cd300a-558c-4498-b301-d0139bc15467",
+          "praise_name": "Como uma folha ao vento",
+          "created": false
+        },
+        {
+          "vid": "BgjWR42NrSk",
+          "song": "Cria em mim, ó Deus",
+          "praise_id": "c81cbace-c9e2-420b-a4db-e265a94add6b",
+          "praise_name": "Cria em mim, ó Deus",
+          "created": false
+        },
+        {
+          "vid": "rnIlmeByHpk",
+          "song": "Maranata! Vem, Senhor Jesus",
+          "praise_id": "987ff3c9-b524-4f2d-8148-26d006c4a654",
+          "praise_name": "Maranata! Vem, Senhor Jesus",
+          "created": false
+        },
+        {
+          "vid": "qkaSZCjsptQ",
+          "song": "O Espírito do Senhor",
+          "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+          "praise_name": "O Espírito do Senhor vem sobre mim",
+          "created": false
+        },
+        {
+          "vid": "nDxgxtoPSMg",
+          "song": "Quem tem ouvidos",
+          "praise_id": "5a41b043-c5db-4580-98ec-00ab9c74ce66",
+          "praise_name": "Quem tem ouvidos",
+          "created": false
+        }
+      ],
+      "unmatched_created": [],
+      "stats": {
+        "error": 0,
+        "metadata_errors": 6,
+        "metadata_fallback_used": 6,
+        "unlisted": 0,
+        "short": 0,
+        "kept_raw": 6,
+        "deduped_in_playlist": 0
+      },
+      "summary": {
+        "playlist_total": 12,
+        "materials_new": 6,
+        "praises_created": 0,
+        "lyrics_filled": 0,
+        "skipped_exists_early": 6,
+        "skipped_exists_late": 0,
+        "skipped_deduped_in_playlist": 0,
+        "skipped_title_filter": 0,
+        "skipped_unparseable": 0,
+        "sql_statements": 6
+      }
+    }
+  ]
+}

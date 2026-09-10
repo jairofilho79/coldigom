@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SearchableSelect } from './SearchableSelect';
 import { InferenceBadge } from './BulkFolderScanStatus';
 import type { BulkFileItem } from '../lib/materialKindInference/scanFolder';
+import { isConvertibleAudio } from '../lib/audioConverter';
 import {
   MAX_UPLOAD_BYTES,
   formatarMB,
@@ -37,12 +38,18 @@ export function BulkFilePreviewList({
   materialKindOptions,
   onKindChange,
   onRemove,
+  onConvertToMp3,
+  onConvertAllToMp3,
+  converting = false,
   editable = true,
 }: {
   files: BulkFileItem[];
   materialKindOptions: Array<{ value: string; label: string }>;
   onKindChange?: (index: number, material_kind: string) => void;
   onRemove?: (index: number) => void;
+  onConvertToMp3?: (index: number) => void;
+  onConvertAllToMp3?: () => void;
+  converting?: boolean;
   editable?: boolean;
 }) {
   const [verTodos, setVerTodos] = useState(false);
@@ -61,11 +68,26 @@ export function BulkFilePreviewList({
       ].sort((a, b) => a.idx - b.idx);
   const ocultos = files.length - visiveis.length;
 
+  const convertiveis = comIndice.filter((x) => (x.it.file || x.it.driveFileId) && isConvertibleAudio(x.it.type));
+
   return (
     <div className="bulk-list">
       {problematicos.length > 0 && (
         <div className="bulk-scan-hint bulk-list-alerta" role="status">
           {problematicos.length} arquivo(s) precisam de atenção antes do envio.
+        </div>
+      )}
+      {convertiveis.length > 0 && onConvertAllToMp3 && (
+        <div className="bulk-scan-hint bulk-convert-bar" role="status">
+          <span>🎵 {convertiveis.length} áudio(s) conversível(is) para MP3 detectado(s).</span>
+          <button
+            type="button"
+            className="linkish bulk-convert-btn"
+            disabled={converting}
+            onClick={onConvertAllToMp3}
+          >
+            {converting ? 'Convertendo para MP3…' : `Converter ${convertiveis.length > 1 ? 'todos para MP3' : 'para MP3'}`}
+          </button>
         </div>
       )}
       {visiveis.map(({ it, idx, problema }) => {
@@ -101,6 +123,17 @@ export function BulkFilePreviewList({
             )}
             {canPreview || (editable && onRemove) ? (
               <div className="bulk-actions">
+                {editable && (it.file || it.driveFileId) && isConvertibleAudio(it.type) && onConvertToMp3 ? (
+                  <button
+                    type="button"
+                    className="bulk-remove"
+                    disabled={converting}
+                    aria-label={`Converter ${it.relPath} para MP3`}
+                    onClick={() => onConvertToMp3(idx)}
+                  >
+                    → MP3
+                  </button>
+                ) : null}
                 {it.driveFileId ? (
                   <a
                     className="bulk-remove"

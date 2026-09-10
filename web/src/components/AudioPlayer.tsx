@@ -3,6 +3,8 @@ import { MaterialInlineAdmin } from './MaterialInlineAdmin';
 import type { Material } from '../types';
 import type { SelectOption } from './selectTypes';
 
+import { isConvertibleAudio } from '../lib/audioConverter';
+
 const VOLUME_KEY = 'audio-volume';
 
 function formatTime(s: number): string {
@@ -34,6 +36,7 @@ type Props = {
     saving: boolean;
     onUpdateKind: (materialId: string, kind: string) => Promise<void>;
     onDelete: (materialId: string) => Promise<void>;
+    onConvertToMp3?: (material: Material) => Promise<void>;
   };
 };
 
@@ -184,7 +187,19 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
         ) : (
           <span className="audio-player-track-name">{trackName}</span>
         )}
-        <span className="audio-player-type-badge">MP3</span>
+        <div className="audio-player-meta">
+          <span className="audio-player-type-badge">{(current?.type || 'mp3').toUpperCase()}</span>
+          {admin?.onConvertToMp3 && current && isConvertibleAudio(current.type) && (
+            <button
+              type="button"
+              className="linkish audio-player-convert-btn"
+              disabled={admin.saving}
+              onClick={() => admin.onConvertToMp3!(current)}
+            >
+              Converter para MP3
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="audio-player-row">

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
+import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, downloadDriveFileBlob, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
 import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
@@ -12,7 +12,14 @@ import { PainelImportacaoDrive } from '../components/PainelImportacaoDrive';
 import { PainelPastaLocal } from '../components/PainelPastaLocal';
 import { StatusImportacaoDrive } from '../components/StatusImportacaoDrive';
 import { SearchableSelect } from '../components/SearchableSelect';
-import { groupMaterialsByType, materialDisplayName } from '../lib/materials';
+import {
+  groupMaterialsByType,
+  materialDisplayName,
+  isAudioMaterialType,
+  AUDIO_MATERIAL_TYPES,
+  sortMaterialsAlphabetically,
+} from '../lib/materials';
+import { convertAudioToMp3, isConvertibleAudio } from '../lib/audioConverter';
 import { pedeReconexaoDoDrive } from '../services/mensagensDeErro';
 import {
   folderNameFromFiles,
@@ -20,7 +27,7 @@ import {
   mapDriveFilesAsync,
   type BulkFileItem,
 } from '../lib/materialKindInference/scanFolder';
-import type { PraiseDetail, Tag, MaterialKind } from '../types';
+import type { PraiseDetail, Tag, MaterialKind, Material } from '../types';
 import { problemaDoArquivo } from '../lib/uploadLimits';
 
 function tagLabel(tag: Tag, catalog?: Tag[]): string {
@@ -33,7 +40,7 @@ function tagLabel(tag: Tag, catalog?: Tag[]): string {
 }
 
 /** Tipos que ganham seção desenhada sob medida na tela. */
-const TIPOS_COM_SECAO_PROPRIA = new Set(['youtube', 'mp3', 'pdf', 'chord']);
+const TIPOS_COM_SECAO_PROPRIA = new Set(['youtube', 'mp3', 'pdf', 'chord', ...AUDIO_MATERIAL_TYPES]);
 
 const MATERIAL_TYPE_OPTIONS = [
   { value: 'youtube', label: 'YouTube' },
@@ -159,6 +166,7 @@ export function PraiseDetailPage() {
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
   const [bulkFiles, setBulkFiles] = useState<BulkFileItem[]>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
+  const [isConvertingBulk, setIsConvertingBulk] = useState(false);
   const [bulkScan, setBulkScan] = useState<BulkScanState>(INITIAL_BULK_SCAN);
   const bulkScanAbortRef = useRef<AbortController | null>(null);
   const pendingFolderFilesRef = useRef<File[] | null>(null);
@@ -171,6 +179,7 @@ export function PraiseDetailPage() {
   const [driveSkipped, setDriveSkipped] = useState<Array<{ path: string; reason: string }>>([]);
   const [driveImportJob, setDriveImportJob] = useState<ImportJobSummary | null>(null);
   const [driveBusy, setDriveBusy] = useState(false);
+  const [isConvertingDrive, setIsConvertingDrive] = useState(false);
   const [driveJobErro, setDriveJobErro] = useState<string | null>(null);
   const [mergeAviso, setMergeAviso] = useState<string | null>(null);
   const [rascunhoAviso, setRascunhoAviso] = useState<string | null>(null);
@@ -299,6 +308,60 @@ export function PraiseDetailPage() {
   const handleBulkRemove = useCallback((index: number) => {
     setBulkFiles((list) => list.filter((_, i) => i !== index));
   }, []);
+
+  const handleConvertBulkItemToMp3 = useCallback(async (index: number) => {
+    const item = bulkFiles[index];
+    if (!item || !item.file || !isConvertibleAudio(item.type)) return;
+    setIsConvertingBulk(true);
+    setError(null);
+    try {
+      const convertedFile = await convertAudioToMp3(item.file);
+      setBulkFiles((list) =>
+        list.map((it, idx) => {
+          if (idx !== index) return it;
+          const newRelPath = it.relPath.replace(/\.[^/.]+$/, '.mp3');
+          return {
+            ...it,
+            file: convertedFile,
+            type: 'mp3',
+            relPath: newRelPath,
+            sizeBytes: convertedFile.size,
+          };
+        })
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao converter áudio para MP3');
+    } finally {
+      setIsConvertingBulk(false);
+    }
+  }, [bulkFiles]);
+
+  const handleConvertAllBulkAudiosToMp3 = useCallback(async () => {
+    setIsConvertingBulk(true);
+    setError(null);
+    try {
+      const updated = [...bulkFiles];
+      for (let i = 0; i < updated.length; i++) {
+        const item = updated[i];
+        if (item.file && isConvertibleAudio(item.type)) {
+          const convertedFile = await convertAudioToMp3(item.file);
+          const newRelPath = item.relPath.replace(/\.[^/.]+$/, '.mp3');
+          updated[i] = {
+            ...item,
+            file: convertedFile,
+            type: 'mp3',
+            relPath: newRelPath,
+            sizeBytes: convertedFile.size,
+          };
+        }
+      }
+      setBulkFiles(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao converter áudios para MP3');
+    } finally {
+      setIsConvertingBulk(false);
+    }
+  }, [bulkFiles]);
 
   const handleDriveKindChange = useCallback((index: number, material_kind: string) => {
     setDriveFiles((list) => list.map((x, i) => (i === index ? { ...x, material_kind } : x)));
@@ -487,6 +550,94 @@ export function PraiseDetailPage() {
     }
   }, [driveUrl, driveConnected, materialKinds, irAutorizarDrive]);
 
+  const handleConvertDriveItemToMp3 = useCallback(async (index: number) => {
+    const item = driveFiles[index];
+    if (!item || !isConvertibleAudio(item.type)) return;
+    setIsConvertingDrive(true);
+    setError(null);
+    try {
+      let sourceBlob: Blob;
+      let originalName: string;
+      if (item.file) {
+        sourceBlob = item.file;
+        originalName = item.file.name;
+      } else if (item.driveFileId) {
+        sourceBlob = await downloadDriveFileBlob(item.driveFileId);
+        originalName = item.relPath.split(/[/\\]/).pop() || 'audio.m4a';
+      } else {
+        return;
+      }
+      const sourceFile = new File([sourceBlob], originalName, { type: sourceBlob.type || 'audio/mp4' });
+      const convertedFile = await convertAudioToMp3(sourceFile);
+      setDriveFiles((list) =>
+        list.map((it, idx) => {
+          if (idx !== index) return it;
+          const newRelPath = it.relPath.replace(/\.[^/.]+$/, '.mp3');
+          return {
+            ...it,
+            file: convertedFile,
+            type: 'mp3',
+            relPath: newRelPath,
+            sizeBytes: convertedFile.size,
+          };
+        })
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Falha ao converter áudio do Google Drive para MP3';
+      if (pedeReconexaoDoDrive(msg)) {
+        irAutorizarDrive();
+        return;
+      }
+      setError(msg);
+    } finally {
+      setIsConvertingDrive(false);
+    }
+  }, [driveFiles, irAutorizarDrive]);
+
+  const handleConvertAllDriveAudiosToMp3 = useCallback(async () => {
+    setIsConvertingDrive(true);
+    setError(null);
+    try {
+      const updated = [...driveFiles];
+      for (let i = 0; i < updated.length; i++) {
+        const item = updated[i];
+        if (isConvertibleAudio(item.type)) {
+          let sourceBlob: Blob;
+          let originalName: string;
+          if (item.file) {
+            sourceBlob = item.file;
+            originalName = item.file.name;
+          } else if (item.driveFileId) {
+            sourceBlob = await downloadDriveFileBlob(item.driveFileId);
+            originalName = item.relPath.split(/[/\\]/).pop() || 'audio.m4a';
+          } else {
+            continue;
+          }
+          const sourceFile = new File([sourceBlob], originalName, { type: sourceBlob.type || 'audio/mp4' });
+          const convertedFile = await convertAudioToMp3(sourceFile);
+          const newRelPath = item.relPath.replace(/\.[^/.]+$/, '.mp3');
+          updated[i] = {
+            ...item,
+            file: convertedFile,
+            type: 'mp3',
+            relPath: newRelPath,
+            sizeBytes: convertedFile.size,
+          };
+        }
+      }
+      setDriveFiles(updated);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Falha ao converter áudios do Google Drive para MP3';
+      if (pedeReconexaoDoDrive(msg)) {
+        irAutorizarDrive();
+        return;
+      }
+      setError(msg);
+    } finally {
+      setIsConvertingDrive(false);
+    }
+  }, [driveFiles, irAutorizarDrive]);
+
   const runFolderScan = useCallback(async (files: File[]) => {
     if (files.length === 0) {
       setBulkFiles([]);
@@ -612,7 +763,10 @@ export function PraiseDetailPage() {
     () => (materialGroups.find((g) => g.type === 'youtube')?.items ?? []).filter((m) => m.url),
     [materialGroups]
   );
-  const audioMaterials = materialGroups.find((g) => g.type === 'mp3')?.items ?? [];
+  const audioMaterials = useMemo(
+    () => sortMaterialsAlphabetically((praise?.materials ?? []).filter((m) => isAudioMaterialType(m.type))),
+    [praise?.materials]
+  );
   const pdfMaterials = materialGroups.find((g) => g.type === 'pdf')?.items ?? [];
   const chordMaterials = materialGroups.find((g) => g.type === 'chord')?.items ?? [];
   // Todo o resto. Sem esta lista, material que a API aceitou (mid, gestures, txt,
@@ -661,12 +815,40 @@ export function PraiseDetailPage() {
     }
   };
 
+  const handleConvertMaterialToMp3 = async (m: Material) => {
+    if (!m.r2_key || !id) return;
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      const assetUrl = getAssetUrl(m.r2_key);
+      const res = await fetch(assetUrl);
+      if (!res.ok) throw new Error('Não foi possível baixar o áudio para conversão.');
+      const blob = await res.blob();
+      const mp3File = await convertAudioToMp3(blob, {
+        filename: `${m.material_kind_name || 'audio'}.m4a`,
+      });
+      await bulkUploadMaterials(id, [{
+        file: mp3File,
+        material_kind: m.material_kind,
+        type: 'mp3',
+        file_path_legacy: m.file_path_legacy ? m.file_path_legacy.replace(/\.[^.]+$/, '') + '.mp3' : undefined,
+      }]);
+      const updated = await deleteMaterial(m.id);
+      aplicarEscrita(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao converter material para MP3');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
   const materialAdminProps = canEditMaterialsInline
     ? {
         materialKindOptions,
         saving: savingMaterials,
         onUpdateKind: handleMaterialKindChange,
         onDelete: handleMaterialDelete,
+        onConvertToMp3: handleConvertMaterialToMp3,
       }
     : undefined;
 
@@ -759,29 +941,70 @@ export function PraiseDetailPage() {
           louvorNoServidor = true;
         }
         if (bulkFiles.length > 0) {
-          created = await bulkUploadMaterials(
-            created.id,
-            bulkFiles
-              .filter((f): f is BulkFileItem & { file: File } => Boolean(f.file))
-              .map((f) => ({
-                file: f.file,
-                material_kind: f.material_kind,
-                type: f.type,
-                file_path_legacy: f.relPath,
-              }))
-          );
+          const filesToUpload: Array<{ file: File; material_kind: string; type: string; file_path_legacy?: string }> = [];
+          for (const f of bulkFiles) {
+            if (!f.file) continue;
+            let file = f.file;
+            let type = f.type;
+            let relPath = f.relPath;
+            if (isConvertibleAudio(f.type)) {
+              file = await convertAudioToMp3(f.file);
+              type = 'mp3';
+              relPath = f.relPath.replace(/\.[^/.]+$/, '.mp3');
+            }
+            filesToUpload.push({
+              file,
+              material_kind: f.material_kind,
+              type,
+              file_path_legacy: relPath,
+            });
+          }
+          if (filesToUpload.length > 0) {
+            created = await bulkUploadMaterials(created.id, filesToUpload);
+          }
         }
-        let driveImportJobId: string | undefined;
-        const driveItems = driveFiles.filter((f) => f.driveFileId);
-        if (driveItems.length > 0) {
-          const started = await startDriveImport(
-            created.id,
-            driveItems.map((f) => ({
-              drive_file_id: f.driveFileId!,
+
+        const driveAudioFilesToUpload: Array<{ file: File; material_kind: string; type: string; file_path_legacy?: string }> = [];
+        const driveItemsToQueue: Array<{ drive_file_id: string; material_kind: string; type: string; file_path_legacy?: string }> = [];
+
+        for (const f of driveFiles) {
+          if (f.file) {
+            driveAudioFilesToUpload.push({
+              file: f.file,
               material_kind: f.material_kind,
               type: f.type,
               file_path_legacy: f.relPath,
-            }))
+            });
+          } else if (isConvertibleAudio(f.type) && f.driveFileId) {
+            const blob = await downloadDriveFileBlob(f.driveFileId);
+            const origName = f.relPath.split(/[/\\]/).pop() || 'audio.m4a';
+            const sourceFile = new File([blob], origName, { type: blob.type || 'audio/mp4' });
+            const converted = await convertAudioToMp3(sourceFile);
+            driveAudioFilesToUpload.push({
+              file: converted,
+              material_kind: f.material_kind,
+              type: 'mp3',
+              file_path_legacy: f.relPath.replace(/\.[^/.]+$/, '.mp3'),
+            });
+          } else if (f.driveFileId) {
+            driveItemsToQueue.push({
+              drive_file_id: f.driveFileId,
+              material_kind: f.material_kind,
+              type: f.type,
+              file_path_legacy: f.relPath,
+            });
+          }
+        }
+
+        if (driveAudioFilesToUpload.length > 0) {
+          created = await bulkUploadMaterials(created.id, driveAudioFilesToUpload);
+        }
+
+        let driveImportJobId: string | undefined;
+        if (driveItemsToQueue.length > 0) {
+          const started = await startDriveImport(
+            created.id,
+            driveItemsToQueue
           );
           driveImportJobId = started.id;
           setDriveImportJob(started);
@@ -816,6 +1039,10 @@ export function PraiseDetailPage() {
       }
     } catch (err) {
       const motivo = err instanceof Error ? err.message : 'Falha ao salvar metadados';
+      if (pedeReconexaoDoDrive(motivo)) {
+        irAutorizarDrive();
+        return;
+      }
       // Sem esta distinção o usuário lia só o erro do envio e concluía que nada
       // tinha acontecido — quando na verdade o louvor já estava no acervo.
       setError(
@@ -1409,6 +1636,9 @@ export function PraiseDetailPage() {
               materialKindOptions={materialKindOptions}
               onKindChange={handleBulkKindChange}
               onRemove={handleBulkRemove}
+              onConvertToMp3={handleConvertBulkItemToMp3}
+              onConvertAllToMp3={handleConvertAllBulkAudiosToMp3}
+              converting={isConvertingBulk}
             >
               <p className="bulk-scan-hint">
                 Os arquivos serão enviados ao clicar em &quot;Criar louvor&quot;.
@@ -1429,6 +1659,9 @@ export function PraiseDetailPage() {
               materialKindOptions={materialKindOptions}
               onKindChange={handleDriveKindChange}
               onRemove={handleDriveRemove}
+              onConvertToMp3={handleConvertDriveItemToMp3}
+              onConvertAllToMp3={handleConvertAllDriveAudiosToMp3}
+              converting={isConvertingDrive}
               acaoDoLote={
                 <p className="bulk-scan-hint">
                   Os arquivos serão importados ao clicar em &quot;Criar louvor&quot;.
@@ -1443,6 +1676,8 @@ export function PraiseDetailPage() {
               className="auth-btn"
               disabled={
                 savingMetadata ||
+                isConvertingBulk ||
+                isConvertingDrive ||
                 !userName ||
                 bulkTemProblema ||
                 driveTemProblema ||
@@ -1565,8 +1800,15 @@ export function PraiseDetailPage() {
                             url: newMat.url.trim(),
                           });
                         } else if (newMat.type === 'pdf' || newMat.type === 'mp3') {
+                          let fileToUpload = newMat.file!;
+                          if (newMat.type === 'mp3') {
+                            const ext = fileToUpload.name.split('.').pop()?.toLowerCase() || '';
+                            if (isConvertibleAudio(ext)) {
+                              fileToUpload = await convertAudioToMp3(fileToUpload);
+                            }
+                          }
                           updated = await bulkUploadMaterials(id, [{
-                            file: newMat.file!,
+                            file: fileToUpload,
                             material_kind: newMat.material_kind,
                             type: newMat.type,
                           }]);
@@ -1595,7 +1837,7 @@ export function PraiseDetailPage() {
                   A categoria de cada arquivo é inferida pelo nome; revise itens marcados como Desconhecido antes de enviar.
                 </p>
               }
-              desabilitado={bulkUploading}
+              desabilitado={bulkUploading || isConvertingBulk}
               scan={bulkScan}
               arquivos={bulkFiles}
               onEscolherPasta={(files) => void runFolderScan(files)}
@@ -1603,6 +1845,9 @@ export function PraiseDetailPage() {
               materialKindOptions={materialKindOptions}
               onKindChange={handleBulkKindChange}
               onRemove={handleBulkRemove}
+              onConvertToMp3={handleConvertBulkItemToMp3}
+              onConvertAllToMp3={handleConvertAllBulkAudiosToMp3}
+              converting={isConvertingBulk}
             >
               <div className="edit-actions">
                 <button
@@ -1611,6 +1856,7 @@ export function PraiseDetailPage() {
                   disabled={
                     !id ||
                     bulkUploading ||
+                    isConvertingBulk ||
                     bulkTemProblema ||
                     bulkFiles.some((f) => !f.material_kind)
                   }
@@ -1619,17 +1865,25 @@ export function PraiseDetailPage() {
                     setBulkUploading(true);
                     setError(null);
                     try {
-                      const updated = await bulkUploadMaterials(
-                        id,
-                        bulkFiles
-                          .filter((f): f is BulkFileItem & { file: File } => Boolean(f.file))
-                          .map(f => ({
-                            file: f.file,
-                            material_kind: f.material_kind,
-                            type: f.type,
-                            file_path_legacy: f.relPath,
-                          }))
-                      );
+                      const filesToUpload: Array<{ file: File; material_kind: string; type: string; file_path_legacy?: string }> = [];
+                      for (const f of bulkFiles) {
+                        if (!f.file) continue;
+                        let file = f.file;
+                        let type = f.type;
+                        let relPath = f.relPath;
+                        if (isConvertibleAudio(f.type)) {
+                          file = await convertAudioToMp3(f.file);
+                          type = 'mp3';
+                          relPath = f.relPath.replace(/\.[^/.]+$/, '.mp3');
+                        }
+                        filesToUpload.push({
+                          file,
+                          material_kind: f.material_kind,
+                          type,
+                          file_path_legacy: relPath,
+                        });
+                      }
+                      const updated = await bulkUploadMaterials(id, filesToUpload);
                       aplicarEscrita(updated);
                       setBulkFiles([]);
                       setBulkScan(INITIAL_BULK_SCAN);
@@ -1652,7 +1906,7 @@ export function PraiseDetailPage() {
               onConectar={irAutorizarDrive}
               url={driveUrl}
               onUrlChange={setDriveUrl}
-              ocupado={driveBusy}
+              ocupado={driveBusy || isConvertingDrive}
               onMapear={() => void runDriveScan()}
               scan={driveScan}
               arquivos={driveFiles}
@@ -1660,6 +1914,9 @@ export function PraiseDetailPage() {
               materialKindOptions={materialKindOptions}
               onKindChange={handleDriveKindChange}
               onRemove={handleDriveRemove}
+              onConvertToMp3={handleConvertDriveItemToMp3}
+              onConvertAllToMp3={handleConvertAllDriveAudiosToMp3}
+              converting={isConvertingDrive}
               acaoDoLote={
                 <div className="edit-actions">
                   <button
@@ -1668,6 +1925,7 @@ export function PraiseDetailPage() {
                     disabled={
                       !id ||
                       driveBusy ||
+                      isConvertingDrive ||
                       driveTemProblema ||
                       driveFiles.some((f) => !f.material_kind) ||
                       Boolean(driveImportJob && !['done', 'completed_with_errors', 'failed'].includes(driveImportJob.status))
@@ -1677,23 +1935,60 @@ export function PraiseDetailPage() {
                       setDriveBusy(true);
                       setError(null);
                       try {
-                        const started = await startDriveImport(
-                          id,
-                          driveFiles
-                            .filter((f) => f.driveFileId)
-                            .map((f) => ({
-                              drive_file_id: f.driveFileId!,
+                        const driveAudioFilesToUpload: Array<{ file: File; material_kind: string; type: string; file_path_legacy?: string }> = [];
+                        const driveItemsToQueue: Array<{ drive_file_id: string; material_kind: string; type: string; file_path_legacy?: string }> = [];
+
+                        for (const f of driveFiles) {
+                          if (f.file) {
+                            driveAudioFilesToUpload.push({
+                              file: f.file,
                               material_kind: f.material_kind,
                               type: f.type,
                               file_path_legacy: f.relPath,
-                            }))
-                        );
-                        const job = await getImportJob(started.id);
-                        preserveScroll(drivePanelRef.current, () => {
-                          setDriveImportJob(job);
-                          setDriveFiles([]);
-                          setDriveScan(INITIAL_BULK_SCAN);
-                        });
+                            });
+                          } else if (isConvertibleAudio(f.type) && f.driveFileId) {
+                            const blob = await downloadDriveFileBlob(f.driveFileId);
+                            const origName = f.relPath.split(/[/\\]/).pop() || 'audio.m4a';
+                            const sourceFile = new File([blob], origName, { type: blob.type || 'audio/mp4' });
+                            const converted = await convertAudioToMp3(sourceFile);
+                            driveAudioFilesToUpload.push({
+                              file: converted,
+                              material_kind: f.material_kind,
+                              type: 'mp3',
+                              file_path_legacy: f.relPath.replace(/\.[^/.]+$/, '.mp3'),
+                            });
+                          } else if (f.driveFileId) {
+                            driveItemsToQueue.push({
+                              drive_file_id: f.driveFileId,
+                              material_kind: f.material_kind,
+                              type: f.type,
+                              file_path_legacy: f.relPath,
+                            });
+                          }
+                        }
+
+                        if (driveAudioFilesToUpload.length > 0) {
+                          const updated = await bulkUploadMaterials(id, driveAudioFilesToUpload);
+                          aplicarEscrita(updated);
+                        }
+
+                        if (driveItemsToQueue.length > 0) {
+                          const started = await startDriveImport(
+                            id,
+                            driveItemsToQueue
+                          );
+                          const job = await getImportJob(started.id);
+                          preserveScroll(drivePanelRef.current, () => {
+                            setDriveImportJob(job);
+                            setDriveFiles([]);
+                            setDriveScan(INITIAL_BULK_SCAN);
+                          });
+                        } else {
+                          preserveScroll(drivePanelRef.current, () => {
+                            setDriveFiles([]);
+                            setDriveScan(INITIAL_BULK_SCAN);
+                          });
+                        }
                       } catch (err) {
                         const message = err instanceof Error ? err.message : 'Falha ao iniciar importação do Drive';
                         if (pedeReconexaoDoDrive(message)) {
@@ -1706,7 +2001,7 @@ export function PraiseDetailPage() {
                       }
                     }}
                   >
-                    Importar {driveFiles.length} arquivo(s) do Drive
+                    {driveBusy ? 'Importando…' : `Importar ${driveFiles.length} arquivo(s) do Drive`}
                   </button>
                 </div>
               }

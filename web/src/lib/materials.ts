@@ -1,5 +1,12 @@
 import type { KnownMaterialType, Material, MaterialType } from '../types';
 
+export const AUDIO_MATERIAL_TYPES = new Set(['mp3', 'm4a', 'wav', 'aac', 'ogg', 'flac']);
+
+export function isAudioMaterialType(type: string | undefined | null): boolean {
+  if (!type) return false;
+  return AUDIO_MATERIAL_TYPES.has(type.toLowerCase());
+}
+
 const TYPE_ORDER: KnownMaterialType[] = ['youtube', 'pdf', 'mp3', 'chord'];
 
 const TYPE_LABELS: Record<KnownMaterialType, string> = {

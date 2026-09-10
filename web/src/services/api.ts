@@ -523,6 +523,25 @@ export async function startDriveImport(
   return response.data;
 }
 
+export async function downloadDriveFileBlob(fileId: string): Promise<Blob> {
+  const res = await fetch(`${API_BASE_URL}/api/drive/files/${encodeURIComponent(fileId)}/download`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    let msg = `Falha ao baixar arquivo do Drive (${res.status})`;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed.error) msg = parsed.error;
+    } catch {
+      if (text) msg = text;
+    }
+    throw new Error(msg);
+  }
+  return res.blob();
+}
+
 export async function getImportJob(jobId: string): Promise<ImportJobSummary> {
   const response = await fetchJson<{ data: ImportJobSummary }>(
     `${API_BASE_URL}/api/import-jobs/${jobId}`

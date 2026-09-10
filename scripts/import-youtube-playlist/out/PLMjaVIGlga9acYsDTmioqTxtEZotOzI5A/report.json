@@ -1,0 +1,220 @@
+{
+  "playlist_url": "https://www.youtube.com/playlist?list=PLMjaVIGlga9acYsDTmioqTxtEZotOzI5A",
+  "playlist_id": "PLMjaVIGlga9acYsDTmioqTxtEZotOzI5A",
+  "material_kind": "4a21d073-1726-41a3-bca7-77550f91e02a",
+  "materials_new": [
+    {
+      "material_id": "b676f0bd-f216-4bc3-bb13-2c497aa545af",
+      "praise_id": "32e2ed2b-5540-4d99-8702-3c5797ef2213",
+      "praise_name": "Com o Espírito de Deus em minha vida",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "5L9ItXgZY7c",
+      "url": "https://www.youtube.com/watch?v=5L9ItXgZY7c",
+      "song": "Com o Espírito de Deus em minha vida",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "8a3ee045-a7eb-428d-8482-e73b291ac0c1",
+      "praise_id": "01cd300a-558c-4498-b301-d0139bc15467",
+      "praise_name": "Como uma folha ao vento",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "TDodj1Uzwe4",
+      "url": "https://www.youtube.com/watch?v=TDodj1Uzwe4",
+      "song": "Como uma folha ao vento",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "4d1bbecc-f170-481f-9d97-cb82bf8f6879",
+      "praise_id": "c81cbace-c9e2-420b-a4db-e265a94add6b",
+      "praise_name": "Cria em mim, ó Deus",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "BgjWR42NrSk",
+      "url": "https://www.youtube.com/watch?v=BgjWR42NrSk",
+      "song": "Cria em mim, ó Deus",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "039f8463-ef8b-4f07-85fd-438bdd7038ba",
+      "praise_id": "987ff3c9-b524-4f2d-8148-26d006c4a654",
+      "praise_name": "Maranata! Vem, Senhor Jesus",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "rnIlmeByHpk",
+      "url": "https://www.youtube.com/watch?v=rnIlmeByHpk",
+      "song": "Maranata! Vem, Senhor Jesus",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "db6401f2-591d-445d-a982-72272b14e3d4",
+      "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+      "praise_name": "O Espírito do Senhor vem sobre mim",
+      "has_pes": true,
+      "tags": [
+        "Avulsos",
+        "CIAs",
+        "PES"
+      ],
+      "vid": "qkaSZCjsptQ",
+      "url": "https://www.youtube.com/watch?v=qkaSZCjsptQ",
+      "song": "O Espírito do Senhor",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "20df93f4-d3d3-469f-8f74-2130f3889e86",
+      "praise_id": "5a41b043-c5db-4580-98ec-00ab9c74ce66",
+      "praise_name": "Quem tem ouvidos",
+      "has_pes": true,
+      "tags": [
+        "Avulsos",
+        "CIAs",
+        "PES"
+      ],
+      "vid": "nDxgxtoPSMg",
+      "url": "https://www.youtube.com/watch?v=nDxgxtoPSMg",
+      "song": "Quem tem ouvidos",
+      "views": 0,
+      "created_praise": false
+    }
+  ],
+  "praises_created": [],
+  "lyrics_filled": [],
+  "skipped_exists": [],
+  "skipped_exists_early": [
+    {
+      "vid": "viArWo8ywHU",
+      "title": "[GESTOS - 2026] - Louvor: Estou aqui pra confessar - Igreja Cristã Maranata",
+      "song": "Estou aqui pra confessar",
+      "url": "https://www.youtube.com/watch?v=viArWo8ywHU",
+      "existing_url": "https://www.youtube.com/watch?v=viArWo8ywHU",
+      "reason": "already_in_d1"
+    },
+    {
+      "vid": "7D7J_YcTOcs",
+      "title": "Quero ser fiel a ti, Jesus (Jesus está vivo) - Gestos CIAs 2022 - Instituto ICM",
+      "song": "Quero ser fiel a ti, Jesus (Jesus está vivo)",
+      "url": "https://www.youtube.com/watch?v=7D7J_YcTOcs",
+      "existing_url": "https://www.youtube.com/watch?v=7D7J_YcTOcs",
+      "reason": "already_in_d1"
+    },
+    {
+      "vid": "piaNuKE9CmQ",
+      "title": "Eu clamo, eu oro - Gestos CIAs 2022 - Instituto ICM",
+      "song": "Eu clamo, eu oro",
+      "url": "https://www.youtube.com/watch?v=piaNuKE9CmQ",
+      "existing_url": "https://www.youtube.com/watch?v=piaNuKE9CmQ",
+      "reason": "already_in_d1"
+    },
+    {
+      "vid": "yL_nRC2GA-w",
+      "title": "Andai na minha presença -  Gestos CIAs 2022 - Instituto ICM",
+      "song": "Andai na minha presença",
+      "url": "https://www.youtube.com/watch?v=yL_nRC2GA-w",
+      "existing_url": "https://www.youtube.com/watch?v=yL_nRC2GA-w",
+      "reason": "already_in_d1"
+    },
+    {
+      "vid": "E21-HAKxVls",
+      "title": "[GESTOS CRIANÇAS 2017] - LOUVOR: Do Alto Céu",
+      "song": "Do Alto Céu",
+      "url": "https://www.youtube.com/watch?v=E21-HAKxVls",
+      "existing_url": "https://www.youtube.com/watch?v=E21-HAKxVls",
+      "reason": "already_in_d1"
+    },
+    {
+      "vid": "n4omnxIcxwI",
+      "title": "[GESTOS CRIANÇAS 2017] - LOUVOR: Dá-me Um Coração Humilde e Reto",
+      "song": "Dá-me Um Coração Humilde e Reto",
+      "url": "https://www.youtube.com/watch?v=n4omnxIcxwI",
+      "existing_url": "https://www.youtube.com/watch?v=n4omnxIcxwI",
+      "reason": "already_in_d1"
+    }
+  ],
+  "skipped_title_filter": [],
+  "skipped_unparseable": [],
+  "matched": [
+    {
+      "vid": "5L9ItXgZY7c",
+      "song": "Com o Espírito de Deus em minha vida",
+      "praise_id": "32e2ed2b-5540-4d99-8702-3c5797ef2213",
+      "praise_name": "Com o Espírito de Deus em minha vida",
+      "created": false
+    },
+    {
+      "vid": "TDodj1Uzwe4",
+      "song": "Como uma folha ao vento",
+      "praise_id": "01cd300a-558c-4498-b301-d0139bc15467",
+      "praise_name": "Como uma folha ao vento",
+      "created": false
+    },
+    {
+      "vid": "BgjWR42NrSk",
+      "song": "Cria em mim, ó Deus",
+      "praise_id": "c81cbace-c9e2-420b-a4db-e265a94add6b",
+      "praise_name": "Cria em mim, ó Deus",
+      "created": false
+    },
+    {
+      "vid": "rnIlmeByHpk",
+      "song": "Maranata! Vem, Senhor Jesus",
+      "praise_id": "987ff3c9-b524-4f2d-8148-26d006c4a654",
+      "praise_name": "Maranata! Vem, Senhor Jesus",
+      "created": false
+    },
+    {
+      "vid": "qkaSZCjsptQ",
+      "song": "O Espírito do Senhor",
+      "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+      "praise_name": "O Espírito do Senhor vem sobre mim",
+      "created": false
+    },
+    {
+      "vid": "nDxgxtoPSMg",
+      "song": "Quem tem ouvidos",
+      "praise_id": "5a41b043-c5db-4580-98ec-00ab9c74ce66",
+      "praise_name": "Quem tem ouvidos",
+      "created": false
+    }
+  ],
+  "unmatched_created": [],
+  "stats": {
+    "error": 0,
+    "metadata_errors": 6,
+    "metadata_fallback_used": 6,
+    "unlisted": 0,
+    "short": 0,
+    "kept_raw": 6,
+    "deduped_in_playlist": 0
+  },
+  "summary": {
+    "playlist_total": 12,
+    "materials_new": 6,
+    "praises_created": 0,
+    "lyrics_filled": 0,
+    "skipped_exists_early": 6,
+    "skipped_exists_late": 0,
+    "skipped_deduped_in_playlist": 0,
+    "skipped_title_filter": 0,
+    "skipped_unparseable": 0,
+    "sql_statements": 6
+  }
+}

@@ -22,6 +22,9 @@ export function PainelPastaLocal({
   materialKindOptions,
   onKindChange,
   onRemove,
+  onConvertToMp3,
+  onConvertAllToMp3,
+  converting,
   children,
 }: {
   ajuda?: ReactNode;
@@ -33,6 +36,9 @@ export function PainelPastaLocal({
   materialKindOptions: Array<{ value: string; label: string }>;
   onKindChange: (index: number, material_kind: string) => void;
   onRemove: (index: number) => void;
+  onConvertToMp3?: (index: number) => void;
+  onConvertAllToMp3?: () => void;
+  converting?: boolean;
   /** Rodapé de ação — a única parte que difere entre criar e editar. */
   children?: ReactNode;
 }) {
@@ -61,6 +67,9 @@ export function PainelPastaLocal({
             materialKindOptions={materialKindOptions}
             onKindChange={onKindChange}
             onRemove={onRemove}
+            onConvertToMp3={onConvertToMp3}
+            onConvertAllToMp3={onConvertAllToMp3}
+            converting={converting}
           />
           {children}
         </>

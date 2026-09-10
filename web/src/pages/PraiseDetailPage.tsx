@@ -353,9 +353,9 @@ export function PraiseDetailPage() {
             relPath: newRelPath,
             sizeBytes: convertedFile.size,
           };
+          setBulkFiles([...updated]);
         }
       }
-      setBulkFiles(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao converter áudios para MP3');
     } finally {
@@ -623,9 +623,9 @@ export function PraiseDetailPage() {
             relPath: newRelPath,
             sizeBytes: convertedFile.size,
           };
+          setDriveFiles([...updated]);
         }
       }
-      setDriveFiles(updated);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Falha ao converter áudios do Google Drive para MP3';
       if (pedeReconexaoDoDrive(msg)) {

@@ -11,6 +11,7 @@ import { corsAllowOrigin } from './origins';
 import { registerAssetsRoutes } from './routes/assets';
 import { registerAuthRoutes } from './routes/auth';
 import { registerDriveRoutes } from './routes/drive';
+import { registerGesturesRoutes } from './routes/gestures';
 import { registerHealthRoutes } from './routes/health';
 import { registerMaterialsRoutes } from './routes/materials';
 import { registerPraisesRoutes } from './routes/praises';
@@ -69,6 +70,7 @@ app.use('/*', async (c, next) => {
 registerAuthRoutes(app);
 registerPraisesRoutes(app);
 registerMaterialsRoutes(app);
+registerGesturesRoutes(app);
 registerTagsRoutes(app);
 registerValidationRoutes(app);
 registerDriveRoutes(app);

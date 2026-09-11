@@ -113,9 +113,17 @@ function entradaIgualALinha(g: GestureEntry, l: LinhaDoDicionario): boolean {
   );
 }
 
-/** Igualdade de documento é por JSON canônico (chaves na ordem do contrato, sem espaço). */
-function canonico(doc: unknown): string {
-  return JSON.stringify(doc);
+/** Igualdade de documento por JSON com chaves ordenadas: a ordem das chaves
+ *  é detalhe de quem serializou; a ordem dos arrays é conteúdo. */
+function canonico(valor: unknown): string {
+  const ordenar = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(ordenar);
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(Object.keys(v as object).sort().map((k) => [k, ordenar((v as Record<string, unknown>)[k])]));
+    }
+    return v;
+  };
+  return JSON.stringify(ordenar(valor));
 }
 
 function materialKindMaisComum(materiais: Map<string, MaterialAtual>): string | null {

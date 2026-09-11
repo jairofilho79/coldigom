@@ -113,6 +113,21 @@ describe('planejar', () => {
     expect(plano.dicionario.atualizar.map((g) => g.id)).toEqual(['c687580e7682']);
     expect(plano.versaoSobe).toBe(true);
   });
+
+  it('documento gravado com chaves em outra ordem conta como igual', () => {
+    const estado = estadoEmDia();
+    const doc = lerExport(EXPORT).documentos[0].doc;
+    const comOutraOrdem = JSON.stringify({
+      items: doc.items.map((i) => ({ lyrics: (i as any).lyrics, gestureId: (i as any).gestureId, type: i.type })),
+      dictionaryVersion: doc.dictionaryVersion,
+      title: doc.title,
+      schema: doc.schema,
+    });
+    estado.documentos.set('txt-1', comOutraOrdem);
+    const plano = planejar(lerExport(EXPORT), estado, { force: false });
+    expect(plano.documentos.iguais).toBe(2);
+    expect(plano.documentos.atualizar).toEqual([]);
+  });
 });
 
 describe('gerarSql', () => {

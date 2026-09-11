@@ -67,4 +67,15 @@ describe('GestureDictionaryPage', () => {
     await waitFor(() => expect(screen.getByText('Viver')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Criar gesto' })).toBeNull();
   });
+
+  it('quando a contagem de uso falha, avisa e não finge que é zero', async () => {
+    vi.spyOn(api, 'getMe').mockResolvedValue(null);
+    vi.spyOn(api, 'getGestureDictionary').mockResolvedValue(dic);
+    vi.spyOn(api, 'getGestureUsageCounts').mockRejectedValue(new Error('falhou'));
+    render(<AuthProvider><MemoryRouter><GestureDictionaryPage /></MemoryRouter></AuthProvider>);
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Quero' })).toBeInTheDocument());
+    expect(screen.getByText('Contagem de uso indisponível — tente recarregar.')).toBeInTheDocument();
+    expect(screen.queryByText(/usado em 0/)).toBeNull();
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+  });
 });

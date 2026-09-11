@@ -72,6 +72,40 @@ describe('GestureDetailPage', () => {
     expect(api.getGesture).toHaveBeenCalledTimes(2);
   });
 
+  it('o resultado da substituição sobrevive ao reload que torna o gesto depreciado', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, 'getMe').mockResolvedValue({ sub: 'u1', name: 'Revisor' } as never);
+    vi.spyOn(api, 'getGesture')
+      .mockResolvedValueOnce(entrada)
+      .mockResolvedValue({ ...entrada, status: 'deprecated', replacedBy: 'bbbbbbbbbbbb' });
+    vi.spyOn(api, 'getGestureDictionary').mockResolvedValue(dic);
+    render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/gestos/dicionario/aaaaaaaaaaaa']}>
+          <Routes><Route path="/gestos/dicionario/:id" element={<GestureDetailPage />} /></Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    );
+    const substituir = vi.spyOn(api, 'replaceGesture').mockResolvedValue({ ok: true, reescritos: 1, falhas: [] });
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Gesto substituto' })).toBeInTheDocument());
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Gesto substituto' }), 'bbbbbbbbbbbb');
+    await user.click(screen.getByRole('button', { name: 'Substituir' }));
+    await waitFor(() => expect(substituir).toHaveBeenCalledWith('aaaaaaaaaaaa', 'bbbbbbbbbbbb', false));
+    expect(await screen.findByText(/1 documento\(s\) reescrito\(s\)/)).toBeInTheDocument();
+    expect(await screen.findByText(/Substituído por/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Substituir' })).toBeNull();
+  });
+
+  it('com sessão troca a figura via o input acessível', async () => {
+    const user = userEvent.setup();
+    montar();
+    const trocar = vi.spyOn(api, 'uploadGestureImage').mockResolvedValue(entrada);
+    await waitFor(() => expect(screen.getByLabelText('Trocar figura')).toBeInTheDocument());
+    const png = new File(['x'], 'a.png', { type: 'image/png' });
+    await user.upload(screen.getByLabelText('Trocar figura'), png);
+    await waitFor(() => expect(trocar).toHaveBeenCalledWith('aaaaaaaaaaaa', png));
+  });
+
   it('gesto depreciado mostra o substituto e não oferece substituir de novo', async () => {
     montar(true, { ...entrada, status: 'deprecated', replacedBy: 'bbbbbbbbbbbb' });
     await waitFor(() => expect(screen.getByText(/Substituído por/)).toBeInTheDocument());

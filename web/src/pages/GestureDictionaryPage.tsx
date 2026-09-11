@@ -14,13 +14,21 @@ export function GestureDictionaryPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
   const [mostrarSubstituidos, setMostrarSubstituidos] = useState(false);
+  const [contagemIndisponivel, setContagemIndisponivel] = useState(false);
 
   const carregar = useCallback(async () => {
     setErro(null);
     try {
-      const [dic, contagens] = await Promise.all([getGestureDictionary(), getGestureUsageCounts().catch(() => [])]);
+      const dic = await getGestureDictionary();
       setIndice(indexar(dic));
-      setUsos(new Map(contagens.map((c) => [c.gesture_id, c.materials])));
+      try {
+        const contagens = await getGestureUsageCounts();
+        setUsos(new Map(contagens.map((c) => [c.gesture_id, c.materials])));
+        setContagemIndisponivel(false);
+      } catch {
+        setUsos(new Map());
+        setContagemIndisponivel(true);
+      }
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha ao carregar o dicionário');
     }
@@ -82,6 +90,8 @@ export function GestureDictionaryPage() {
 
       {erro ? <div className="cp-state cp-state--error"><div className="cp-state-title">{erro}</div><button type="button" className="cp-retry" onClick={() => void carregar()}>Tentar de novo</button></div> : null}
 
+      {contagemIndisponivel ? <p className="cp-review-error" role="status">Contagem de uso indisponível — tente recarregar.</p> : null}
+
       <div className="gd-filtros">
         <input type="search" aria-label="Buscar" placeholder="Nome, gatilho ou id" value={busca} onChange={(e) => setBusca(e.target.value)} className="ge-picker-busca" />
         <label className="gd-check">
@@ -117,7 +127,7 @@ export function GestureDictionaryPage() {
               <td><code>{g.id}</code></td>
               <td>{g.exampleTriggers.join(', ')}</td>
               <td>{g.status === 'active' ? 'ativo' : `substituído por ${g.replacedBy ?? '?'}`}</td>
-              <td>{`usado em ${usos.get(g.id) ?? 0} materiais`}</td>
+              <td>{contagemIndisponivel ? '—' : `usado em ${usos.get(g.id) ?? 0} materiais`}</td>
             </tr>
           ))}
         </tbody>

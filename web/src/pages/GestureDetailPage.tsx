@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { StyledFileInput } from '../components/StyledFileInput';
 import { useAuth } from '../context/useAuth';
 import { indexar, type Indice } from '../lib/gestures/dictionary';
 import {
@@ -79,13 +80,32 @@ export function GestureDetailPage() {
         </div>
       </header>
 
+      {resultado ? (
+        <div className="cp-state">
+          <div>{resultado.reescritos} documento(s) reescrito(s).</div>
+          {resultado.falhas.length ? (
+            <ul>{resultado.falhas.map((f) => <li key={f.materialId}><code>{f.materialId}</code>: {f.motivo}</li>)}</ul>
+          ) : null}
+        </div>
+      ) : null}
+
       <section className="gd-figuras">
         <img src={getAssetUrl(entrada.image)} alt={entrada.name} width={96} height={96} className="gv-figura" />
         {entrada.gif ? <img src={getAssetUrl(entrada.gif)} alt={`${entrada.name} (animação)`} width={96} height={96} className="gv-figura" /> : <span className="materials-placeholder">Sem GIF</span>}
         {isAuthenticated ? (
           <div className="gd-figuras-acoes">
-            <label className="ge-btn">Trocar figura<input type="file" accept="image/png,.png" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void executar(() => uploadGestureImage(id, f), 'Figura trocada.'); }} /></label>
-            <label className="ge-btn">Enviar GIF<input type="file" accept="image/gif,.gif" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void executar(() => uploadGestureGif(id, f), 'GIF enviado.'); }} /></label>
+            <StyledFileInput
+              label="Trocar figura"
+              accept="image/png,.png"
+              selectedName={null}
+              onChange={(files) => { const f = files[0]; if (f) void executar(() => uploadGestureImage(id, f), 'Figura trocada.'); }}
+            />
+            <StyledFileInput
+              label="Enviar GIF"
+              accept="image/gif,.gif"
+              selectedName={null}
+              onChange={(files) => { const f = files[0]; if (f) void executar(() => uploadGestureGif(id, f), 'GIF enviado.'); }}
+            />
           </div>
         ) : null}
       </section>
@@ -163,14 +183,6 @@ export function GestureDetailPage() {
               </button>
             </div>
           </div>
-          {resultado ? (
-            <div className="cp-state">
-              <div>{resultado.reescritos} documento(s) reescrito(s).</div>
-              {resultado.falhas.length ? (
-                <ul>{resultado.falhas.map((f) => <li key={f.materialId}><code>{f.materialId}</code>: {f.motivo}</li>)}</ul>
-              ) : null}
-            </div>
-          ) : null}
         </section>
       ) : null}
     </main>

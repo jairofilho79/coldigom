@@ -194,14 +194,18 @@ export function registerGesturesRoutes(app: App): void {
     if (['name', 'description', 'exampleTriggers', 'status'].every((k) => body[k] === undefined)) {
       return c.json({ error: 'Nothing to update' }, 400);
     }
+    // Voltar a 'active' sem limpar replaced_by deixava o resolvedor de alias da
+    // tela seguir um alias a partir de um gesto ativo — replaced_by só faz
+    // sentido junto de 'deprecated'.
+    const replacedBy = status === 'active' ? null : linha.replaced_by;
 
     try {
       await escreverNoDicionario(c.env.DB, [
         c.env.DB
           .prepare(
-            `UPDATE gesture_dictionary SET name = ?, description = ?, example_triggers = ?, status = ?, updated_at = datetime('now') WHERE id = ?`
+            `UPDATE gesture_dictionary SET name = ?, description = ?, example_triggers = ?, status = ?, replaced_by = ?, updated_at = datetime('now') WHERE id = ?`
           )
-          .bind(name, description, JSON.stringify(exemplos ?? JSON.parse(linha.example_triggers || '[]')), status, id),
+          .bind(name, description, JSON.stringify(exemplos ?? JSON.parse(linha.example_triggers || '[]')), status, replacedBy, id),
       ]);
       const depois = (await lerLinha(c.env.DB, id)) ?? linha;
       return c.json({ data: linhaParaEntrada(depois) });
@@ -302,9 +306,14 @@ export function registerGesturesRoutes(app: App): void {
             // dicionário é o revisor; por isso, ao contrário do PUT /content, a marca
             // is_reviewed fica como está (zerar dezenas de louvores por uma fusão de
             // alias criaria revisão sem mudança de conteúdo).
-            await c.env.ASSETS.put(storageKeyFor(row.r2_key), JSON.stringify(doc), {
+            // onlyIf com o etag lido: se alguém gravou o documento entre o GET e
+            // este PUT, o R2 devolve null em vez de aceitar por cima — e essa
+            // gravação perdida vira falha, não silêncio.
+            const gravado = await c.env.ASSETS.put(storageKeyFor(row.r2_key), JSON.stringify(doc), {
               httpMetadata: { contentType: 'application/json; charset=utf-8' },
+              onlyIf: { etagMatches: objeto.etag },
             });
+            if (!gravado) throw new Error('documento alterado durante a reescrita');
             const usosNovos = contarUsos(doc);
             await c.env.DB.batch([
               c.env.DB.prepare(`DELETE FROM gesture_usage WHERE material_id = ?`).bind(materialId),

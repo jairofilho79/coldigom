@@ -21,10 +21,13 @@ const linha = (id: string, status = 'active') => ({
   status, replaced_by: null, created_at: 't', updated_at: 't',
 });
 
-function cenario(opts: { alvo?: Record<string, unknown> | null; usos?: { material_id: string; r2_key: string | null }[]; objetos?: Record<string, string> } = {}) {
+function cenario(opts: { alvo?: Record<string, unknown> | null; usos?: { material_id: string; r2_key: string | null }[]; objetos?: Record<string, string>; etags?: Record<string, string> } = {}) {
   const linhas = [linha('deadbeef0004'), opts.alvo === undefined ? linha('ffffffffffff') : opts.alvo].filter(Boolean) as Record<string, unknown>[];
   const usos = opts.usos ?? [];
   const objetos = { ...(opts.objetos ?? {}) };
+  // O etag "armazenado" é o que o put compara via onlyIf; get() sempre devolve
+  // 'e1' — divergir os dois simula outra escrita entre o read e o write.
+  const etagsArmazenados: Record<string, string> = { ...Object.fromEntries(Object.keys(objetos).map((k) => [k, 'e1'])), ...(opts.etags ?? {}) };
   const lotes: { sql: string; args: unknown[] }[][] = [];
   const db = {
     prepare: vi.fn((sql: string) => {
@@ -43,8 +46,12 @@ function cenario(opts: { alvo?: Record<string, unknown> | null; usos?: { materia
     batch: vi.fn(async (stmts: { __sql: string; __args: unknown[] }[]) => { lotes.push(stmts.map((s) => ({ sql: s.__sql, args: s.__args }))); return []; }),
   };
   const assets = {
-    get: vi.fn(async (key: string) => (key in objetos ? { text: async () => objetos[key] } : null)),
-    put: vi.fn(async (key: string, body: string) => { objetos[key] = body; return { httpEtag: '"n"' }; }),
+    get: vi.fn(async (key: string) => (key in objetos ? { text: async () => objetos[key], etag: 'e1' } : null)),
+    put: vi.fn(async (key: string, body: string, options?: R2PutOptions) => {
+      if (options?.onlyIf && 'etagMatches' in options.onlyIf && options.onlyIf.etagMatches !== etagsArmazenados[key]) return null;
+      objetos[key] = body;
+      return { httpEtag: '"n"' };
+    }),
     head: vi.fn(async () => null), delete: vi.fn(async () => undefined),
   };
   return { db, assets, lotes, objetos };
@@ -88,6 +95,31 @@ describe('POST /api/gestures/dictionary/:id/replace-with', () => {
     expect(cen.lotes).toHaveLength(3);
     expect(cen.lotes[1][0].sql).toMatch(/DELETE FROM gesture_usage WHERE material_id = \?/);
     expect(cen.lotes[1].some((s) => s.sql.includes('version = version + 1'))).toBe(false);
+  });
+
+  it('reescreve quando o etag do objeto bate com o lido (onlyIf casa)', async () => {
+    const cen = cenario({
+      usos: [{ material_id: 'm1', r2_key: 'assets/praises/p/m1.gestures' }],
+      objetos: { 'storage/assets/praises/p/m1.gestures': EXEMPLO },
+    });
+    const res = await substituir(cen, { targetId: 'ffffffffffff', rewriteDocuments: true });
+    const json = (await res.json()) as { reescritos: number; falhas: unknown[] };
+    expect(json.reescritos).toBe(1);
+    expect(json.falhas).toEqual([]);
+  });
+
+  it('recusa reescrever quando o objeto mudou entre a leitura e a gravação: falha, não corrompe', async () => {
+    const cen = cenario({
+      usos: [{ material_id: 'm1', r2_key: 'assets/praises/p/m1.gestures' }],
+      objetos: { 'storage/assets/praises/p/m1.gestures': EXEMPLO },
+      etags: { 'storage/assets/praises/p/m1.gestures': 'e2' },
+    });
+    const res = await substituir(cen, { targetId: 'ffffffffffff', rewriteDocuments: true });
+    const json = (await res.json()) as { reescritos: number; falhas: { materialId: string; motivo: string }[] };
+    expect(json.reescritos).toBe(0);
+    expect(json.falhas).toEqual([{ materialId: 'm1', motivo: 'documento alterado durante a reescrita' }]);
+    // o batch de uso (DELETE + INSERTs) do material não pode ter rodado
+    expect(cen.lotes.some((lote) => lote.some((s) => s.sql.includes('DELETE FROM gesture_usage')))).toBe(false);
   });
 
   it('uma falha num documento não derruba os outros: vira item em falhas', async () => {

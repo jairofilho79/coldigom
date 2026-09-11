@@ -155,7 +155,7 @@ describe('PATCH /api/gestures/dictionary/:id', () => {
     expect(res.status).toBe(200);
     expect(lotes).toHaveLength(1);
     expect(lotes[0][0].sql).toMatch(/UPDATE gesture_dictionary SET/);
-    expect(lotes[0][0].args).toEqual(['Desejo', 'nova', '["a","b"]', 'deprecated', 'c687580e7682']);
+    expect(lotes[0][0].args).toEqual(['Desejo', 'nova', '["a","b"]', 'deprecated', null, 'c687580e7682']);
     bumpNoFim(lotes[0]);
   });
 
@@ -163,6 +163,19 @@ describe('PATCH /api/gestures/dictionary/:id', () => {
     expect((await editar({ name: 'x' }, '000000000000')).res.status).toBe(404);
     expect((await editar({ status: 'apagado' })).res.status).toBe(400);
     expect((await editar({})).res.status).toBe(400);
+  });
+
+  it('voltar para active limpa replaced_by, para o alias não seguir a partir de um gesto ativo', async () => {
+    const depreciado = { ...LINHA, id: 'deadbeef0001', status: 'deprecated', replaced_by: 'x' };
+    const { db, lotes } = banco([depreciado]);
+    const res = await app.request(
+      `/api/gestures/dictionary/${depreciado.id}`,
+      { method: 'PATCH', headers: { ...(await sessao()), 'content-type': 'application/json' }, body: JSON.stringify({ status: 'active' }) },
+      env(db, r2().r2)
+    );
+    expect(res.status).toBe(200);
+    expect(lotes[0][0].sql).toMatch(/replaced_by = \?/);
+    expect(lotes[0][0].args).toEqual(['Quero', '', '[]', 'active', null, 'deadbeef0001']);
   });
 });
 

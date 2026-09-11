@@ -16,6 +16,7 @@ async function cabecalhos() {
 /** Banco mínimo para criar, listar e apagar material num louvor só. */
 function ambiente(opts: { fonte?: { id: string; praise_id: string } | null } = {}) {
   const escritas: { sql: string; args: unknown[] }[] = [];
+  const lotes: { sql: string; args: unknown[] }[][] = [];
   const materiais: Record<string, unknown>[] = [
     { id: 'g1', praise_id: 'praise-1', material_kind: 'k1', type: 'gestures', r2_key: 'assets/praises/praise-1/g1.gestures', file_path_legacy: '', source_material_id: null, url: null },
     { id: 'c1', praise_id: 'praise-1', material_kind: 'k1', type: 'chord', r2_key: 'assets/praises/praise-1/c1.chord', file_path_legacy: '', source_material_id: null, url: null },
@@ -41,15 +42,20 @@ function ambiente(opts: { fonte?: { id: string; praise_id: string } | null } = {
           return { results: [] };
         }),
         run: vi.fn(async () => { escritas.push({ sql, args }); return { meta: { changes: 1 } }; }),
+        __sql: sql,
+        __args: args,
       })),
     })),
-    batch: vi.fn(async () => []),
+    batch: vi.fn(async (stmts: { __sql: string; __args: unknown[] }[]) => {
+      lotes.push(stmts.map((s) => ({ sql: s.__sql, args: s.__args })));
+      return [];
+    }),
   };
   const assets = {
     head: vi.fn(async (key: string) => (key.endsWith('g1.gestures') ? { size: 10 } : null)),
     put: vi.fn(), delete: vi.fn(async () => undefined), get: vi.fn(async () => null),
   };
-  return { db, assets, escritas, env: { DB: db, ASSETS: assets, AUTH_JWT_SECRET: SEGREDO, AUTH_ALLOWED_EMAILS: '*', WEB_ORIGIN: ORIGEM } as never };
+  return { db, assets, escritas, lotes, env: { DB: db, ASSETS: assets, AUTH_JWT_SECRET: SEGREDO, AUTH_ALLOWED_EMAILS: '*', WEB_ORIGIN: ORIGEM } as never };
 }
 
 describe('POST /api/praises/:id/materials — type gestures', () => {
@@ -108,14 +114,13 @@ describe('GET /api/praises/:id — has_content nos gestos', () => {
 });
 
 describe('DELETE /api/materials/:materialId — limpa gesture_usage', () => {
-  it('apaga o uso antes da linha, explicitamente', async () => {
+  it('apaga o uso e a linha num único batch, nessa ordem', async () => {
     const ctx = ambiente();
     const res = await app.request('/api/materials/g1', { method: 'DELETE', headers: await cabecalhos() }, ctx.env);
     expect(res.status).toBe(200);
-    const sqls = ctx.escritas.map((e) => e.sql);
-    const iUso = sqls.findIndex((s) => /DELETE FROM gesture_usage WHERE material_id = \?/.test(s));
-    const iLinha = sqls.findIndex((s) => /DELETE FROM praise_materials WHERE id = \?/.test(s));
-    expect(iUso).toBeGreaterThanOrEqual(0);
-    expect(iUso).toBeLessThan(iLinha);
+    expect(ctx.lotes).toHaveLength(1);
+    const sqls = ctx.lotes[0].map((s) => s.sql);
+    expect(sqls[0]).toMatch(/DELETE FROM gesture_usage WHERE material_id = \?/);
+    expect(sqls[1]).toMatch(/DELETE FROM praise_materials WHERE id = \?/);
   });
 });

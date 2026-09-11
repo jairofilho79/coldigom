@@ -15,8 +15,9 @@ const FIXTURES = resolve(__dirname, '..', '..', '..', '..', '..', 'api', 'src', 
 const exemplo = JSON.parse(readFileSync(resolve(FIXTURES, 'valido-exemplo.json'), 'utf8')) as GestureDocument;
 
 /** A página real guarda doc e foco em estado e aplica cada Resultado; o harness faz o mesmo. */
-function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho }: {
+function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho, onFocoSpy }: {
   inicial: GestureDocument; focoInicial: Caminho | null; onMudar: (r: Resultado) => void; indice?: Indice | null; erroNoCaminho?: string | null;
+  onFocoSpy?: (c: Caminho | null) => void;
 }) {
   const [doc, setDoc] = useState(inicial);
   const [foco, setFoco] = useState<Caminho | null>(focoInicial);
@@ -25,7 +26,7 @@ function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho }
       doc={doc}
       indice={indice}
       foco={foco}
-      onFoco={setFoco}
+      onFoco={(c) => { onFocoSpy?.(c); setFoco(c); }}
       onMudar={(r) => { onMudar(r); setDoc(r.doc); setFoco(r.foco); }}
       erroNoCaminho={erroNoCaminho}
     />
@@ -34,10 +35,11 @@ function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho }
 
 function montar(foco: Caminho | null = null, extras: { indice?: Indice | null; erroNoCaminho?: string | null } = {}) {
   const onMudar = vi.fn<(r: Resultado) => void>();
-  const utils = render(<Harness inicial={exemplo} focoInicial={foco} onMudar={onMudar} {...extras} />);
+  const onFocoSpy = vi.fn<(c: Caminho | null) => void>();
+  const utils = render(<Harness inicial={exemplo} focoInicial={foco} onMudar={onMudar} onFocoSpy={onFocoSpy} {...extras} />);
   const cartao = (chave: string) => utils.container.querySelector(`[data-cartao="${chave}"]`) as HTMLElement;
   const ultimo = () => onMudar.mock.calls.at(-1)![0];
-  return { ...utils, onMudar, cartao, ultimo };
+  return { ...utils, onMudar, onFocoSpy, cartao, ultimo };
 }
 
 describe('GesturesEditor — seleção e envolver', () => {
@@ -140,5 +142,56 @@ describe('GesturesEditor — edição do cartão', () => {
     const { cartao } = montar(null, { erroNoCaminho: 'items[1].children[1].children[0]' });
     expect(cartao('items[1].children[1].children[0]')).toHaveClass('is-erro');
     expect(cartao('items[0]')).not.toHaveClass('is-erro');
+  });
+});
+
+describe('GesturesEditor — cartão alcançável pelo teclado (F6)', () => {
+  it('a lista é um listbox e cada cartão é uma option focável', () => {
+    const { container } = montar();
+    expect(screen.getByRole('listbox', { name: 'Cartões do documento' })).toBeInTheDocument();
+    const cartoes = container.querySelectorAll('[data-cartao]');
+    expect(cartoes.length).toBeGreaterThan(0);
+    cartoes.forEach((el) => {
+      expect(el).toHaveAttribute('role', 'option');
+      expect(el).toHaveAttribute('tabindex', '0');
+    });
+  });
+
+  it('Tab a partir da barra alcança um cartão, e ele avisa onFoco com o próprio caminho', async () => {
+    const user = userEvent.setup();
+    const { onFocoSpy } = montar();
+    // tabula até sair da barra de ferramentas e entrar num cartão
+    for (let i = 0; i < 40 && document.activeElement?.getAttribute('role') !== 'option'; i++) {
+      await user.tab();
+    }
+    expect(document.activeElement).toHaveAttribute('role', 'option');
+    const caminhoEsperado = document.activeElement?.getAttribute('data-cartao');
+    expect(caminhoEsperado).toBeTruthy();
+    expect(onFocoSpy).toHaveBeenCalledWith(expect.any(Array));
+  });
+
+  it('Enter num cartão em foco seleciona (is-foco), igual ao clique', async () => {
+    const user = userEvent.setup();
+    const { cartao } = montar();
+    const alvo = cartao('items[0].children[1]');
+    alvo.focus();
+    await user.keyboard('{Enter}');
+    expect(cartao('items[0].children[1]')).toHaveClass('is-foco');
+  });
+
+  it('espaço num cartão em foco também seleciona', async () => {
+    const user = userEvent.setup();
+    const { cartao } = montar();
+    const alvo = cartao('items[0].children[1]');
+    alvo.focus();
+    await user.keyboard(' ');
+    expect(cartao('items[0].children[1]')).toHaveClass('is-foco');
+  });
+
+  it('focar um input dentro do cartão também avisa onFoco com o caminho do cartão', () => {
+    const { cartao, onFocoSpy } = montar();
+    const gatilho = within(cartao('items[0].children[0]')).getAllByRole('textbox', { name: 'Gatilho' })[0];
+    gatilho.focus();
+    expect(onFocoSpy).toHaveBeenCalledWith([0, 0]);
   });
 });

@@ -91,7 +91,22 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
         data-cartao={chave}
         className={classes}
         style={{ marginLeft: c.profundidade * 16 }}
+        role="option"
+        aria-selected={selecionado}
+        tabIndex={0}
         onClick={(e) => clicarCartao(c.caminho, e.shiftKey)}
+        // Shift+clique é seleção de faixa a partir do foco atual: o navegador
+        // moveria o foco para o cartão clicado antes do onClick decidir a
+        // faixa, trocando a âncora por baixo do gesto. Sem isso, a faixa vira
+        // sempre um cartão só.
+        onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
+        onFocus={() => { if (!emFoco) onFoco(c.caminho); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            clicarCartao(c.caminho, false);
+          }
+        }}
       >
         <div className="ge-cartao-tipo">{ROTULO_DO_TIPO[c.item.type] ?? c.item.type}</div>
         {renderCorpo(c.item, c.caminho)}
@@ -124,6 +139,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
                     value={l.trigger}
                     placeholder="gatilho"
                     onClick={(e) => e.stopPropagation()}
+                    onFocus={() => onFoco(caminho)}
                     onChange={(e) => onMudar(editarLinha(doc, caminho, n, { trigger: e.target.value }))}
                   />
                   <input
@@ -132,6 +148,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
                     value={l.text}
                     placeholder="leitura"
                     onClick={(e) => e.stopPropagation()}
+                    onFocus={() => onFoco(caminho)}
                     onChange={(e) => onMudar(editarLinha(doc, caminho, n, { text: e.target.value }))}
                   />
                 </div>
@@ -158,6 +175,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
               aria-label="Repetições"
               className="ge-input ge-input--n"
               value={item.count}
+              onFocus={() => onFoco(caminho)}
               onChange={(e) => onMudar(definirRepeticoes(doc, caminho, Number(e.target.value)))}
             />
           </label>
@@ -169,6 +187,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
             className="ge-input"
             value={item.kind}
             onClick={(e) => e.stopPropagation()}
+            onFocus={() => onFoco(caminho)}
             onChange={(e) => onMudar(definirInstrucao(doc, caminho, e.target.value as InstructionKind))}
           >
             {INSTRUCTION_KINDS.map((k) => (
@@ -185,6 +204,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
             className="ge-input"
             value={item.text}
             onClick={(e) => e.stopPropagation()}
+            onFocus={() => onFoco(caminho)}
             onChange={(e) => onMudar(editarTexto(doc, caminho, e.target.value))}
           />
         );
@@ -223,7 +243,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
         <button type="button" className="ge-btn ge-btn--perigo" disabled={!foco} onClick={() => foco && aplicar(remover(doc, foco))}>Remover</button>
       </div>
 
-      <div className="ge-lista">
+      <div className="ge-lista" role="listbox" aria-label="Cartões do documento">
         {cartoes.length === 0 ? <p className="ge-vazio">Documento vazio. Comece por "Adicionar gesto".</p> : cartoes.map(renderCartao)}
       </div>
 

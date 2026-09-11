@@ -3740,3 +3740,16 @@ button.linkish {
 .ge-picker-nome { font-weight: 600; }
 .ge-picker-exemplos { color: #6b7280; font-size: 0.8rem; }
 .ge-picker-aviso { padding: 16px; color: #6b7280; }
+
+.ge-page { max-width: 1400px; }
+.ge-abas { display: none; gap: 6px; margin: 8px 0; }
+.ge-abas [aria-selected='true'] { background: #1E63C8; color: #fff; border-color: #1E63C8; }
+.ge-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ge-coluna--preview { position: sticky; top: 8px; max-height: calc(100vh - 16px); overflow: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+@media (max-width: 900px) {
+  .ge-abas { display: flex; }
+  .ge-layout { grid-template-columns: minmax(0, 1fr); }
+  .ge-layout.is-aba-editor .ge-coluna--preview { display: none; }
+  .ge-layout.is-aba-preview .ge-coluna--editor { display: none; }
+  .ge-coluna--preview { position: static; max-height: none; }
+}

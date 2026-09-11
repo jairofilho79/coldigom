@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GestureDocument, InstructionKind, Item } from '../../lib/gestures/schema';
 import { INSTRUCTION_KINDS } from '../../lib/gestures/schema';
 import type { Indice } from '../../lib/gestures/dictionary';
@@ -19,6 +19,8 @@ type Props = {
   onMudar: (r: Resultado) => void;
   /** Chave do `path` que o servidor devolveu num 400. */
   erroNoCaminho?: string | null;
+  /** Contador: quando muda, abre o seletor em modo inserir (Ctrl+Enter da página). */
+  abrirSeletor?: number;
 };
 
 const ROTULO_DO_TIPO: Record<string, string> = {
@@ -32,11 +34,17 @@ const mesmoCaminho = (a: Caminho | null, b: Caminho | null) => JSON.stringify(a)
  * projeção de `achatar`. Seleção contígua entre irmãos é estado daqui; o foco é
  * da página, porque a pré-visualização ao lado o acompanha.
  */
-export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCaminho }: Props) {
+export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCaminho, abrirSeletor }: Props) {
   const cartoes = useMemo(() => achatar(doc), [doc]);
   const [selecao, setSelecao] = useState<Caminho[]>([]);
   const [vezes, setVezes] = useState(2);
   const [picker, setPicker] = useState<{ modo: 'inserir' | 'trocar'; caminho: Caminho | null } | null>(null);
+
+  useEffect(() => {
+    if (abrirSeletor) setPicker({ modo: 'inserir', caminho: foco });
+    // só quando o contador muda; o foco do momento é o que vale
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abrirSeletor]);
 
   // A seleção efetiva sempre inclui o foco; seleção velha de outro pai cai fora.
   const selecionados = useMemo<Caminho[]>(() => {

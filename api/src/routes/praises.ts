@@ -372,7 +372,10 @@ export function registerPraisesRoutes(app: App): void {
             ...m,
             material_kind_name: labelFor(materialKindLabels, m.material_kind),
           };
-          if (m.type !== 'chord') return base;
+          // Cifra e gestos têm r2_key preenchido mesmo sem arquivo; só o R2 sabe
+          // quais existem de verdade, e a tela precisa disso para dizer "criar"
+          // em vez de "editar".
+          if (m.type !== 'chord' && m.type !== 'gestures') return base;
           if (!m.r2_key) return { ...base, has_content: false };
           // Cada head com catch PRÓPRIO. Estes heads rodavam dentro do try do
           // handler: um soluço do R2 tirava o louvor inteiro do ar — nome, letra,
@@ -964,6 +967,23 @@ export function registerPraisesRoutes(app: App): void {
       .first();
     if (!louvor) return c.json({ error: 'Praise not found' }, 404);
 
+    // Gestos: a linha nasce com a chave padrão do R2 e SEM objeto — o editor lê
+    // o 404 do asset como "documento novo". A origem (o PDF de gestos) é
+    // opcional e precisa ser do mesmo louvor, senão o link "Abrir PDF" apontaria
+    // para o material de outro.
+    const ehGestos = type === 'gestures';
+    const sourceMaterialId =
+      ehGestos && typeof body.source_material_id === 'string' && body.source_material_id.trim()
+        ? body.source_material_id.trim()
+        : null;
+    if (sourceMaterialId) {
+      const fonte = await c.env.DB.prepare('SELECT id, praise_id FROM praise_materials WHERE id = ?')
+        .bind(sourceMaterialId)
+        .first<{ id: string; praise_id: string }>();
+      if (!fonte) return c.json({ error: 'Source material not found' }, 404);
+      if (fonte.praise_id !== praiseId) return c.json({ error: 'Source material does not belong to this praise' }, 400);
+    }
+
     const id = crypto.randomUUID();
 
     try {
@@ -975,9 +995,9 @@ export function registerPraisesRoutes(app: App): void {
         praiseId,
         material_kind,
         type,
-        null,
+        ehGestos ? `assets/praises/${praiseId}/${id}.gestures` : null,
         '',
-        null,
+        sourceMaterialId,
         null,
         hasUrl ? url.trim() : null
       ).run();

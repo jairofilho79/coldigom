@@ -374,6 +374,11 @@ export function registerMaterialsRoutes(app: App): void {
         .first<Pick<MaterialRow, 'praise_id' | 'r2_key'>>();
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
 
+      // gesture_usage tem ON DELETE CASCADE, mas a migração 018 cai sobre um
+      // banco já existente e este handler não é batch: apagar explicitamente
+      // custa uma statement e a contagem de uso do dicionário nunca mente.
+      await c.env.DB.prepare(`DELETE FROM gesture_usage WHERE material_id = ?`).bind(materialId).run();
+
       await c.env.DB.prepare(`DELETE FROM praise_materials WHERE id = ?`).bind(materialId).run();
 
       if (row.r2_key) {

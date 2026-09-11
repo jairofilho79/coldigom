@@ -3753,3 +3753,15 @@ button.linkish {
   .ge-layout.is-aba-preview .ge-coluna--editor { display: none; }
   .ge-coluna--preview { position: static; max-height: none; }
 }
+
+/* ---------- dicionário de gestos ---------- */
+.gd-page { max-width: 1100px; }
+.gd-filtros { display: flex; gap: 12px; align-items: center; margin: 12px 0; }
+.gd-check { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
+.gd-novo { margin: 8px 0 16px; }
+.gd-tabela { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.gd-tabela th, .gd-tabela td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+.gd-tabela tr.is-depreciado { opacity: 0.6; }
+.gd-figuras { display: flex; gap: 16px; align-items: center; margin: 12px 0; }
+.gd-figuras-acoes { display: flex; gap: 8px; }
+.gd-usos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }

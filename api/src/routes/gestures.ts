@@ -16,7 +16,7 @@ import {
   escreverNoDicionario,
   gerarIdDeGesto,
 } from '../gestures/dicionario';
-import { GESTURE_ID_RE, validarDocumento } from '../gestures/schema';
+import { GESTURE_ID_RE, MENSAGENS, validarDocumento } from '../gestures/schema';
 import { contarUsos, substituirGesto } from '../gestures/usage';
 
 const CACHE = 'public, max-age=300';
@@ -294,9 +294,14 @@ export function registerGesturesRoutes(app: App): void {
               throw new Error('documento não é JSON válido');
             }
             const validado = validarDocumento(lido);
-            if (!validado.ok) throw new Error(`documento inválido em ${validado.erro.caminho}`);
+            if (!validado.ok) throw new Error(`${MENSAGENS[validado.erro.codigo]} (${validado.erro.caminho})`);
             const { doc, trocados } = substituirGesto(validado.doc, id, targetId);
             if (trocados === 0) continue;
+            // A reescrita é mecânica e equivalente no desenho — o cliente já resolve
+            // replacedBy para a mesma figura — e quem escolheu o substituto no
+            // dicionário é o revisor; por isso, ao contrário do PUT /content, a marca
+            // is_reviewed fica como está (zerar dezenas de louvores por uma fusão de
+            // alias criaria revisão sem mudança de conteúdo).
             await c.env.ASSETS.put(storageKeyFor(row.r2_key), JSON.stringify(doc), {
               httpMetadata: { contentType: 'application/json; charset=utf-8' },
             });

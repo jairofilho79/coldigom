@@ -101,6 +101,17 @@ describe('POST /api/gestures/dictionary/:id/replace-with', () => {
     expect(json.falhas).toEqual([{ materialId: 'm1', motivo: expect.stringMatching(/JSON|inválido/i) }]);
   });
 
+  it('documento que falha na validação leva o motivo real, não um genérico', async () => {
+    const invalido = JSON.stringify({ schema: 'coldigom.gestures/1', title: 'x', dictionaryVersion: 0, items: [{ type: 'dança' }] });
+    const cen = cenario({
+      usos: [{ material_id: 'm1', r2_key: 'assets/praises/p/m1.gestures' }],
+      objetos: { 'storage/assets/praises/p/m1.gestures': invalido },
+    });
+    const res = await substituir(cen, { targetId: 'ffffffffffff', rewriteDocuments: true });
+    const json = (await res.json()) as { falhas: { materialId: string; motivo: string }[] };
+    expect(json.falhas).toEqual([{ materialId: 'm1', motivo: 'Tipo de item desconhecido neste ponto do documento. (items[0])' }]);
+  });
+
   it('recusa alvo igual, alvo inexistente, alvo depreciado e corpo sem targetId', async () => {
     expect((await substituir(cenario(), { targetId: 'deadbeef0004' })).status).toBe(400);
     expect((await substituir(cenario({ alvo: null }), { targetId: 'ffffffffffff' })).status).toBe(404);

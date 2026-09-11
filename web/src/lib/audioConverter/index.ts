@@ -127,3 +127,15 @@ export async function convertAudioToMp3(
 
   return new File([arrayBuffer], mp3Name, { type: 'audio/mpeg' });
 }
+
+/**
+ * Garante que o caminho/nome termine com .mp3.
+ * Se já tiver uma extensão (ex.: .m4a), ela é substituída por .mp3.
+ * Se não tiver extensão, .mp3 é anexado.
+ */
+export function ensureMp3Extension(path: string): string {
+  if (/\.[a-z0-9]+$/i.test(path)) {
+    return path.replace(/\.[a-z0-9]+$/i, '.mp3');
+  }
+  return `${path}.mp3`;
+}

@@ -259,13 +259,68 @@ export function inferMaterialKind(input: InferMaterialKindInput): InferenceResul
   };
 }
 
-export function inferTypeFromExtension(fileName: string): string {
-  const ext = fileName.split('.').pop()?.toLowerCase() || '';
-  if (ext === 'mp3') return 'mp3';
-  if (ext === 'pdf') return 'pdf';
-  if (ext === 'chord') return 'chord';
-  if (ext === 'mid' || ext === 'midi') return 'mid';
-  return ext || 'bin';
+export const MIME_TO_EXTENSION: Record<string, string> = {
+  'audio/x-m4a': 'm4a',
+  'audio/m4a': 'm4a',
+  'audio/mp4': 'm4a',
+  'audio/x-mp4': 'm4a',
+  'audio/aac': 'aac',
+  'audio/x-aac': 'aac',
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/wav': 'wav',
+  'audio/x-wav': 'wav',
+  'audio/wave': 'wav',
+  'audio/ogg': 'ogg',
+  'audio/flac': 'flac',
+  'audio/x-flac': 'flac',
+  'audio/x-ms-wma': 'wma',
+  'audio/wma': 'wma',
+  'application/pdf': 'pdf',
+  'audio/midi': 'mid',
+  'audio/x-midi': 'mid',
+  'audio/mid': 'mid',
+  'text/plain': 'txt',
+};
+
+export function inferTypeFromExtension(fileName: string, mimeType?: string | null): string {
+  const parts = fileName.split('.');
+  const hasDot = parts.length > 1 && parts[0].length > 0;
+  const rawExt = hasDot ? parts.pop()?.toLowerCase() || '' : '';
+
+  if (rawExt === 'mp3') return 'mp3';
+  if (rawExt === 'pdf') return 'pdf';
+  if (rawExt === 'chord') return 'chord';
+  if (rawExt === 'mid' || rawExt === 'midi') return 'mid';
+
+  // Se o arquivo tiver extensão segura reconhecida (ex.: .m4a, .wav, .txt, etc.)
+  if (rawExt && /^[a-z0-9]{1,16}$/.test(rawExt)) {
+    return rawExt;
+  }
+
+  // Se o nome não tem extensão ou a extensão extraída é inválida, resolve pelo MIME type se disponível
+  if (mimeType) {
+    const cleanMime = mimeType.toLowerCase().split(';')[0].trim();
+    if (MIME_TO_EXTENSION[cleanMime]) {
+      return MIME_TO_EXTENSION[cleanMime];
+    }
+    if (cleanMime.startsWith('audio/')) {
+      const sub = cleanMime.slice(6);
+      if (sub === 'x-m4a' || sub === 'm4a' || sub === 'mp4' || sub === 'x-mp4') return 'm4a';
+      if (sub === 'mpeg' || sub === 'mp3') return 'mp3';
+      if (sub === 'wav' || sub === 'x-wav' || sub === 'wave') return 'wav';
+      if (sub === 'aac' || sub === 'x-aac') return 'aac';
+      if (sub === 'ogg') return 'ogg';
+      if (sub === 'flac' || sub === 'x-flac') return 'flac';
+    }
+    if (cleanMime === 'application/pdf') return 'pdf';
+  }
+
+  // Se tem extensão mesmo que não catalogada
+  if (rawExt) return rawExt;
+
+  // Sem extensão e sem MIME reconhecido: devolve o nome para a validação de tipo da UI acusar
+  return fileName.toLowerCase();
 }
 
 export { UNKNOWN_MATERIAL_KIND_ID } from './constants';

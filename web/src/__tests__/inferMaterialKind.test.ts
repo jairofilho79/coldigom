@@ -162,4 +162,13 @@ describe('inferTypeFromExtension', () => {
     expect(inferTypeFromExtension('a.chord')).toBe('chord');
     expect(inferTypeFromExtension('a.xyz')).toBe('xyz');
   });
+
+  it('infere tipo a partir do mimeType quando o arquivo não tem extensão', async () => {
+    const { inferTypeFromExtension } = await import('../lib/materialKindInference');
+    expect(inferTypeFromExtension('BAIXO - Majestoso és', 'audio/x-m4a')).toBe('m4a');
+    expect(inferTypeFromExtension('SOPRANO - Majestoso és', 'audio/mp4')).toBe('m4a');
+    expect(inferTypeFromExtension('Partitura Geral', 'application/pdf')).toBe('pdf');
+    expect(inferTypeFromExtension('Voz Tenor', 'audio/mpeg')).toBe('mp3');
+    expect(inferTypeFromExtension('Áudio Ensaio', 'audio/wav')).toBe('wav');
+  });
 });

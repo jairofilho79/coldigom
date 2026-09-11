@@ -19,7 +19,7 @@ import {
   AUDIO_MATERIAL_TYPES,
   sortMaterialsAlphabetically,
 } from '../lib/materials';
-import { convertAudioToMp3, isConvertibleAudio } from '../lib/audioConverter';
+import { convertAudioToMp3, isConvertibleAudio, ensureMp3Extension } from '../lib/audioConverter';
 import { pedeReconexaoDoDrive } from '../services/mensagensDeErro';
 import {
   folderNameFromFiles,
@@ -319,7 +319,7 @@ export function PraiseDetailPage() {
       setBulkFiles((list) =>
         list.map((it, idx) => {
           if (idx !== index) return it;
-          const newRelPath = it.relPath.replace(/\.[^/.]+$/, '.mp3');
+          const newRelPath = ensureMp3Extension(it.relPath);
           return {
             ...it,
             file: convertedFile,
@@ -345,7 +345,7 @@ export function PraiseDetailPage() {
         const item = updated[i];
         if (item.file && isConvertibleAudio(item.type)) {
           const convertedFile = await convertAudioToMp3(item.file);
-          const newRelPath = item.relPath.replace(/\.[^/.]+$/, '.mp3');
+          const newRelPath = ensureMp3Extension(item.relPath);
           updated[i] = {
             ...item,
             file: convertedFile,
@@ -572,7 +572,7 @@ export function PraiseDetailPage() {
       setDriveFiles((list) =>
         list.map((it, idx) => {
           if (idx !== index) return it;
-          const newRelPath = it.relPath.replace(/\.[^/.]+$/, '.mp3');
+          const newRelPath = ensureMp3Extension(it.relPath);
           return {
             ...it,
             file: convertedFile,
@@ -615,7 +615,7 @@ export function PraiseDetailPage() {
           }
           const sourceFile = new File([sourceBlob], originalName, { type: sourceBlob.type || 'audio/mp4' });
           const convertedFile = await convertAudioToMp3(sourceFile);
-          const newRelPath = item.relPath.replace(/\.[^/.]+$/, '.mp3');
+          const newRelPath = ensureMp3Extension(item.relPath);
           updated[i] = {
             ...item,
             file: convertedFile,
@@ -950,7 +950,7 @@ export function PraiseDetailPage() {
             if (isConvertibleAudio(f.type)) {
               file = await convertAudioToMp3(f.file);
               type = 'mp3';
-              relPath = f.relPath.replace(/\.[^/.]+$/, '.mp3');
+              relPath = ensureMp3Extension(f.relPath);
             }
             filesToUpload.push({
               file,
@@ -984,7 +984,7 @@ export function PraiseDetailPage() {
               file: converted,
               material_kind: f.material_kind,
               type: 'mp3',
-              file_path_legacy: f.relPath.replace(/\.[^/.]+$/, '.mp3'),
+              file_path_legacy: ensureMp3Extension(f.relPath),
             });
           } else if (f.driveFileId) {
             driveItemsToQueue.push({
@@ -1874,7 +1874,7 @@ export function PraiseDetailPage() {
                         if (isConvertibleAudio(f.type)) {
                           file = await convertAudioToMp3(f.file);
                           type = 'mp3';
-                          relPath = f.relPath.replace(/\.[^/.]+$/, '.mp3');
+                          relPath = ensureMp3Extension(f.relPath);
                         }
                         filesToUpload.push({
                           file,
@@ -1955,7 +1955,7 @@ export function PraiseDetailPage() {
                               file: converted,
                               material_kind: f.material_kind,
                               type: 'mp3',
-                              file_path_legacy: f.relPath.replace(/\.[^/.]+$/, '.mp3'),
+                              file_path_legacy: ensureMp3Extension(f.relPath),
                             });
                           } else if (f.driveFileId) {
                             driveItemsToQueue.push({

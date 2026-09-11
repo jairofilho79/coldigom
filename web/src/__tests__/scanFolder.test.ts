@@ -61,3 +61,22 @@ describe('bulkScanSummary', () => {
     expect(summary.identified).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe('mapDriveScanFile', () => {
+  it('deduz o tipo a partir do mime_type quando o nome no Drive não tem extensão', async () => {
+    const { mapDriveScanFile } = await import('../lib/materialKindInference/scanFolder');
+    const catalogIds = new Set([KIND.sheetMusic, KIND.unknown]);
+    const item = mapDriveScanFile(
+      {
+        drive_file_id: 'drive-123',
+        name: 'BAIXO - Majestoso és',
+        rel_path: 'Majestoso és/VOCAL/KIT ENSAIO/BAIXO - Majestoso és',
+        mime_type: 'audio/x-m4a',
+        size_bytes: 4737910,
+      },
+      catalogIds
+    );
+    expect(item.type).toBe('m4a');
+    expect(item.driveFileId).toBe('drive-123');
+  });
+});

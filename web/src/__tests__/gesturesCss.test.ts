@@ -10,9 +10,12 @@ import { describe, expect, it } from 'vitest';
  */
 describe('global.css — o editor de gestos usa os tokens escuros da casa', () => {
   const css = readFileSync(resolve(__dirname, '..', 'styles', 'global.css'), 'utf8');
-  const blocoGe = css.slice(css.indexOf('.ge-editor'), css.indexOf('.gd-page'));
+  // Vai até o fim do arquivo, não só até `.gd-page`: o bloco `.gd-*` (tabela,
+  // figuras, usos) continua depois dele, e um corte cedo demais deixava essas
+  // regras fora da varredura — a re-revisão pegou isso.
+  const blocoGe = css.slice(css.indexOf('.ge-editor'));
 
-  it('não tem fundo branco fixo (#fff/#ffffff) no bloco .ge-*', () => {
+  it('não tem fundo branco fixo (#fff/#ffffff) no bloco .ge-*/.gd-*', () => {
     expect(blocoGe).not.toMatch(/background(-color)?:\s*#fff(fff)?\b/i);
   });
 

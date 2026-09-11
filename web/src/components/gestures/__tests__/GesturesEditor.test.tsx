@@ -98,6 +98,24 @@ describe('GesturesEditor — edição do cartão', () => {
     expect(itemEm(ultimo().doc, [0, 0])).toMatchObject({ lyrics: [{ trigger: 'Quero!' }] });
   });
 
+  it('espaço digitado na Leitura não é engolido pelo atalho de teclado do cartão (regressão do F6)', async () => {
+    const user = userEvent.setup();
+    const { ultimo, cartao } = montar([0, 0]);
+    const leitura = within(cartao('items[0].children[0]')).getAllByRole('textbox', { name: 'Leitura' })[0];
+    await user.type(leitura, 'a b');
+    expect((itemEm(ultimo().doc, [0, 0]) as { lyrics: { text: string }[] }).lyrics[0].text).toBe('viver pra sempre com Jesusa b');
+  });
+
+  it('Enter dentro do Gatilho não repete a seleção do cartão (regressão do F6)', async () => {
+    const user = userEvent.setup();
+    const { cartao, onFocoSpy } = montar();
+    const gatilho = within(cartao('items[0].children[0]')).getAllByRole('textbox', { name: 'Gatilho' })[0];
+    await user.click(gatilho);
+    const chamadasAntes = onFocoSpy.mock.calls.length;
+    await user.keyboard('{Enter}');
+    expect(onFocoSpy.mock.calls.length).toBe(chamadasAntes);
+  });
+
   it('+ linha, repetições, instrução e texto', async () => {
     const user = userEvent.setup();
     const { ultimo, cartao } = montar([0, 0]);

@@ -98,10 +98,17 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
         // Shift+clique é seleção de faixa a partir do foco atual: o navegador
         // moveria o foco para o cartão clicado antes do onClick decidir a
         // faixa, trocando a âncora por baixo do gesto. Sem isso, a faixa vira
-        // sempre um cartão só.
-        onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}
+        // sempre um cartão só. `e.target !== e.currentTarget` só age quando o
+        // mousedown é no próprio cartão — senão intercepta o clique de um
+        // botão/input dentro dele.
+        onMouseDown={(e) => { if (e.target !== e.currentTarget) return; if (e.shiftKey) e.preventDefault(); }}
         onFocus={() => { if (!emFoco) onFoco(c.caminho); }}
+        // Mesma guarda: sem ela, Espaço/Enter digitados num input do cartão
+        // (Gatilho, Leitura...) borbulham até aqui — o Espaço era engolido por
+        // `preventDefault` (virava "ab" no lugar de "a b") e o Enter repetia a
+        // seleção do cartão por cima de quem estava digitando.
         onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             clicarCartao(c.caminho, false);

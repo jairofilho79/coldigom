@@ -3,7 +3,7 @@ import { getAssetUrl } from '../services/api';
 
 export type ContentState =
   | { status: 'loading' }
-  | { status: 'ready'; source: string }
+  | { status: 'ready'; source: string; etag: string | null }
   | { status: 'absent' }
   | { status: 'error'; message: string };
 
@@ -48,7 +48,7 @@ export function useMaterialContent(r2Key: string | null): {
           settle({ status: 'error', message: `HTTP ${response.status}` });
           return;
         }
-        settle({ status: 'ready', source: await response.text() });
+        settle({ status: 'ready', source: await response.text(), etag: response.headers.get('ETag') });
       } catch (err) {
         // Aborto é troca de material ou desmontagem, não falha: pintar erro
         // aqui mostraria "a rede falhou" a quem só clicou em outra cifra.

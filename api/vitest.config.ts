@@ -17,12 +17,13 @@ export default defineConfig({
       // S3 (2026-08-31): 55 / 48 / 63 / 57
       // S4 (2026-08-31): 58 / 51 / 65 / 59
       // P2 (2026-09-03): fila de revisão — 70.48 / 66.16 / 72.79 / 72.88
+      // Gestos (2026-09-11): editor de gestos — 74.64 / 70.97 / 76.65 / 77.09
       thresholds: {
-        // P2: medido 70.48 / 66.16 / 72.79 / 72.88
-        statements: 70,
-        branches: 66,
-        functions: 72,
-        lines: 72,
+        // Gestos: medido 74.64 / 70.97 / 76.65 / 77.09
+        statements: 74,
+        branches: 70,
+        functions: 76,
+        lines: 77,
       },
     },
   },

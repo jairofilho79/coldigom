@@ -28,7 +28,11 @@ export function GestureThumb({ id, indice, tamanho }: Props) {
   return (
     <img
       className={`gv-figura${r.viaAlias ? ' gv-figura--alias' : ''}`}
-      src={getAssetUrl(r.entrada.image)}
+      // A chave (o nome do arquivo) não muda quando alguém troca a figura no
+      // dicionário; sem uma versão na query o navegador continua servindo a
+      // figura velha do cache. `indice.version` sobe a cada gravação do
+      // dicionário — é o invalidador mais barato que já temos à mão.
+      src={`${getAssetUrl(r.entrada.image)}?v=${indice!.version}`}
       alt={r.entrada.name}
       title={r.viaAlias ? `${r.entrada.name} (substituiu ${id})` : r.entrada.name}
       width={tamanho}

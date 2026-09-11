@@ -74,6 +74,9 @@ describe('GestureDocumentView — o exemplo da spec', () => {
     const { container } = render(<GestureDocumentView doc={exemplo} indice={indice} />);
     const figuras = container.querySelectorAll('.gv-gesto');
     expect(figuras[0].querySelector('img')?.getAttribute('src')).toContain('assets/cia/gestures/c687580e7682.png');
+    // F5: a versão do dicionário na query invalida o cache do navegador quando o
+    // gesto ganha uma figura nova — o índice de teste tem version: 1.
+    expect(figuras[0].querySelector('img')?.getAttribute('src')).toContain('?v=1');
     expect(figuras[1].querySelector('.gv-figura--ausente')).not.toBeNull();
     const amem = container.querySelector('.gv-final .gv-gesto')!;
     expect(amem.querySelector('img')?.getAttribute('src')).toContain('c687580e7682.png');

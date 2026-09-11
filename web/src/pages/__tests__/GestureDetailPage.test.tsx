@@ -43,6 +43,10 @@ describe('GestureDetailPage', () => {
     montar(false);
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Quero' })).toBeInTheDocument());
     expect(document.querySelector('img')?.getAttribute('src')).toContain('aaaaaaaaaaaa.png');
+    // F5: a imagem carrega uma versão na query — sem isso o navegador continua
+    // mostrando a figura velha depois de "Trocar figura"/"Enviar GIF", porque a
+    // chave (o nome do arquivo) não muda.
+    expect(document.querySelector('img')?.getAttribute('src')).toContain('?v=');
     expect(screen.getByRole('link', { name: /182/ })).toHaveAttribute('href', '/praise/p1/gestos/g1');
     expect(screen.getAllByText(/2 vez/).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Salvar alterações' })).toBeNull();

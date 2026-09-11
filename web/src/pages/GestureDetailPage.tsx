@@ -90,8 +90,11 @@ export function GestureDetailPage() {
       ) : null}
 
       <section className="gd-figuras">
-        <img src={getAssetUrl(entrada.image)} alt={entrada.name} width={96} height={96} className="gv-figura" />
-        {entrada.gif ? <img src={getAssetUrl(entrada.gif)} alt={`${entrada.name} (animação)`} width={96} height={96} className="gv-figura" /> : <span className="materials-placeholder">Sem GIF</span>}
+        {/* F5: a chave (o nome do arquivo) não muda quando "Trocar figura"/"Enviar
+            GIF" sobrescreve o mesmo objeto no R2 — sem uma versão na query o
+            navegador continua mostrando a figura velha do cache. */}
+        <img src={`${getAssetUrl(entrada.image)}?v=${encodeURIComponent(entrada.updatedAt)}`} alt={entrada.name} width={96} height={96} className="gv-figura" />
+        {entrada.gif ? <img src={`${getAssetUrl(entrada.gif)}?v=${encodeURIComponent(entrada.updatedAt)}`} alt={`${entrada.name} (animação)`} width={96} height={96} className="gv-figura" /> : <span className="materials-placeholder">Sem GIF</span>}
         {isAuthenticated ? (
           <div className="gd-figuras-acoes">
             <StyledFileInput

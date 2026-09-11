@@ -1,0 +1,9 @@
+{
+  "schema": "coldigom.gestures/1",
+  "title": "182 - QUERO VIVER",
+  "dictionaryVersion": 1,
+  "items": [
+    { "type": "gesture", "gestureId": "c687580e7682", "lyrics": [{ "trigger": "Quero", "text": "viver" }] },
+    { "type": "gesture", "gestureId": "a1b2c3d4e5f6", "lyrics": [{ "trigger": "viver", "text": "com Jesus" }] }
+  ]
+}

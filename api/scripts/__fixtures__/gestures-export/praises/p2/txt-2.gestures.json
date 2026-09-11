@@ -1,0 +1,8 @@
+{
+  "schema": "coldigom.gestures/1",
+  "title": "7 - OUTRO",
+  "dictionaryVersion": 1,
+  "items": [
+    { "type": "gesture", "gestureId": "c687580e7682", "lyrics": [{ "trigger": "Quero", "text": "" }] }
+  ]
+}

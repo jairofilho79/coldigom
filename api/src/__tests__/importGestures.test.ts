@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { gerarSql, lerExport, planejar, resumo, type EstadoAtual } from '../../scripts/import_gestures';
+import { ehObjetoAusente, gerarSql, lerExport, main, planejar, resumo, type EstadoAtual } from '../../scripts/import_gestures';
 
 const EXPORT = resolve(__dirname, '..', '..', 'scripts', '__fixtures__', 'gestures-export');
 
@@ -146,12 +146,63 @@ describe('gerarSql', () => {
     estado.materiais.get('txt-1')!.is_reviewed = 1;
     estado.documentos.set('txt-1', '{}');
     const sql = gerarSql(planejar(lerExport(EXPORT), estado, { force: true }));
-    expect(sql).toMatch(/UPDATE praise_materials SET is_reviewed = 0, reviewed_at = NULL, reviewed_by = NULL WHERE id = 'txt-1'/);
+    expect(sql).toMatch(/UPDATE praise_materials SET is_reviewed = 0, reviewed_at = NULL, reviewed_by = NULL, .* WHERE id = 'txt-1'/);
   });
 
   it('o resumo do dry-run lista criar/atualizar/pular por seção', () => {
     const texto = resumo(planejar(lerExport(EXPORT), estadoVazio(), { force: false, materialKind: 'k' }));
     expect(texto).toMatch(/dicionário.*criar: 2/i);
     expect(texto).toMatch(/documentos.*criar: 2/i);
+  });
+
+  it('atualização com --force preenche source_material_id e r2_key só quando estavam nulos (COALESCE)', () => {
+    const estado = estadoEmDia();
+    estado.materiais.get('txt-1')!.is_reviewed = 1;
+    estado.documentos.set('txt-1', '{}');
+    const sql = gerarSql(planejar(lerExport(EXPORT), estado, { force: true }));
+    expect(sql).toContain("COALESCE(source_material_id, 'pdf-1')");
+    expect(sql).toContain("COALESCE(r2_key, 'assets/praises/p1/txt-1.gestures')");
+  });
+});
+
+describe('ehObjetoAusente', () => {
+  it('NoSuchKey é ausência', () => {
+    const err = Object.assign(new Error('not found'), { name: 'NoSuchKey' });
+    expect(ehObjetoAusente(err)).toBe(true);
+  });
+
+  it('404 nos metadados é ausência', () => {
+    expect(ehObjetoAusente({ $metadata: { httpStatusCode: 404 } })).toBe(true);
+  });
+
+  it('erro genérico não é ausência', () => {
+    expect(ehObjetoAusente(new Error('AccessDenied'))).toBe(false);
+  });
+
+  it('403 nos metadados não é ausência', () => {
+    expect(ehObjetoAusente({ $metadata: { httpStatusCode: 403 } })).toBe(false);
+  });
+});
+
+describe('planejar — linha revisada sem objeto no R2', () => {
+  it('vai para atualizar mesmo com is_reviewed = 1 e sem --force: não há o que sobrescrever', () => {
+    const estado = estadoEmDia();
+    estado.materiais.get('txt-1')!.is_reviewed = 1;
+    estado.documentos.delete('txt-1');
+    const plano = planejar(lerExport(EXPORT), estado, { force: false });
+    expect(plano.documentos.atualizar.map((d) => d.materialId)).toEqual(['txt-1']);
+    expect(plano.documentos.pular).toEqual([]);
+  });
+});
+
+describe('main — credenciais do R2', () => {
+  it('falha cedo, mesmo em dry-run, quando falta alguma credencial do R2', async () => {
+    // Neste ambiente de teste as três env vars não estão definidas, então o
+    // R2_CONFIG lido no carregamento do módulo já está vazio — a checagem
+    // deve barrar ANTES de qualquer leitura de D1/R2 via wrangler/S3, que
+    // travaria (ou explodiria) num teste unitário.
+    await expect(main(['--from', EXPORT, '--dry-run'])).rejects.toThrow(
+      /CF_ACCOUNT_ID|CF_ACCESS_KEY_ID|CF_SECRET_ACCESS_KEY|credencia/i
+    );
   });
 });

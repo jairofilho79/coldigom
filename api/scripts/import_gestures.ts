@@ -167,6 +167,10 @@ export function planejar(exp: Exportacao, estado: EstadoAtual, opcoes: { force: 
     const gravado = estado.documentos.get(d.txtId);
     if (gravado !== undefined && canonico(JSON.parse(gravado)) === canonico(d.doc)) {
       documentos.iguais += 1;
+    } else if (gravado === undefined) {
+      // A linha existe mas nunca teve documento gravado no R2: não há o que
+      // sobrescrever, então "revisado" não é motivo para pular.
+      documentos.atualizar.push(planejado);
     } else if (material.is_reviewed === 1 && !opcoes.force) {
       documentos.pular.push(planejado);
     } else {
@@ -225,8 +229,15 @@ export function gerarSql(plano: Plano): string {
     linhas.push(...sqlDoUso(d));
   }
   for (const d of plano.documentos.atualizar) {
-    // Conteúdo novo nunca teve olho humano: mesma regra do PUT /content.
-    linhas.push(`UPDATE praise_materials SET is_reviewed = 0, reviewed_at = NULL, reviewed_by = NULL WHERE id = ${sql(d.materialId)};`);
+    // Conteúdo novo nunca teve olho humano: mesma regra do PUT /content. E o
+    // COALESCE preenche r2_key/source_material_id só quando ainda estão nulos
+    // — as 254 linhas legadas ganham o link de "abrir PDF" e a chave do R2
+    // sem que uma linha já corrigida à mão seja sobrescrita.
+    linhas.push(
+      `UPDATE praise_materials SET is_reviewed = 0, reviewed_at = NULL, reviewed_by = NULL, ` +
+        `r2_key = COALESCE(r2_key, ${sql(d.r2Key)}), source_material_id = COALESCE(source_material_id, ${sql(d.sourceMaterialId)}) ` +
+        `WHERE id = ${sql(d.materialId)};`
+    );
     linhas.push(...sqlDoUso(d));
   }
   return linhas.join('\n') + (linhas.length ? '\n' : '');
@@ -286,11 +297,29 @@ async function lerEstadoAtual(): Promise<EstadoAtual> {
     try {
       const obj = await s3.send(new GetObjectCommand({ Bucket: R2_CONFIG.bucket, Key: `storage/${m.r2_key.replace(/^\/+/, '')}` }));
       documentos.set(id, await obj.Body!.transformToString());
-    } catch {
-      // sem objeto: a linha existe mas o documento nunca foi gravado — vira "atualizar"
+    } catch (err) {
+      // Só objeto ausente é "nunca foi gravado" — vira "atualizar". Qualquer
+      // outro erro (credencial errada, endpoint errado, R2 fora do ar) faz
+      // TODA linha existente parecer sem documento: a segunda passada deixa
+      // de ser no-op e, com --force, reseta is_reviewed do acervo inteiro.
+      if (!ehObjetoAusente(err)) {
+        throw new Error(
+          `Falha ao ler do R2 o material ${id} (${m.r2_key}): ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
     }
   }
   return { dicionario, materiais, louvores, documentos };
+}
+
+/** Decide se um erro do S3/R2 significa "objeto não existe" — o único caso em
+ *  que lerEstadoAtual pode seguir em frente tratando a linha como não gravada.
+ *  Qualquer outro erro (credencial, rede, permissão) precisa subir. */
+export function ehObjetoAusente(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  if ((err as { name?: unknown }).name === 'NoSuchKey') return true;
+  const status = (err as { $metadata?: { httpStatusCode?: unknown } }).$metadata?.httpStatusCode;
+  return status === 404;
 }
 
 // ---------- execução ----------
@@ -316,6 +345,15 @@ function lerFlag(argv: string[], nome: string): string | undefined {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   const from = lerFlag(argv, '--from');
   if (!from) throw new Error('Informe --from <pasta do export/gestures>');
+  // Mesmo o --dry-run lê o estado atual do R2 (lerEstadoAtual). Sem essa
+  // checagem, credencial vazia não dava erro claro — só fazia todo objeto
+  // parecer ausente lá na frente (ver ehObjetoAusente), como o ingest.ts
+  // já evita para a própria importação (~linha 346 de ingest.ts).
+  if (!R2_CONFIG.accountId || !R2_CONFIG.accessKeyId || !R2_CONFIG.secretAccessKey) {
+    throw new Error(
+      'Credenciais do R2 ausentes: defina CF_ACCOUNT_ID, CF_ACCESS_KEY_ID e CF_SECRET_ACCESS_KEY.'
+    );
+  }
   const full = argv.includes('--full');
   const dryRun = argv.includes('--dry-run') || !(full || argv.includes('--sql-only') || argv.includes('--upload-r2') || argv.includes('--execute-d1'));
 

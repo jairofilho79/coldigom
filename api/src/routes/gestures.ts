@@ -16,7 +16,8 @@ import {
   escreverNoDicionario,
   gerarIdDeGesto,
 } from '../gestures/dicionario';
-import { GESTURE_ID_RE } from '../gestures/schema';
+import { GESTURE_ID_RE, validarDocumento } from '../gestures/schema';
+import { contarUsos, substituirGesto } from '../gestures/usage';
 
 const CACHE = 'public, max-age=300';
 
@@ -245,4 +246,79 @@ export function registerGesturesRoutes(app: App): void {
       }
     });
   }
+
+  // POST …/:id/replace-with — funde dois gestos: o de origem vira 'deprecated' com
+  // replaced_by, SEMPRE e no batch. Reescrever os documentos é faxina opcional: a
+  // resolução de alias já é do cliente, e reescrever N objetos no R2 numa
+  // requisição é caro e falível — por isso é sequencial e cada falha vira item
+  // da resposta em vez de derrubar o resto.
+  app.post('/api/gestures/dictionary/:id/replace-with', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+    const targetId = typeof body?.targetId === 'string' ? body.targetId : '';
+    if (!targetId) return c.json({ error: "Field 'targetId' is required" }, 400);
+    if (targetId === id) return c.json({ error: 'A gesture cannot replace itself' }, 400);
+    const rewriteDocuments = body?.rewriteDocuments === true;
+
+    try {
+      const origem = await lerLinha(c.env.DB, id);
+      if (!origem) return c.json({ error: 'Gesture not found' }, 404);
+      const alvo = await lerLinha(c.env.DB, targetId);
+      if (!alvo) return c.json({ error: 'Target gesture not found' }, 404);
+      if (alvo.status !== 'active') return c.json({ error: 'Target gesture is deprecated' }, 400);
+
+      await escreverNoDicionario(c.env.DB, [
+        c.env.DB
+          .prepare(`UPDATE gesture_dictionary SET status = 'deprecated', replaced_by = ?, updated_at = datetime('now') WHERE id = ?`)
+          .bind(targetId, id),
+      ]);
+
+      let reescritos = 0;
+      const falhas: { materialId: string; motivo: string }[] = [];
+      if (rewriteDocuments) {
+        const usos = await usosDoGesto(c.env.DB, id);
+        for (const uso of usos) {
+          const materialId = uso.material_id;
+          try {
+            const row = await c.env.DB
+              .prepare(`SELECT r2_key FROM praise_materials WHERE id = ?`)
+              .bind(materialId)
+              .first<{ r2_key: string | null }>();
+            if (!row?.r2_key) throw new Error('material sem r2_key');
+            const objeto = await c.env.ASSETS.get(storageKeyFor(row.r2_key));
+            if (!objeto) throw new Error('objeto não existe no R2');
+            let lido: unknown;
+            try {
+              lido = JSON.parse(await objeto.text());
+            } catch {
+              throw new Error('documento não é JSON válido');
+            }
+            const validado = validarDocumento(lido);
+            if (!validado.ok) throw new Error(`documento inválido em ${validado.erro.caminho}`);
+            const { doc, trocados } = substituirGesto(validado.doc, id, targetId);
+            if (trocados === 0) continue;
+            await c.env.ASSETS.put(storageKeyFor(row.r2_key), JSON.stringify(doc), {
+              httpMetadata: { contentType: 'application/json; charset=utf-8' },
+            });
+            const usosNovos = contarUsos(doc);
+            await c.env.DB.batch([
+              c.env.DB.prepare(`DELETE FROM gesture_usage WHERE material_id = ?`).bind(materialId),
+              ...[...usosNovos].map(([g, n]) =>
+                c.env.DB.prepare(`INSERT INTO gesture_usage (material_id, gesture_id, count) VALUES (?, ?, ?)`).bind(materialId, g, n)
+              ),
+            ]);
+            reescritos += 1;
+          } catch (error) {
+            falhas.push({ materialId, motivo: error instanceof Error ? error.message : String(error) });
+          }
+        }
+      }
+
+      console.log(JSON.stringify({ msg: 'gesture.replace', from: id, to: targetId, rewritten: reescritos, failed: falhas.length }));
+      return c.json({ ok: true, deprecated: id, replacedBy: targetId, reescritos, falhas });
+    } catch (error) {
+      console.error('Error replacing gesture:', error);
+      return c.json({ error: 'Failed to replace gesture' }, 500);
+    }
+  });
 }

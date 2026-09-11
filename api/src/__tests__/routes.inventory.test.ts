@@ -69,6 +69,8 @@ const ROTAS_ESPERADAS = [
   'POST /api/gestures/dictionary/:id/image',
   'POST /api/gestures/dictionary/:id/gif',
   'POST /api/gestures/dictionary/:id/gif',
+  'POST /api/gestures/dictionary/:id/replace-with',
+  'POST /api/gestures/dictionary/:id/replace-with',
   'GET /api/tags',
   'POST /api/tags',
   'POST /api/tags',

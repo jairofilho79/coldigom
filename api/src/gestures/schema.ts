@@ -102,7 +102,10 @@ export type ResultadoDaValidacao =
 
 /** Sinaliza o primeiro erro e sobe até `validarDocumento`. Só existe dentro deste arquivo. */
 class Falha {
-  constructor(public readonly erro: ErroDeValidacao) {}
+  readonly erro: ErroDeValidacao;
+  constructor(erro: ErroDeValidacao) {
+    this.erro = erro;
+  }
 }
 function falhar(codigo: CodigoDeErro, caminho: string): never {
   throw new Falha({ codigo, caminho });

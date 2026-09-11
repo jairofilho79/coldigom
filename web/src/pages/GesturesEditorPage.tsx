@@ -80,17 +80,22 @@ export function GesturesEditorPage() {
     return { status: 'ok', doc: r.doc, etag: etagDoGet };
   }, [material?.r2_key, content.status, fonte, etagDoGet, gravado]);
 
-  // Título e versão são primitivos de propósito: trocar a marca de revisão devolve
-  // um `praise` novo, e um documento novo memoizado nele perderia o rascunho.
+  // Título é primitivo de propósito: trocar a marca de revisão devolve um
+  // `praise` novo, e um documento novo memoizado nele perderia o rascunho.
+  // A versão do dicionário FICA FORA das deps de propósito: para um documento
+  // novo ela nasce 0 e só importa na hora de salvar (`salvar` já carimba
+  // `indice.version` na saída). Se ela entrasse aqui, o dicionário chegando
+  // depois do GET (ou depois de a pessoa já ter começado a editar) trocaria a
+  // identidade de `base` e apagaria o rascunho por baixo dela.
   const tituloBase = praise ? tituloPadrao(praise) : '';
   const base = useMemo<GestureDocument | null>(() => {
     if (!servidor || !tituloBase) return null;
     if (servidor.status === 'ok') return servidor.doc;
     if (servidor.status === 'novo') {
-      return { schema: GESTURE_SCHEMA, title: tituloBase, dictionaryVersion: indice?.version ?? 0, items: [] };
+      return { schema: GESTURE_SCHEMA, title: tituloBase, dictionaryVersion: 0, items: [] };
     }
     return null;
-  }, [servidor, tituloBase, indice?.version]);
+  }, [servidor, tituloBase]);
 
   // rascunho + histórico
   const [rascunho, setRascunho] = useState<GestureDocument | null>(null);
@@ -158,6 +163,11 @@ export function GesturesEditorPage() {
       });
       return p.slice(0, -1);
     });
+    // O foco pode apontar para um caminho que só existe do lado de cá do tempo
+    // (o cartão que Desfazer acabou de desmanchar): soltar aqui é mais simples e
+    // mais seguro que tentar validar o caminho contra a árvore de destino.
+    setFoco(null);
+    setErroNoCaminho(null);
   }, []);
 
   const refazer = useCallback(() => {
@@ -170,14 +180,25 @@ export function GesturesEditorPage() {
       });
       return f.slice(0, -1);
     });
+    setFoco(null);
+    setErroNoCaminho(null);
   }, []);
 
   const rascunhoRef = useRef(rascunho);
   rascunhoRef.current = rascunho;
+  // Espelha `base` como `rascunhoRef` espelha `rascunho`: `salvar` precisa do valor
+  // mais recente sem entrar nas deps do useCallback — senão ele mudaria de
+  // identidade a cada tecla, e o listener de teclado (que depende dele) recriaria
+  // junto, o mesmo problema que rascunhoRef evita para o próprio rascunho.
+  const baseRef = useRef(base);
+  baseRef.current = base;
 
   const salvar = useCallback(async () => {
     const doc = rascunhoRef.current;
     if (!doc || !material?.r2_key || !servidor || servidor.status === 'invalido') return;
+    // Ctrl+S num documento intocado não pode gravar: o PUT reseta is_reviewed no
+    // servidor mesmo sem mudança nenhuma no conteúdo.
+    if (doc === baseRef.current) return;
     const v = validarDocumento(doc);
     if (!v.ok) {
       setMensagem(MENSAGENS[v.erro.codigo]);
@@ -198,6 +219,12 @@ export function GesturesEditorPage() {
       // ChordProPage.
       const mudouDurante = rascunhoRef.current !== doc;
       setGravado({ key: material.r2_key, doc: paraGravar, etag });
+      // O servidor reseta a marca de revisão a cada gravação; o switch na tela
+      // não pode continuar dizendo "Revisada" depois de um Salvar bem-sucedido.
+      setPraise((p) => p && {
+        ...p,
+        materials: p.materials.map((m) => (m.id === material.id ? { ...m, is_reviewed: false, reviewed_at: null, reviewed_by: null } : m)),
+      });
       if (!mudouDurante) {
         setRascunho(paraGravar);
         setPassado([]);

@@ -27,9 +27,9 @@ const dicionario = {
   gestures: [{ id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/c687580e7682.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' }],
 };
 
-function montar({ asset = EXEMPLO, status = 200, etag = '"v1"', autenticado = true }: { asset?: string; status?: number; etag?: string; autenticado?: boolean } = {}) {
+function montar({ asset = EXEMPLO, status = 200, etag = '"v1"', autenticado = true, praiseObj = praise }: { asset?: string; status?: number; etag?: string; autenticado?: boolean; praiseObj?: PraiseDetail } = {}) {
   vi.spyOn(api, 'getMe').mockResolvedValue(autenticado ? ({ sub: 'u1', name: 'Revisor' } as never) : null);
-  vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+  vi.spyOn(api, 'getPraise').mockResolvedValue(praiseObj);
   vi.spyOn(api, 'getGestureDictionary').mockResolvedValue(dicionario);
   vi.stubGlobal('fetch', vi.fn(() => new Response(status === 200 ? asset : '', { status, headers: status === 200 ? { ETag: etag } : {} })));
   const put = vi.spyOn(api, 'putGesturesContent');
@@ -107,6 +107,50 @@ describe('GesturesEditorPage', () => {
     expect(gatilho()).toHaveValue('Quero!');
     await user.keyboard('{Control>}s{/Control}');
     await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
+  });
+
+  it('Desfazer solta o foco (F4): depois de envolver e Ctrl+Z, Remover fica desabilitado e não lança', async () => {
+    const user = userEvent.setup();
+    const erro = vi.spyOn(console, 'error').mockImplementation(() => {});
+    montar();
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    await user.click(document.querySelector('[data-cartao="items[0].children[0]"]') as HTMLElement);
+    await user.keyboard('{Shift>}');
+    await user.click(document.querySelector('[data-cartao="items[0].children[2]"]') as HTMLElement);
+    await user.keyboard('{/Shift}');
+    await user.click(screen.getByRole('button', { name: 'Repetir 2x' }));
+    await waitFor(() => expect(document.querySelector('[data-cartao="items[0].children[0]"]')).toHaveClass('ge-cartao--repeat'));
+    await user.keyboard('{Control>}z{/Control}');
+    await waitFor(() => expect(document.querySelector('[data-cartao="items[0].children[0]"]')).not.toHaveClass('ge-cartao--repeat'));
+    expect(screen.getByRole('button', { name: 'Remover' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Remover' }));
+    expect(erro).not.toHaveBeenCalledWith(expect.stringContaining('TypeError'), expect.anything());
+    expect(erro.mock.calls.some(([a]) => a instanceof Error && a.name === 'TypeError')).toBe(false);
+    erro.mockRestore();
+  });
+
+  it('Ctrl+S sem alteração não grava nada (F2): rascunho igual à base não dispara PUT', async () => {
+    const user = userEvent.setup();
+    const { put } = montar();
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    await user.keyboard('{Control>}s{/Control}');
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  it('depois de salvar, a marca de revisão local reflete o reset do servidor (F12)', async () => {
+    const user = userEvent.setup();
+    const revisado = {
+      ...praise,
+      materials: praise.materials.map((m) => (m.id === 'g1' ? { ...m, is_reviewed: true, reviewed_at: '2024-01-01', reviewed_by: 'Fulano' } : m)),
+    } as unknown as PraiseDetail;
+    const { put } = montar({ praiseObj: revisado });
+    put.mockResolvedValue({ etag: '"v2"' });
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    expect(screen.getByText('Revisada')).toBeInTheDocument();
+    await user.type(within(document.querySelector('[data-cartao="items[0].children[0]"]') as HTMLElement).getAllByRole('textbox', { name: 'Gatilho' })[0], '!');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.getByText('Salvo.')).toBeInTheDocument());
+    expect(screen.getByText('Marcar como revisada')).toBeInTheDocument();
   });
 
   it('digitar durante o PUT não é perdido: o rascunho fica, avisa e o Salvar de novo manda o texto novo com o ETag novo', async () => {
@@ -204,5 +248,30 @@ describe('GesturesEditorPage', () => {
     await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
     expect(screen.getByText(/não revisada/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Salvar' })).toBeNull();
+  });
+
+  it('dicionário chegando depois não apaga o rascunho de um documento novo (F11)', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, 'getMe').mockResolvedValue({ sub: 'u1', name: 'Revisor' } as never);
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    let resolverDicionario: (d: typeof dicionario) => void = () => {};
+    vi.spyOn(api, 'getGestureDictionary').mockImplementation(() => new Promise((r) => { resolverDicionario = r; }));
+    vi.stubGlobal('fetch', vi.fn(() => new Response('', { status: 404 })));
+    render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/praise/p1/gestos/g1']}>
+          <Routes>
+            <Route path="/praise/:praiseId/gestos/:materialId" element={<GesturesEditorPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText(/Documento vazio/)).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Adicionar instrução' }));
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Instrução' })).toBeInTheDocument());
+    resolverDicionario(dicionario);
+    // dá tempo do efeito que guarda o dicionário rodar e re-renderizar
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Instrução' })).toBeInTheDocument());
+    expect(screen.queryByText(/Documento vazio/)).not.toBeInTheDocument();
   });
 });

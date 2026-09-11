@@ -58,6 +58,13 @@ describe('GestureDocumentView — o exemplo da spec', () => {
     expect(screen.getByText('(pausa para os instrumentos)')).toHaveClass('gv-texto');
   });
 
+  it('contagem do repeat é lida por leitor de tela, e a chave visual continua aria-hidden', () => {
+    const { container } = render(<GestureDocumentView doc={exemplo} indice={indice} />);
+    expect(container.querySelector('.gv-repeat .gv-sr')?.textContent).toBe('Repetir 2 vezes');
+    expect(container.querySelector('.gv-repeat .gv-vezes')?.textContent).toBe('2x');
+    expect(container.querySelector('.gv-repeat .gv-chave')).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('título em caixa alta no topo', () => {
     render(<GestureDocumentView doc={exemplo} indice={indice} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('182 - QUERO VIVER PRA SEMPRE COM JESUS');
@@ -125,5 +132,11 @@ describe('regras.css — as cores da spec, verbatim', () => {
     }
     expect(css).toMatch(/max-width:\s*720px/);
     expect(css).toMatch(/\.gv-gatilho\s*{[^}]*white-space:\s*nowrap/);
+  });
+
+  it('o divisor do FINAL desenha o traço com um pseudo-elemento, não com border-image', () => {
+    const css = readFileSync(resolve(__dirname, '..', 'regras.css'), 'utf8');
+    expect(css).toMatch(/\.gv-final > \.gv-divisor::before\s*{[^}]*repeating-linear-gradient/);
+    expect(css).not.toMatch(/border-image/);
   });
 });

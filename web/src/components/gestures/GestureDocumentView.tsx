@@ -62,6 +62,7 @@ export function GestureDocumentView({ doc, indice, tamanhoDaFigura = 96, emFoco,
       case 'repeat':
         return (
           <div key={chave} {...props(caminho, 'gv-bloco gv-repeat')}>
+            <span className="gv-sr">Repetir {item.count} vezes</span>
             {filhos(item.children, caminho)}
             <div className="gv-chave" aria-hidden="true">
               <span className="gv-vezes">{item.count}x</span>

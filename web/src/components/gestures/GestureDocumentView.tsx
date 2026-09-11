@@ -1,22 +1,10 @@
 import type { MouseEvent, ReactNode } from 'react';
 
-import type { GestureDocument, InstructionKind, Item } from '../../lib/gestures/schema';
+import type { GestureDocument, Item } from '../../lib/gestures/schema';
 import type { Indice } from '../../lib/gestures/dictionary';
 import { chaveDoCaminho, type Caminho } from '../../lib/gestures/flatten';
+import { ROTULOS_DE_INSTRUCAO, separadorDaLinha } from '../../lib/gestures/render';
 import { GestureThumb } from './GestureThumb';
-
-export const ROTULOS_DE_INSTRUCAO: Record<InstructionKind, string> = {
-  instruments: 'Instrumentos',
-  repeat_praise: 'Repetir o louvor',
-  back_to_chorus: 'Voltar ao coro',
-  back_to_chorus_and_finish: 'Voltar ao coro e finalizar',
-};
-
-/** Sem espaço quando a leitura começa com pontuação que gruda na palavra anterior. */
-export function separadorDaLinha(text: string): '' | ' ' {
-  if (!text) return '';
-  return /^[,.;:!?)\]]/.test(text) ? '' : ' ';
-}
 
 type Props = {
   doc: GestureDocument;

@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { GestureDocument } from '../../../lib/gestures/schema';
 import { indexar } from '../../../lib/gestures/dictionary';
-import { GestureDocumentView, separadorDaLinha } from '../GestureDocumentView';
+import { GestureDocumentView } from '../GestureDocumentView';
+import { separadorDaLinha } from '../../../lib/gestures/render';
 
 const FIXTURES = resolve(__dirname, '..', '..', '..', '..', '..', 'api', 'src', 'gestures', '__fixtures__');
 const exemplo = JSON.parse(readFileSync(resolve(FIXTURES, 'valido-exemplo.json'), 'utf8')) as GestureDocument;

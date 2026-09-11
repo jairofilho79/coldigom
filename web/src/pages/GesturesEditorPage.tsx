@@ -8,7 +8,7 @@ import { useAuth } from '../context/useAuth';
 import { useMaterialContent } from '../hooks/useMaterialContent';
 import { indexar, type Indice } from '../lib/gestures/dictionary';
 import type { Resultado } from '../lib/gestures/edit';
-import { chaveDoCaminho, type Caminho } from '../lib/gestures/flatten';
+import { caminhoDaChave, chaveDoCaminho, type Caminho } from '../lib/gestures/flatten';
 import { GESTURE_SCHEMA, MENSAGENS, validarDocumento, type GestureDocument } from '../lib/gestures/schema';
 import {
   ConflitoDeGravacao, DocumentoRecusado, getAssetUrl, getGestureDictionary, getPraise, putGesturesContent, updateMaterial,
@@ -110,15 +110,21 @@ export function GesturesEditorPage() {
   // do primeiro paint com o rascunho velho — o `set-state-in-effect` do lint acusa
   // exatamente esse padrão. Comparar `base` com o valor visto da última vez decide
   // se este render é o de troca, e o `setState` aqui é síncrono com ele.
+  // Exceção: quando a base só mudou porque `salvar` acabou de gravar
+  // (`gravado && base === gravado.doc`), `salvar` já decidiu o que fazer com o
+  // rascunho e o histórico — inclusive o caso de ter havido digitação durante o
+  // PUT, que este bloco não pode ver. Zerar aqui por cima apagaria isso.
   const [baseAnterior, setBaseAnterior] = useState<GestureDocument | null>(null);
   if (base !== baseAnterior) {
     setBaseAnterior(base);
-    setRascunho(base);
-    setPassado([]);
-    setFuturo([]);
-    setFoco(null);
-    setErroNoCaminho(null);
-    setConflito(null);
+    if (!(gravado && base === gravado.doc)) {
+      setRascunho(base);
+      setPassado([]);
+      setFuturo([]);
+      setFoco(null);
+      setErroNoCaminho(null);
+      setConflito(null);
+    }
   }
 
   const sujo = rascunho !== null && base !== null && rascunho !== base;
@@ -175,7 +181,8 @@ export function GesturesEditorPage() {
     const v = validarDocumento(doc);
     if (!v.ok) {
       setMensagem(MENSAGENS[v.erro.codigo]);
-      setErroNoCaminho(v.erro.caminho.replace(/\.(lyrics|count|kind|text)\b.*$/, '') || null);
+      const c = caminhoDaChave(v.erro.caminho);
+      setErroNoCaminho(c ? chaveDoCaminho(c) : null);
       return;
     }
     setSalvando(true);
@@ -184,16 +191,29 @@ export function GesturesEditorPage() {
     try {
       const paraGravar: GestureDocument = { ...doc, dictionaryVersion: indice?.version ?? doc.dictionaryVersion };
       const { etag } = await putGesturesContent(material.id, paraGravar, servidor.etag);
+      // A pessoa pode ter continuado digitando enquanto o PUT viajava: `doc` é a
+      // foto de quando o clique aconteceu, `rascunhoRef.current` é o que está na
+      // tela agora. Sobrescrever o rascunho com `paraGravar` nesse caso jogaria
+      // fora o que foi digitado depois — o mesmo risco que `concluir` cobre no
+      // ChordProPage.
+      const mudouDurante = rascunhoRef.current !== doc;
       setGravado({ key: material.r2_key, doc: paraGravar, etag });
-      // A base muda → o ajuste acima zera o rascunho para a base nova, que é o que gravamos.
-      setMensagem('Salvo.');
+      if (!mudouDurante) {
+        setRascunho(paraGravar);
+        setPassado([]);
+        setFuturo([]);
+        setMensagem('Salvo.');
+      } else {
+        setMensagem('Gravado. Você fez alterações novas depois do clique — elas ainda não foram salvas.');
+      }
     } catch (e) {
       if (e instanceof ConflitoDeGravacao) {
         setConflito(JSON.stringify(doc, null, 2));
         setMensagem(e.message);
       } else if (e instanceof DocumentoRecusado) {
         setMensagem(e.message);
-        setErroNoCaminho(e.path.replace(/\.(lyrics|count|kind|text)\b.*$/, '') || null);
+        const c = caminhoDaChave(e.path);
+        setErroNoCaminho(c ? chaveDoCaminho(c) : null);
       } else {
         setMensagem(e instanceof Error ? e.message : 'Falha ao salvar');
       }
@@ -348,10 +368,7 @@ export function GesturesEditorPage() {
               )}
             </section>
             <section className="ge-coluna ge-coluna--preview" aria-label="Pré-visualização">
-              <GestureDocumentView doc={rascunho} indice={indice} tamanhoDaFigura={64} emFoco={chaveDoFoco} onClicarCartao={(chave) => {
-                const c = chave.match(/\d+/g)?.map(Number) ?? null;
-                setFoco(c);
-              }} />
+              <GestureDocumentView doc={rascunho} indice={indice} tamanhoDaFigura={64} emFoco={chaveDoFoco} onClicarCartao={(chave) => setFoco(caminhoDaChave(chave))} />
             </section>
           </div>
         </>

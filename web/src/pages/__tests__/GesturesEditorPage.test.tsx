@@ -109,6 +109,31 @@ describe('GesturesEditorPage', () => {
     await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
   });
 
+  it('digitar durante o PUT não é perdido: o rascunho fica, avisa e o Salvar de novo manda o texto novo com o ETag novo', async () => {
+    const user = userEvent.setup();
+    const { put } = montar();
+    let resolver: (v: { etag: string | null }) => void = () => {};
+    put.mockImplementation(() => new Promise((r) => { resolver = r; }));
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    const gatilho = () => within(document.querySelector('[data-cartao="items[0].children[0]"]') as HTMLElement).getAllByRole('textbox', { name: 'Gatilho' })[0];
+    await user.type(gatilho(), '!');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    // digita enquanto o PUT ainda está em voo
+    await user.type(gatilho(), '?');
+    expect(gatilho()).toHaveValue('Quero!?');
+    resolver({ etag: '"v9"' });
+    await waitFor(() => expect(screen.getByText(/alterações novas/)).toBeInTheDocument());
+    // o que foi digitado depois do clique continua na tela
+    expect(gatilho()).toHaveValue('Quero!?');
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeEnabled();
+    // a segunda gravação manda o texto novo, com o ETag que a primeira devolveu
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(put).toHaveBeenCalledTimes(2));
+    const [, doc2, etag2] = put.mock.calls[1];
+    expect(JSON.stringify(doc2)).toContain('Quero!?');
+    expect(etag2).toBe('"v9"');
+  });
+
   it('409 vira cartão de conflito com Recarregar e o JSON para copiar; o rascunho fica na tela', async () => {
     const user = userEvent.setup();
     const { put } = montar();
@@ -132,6 +157,28 @@ describe('GesturesEditorPage', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
     await waitFor(() => expect(screen.getByText('Tipo de item desconhecido neste ponto do documento.')).toBeInTheDocument());
     expect(document.querySelector('[data-cartao="items[1].children[1].children[0]"]')).toHaveClass('is-erro');
+  });
+
+  it('400 com path terminando em ".children" marca o bloco, não o filho', async () => {
+    const user = userEvent.setup();
+    const { put } = montar();
+    put.mockRejectedValue(new api.DocumentoRecusado('O bloco não pode ficar sem filhos.', 'bloco_vazio', 'items[1].children'));
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    await user.type(within(document.querySelector('[data-cartao="items[0].children[0]"]') as HTMLElement).getAllByRole('textbox', { name: 'Gatilho' })[0], '!');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.getByText('O bloco não pode ficar sem filhos.')).toBeInTheDocument());
+    expect(document.querySelector('[data-cartao="items[1]"]')).toHaveClass('is-erro');
+  });
+
+  it('400 com path em ".gestureId" marca o cartão do gesto', async () => {
+    const user = userEvent.setup();
+    const { put } = montar();
+    put.mockRejectedValue(new api.DocumentoRecusado('O id do gesto precisa ter 12 caracteres hexadecimais minúsculos.', 'gesture_id_invalido', 'items[0].children[0].gestureId'));
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    await user.type(within(document.querySelector('[data-cartao="items[0].children[0]"]') as HTMLElement).getAllByRole('textbox', { name: 'Gatilho' })[0], '!');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.getByText('O id do gesto precisa ter 12 caracteres hexadecimais minúsculos.')).toBeInTheDocument());
+    expect(document.querySelector('[data-cartao="items[0].children[0]"]')).toHaveClass('is-erro');
   });
 
   it('rascunho inválido não vai à rede: remove o último gesto do mínimo e Salvar explica', async () => {

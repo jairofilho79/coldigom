@@ -33,6 +33,15 @@ function textoDoProblema(problema: ProblemaDeArquivo): string {
     : 'sem extensão reconhecida — a API recusa o lote inteiro por causa dele';
 }
 
+export type ConversionProgress = {
+  phase: 'idle' | 'downloading' | 'converting' | 'done' | 'error';
+  current?: number;
+  total?: number;
+  fileName?: string;
+  percent?: number;
+  error?: string | null;
+};
+
 export function BulkFilePreviewList({
   files,
   materialKindOptions,
@@ -41,6 +50,8 @@ export function BulkFilePreviewList({
   onConvertToMp3,
   onConvertAllToMp3,
   converting = false,
+  convertingIndex = null,
+  conversionProgress = null,
   editable = true,
 }: {
   files: BulkFileItem[];
@@ -50,6 +61,8 @@ export function BulkFilePreviewList({
   onConvertToMp3?: (index: number) => void;
   onConvertAllToMp3?: () => void;
   converting?: boolean;
+  convertingIndex?: number | null;
+  conversionProgress?: ConversionProgress | null;
   editable?: boolean;
 }) {
   const [verTodos, setVerTodos] = useState(false);
@@ -69,6 +82,7 @@ export function BulkFilePreviewList({
   const ocultos = files.length - visiveis.length;
 
   const convertiveis = comIndice.filter((x) => (x.it.file || x.it.driveFileId) && isConvertibleAudio(x.it.type));
+  const isCurrentlyConverting = converting || conversionProgress?.phase === 'converting' || conversionProgress?.phase === 'downloading';
 
   return (
     <div className="bulk-list">
@@ -78,16 +92,102 @@ export function BulkFilePreviewList({
         </div>
       )}
       {convertiveis.length > 0 && onConvertAllToMp3 && (
-        <div className="bulk-scan-hint bulk-convert-bar" role="status">
-          <span>🎵 {convertiveis.length} áudio(s) conversível(is) para MP3 detectado(s).</span>
-          <button
-            type="button"
-            className="linkish bulk-convert-btn"
-            disabled={converting}
-            onClick={onConvertAllToMp3}
-          >
-            {converting ? 'Convertendo para MP3…' : `Converter ${convertiveis.length > 1 ? 'todos para MP3' : 'para MP3'}`}
-          </button>
+        <div
+          className={`bulk-convert-bar${
+            isCurrentlyConverting
+              ? ' bulk-convert-bar--converting'
+              : conversionProgress?.phase === 'done'
+              ? ' bulk-convert-bar--done'
+              : conversionProgress?.phase === 'error'
+              ? ' bulk-convert-bar--error'
+              : ''
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="bulk-convert-bar-header">
+            <div className="bulk-convert-status-text">
+              {conversionProgress?.phase === 'downloading' ? (
+                <>
+                  <span className="bulk-scan-spinner" aria-hidden="true" />
+                  <span>
+                    Baixando do Drive ({conversionProgress.current ?? 1}/{conversionProgress.total ?? convertiveis.length}):{' '}
+                    <strong>{conversionProgress.fileName || 'áudio'}</strong>…
+                  </span>
+                </>
+              ) : conversionProgress?.phase === 'converting' || (isCurrentlyConverting && !conversionProgress) ? (
+                <>
+                  <span className="bulk-scan-spinner" aria-hidden="true" />
+                  <span>
+                    Convertendo para MP3 ({conversionProgress?.current ?? 1}/{conversionProgress?.total ?? convertiveis.length}):{' '}
+                    <strong>{conversionProgress?.fileName || 'áudio'}</strong>
+                    {conversionProgress?.percent != null ? ` (${conversionProgress.percent}%)` : ''}…
+                  </span>
+                </>
+              ) : conversionProgress?.phase === 'done' ? (
+                <span style={{ color: 'var(--color-success, #2d6a4f)' }}>
+                  ✓ {conversionProgress.total ?? 'Todos os'} áudio(s) convertidos com sucesso para MP3!
+                </span>
+              ) : conversionProgress?.phase === 'error' ? (
+                <span style={{ color: 'var(--color-danger, #c1121f)' }}>
+                  ⚠️ Falha na conversão: {conversionProgress.error || 'Erro desconhecido'}
+                </span>
+              ) : (
+                <span>🎵 {convertiveis.length} áudio(s) conversível(is) para MP3 detectado(s).</span>
+              )}
+            </div>
+            {isCurrentlyConverting ? (
+              <button
+                type="button"
+                className="linkish bulk-convert-btn"
+                disabled
+              >
+                Convertendo para MP3…
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="linkish bulk-convert-btn"
+                onClick={onConvertAllToMp3}
+              >
+                {conversionProgress?.phase === 'error'
+                  ? 'Tentar novamente'
+                  : `Converter ${convertiveis.length > 1 ? 'todos para MP3' : 'para MP3'}`}
+              </button>
+            )}
+          </div>
+          {isCurrentlyConverting && conversionProgress?.total ? (
+            <div
+              className="bulk-scan-progress"
+              role="progressbar"
+              aria-valuenow={Math.round(
+                (((conversionProgress.current ? conversionProgress.current - 1 : 0) +
+                  (conversionProgress.percent ?? 0) / 100) /
+                  conversionProgress.total) *
+                  100
+              )}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="bulk-scan-progress-bar"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.max(
+                      5,
+                      Math.round(
+                        (((conversionProgress.current ? conversionProgress.current - 1 : 0) +
+                          (conversionProgress.percent ?? 0) / 100) /
+                          conversionProgress.total) *
+                          100
+                      )
+                    )
+                  )}%`,
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       )}
       {visiveis.map(({ it, idx, problema }) => {
@@ -124,15 +224,22 @@ export function BulkFilePreviewList({
             {canPreview || (editable && onRemove) ? (
               <div className="bulk-actions">
                 {editable && (it.file || it.driveFileId) && isConvertibleAudio(it.type) && onConvertToMp3 ? (
-                  <button
-                    type="button"
-                    className="bulk-remove"
-                    disabled={converting}
-                    aria-label={`Converter ${it.relPath} para MP3`}
-                    onClick={() => onConvertToMp3(idx)}
-                  >
-                    → MP3
-                  </button>
+                  convertingIndex === idx ? (
+                    <span className="bulk-converting-indicator" title="Convertendo para MP3…">
+                      <span className="bulk-scan-spinner" style={{ width: '0.85rem', height: '0.85rem' }} aria-hidden="true" />
+                      <span>Convertendo…</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="bulk-remove"
+                      disabled={isCurrentlyConverting}
+                      aria-label={`Converter ${it.relPath} para MP3`}
+                      onClick={() => onConvertToMp3(idx)}
+                    >
+                      → MP3
+                    </button>
+                  )
                 ) : null}
                 {it.driveFileId ? (
                   <a

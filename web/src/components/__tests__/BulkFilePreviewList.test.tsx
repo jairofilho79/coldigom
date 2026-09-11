@@ -119,4 +119,123 @@ describe('BulkFilePreviewList audio conversion', () => {
     expect(screen.queryByText(/áudio\(s\) conversível\(is\) para MP3 detectado\(s\)/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /converter.*mp3/i })).not.toBeInTheDocument();
   });
+
+  it('renders downloading and converting progress with percentage and progressbar', () => {
+    const files: BulkFileItem[] = [
+      {
+        relPath: 'audio1.m4a',
+        type: 'm4a',
+        material_kind: 'kind-2',
+        inference: { materialKindId: 'kind-2', confidence: 0.9, method: 'exact' },
+        file: new File(['dummy'], 'audio1.m4a', { type: 'audio/mp4' }),
+      },
+      {
+        relPath: 'audio2.m4a',
+        type: 'm4a',
+        material_kind: 'kind-2',
+        inference: { materialKindId: 'kind-2', confidence: 0.9, method: 'exact' },
+        file: new File(['dummy'], 'audio2.m4a', { type: 'audio/mp4' }),
+      },
+    ];
+
+    const { rerender } = render(
+      <BulkFilePreviewList
+        files={files}
+        materialKindOptions={sampleOptions}
+        onConvertToMp3={onConvertToMp3}
+        onConvertAllToMp3={onConvertAllToMp3}
+        converting={true}
+        convertingIndex={0}
+        conversionProgress={{
+          phase: 'downloading',
+          current: 1,
+          total: 2,
+          fileName: 'audio1.m4a',
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Baixando do Drive \(1\/2\):/)).toBeInTheDocument();
+    expect(screen.getAllByText('audio1.m4a')).toHaveLength(2);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('Convertendo…')).toBeInTheDocument();
+
+    // Now converting with 65% progress
+    rerender(
+      <BulkFilePreviewList
+        files={files}
+        materialKindOptions={sampleOptions}
+        onConvertToMp3={onConvertToMp3}
+        onConvertAllToMp3={onConvertAllToMp3}
+        converting={true}
+        convertingIndex={0}
+        conversionProgress={{
+          phase: 'converting',
+          current: 1,
+          total: 2,
+          fileName: 'audio1.m4a',
+          percent: 65,
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Convertendo para MP3 \(1\/2\):/)).toBeInTheDocument();
+    expect(screen.getByText(/\(65%\)…/)).toBeInTheDocument();
+  });
+
+  it('renders error banner with retry option when conversion fails', () => {
+    const files: BulkFileItem[] = [
+      {
+        relPath: 'audio1.m4a',
+        type: 'm4a',
+        material_kind: 'kind-2',
+        inference: { materialKindId: 'kind-2', confidence: 0.9, method: 'exact' },
+        file: new File(['dummy'], 'audio1.m4a', { type: 'audio/mp4' }),
+      },
+    ];
+
+    render(
+      <BulkFilePreviewList
+        files={files}
+        materialKindOptions={sampleOptions}
+        onConvertToMp3={onConvertToMp3}
+        onConvertAllToMp3={onConvertAllToMp3}
+        conversionProgress={{
+          phase: 'error',
+          error: 'Codec não suportado',
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Falha na conversão: Codec não suportado/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /tentar novamente/i })).toBeInTheDocument();
+  });
+
+  it('renders success message when conversion is completed', () => {
+    const files: BulkFileItem[] = [
+      {
+        relPath: 'audio1.m4a',
+        type: 'm4a',
+        material_kind: 'kind-2',
+        inference: { materialKindId: 'kind-2', confidence: 0.9, method: 'exact' },
+        file: new File(['dummy'], 'audio1.m4a', { type: 'audio/mp4' }),
+      },
+    ];
+
+    render(
+      <BulkFilePreviewList
+        files={files}
+        materialKindOptions={sampleOptions}
+        onConvertToMp3={onConvertToMp3}
+        onConvertAllToMp3={onConvertAllToMp3}
+        conversionProgress={{
+          phase: 'done',
+          total: 1,
+        }}
+      />
+    );
+
+    expect(screen.getByText(/1 áudio\(s\) convertidos com sucesso para MP3!/)).toBeInTheDocument();
+  });
 });
+

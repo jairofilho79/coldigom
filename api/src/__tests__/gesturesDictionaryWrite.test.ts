@@ -124,6 +124,19 @@ describe('POST /api/gestures/dictionary', () => {
   it('recusa exampleTriggers que não é lista de strings', async () => {
     expect((await criar({ name: 'X', exampleTriggers: '{"a":1}', image: png() })).res.status).toBe(400);
   });
+
+  it('se o batch falhar depois da figura subir, apaga o objeto e responde 500', async () => {
+    const { db } = banco([]);
+    (db.batch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('D1_ERROR: constraint failed'));
+    const { r2: assets, escritos } = r2();
+    const form = new FormData();
+    form.set('name', 'X');
+    form.set('image', png());
+    const res = await app.request('/api/gestures/dictionary', { method: 'POST', headers: await sessao(), body: form }, env(db, assets));
+    expect(res.status).toBe(500);
+    expect(escritos).toHaveLength(1);
+    expect(assets.delete).toHaveBeenCalledWith(escritos[0].key);
+  });
 });
 
 describe('PATCH /api/gestures/dictionary/:id', () => {

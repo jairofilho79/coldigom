@@ -136,14 +136,25 @@ export function registerGesturesRoutes(app: App): void {
       if (await lerLinha(c.env.DB, id)) return c.json({ error: 'Gesture id already exists' }, 409);
       const imageKey = chaveDaFigura(id, 'png');
       await c.env.ASSETS.put(storageKeyFor(imageKey), figura.stream(), { httpMetadata: { contentType: 'image/png' } });
-      await escreverNoDicionario(c.env.DB, [
-        c.env.DB
-          .prepare(
-            `INSERT INTO gesture_dictionary (id, name, description, example_triggers, image_key, status)
-             VALUES (?, ?, ?, ?, ?, 'active')`
-          )
-          .bind(id, name, description, JSON.stringify(exemplos), imageKey),
-      ]);
+      try {
+        await escreverNoDicionario(c.env.DB, [
+          c.env.DB
+            .prepare(
+              `INSERT INTO gesture_dictionary (id, name, description, example_triggers, image_key, status)
+               VALUES (?, ?, ?, ?, ?, 'active')`
+            )
+            .bind(id, name, description, JSON.stringify(exemplos), imageKey),
+        ]);
+      } catch (error) {
+        // Sem linha no banco, o objeto no R2 é lixo que ninguém mais alcança —
+        // mesmo caso do bulk-upload em praises.ts.
+        try {
+          await c.env.ASSETS.delete(storageKeyFor(imageKey));
+        } catch (e) {
+          console.warn('Failed to delete R2 object:', e);
+        }
+        throw error;
+      }
       const linha = await lerLinha(c.env.DB, id);
       return c.json(
         {

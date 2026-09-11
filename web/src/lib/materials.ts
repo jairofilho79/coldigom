@@ -7,13 +7,14 @@ export function isAudioMaterialType(type: string | undefined | null): boolean {
   return AUDIO_MATERIAL_TYPES.has(type.toLowerCase());
 }
 
-const TYPE_ORDER: KnownMaterialType[] = ['youtube', 'pdf', 'mp3', 'chord'];
+const TYPE_ORDER: KnownMaterialType[] = ['youtube', 'pdf', 'mp3', 'chord', 'gestures'];
 
 const TYPE_LABELS: Record<KnownMaterialType, string> = {
   youtube: 'YouTube',
   pdf: 'PDF',
   mp3: 'MP3',
   chord: 'Cifra',
+  gestures: 'Gestos CIAs',
 };
 
 export function materialDisplayName(m: Material): string {

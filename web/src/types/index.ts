@@ -15,7 +15,7 @@ export interface Praise {
 }
 
 /** Os tipos que a tela do louvor desenha com apresentação própria. */
-export type KnownMaterialType = 'pdf' | 'mp3' | 'chord' | 'youtube';
+export type KnownMaterialType = 'pdf' | 'mp3' | 'chord' | 'youtube' | 'gestures';
 
 /**
  * O acervo guarda mais que os quatro acima — mid, gestures, txt e link vieram da

@@ -39,4 +39,9 @@ describe('materials sort/group', () => {
     expect(groups[1].items[0].material_kind_name).toBe('Áudio');
     expect(groups[2].items[0].material_kind_name).toBe('Cifra B');
   });
+
+  it('gestures é tipo conhecido, com rótulo próprio e depois de chord', () => {
+    const groups = groupMaterialsByType([mat('g1', 'gestures', 'Gestos'), mat('c1', 'chord', 'Cifra')]);
+    expect(groups.map((g) => [g.type, g.label])).toEqual([['chord', 'Cifra'], ['gestures', 'Gestos CIAs']]);
+  });
 });

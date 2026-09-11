@@ -13,6 +13,7 @@ import { PainelPastaLocal } from '../components/PainelPastaLocal';
 import type { ConversionProgress } from '../components/BulkFilePreviewList';
 import { StatusImportacaoDrive } from '../components/StatusImportacaoDrive';
 import { SearchableSelect } from '../components/SearchableSelect';
+import { SecaoGestos } from '../components/gestures/SecaoGestos';
 import {
   groupMaterialsByType,
   materialDisplayName,
@@ -41,7 +42,7 @@ function tagLabel(tag: Tag, catalog?: Tag[]): string {
 }
 
 /** Tipos que ganham seção desenhada sob medida na tela. */
-const TIPOS_COM_SECAO_PROPRIA = new Set(['youtube', 'mp3', 'pdf', 'chord', ...AUDIO_MATERIAL_TYPES]);
+const TIPOS_COM_SECAO_PROPRIA = new Set(['youtube', 'mp3', 'pdf', 'chord', 'gestures', ...AUDIO_MATERIAL_TYPES]);
 
 const MATERIAL_TYPE_OPTIONS = [
   { value: 'youtube', label: 'YouTube' },
@@ -2265,6 +2266,16 @@ export function PraiseDetailPage() {
           </div>
         </section>
       )}
+
+      {praise ? (
+        <SecaoGestos
+          praiseId={praise.id}
+          materiais={praise.materials}
+          categorias={materialKinds}
+          podeEditar={Boolean(userName) && !isCreate}
+          onAtualizar={setPraise}
+        />
+      ) : null}
 
       {outrosGrupos.length > 0 && (
         <section className="detail-section animate-fade-in-up">

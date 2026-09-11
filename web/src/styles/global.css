@@ -3705,3 +3705,38 @@ button.linkish {
 .vf-compare-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); margin: var(--space-1) 0 var(--space-2); }
 .vf-compare-letra { margin: 0; white-space: pre-wrap; font-family: var(--font-body); font-size: var(--text-sm); line-height: var(--leading-relaxed); max-height: 320px; overflow: auto; }
 .vf-compare-erro { color: var(--c-error); font-size: var(--text-xs); }
+
+/* ---------- editor de gestos ---------- */
+.ge-editor { display: flex; flex-direction: column; gap: 10px; }
+.ge-barra { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; position: sticky; top: 0; background: var(--bg, #fff); padding: 6px 0; z-index: 2; }
+.ge-barra-sep { width: 1px; height: 22px; background: #d1d5db; margin: 0 4px; }
+.ge-btn { font: inherit; font-size: 0.85rem; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; }
+.ge-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ge-btn--mini { padding: 2px 8px; font-size: 0.78rem; }
+.ge-btn--perigo { border-color: #fca5a5; color: #b91c1c; }
+.ge-lista { display: flex; flex-direction: column; gap: 4px; }
+.ge-cartao { border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 8px; background: #fff; cursor: pointer; }
+.ge-cartao.is-selecionado { background: #eff6ff; border-color: #93c5fd; }
+.ge-cartao.is-foco { border-color: #1E63C8; box-shadow: 0 0 0 2px rgba(30, 99, 200, 0.25); }
+.ge-cartao.is-erro { border-color: #D32F2F; box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.25); }
+.ge-cartao-tipo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; margin-bottom: 4px; }
+.ge-gesto { display: flex; gap: 10px; align-items: flex-start; }
+.ge-figura-btn { padding: 0; border: 0; background: none; cursor: pointer; }
+.ge-linhas { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ge-linha { display: grid; grid-template-columns: 1fr 2fr; gap: 6px; }
+.ge-input { font: inherit; font-size: 0.9rem; padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; min-width: 0; }
+.ge-input--gatilho { color: #D32F2F; font-weight: 700; }
+.ge-input--n { width: 64px; }
+.ge-linha-acoes { display: flex; gap: 6px; align-items: center; }
+.ge-id { font-size: 0.72rem; color: #9ca3af; margin-left: auto; }
+.ge-campo { display: inline-flex; gap: 8px; align-items: center; font-size: 0.85rem; }
+.ge-vazio { color: #6b7280; font-style: italic; }
+.ge-picker { position: fixed; inset: 10% 15%; background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); z-index: 20; display: flex; flex-direction: column; overflow: hidden; }
+.ge-picker-topo { display: flex; gap: 8px; padding: 10px; border-bottom: 1px solid #e5e7eb; }
+.ge-picker-busca { flex: 1 1 auto; font: inherit; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; }
+.ge-picker-lista { list-style: none; margin: 0; padding: 8px; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
+.ge-picker-item { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; font: inherit; padding: 6px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; cursor: pointer; }
+.ge-picker-item:hover { background: #eff6ff; }
+.ge-picker-nome { font-weight: 600; }
+.ge-picker-exemplos { color: #6b7280; font-size: 0.8rem; }
+.ge-picker-aviso { padding: 16px; color: #6b7280; }

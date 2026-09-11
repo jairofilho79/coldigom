@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { validarDocumento, type GestureDocument, type Item } from '../schema';
+import { GESTURE_SCHEMA, MENSAGENS, validarDocumento, type GestureDocument, type Item } from '../schema';
 import { achatar, itemEm } from '../flatten';
 import {
   adicionarLinha, definirInstrucao, definirRepeticoes, desagrupar, editarLinha, editarTexto, envolver,
@@ -53,6 +53,18 @@ describe('envolver', () => {
     const { doc } = envolver(minimo, [[0]], { type: 'final' });
     expect(doc.items[0]).toMatchObject({ type: 'final' });
     valido(doc);
+  });
+
+  it('FINAL exige que só sobrem instruções depois dele, mesmo na raiz (F3)', () => {
+    const g1 = { ...novoGesto('aaaaaaaaaaaa'), lyrics: [{ trigger: 'a', text: '' }] };
+    const g2 = { ...novoGesto('bbbbbbbbbbbb'), lyrics: [{ trigger: 'b', text: '' }] };
+    const g3 = { ...novoGesto('cccccccccccc'), lyrics: [{ trigger: 'c', text: '' }] };
+    const doc: GestureDocument = { schema: GESTURE_SCHEMA, title: 'g1,g2,g3', dictionaryVersion: 0, items: [g1, g2, g3] };
+    // Final em g1 deixaria g2 e g3 (que não são instrução) depois do FINAL.
+    expect(podeEnvolver(doc, [[0]], { type: 'final' })).toBe(MENSAGENS.item_depois_do_final);
+    // Final no último cartão não deixa nada depois: permitido.
+    expect(podeEnvolver(doc, [[2]], { type: 'final' })).toBeNull();
+    valido(envolver(doc, [[2]], { type: 'final' }).doc);
   });
 
   it('link exige 2 ou 3 cartões, e repetir exige count >= 2', () => {
@@ -111,6 +123,10 @@ describe('remover', () => {
     const { doc } = remover(minimo, [0]);
     expect(doc.items).toEqual([]);
   });
+
+  it('caminho morto (F4) não lança: devolve o mesmo doc, sem foco', () => {
+    expect(remover(exemplo, [9, 9])).toEqual({ doc: exemplo, foco: null });
+  });
 });
 
 describe('inserirApos e mover', () => {
@@ -147,6 +163,18 @@ describe('inserirApos e mover', () => {
     const borda = mover(exemplo, [0, 0], -1);
     expect(borda.doc).toBe(exemplo);
     expect(borda.foco).toEqual([0, 0]);
+  });
+
+  it('caminho morto (F4) não lança: devolve o mesmo doc, sem foco', () => {
+    expect(mover(exemplo, [9, 9], 1)).toEqual({ doc: exemplo, foco: null });
+  });
+
+  it('foco morto em inserirApos (F4) é tratado como null: insere no fim da raiz, igual a caminho null', () => {
+    const comCaminhoNulo = inserirApos(exemplo, null, { type: 'instruction', kind: 'instruments' });
+    const comCaminhoMorto = inserirApos(exemplo, [9, 9], { type: 'instruction', kind: 'instruments' });
+    expect(comCaminhoMorto.foco).toEqual(comCaminhoNulo.foco);
+    expect(comCaminhoMorto.foco).toEqual([exemplo.items.length]);
+    valido(comCaminhoMorto.doc);
   });
 });
 
@@ -187,6 +215,7 @@ describe('invariantes sobre o corpo de fixtures', () => {
           ['inserir gesto', () => inserirApos(base, c.caminho, { ...novoGesto('cccccccccccc'), lyrics: [{ trigger: 'x', text: '' }] })],
           ['inserir instrução', () => inserirApos(base, c.caminho, { type: 'instruction', kind: 'repeat_praise' })],
           ['envolver', () => (podeEnvolver(base, [c.caminho], { type: 'coro' }) ? null : envolver(base, [c.caminho], { type: 'coro' }))],
+          ['envolver final', () => (podeEnvolver(base, [c.caminho], { type: 'final' }) ? null : envolver(base, [c.caminho], { type: 'final' }))],
           ['desagrupar', () => (podeDesagrupar(base, c.caminho) ? null : desagrupar(base, c.caminho))],
         ];
         for (const [nome, op] of ops) {

@@ -1,4 +1,4 @@
-import type { BlockChild, Bloco, GestureDocument, GestureItem, InstructionKind, Item, LyricLine } from './schema';
+import { MENSAGENS, type BlockChild, type Bloco, type GestureDocument, type GestureItem, type InstructionKind, type Item, type LyricLine } from './schema';
 import { irmaosContiguos, itemEm, ordenar, pai, type Caminho } from './flatten';
 
 export type Resultado = { doc: GestureDocument; foco: Caminho | null };
@@ -42,6 +42,9 @@ function indiceDoFinal(doc: GestureDocument): number {
 // ---------- estrutura ----------
 
 export function inserirApos(doc: GestureDocument, caminho: Caminho | null, item: Item): Resultado {
+  // Foco morto (item removido por outra aba, ou por Desfazer/Refazer que pulou
+  // por cima) não pode virar exceção: vira "sem foco", ou seja, insere no fim.
+  if (caminho && !itemEm(doc, caminho)) caminho = null;
   // O que só cabe na raiz sobe até o ancestral de topo.
   let alvo = caminho;
   if (alvo && SO_NA_RAIZ.has(item.type)) alvo = [alvo[0]];
@@ -63,6 +66,9 @@ export function inserirApos(doc: GestureDocument, caminho: Caminho | null, item:
 }
 
 export function remover(doc: GestureDocument, caminho: Caminho): Resultado {
+  // Total: um caminho morto (Desfazer/Refazer que trocou a árvore por baixo do
+  // foco) não lança — devolve o doc como está, sem foco.
+  if (!itemEm(doc, caminho)) return { doc, foco: null };
   const p = pai(caminho);
   const i = caminho[caminho.length - 1];
   const irmaosAntes = p ? (itemEm(doc, p) as Bloco).children : doc.items;
@@ -83,6 +89,8 @@ export function remover(doc: GestureDocument, caminho: Caminho): Resultado {
 }
 
 export function mover(doc: GestureDocument, caminho: Caminho, direcao: -1 | 1): Resultado {
+  // Mesma totalidade de `remover`: caminho morto não lança.
+  if (!itemEm(doc, caminho)) return { doc, foco: null };
   const p = pai(caminho);
   const i = caminho[caminho.length - 1];
   const lista = p ? (itemEm(doc, p) as Bloco).children : doc.items;
@@ -112,6 +120,10 @@ export function podeEnvolver(doc: GestureDocument, caminhos: Caminho[], espec: E
   if (espec.type === 'final') {
     if (p !== null) return 'FINAL só pode ficar na raiz.';
     if (indiceDoFinal(doc) >= 0) return 'Já existe um FINAL neste documento.';
+    const ordenados = ordenar(caminhos);
+    const inicio = ordenados[0][ordenados[0].length - 1];
+    const fim = inicio + caminhos.length;
+    if (doc.items.slice(fim).some((i) => i.type !== 'instruction')) return MENSAGENS.item_depois_do_final;
   }
   if (espec.type === 'link' && (caminhos.length < 2 || caminhos.length > 3)) return 'Um link liga 2 ou 3 cartões.';
   if (espec.type === 'repeat' && (!Number.isInteger(espec.count) || espec.count < 2)) return 'Repetir exige no mínimo 2 vezes.';

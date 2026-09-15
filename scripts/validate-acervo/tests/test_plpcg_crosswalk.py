@@ -8,6 +8,7 @@ from detectors.plpcg_crosswalk import (
     chaves_csv,
     chaves_plpcg,
     classe_ok,
+    cruzar,
     numero_int,
     slug,
     tags_propostas,
@@ -238,3 +239,191 @@ def test_numero_sem_candidato_cai_para_o_nome(tmp_path):
     conn.commit()
     a = Acervo.carregar(conn)
     assert candidatos_louvor("999:alto-preco", "Coletânea Adultos", "999", a) == (["p1"], ["nome"], False)
+
+
+# --- o cruzamento -------------------------------------------------------------
+
+def _cruza(conn, entrada, sha=None, hc=None):
+    return cruzar(entrada, Acervo.carregar(conn), sha, hc or {})
+
+
+def test_numero_mais_hash_e_alta(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "m31", "p31", "Sheet Music")
+    _material(conn, "a31", "p31", "Audio", tipo="mp3")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                 "Partitura", "031:meu-deus-meu-pai")
+    r = _cruza(conn, e, "sha-31", {"sha-31": {"m31"}})
+    assert r.faixa == "alta"
+    assert r.evidencias == ["num", "hash"]
+    assert (r.praise_id, r.material_id, r.kind_coldigom) == ("p31", "m31", "Sheet Music")
+    assert r.nota is None
+    assert r.candidatos[0]["material_id"] == "m31" and "hash" in r.candidatos[0]["por_que"]
+
+
+def test_numero_mais_caminho_e_alta_sem_hash(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "c31", "p31", "Chord Chart I")
+    _csv(conn, "Coletânea /031 - Meu Deus, meu Pai/Cifra I.pdf", "c31")
+    conn.commit()
+    e = _entrada("Louvores Coletânea de Partituras/031 - Meu Deus, meu Pai/Cifra I.pdf",
+                 "Meu Deus, meu Pai", "031", "Coletânea Adultos", "Cifra nível I",
+                 "031:meu-deus-meu-pai")
+    r = _cruza(conn, e)
+    assert r.faixa == "alta" and r.evidencias == ["num", "path"] and r.material_id == "c31"
+
+
+def test_pagina_compartilhada_casa_dentro_do_proprio_louvor(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _praise(conn, "p32", "Vem, Senhor", "032", ("Coletânea",))
+    _material(conn, "m31", "p31", "Sheet Music")
+    _material(conn, "m32", "p32", "Sheet Music")
+    conn.commit()
+    hc = {"sha-pag": {"m31", "m32"}}  # a mesma página copiada para os dois louvores
+    r31 = _cruza(conn, _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031",
+                                "Coletânea Adultos", "Partitura", "031:meu-deus-meu-pai"), "sha-pag", hc)
+    r32 = _cruza(conn, _entrada("ColAdultos/032.pdf", "Vem, Senhor", "032",
+                                "Coletânea Adultos", "Partitura", "032:vem-senhor"), "sha-pag", hc)
+    assert (r31.faixa, r31.material_id) == ("alta", "m31")
+    assert (r32.faixa, r32.material_id) == ("alta", "m32")
+
+
+def test_grupo_com_coletanea_e_arranjo_pes_escolhe_o_praise_do_material(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "pA", "Clamo a ti", "003", ("Coletânea",))
+    _praise(conn, "pB", "Clamo a ti", "003", ("Coletânea", "PES"))
+    _material(conn, "mA", "pA", "Sheet Music")
+    _material(conn, "mB", "pB", "Choir")
+    conn.commit()
+    e = _entrada("Avulsos/Clamo a ti/Coro.pdf", "Clamo a ti", "003", "PES", "Partitura", "003:clamo-a-ti")
+    r = _cruza(conn, e, "sha-b", {"sha-b": {"mB"}})
+    assert r.faixa == "alta" and r.praise_id == "pB" and r.material_id == "mB"
+    assert "classe" in r.evidencias and "hash" in r.evidencias
+
+
+def test_nome_aproximado_com_hash_fica_em_media(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "A ti que habitas entre os querubins", "", ("Avulsos",))
+    _material(conn, "m1", "p1", "Chord Chart")
+    conn.commit()
+    e = _entrada("Adicionados/A ti que habitas/Cifra.pdf", "A ti que habitas", "",
+                 "Avulsos Diversos", "Cifra", "avulso:a-ti-que-habitas")
+    r = _cruza(conn, e, "sha-1", {"sha-1": {"m1"}})
+    assert r.faixa == "media" and "nome~" in r.evidencias and r.material_id == "m1"
+
+
+def test_louvor_unico_com_um_material_do_kind_e_media_kind_unico(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Alto preço", "", ("Avulsos",))
+    _material(conn, "m1", "p1", "Choir")
+    _material(conn, "c1", "p1", "Chord Chart")
+    conn.commit()
+    e = _entrada("Adicionados/Alto preço/Partitura.pdf", "Alto preço", "", "Avulsos Diversos",
+                 "Partitura", "avulso:alto-preco")
+    r = _cruza(conn, e)
+    assert r.faixa == "media" and r.evidencias == ["nome", "kind-unico"]
+    assert r.material_id == "m1" and r.kind_coldigom == "Choir"
+
+
+def test_louvor_certo_sem_material_do_kind_e_faltante(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "a31", "p31", "Audio", tipo="mp3")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                 "Partitura", "031:meu-deus-meu-pai")
+    r = _cruza(conn, e)
+    assert r.faixa == "faltante" and r.praise_id == "p31" and r.material_id is None
+    assert r.nota == "louvor casado, sem material desse kind"
+
+
+def test_dois_materiais_do_kind_sem_corroboracao_e_ambiguo_com_candidatos(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Alto preço", "", ("Avulsos",))
+    _material(conn, "mA", "p1", "Choir")
+    _material(conn, "mB", "p1", "Score")
+    conn.commit()
+    e = _entrada("Adicionados/Alto preço/Partitura.pdf", "Alto preço", "", "Avulsos Diversos",
+                 "Partitura", "avulso:alto-preco")
+    r = _cruza(conn, e)
+    assert r.faixa == "ambiguo" and r.praise_id == "p1" and r.material_id is None
+    assert r.nota == "2 materiais do kind, nenhum corroborado"
+    assert [c["material_id"] for c in r.candidatos] == ["mA", "mB"]
+    assert r.candidatos[0]["por_que"] == ["nome", "kind"]
+
+
+def test_dois_louvores_sem_desempate_e_ambiguo(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "pA", "Clamo a ti", "003", ("Coletânea",))
+    _praise(conn, "pB", "Clamo a ti", "003", ("Coletânea",))
+    conn.commit()
+    e = _entrada("ColAdultos/003.pdf", "Clamo a ti", "003", "Coletânea Adultos", "Partitura", "003:clamo-a-ti")
+    r = _cruza(conn, e)
+    assert r.faixa == "ambiguo" and r.praise_id is None and r.nota == "2 louvores candidatos"
+
+
+def test_kind_divergente_vira_nota_nao_rebaixa(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "x31", "p31", "Chord Chart")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                 "Partitura", "031:meu-deus-meu-pai")
+    r = _cruza(conn, e, "sha-31", {"sha-31": {"x31"}})
+    assert r.faixa == "alta" and r.material_id == "x31"
+    assert r.nota == "kind divergente: coldigom=Chord Chart"
+
+
+def test_so_hash_num_louvor_unico_e_media_hash_so(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Nome completamente outro", "", ("Avulsos",))
+    _material(conn, "m1", "p1", "Chord Chart")
+    conn.commit()
+    e = _entrada("Adicionados/Zzz qqq/Cifra.pdf", "Zzz qqq", "", "Avulsos Diversos", "Cifra", "avulso:zzz-qqq")
+    r = _cruza(conn, e, "sha-1", {"sha-1": {"m1"}})
+    assert r.faixa == "media" and r.evidencias == ["hash-so"]
+    assert r.praise_id == "p1" and r.material_id == "m1"
+    assert r.candidatos[0]["por_que"] == ["hash", "kind"]
+
+
+def test_nada_em_l_nem_em_h_e_sem_louvor(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Nome completamente outro", "", ("Avulsos",))
+    conn.commit()
+    e = _entrada("Adicionados/Zzz qqq/Cifra.pdf", "Zzz qqq", "", "Avulsos Diversos", "Cifra", "avulso:zzz-qqq")
+    r = _cruza(conn, e)
+    assert r.faixa == "sem_louvor" and r.praise_id is None and r.candidatos == []
+    assert r.nota == "nenhum louvor candidato"
+
+
+def test_hash_em_varios_louvores_sem_l_e_sem_louvor(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Um", "", ("Avulsos",))
+    _praise(conn, "p2", "Dois", "", ("Avulsos",))
+    _material(conn, "m1", "p1", "Sheet Music")
+    _material(conn, "m2", "p2", "Sheet Music")
+    conn.commit()
+    e = _entrada("Adicionados/Zzz qqq/Partitura.pdf", "Zzz qqq", "", "Avulsos Diversos",
+                 "Partitura", "avulso:zzz-qqq")
+    r = _cruza(conn, e, "sha-pag", {"sha-pag": {"m1", "m2"}})
+    assert r.faixa == "sem_louvor" and r.nota == "hash bate em 2 louvores"
+    assert {c["praise_id"] for c in r.candidatos} == {"p1", "p2"}
+
+
+def test_candidatos_no_maximo_cinco_ordenados_por_score(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Alto preço", "", ("Avulsos",))
+    for i in range(7):
+        _material(conn, f"m{i}", "p1", "Choir")
+    conn.commit()
+    e = _entrada("Adicionados/Alto preço/Partitura.pdf", "Alto preço", "", "Avulsos Diversos",
+                 "Partitura", "avulso:alto-preco")
+    r = _cruza(conn, e, "sha-3", {"sha-3": {"m3"}})
+    assert r.faixa == "alta" and r.material_id == "m3"
+    assert len(r.candidatos) == 5
+    assert r.candidatos[0]["material_id"] == "m3"
+    assert r.candidatos[0]["score"] > r.candidatos[1]["score"]

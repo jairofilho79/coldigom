@@ -5,7 +5,7 @@ import re
 import sqlite3
 import unicodedata
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 DETECTOR = "plpcg_crosswalk"
 
@@ -69,6 +69,9 @@ CONTRATO = {
 CONTINENCIA_MINIMA = 10
 SIMILARIDADE_MINIMA = 0.8
 MAX_CANDIDATOS = 5
+
+# As evidências que são do louvor (Camada L), não do material.
+EVIDENCIAS_L = ("num", "nome", "nome~", "slug", "classe")
 
 
 # --- normalização -------------------------------------------------------------
@@ -263,3 +266,121 @@ def candidatos_louvor(
         evid.append("nome~")
         return afunilar([p for s in proximos for p in acervo.por_slug[s]]), evid, True
     return [], evid, False
+
+
+# --- o cruzamento de uma entrada ---------------------------------------------
+
+@dataclass
+class Resultado:
+    faixa: str
+    evidencias: list[str]
+    praise_id: str | None = None
+    material_id: str | None = None
+    kind_coldigom: str | None = None
+    nota: str | None = None
+    candidatos: list[dict] = field(default_factory=list)
+
+
+def _testemunhas(m: str, H: set[str], Pth: set[str]) -> list[str]:
+    return [e for e, s in (("hash", H), ("path", Pth)) if m in s]
+
+
+def _candidatos(
+    P: list[str], evid_l: list[str], H: set[str], Pth: set[str], acervo: Acervo, fam: set[str]
+) -> list[dict]:
+    """Até MAX_CANDIDATOS (praise, material?) com o porquê de cada um.
+
+    É o que o site mostra ao lado do PDF do PLPCG. Entram os praises da
+    Camada L e os que só o hash apontou; por praise, cada material pdf que
+    trouxe testemunha própria (hash, path, kind da família), e o praise
+    sozinho quando nenhum material trouxe.
+    """
+    so_hash = sorted({acervo.praise_do_material[m] for m in H if m in acervo.praise_do_material} - set(P))
+    out: list[dict] = []
+    for p in list(P) + so_hash:
+        base = list(evid_l) if p in P else []
+        algum = False
+        for (m, k, t) in acervo.materiais.get(p, []):
+            if t != "pdf":
+                continue
+            por_que = base + _testemunhas(m, H, Pth) + (["kind"] if k in fam else [])
+            if len(por_que) > len(base):
+                out.append({"praise_id": p, "material_id": m, "kind": k,
+                            "score": len(por_que), "por_que": por_que})
+                algum = True
+        if not algum and base:
+            out.append({"praise_id": p, "material_id": None, "kind": None,
+                        "score": len(base), "por_que": base})
+    out.sort(key=lambda c: (-c["score"], c["praise_id"], c["material_id"] or ""))
+    return out[:MAX_CANDIDATOS]
+
+
+def cruzar(entrada: dict, acervo: Acervo, sha: str | None, hc: dict[str, set[str]]) -> Resultado:
+    """As camadas do spec §5 para uma entrada do PLPCG.
+
+    L escolhe o(s) louvor(es); H e P só contam DENTRO deles (a página da
+    coletânea com 31–34 é o mesmo arquivo em quatro louvores — hash sozinho
+    não decide). Um único material corroborado escolhe louvor e material.
+    """
+    fam = FAMILIA[entrada["categoria"]]
+    gnum = entrada["group_id"].split(":", 1)[0]
+    n = int(gnum) if gnum.isdigit() else numero_int(entrada["numero"])
+
+    P, evid, aproximado = candidatos_louvor(
+        entrada["group_id"], entrada["classificacao"], entrada["numero"], acervo
+    )
+    H: set[str] = set(hc.get(sha, ())) if sha else set()
+    Pth: set[str] = set()
+    for k in chaves_plpcg(entrada["caminho"], n):
+        Pth |= acervo.chave_csv.get(k, set())
+
+    corro = sorted({
+        m for p in P for (m, _k, t) in acervo.materiais.get(p, [])
+        if t == "pdf" and (m in H or m in Pth)
+    })
+
+    if len(corro) == 1:
+        m = corro[0]
+        p = acervo.praise_do_material[m]
+        k = next(k for (mm, k, _t) in acervo.materiais[p] if mm == m)
+        r = Resultado("media" if aproximado else "alta", evid + _testemunhas(m, H, Pth), p, m, k)
+        if k not in fam:
+            # O hash prova que é o mesmo arquivo; o kind errado é assunto da
+            # Fase 2 do validate-acervo, não deste cruzamento.
+            r.nota = f"kind divergente: coldigom={k}"
+    elif len(corro) > 1:
+        pr = {acervo.praise_do_material[m] for m in corro}
+        r = Resultado("ambiguo", evid, nota=f"{len(corro)} materiais corroborados em {len(pr)} louvor(es)")
+        if len(pr) == 1:
+            r.praise_id = next(iter(pr))
+    elif len(P) == 1:
+        p = P[0]
+        do_kind = [(m, k) for (m, k, t) in acervo.materiais.get(p, []) if t == "pdf" and k in fam]
+        if len(do_kind) == 1:
+            r = Resultado("media", evid + ["kind-unico"], p, do_kind[0][0], do_kind[0][1])
+        elif not do_kind:
+            r = Resultado("media" if aproximado else "faltante", evid, p,
+                          nota="louvor casado, sem material desse kind")
+        else:
+            r = Resultado("ambiguo", evid, p, nota=f"{len(do_kind)} materiais do kind, nenhum corroborado")
+    elif len(P) > 1:
+        r = Resultado("ambiguo", evid, nota=f"{len(P)} louvores candidatos")
+    else:
+        so_hash = {acervo.praise_do_material[m] for m in H if m in acervo.praise_do_material}
+        if len(so_hash) == 1:
+            p = next(iter(so_hash))
+            dele = [m for (m, _k, _t) in acervo.materiais[p] if m in H]
+            r = Resultado("media", evid + ["hash-so"], p,
+                          dele[0] if len(dele) == 1 else None,
+                          nota="só hash: mesmo arquivo em " + acervo.praises[p]["name"])
+            if r.material_id:
+                r.kind_coldigom = next(k for (m, k, _t) in acervo.materiais[p] if m == r.material_id)
+        elif so_hash:
+            r = Resultado("sem_louvor", evid, nota=f"hash bate em {len(so_hash)} louvores")
+        else:
+            r = Resultado("sem_louvor", evid, nota="nenhum louvor candidato")
+
+    # aos candidatos vai só a evidência da Camada L; hash/path/kind cada
+    # material traz a sua
+    r.candidatos = _candidatos(P, [e for e in evid if e in EVIDENCIAS_L], H, Pth, acervo, fam)
+    return r

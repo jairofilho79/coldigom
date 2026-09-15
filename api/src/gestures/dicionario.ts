@@ -92,10 +92,13 @@ export async function usosDoGesto(db: D1Database, gestureId: string): Promise<Us
   return r.results ?? [];
 }
 
+// pm.type = 'youtube' é reforço, não a fonte de verdade: um material que muda
+// de tipo (PATCH) já apaga suas ocorrências; isso cobre o que passar por fora.
 const SQL_OCORRENCIAS = `SELECT o.gesture_id, o.material_id, pm.praise_id, p.number AS praise_number, p.name AS praise_name, pm.url, o.seconds
      FROM gesture_video_occurrences o
      JOIN praise_materials pm ON pm.id = o.material_id
-     JOIN praises p ON p.id = pm.praise_id`;
+     JOIN praises p ON p.id = pm.praise_id
+    WHERE pm.type = 'youtube'`;
 
 /** "9" antes de "10"; o que não é número vai para o fim, em ordem de texto. */
 function compararNumero(a: string | null, b: string | null): number {
@@ -134,6 +137,6 @@ export async function videosDoDicionario(db: D1Database): Promise<Map<string, Ge
 }
 
 export async function videosDoGesto(db: D1Database, gestureId: string): Promise<GestureVideo[]> {
-  const r = await db.prepare(`${SQL_OCORRENCIAS} WHERE o.gesture_id = ?`).bind(gestureId).all<LinhaDeOcorrencia>();
+  const r = await db.prepare(`${SQL_OCORRENCIAS} AND o.gesture_id = ?`).bind(gestureId).all<LinhaDeOcorrencia>();
   return agruparVideos(r.results ?? []).get(gestureId) ?? [];
 }

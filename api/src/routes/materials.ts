@@ -352,9 +352,36 @@ export function registerMaterialsRoutes(app: App): void {
         }
       }
 
-      await c.env.DB.prepare(`UPDATE praise_materials SET ${sets.join(', ')} WHERE id = ?`)
-        .bind(...bindings, materialId)
-        .run();
+      const atualizaMaterial = c.env.DB
+        .prepare(`UPDATE praise_materials SET ${sets.join(', ')} WHERE id = ?`)
+        .bind(...bindings, materialId);
+
+      // url e type são o que videos aponta como o vídeo em si: mudar um dos dois
+      // pode trocar o que o coldigui mostra, e sem bump o ETag não muda e o
+      // cliente segue com o vídeo antigo em cache. Só contamos ocorrências
+      // quando um dos dois está em jogo — o resto do PATCH (is_reviewed, etc.)
+      // não mexe em videos. Igual ao DELETE: se o tipo deixou de ser youtube,
+      // as ocorrências desse material não fazem mais sentido e somem junto.
+      const tocaVideo = 'url' in body || 'type' in body;
+      if (tocaVideo) {
+        const ocorrencias = await c.env.DB
+          .prepare(`SELECT COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id = ?`)
+          .bind(materialId)
+          .first<{ n: number }>();
+        if ((ocorrencias?.n ?? 0) > 0) {
+          await c.env.DB.batch([
+            ...(tipoEfetivo !== 'youtube'
+              ? [c.env.DB.prepare(`DELETE FROM gesture_video_occurrences WHERE material_id = ?`).bind(materialId)]
+              : []),
+            atualizaMaterial,
+            c.env.DB.prepare(`UPDATE gesture_dictionary_meta SET version = version + 1 WHERE id = 1`).bind(),
+          ]);
+        } else {
+          await atualizaMaterial.run();
+        }
+      } else {
+        await atualizaMaterial.run();
+      }
 
       const res = await app.request(`/api/praises/${row.praise_id}`, { method: 'GET' }, c.env);
       const json = await res.json();

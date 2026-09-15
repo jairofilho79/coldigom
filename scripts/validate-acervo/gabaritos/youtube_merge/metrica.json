@@ -1,0 +1,30 @@
+{
+ "alta": {
+  "total": 3,
+  "acertos": 3,
+  "erros": 0,
+  "falso_positivo": 0,
+  "precisao": 100.0
+ },
+ "media": {
+  "total": 29,
+  "acertos": 11,
+  "erros": 18,
+  "falso_positivo": 10,
+  "precisao": 37.9
+ },
+ "baixa": {
+  "total": 0,
+  "acertos": 0,
+  "erros": 0,
+  "falso_positivo": 0,
+  "precisao": 0.0
+ },
+ "discussao": {
+  "total": 0,
+  "acertos": 0,
+  "erros": 0,
+  "falso_positivo": 0,
+  "precisao": 0.0
+ }
+}

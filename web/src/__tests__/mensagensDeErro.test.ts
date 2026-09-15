@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mensagemAmigavel } from '../services/mensagensDeErro';
+import { mensagemAmigavel, pedeReconexaoDoDrive } from '../services/mensagensDeErro';
 
 describe('mensagemAmigavel', () => {
   it('traduz as frases que o usuário mais encontra', () => {
@@ -23,6 +23,15 @@ describe('mensagemAmigavel', () => {
   it('distingue os motivos de falha do Drive', () => {
     expect(mensagemAmigavel('Drive download failed (413): x')).toMatch(/100 MB/);
     expect(mensagemAmigavel('Drive download failed (404): x')).toMatch(/não existe mais/i);
+  });
+
+  it('reconhece o pedido de reconexão do Drive antes e depois da tradução', () => {
+    // A tela reagia à frase crua do servidor, que o tradutor já tinha trocado:
+    // o painel ficava mostrando "não está conectado" sem oferecer o botão.
+    expect(pedeReconexaoDoDrive('Drive not connected')).toBe(true);
+    expect(pedeReconexaoDoDrive(mensagemAmigavel('Drive not connected'))).toBe(true);
+    expect(pedeReconexaoDoDrive('drive_not_connected')).toBe(true);
+    expect(pedeReconexaoDoDrive('Drive list failed (503): unavailable')).toBe(false);
   });
 
   it('devolve a mensagem original quando não conhece a tradução', () => {

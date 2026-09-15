@@ -1,0 +1,213 @@
+{
+  "playlist_url": "https://www.youtube.com/playlist?list=PLFElx3O_dMZul1_Vn18NgHnOSb-1OpCnB",
+  "playlist_id": "PLFElx3O_dMZul1_Vn18NgHnOSb-1OpCnB",
+  "material_kind": "4a21d073-1726-41a3-bca7-77550f91e02a",
+  "materials_new": [
+    {
+      "material_id": "b6ebc8bc-0714-4577-9aff-8f1dd8e05e94",
+      "praise_id": "bb38bd5c-8f92-4557-8f08-8a5b3b097be5",
+      "praise_name": "Clama, ó igreja",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "228HXg9DXyc",
+      "url": "https://www.youtube.com/watch?v=228HXg9DXyc",
+      "song": "Clama ó igreja",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "8392042a-b40b-4256-99ed-2fa4062dac3a",
+      "praise_id": "d8a7b948-6ba4-4164-a452-f5e7a07e2c62",
+      "praise_name": "Fala ao meu coração, Jesus",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "1goExKnuJI8",
+      "url": "https://www.youtube.com/watch?v=1goExKnuJI8",
+      "song": "Fala ao meu coração Jesus",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "bb6597cb-67f1-483e-b1a8-01477b982114",
+      "praise_id": "1ee4adcd-34fb-41d6-834d-2be5ea1fd538",
+      "praise_name": "Jesus voltará pra me buscar! (Maranata)",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "PPUMEjll3Oo",
+      "url": "https://www.youtube.com/watch?v=PPUMEjll3Oo",
+      "song": "Maranata (Jesus Breve virá)",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "76a80d22-43ab-44ac-97d3-e7d30925deaf",
+      "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+      "praise_name": "O Espírito do Senhor vem sobre mim",
+      "has_pes": true,
+      "tags": [
+        "Avulsos",
+        "CIAs",
+        "PES"
+      ],
+      "vid": "IvGuPfmPQ6I",
+      "url": "https://www.youtube.com/watch?v=IvGuPfmPQ6I",
+      "song": "O Espírito do Senhor vem sobre mim",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "a7ad59d5-b738-4ea5-af42-001500228d0f",
+      "praise_id": "fe296940-517d-4128-9595-5dab5b5cf038",
+      "praise_name": "Sei que na cruz seu sangue verteu",
+      "has_pes": false,
+      "tags": [
+        "CIAs",
+        "Coletânea"
+      ],
+      "vid": "TK-hSoeJlGI",
+      "url": "https://www.youtube.com/watch?v=TK-hSoeJlGI",
+      "song": "Sei que na cruz",
+      "views": 0,
+      "created_praise": false
+    },
+    {
+      "material_id": "3fcd2880-546e-466b-ad2a-79d1bab55b9e",
+      "praise_id": "e802920d-ad78-4d10-a4a6-395bc3d5a438",
+      "praise_name": "Sou o Santo Verdadeiro",
+      "has_pes": false,
+      "tags": [
+        "Avulsos"
+      ],
+      "vid": "H_44w2lHddU",
+      "url": "https://www.youtube.com/watch?v=H_44w2lHddU",
+      "song": "Sou o Santo Verdadeiro",
+      "views": 0,
+      "created_praise": true
+    }
+  ],
+  "praises_created": [
+    {
+      "id": "e802920d-ad78-4d10-a4a6-395bc3d5a438",
+      "name": "Sou o Santo Verdadeiro",
+      "vid": "H_44w2lHddU",
+      "author": null
+    }
+  ],
+  "lyrics_filled": [],
+  "skipped_exists": [],
+  "skipped_exists_early": [
+    {
+      "vid": "ho64P8NzGfc",
+      "title": "Deus falou comigo - Gestos CIAs EBD ICM",
+      "song": "Deus falou comigo",
+      "url": "https://www.youtube.com/watch?v=ho64P8NzGfc",
+      "existing_url": "https://www.youtube.com/watch?v=ho64P8NzGfc",
+      "reason": "already_in_d1"
+    },
+    {
+      "vid": "OToltEExFPI",
+      "title": "Muito em breve o Rei vem -  Gestos CIAs EBD ICM",
+      "song": "Muito em breve o Rei vem",
+      "url": "https://www.youtube.com/watch?v=OToltEExFPI",
+      "existing_url": "https://www.youtube.com/watch?v=OToltEExFPI",
+      "reason": "already_in_d1"
+    }
+  ],
+  "skipped_title_filter": [
+    {
+      "vid": "zfQNcFYaFlQ",
+      "title": "NA",
+      "reason": "title_filter"
+    },
+    {
+      "vid": "IwieSuRSD54",
+      "title": "NA",
+      "reason": "title_filter"
+    }
+  ],
+  "skipped_unparseable": [],
+  "matched": [
+    {
+      "vid": "228HXg9DXyc",
+      "song": "Clama ó igreja",
+      "praise_id": "bb38bd5c-8f92-4557-8f08-8a5b3b097be5",
+      "praise_name": "Clama, ó igreja",
+      "created": false
+    },
+    {
+      "vid": "1goExKnuJI8",
+      "song": "Fala ao meu coração Jesus",
+      "praise_id": "d8a7b948-6ba4-4164-a452-f5e7a07e2c62",
+      "praise_name": "Fala ao meu coração, Jesus",
+      "created": false
+    },
+    {
+      "vid": "PPUMEjll3Oo",
+      "song": "Maranata (Jesus Breve virá)",
+      "praise_id": "1ee4adcd-34fb-41d6-834d-2be5ea1fd538",
+      "praise_name": "Jesus voltará pra me buscar! (Maranata)",
+      "created": false
+    },
+    {
+      "vid": "IvGuPfmPQ6I",
+      "song": "O Espírito do Senhor vem sobre mim",
+      "praise_id": "abe0bcc8-9267-452b-9164-6c37229c72e9",
+      "praise_name": "O Espírito do Senhor vem sobre mim",
+      "created": false
+    },
+    {
+      "vid": "TK-hSoeJlGI",
+      "song": "Sei que na cruz",
+      "praise_id": "fe296940-517d-4128-9595-5dab5b5cf038",
+      "praise_name": "Sei que na cruz seu sangue verteu",
+      "created": false
+    },
+    {
+      "vid": "H_44w2lHddU",
+      "song": "Sou o Santo Verdadeiro",
+      "praise_id": "e802920d-ad78-4d10-a4a6-395bc3d5a438",
+      "praise_name": "Sou o Santo Verdadeiro",
+      "created": true
+    }
+  ],
+  "unmatched_created": [
+    {
+      "vid": "H_44w2lHddU",
+      "title": "Sou o Santo Verdadeiro - Gestos CIAs EBD ICM",
+      "song": "Sou o Santo Verdadeiro",
+      "views": 0,
+      "description": "",
+      "url": "https://www.youtube.com/watch?v=H_44w2lHddU"
+    }
+  ],
+  "stats": {
+    "error": 0,
+    "metadata_errors": 6,
+    "metadata_fallback_used": 6,
+    "unlisted": 0,
+    "short": 0,
+    "kept_raw": 6,
+    "deduped_in_playlist": 0
+  },
+  "summary": {
+    "playlist_total": 10,
+    "materials_new": 6,
+    "praises_created": 1,
+    "lyrics_filled": 0,
+    "skipped_exists_early": 2,
+    "skipped_exists_late": 0,
+    "skipped_deduped_in_playlist": 0,
+    "skipped_title_filter": 2,
+    "skipped_unparseable": 0,
+    "sql_statements": 8
+  }
+}

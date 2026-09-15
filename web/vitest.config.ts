@@ -15,12 +15,15 @@ export default defineConfig({
       // S0 (2026-08-31): 65 / 60 / 63 / 66
       // S6 (2026-08-31): 67 / 62 / 64 / 69
       // S5 (2026-08-31): 68 / 63 / 64 / 70
+      // P2 (2026-09-03): fila de revisão — 79.39 / 72.41 / 76.63 / 81.79
+      // Gestos (2026-09-11): editor de gestos — 77.59 / 72.79 / 77.59 / 79.53 (statements e lines abaixo da catraca por dívida de develop: áudio/Drive de 2026-09-08..11)
+      // Dívida paga (2026-09-14): testes de áudio/Drive — 80.51 / 75.74 / 81.44 / 82.42
       thresholds: {
-        // S8: medido 79.10 / 72.33 / 76.97 / 81.52
-        statements: 79,
-        branches: 72,
-        functions: 76,
-        lines: 81,
+        // Dívida paga: medido 80.51 / 75.74 / 81.44 / 82.42
+        statements: 80,
+        branches: 75,
+        functions: 81,
+        lines: 82,
       },
     },
   },

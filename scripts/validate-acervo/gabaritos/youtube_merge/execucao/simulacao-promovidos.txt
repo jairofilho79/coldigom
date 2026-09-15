@@ -1,0 +1,48 @@
+SIMULAÇÃO — nada será escrito: 11 findings na faixa 'alta'
+
+--- exemplo: youtube_merge / 88560f02-3b4a-4409-b4a3-0ecb0ad7c667 (alta) ---
+    UPDATE praises SET lyrics = 'Quanta dor e vergonha
+o pecado traz.
+A dor que sentes em tua alma
+te faz entender
+que não podes prosseguir
+vivendo como estás.
+Deus está pronto a te ajudar.
+
+Vem, meu filho! Vem, meu filho! Vem!
+Das algemas, hoje,
+o teu Pai vai te libertar
+e, do teu rosto, toda lágrima
+enxugar e curar teu coração.
+Encontrarás perdão.
+
+Se a tua vida entregares a Jesus,
+então verás a diferença de viver na luz.
+A felicidade hoje encontrarás,
+vem a Jesus te entregar!
+
+Vem, meu filho! Vem, meu filho! Vem!
+Das algemas, hoje,
+o teu Pai vai te libertar
+e, do teu rosto, toda lágrima
+enxugar e curar teu coração.
+Encontrarás perdão.
+
+Vem, meu filho! Vem, meu filho! Vem!
+Das algemas, hoje,
+o teu Pai vai te libertar
+e, do teu rosto, toda lágrima
+enxugar e curar teu coração.
+Encontrarás perdão.', updated_at = datetime('now') WHERE id = '0918d62f-9e09-47b5-80ae-b1ca7e3e69af' AND (lyrics IS NULL OR trim(lyrics) = '');
+    UPDATE praise_materials SET praise_id = '0918d62f-9e09-47b5-80ae-b1ca7e3e69af', merged_from_praise_id = '88560f02-3b4a-4409-b4a3-0ecb0ad7c667' WHERE id = 'e9768583-ef9d-41e2-bfd2-5b0c87250a99' AND praise_id = '88560f02-3b4a-4409-b4a3-0ecb0ad7c667';
+    DELETE FROM praises WHERE id = '88560f02-3b4a-4409-b4a3-0ecb0ad7c667' AND NOT EXISTS (SELECT 1 FROM praise_materials WHERE praise_id = '88560f02-3b4a-4409-b4a3-0ecb0ad7c667');
+
+--- exemplo: youtube_merge / d6c0fca4-b959-4f21-843e-16599f649460 (alta) ---
+    UPDATE praise_materials SET praise_id = '87d17376-6089-4df6-8fa5-aac374f35ac8', merged_from_praise_id = 'd6c0fca4-b959-4f21-843e-16599f649460' WHERE id = '716173f7-552a-42d1-8f1b-c40d0f5e7e4d' AND praise_id = 'd6c0fca4-b959-4f21-843e-16599f649460';
+    DELETE FROM praises WHERE id = 'd6c0fca4-b959-4f21-843e-16599f649460' AND NOT EXISTS (SELECT 1 FROM praise_materials WHERE praise_id = 'd6c0fca4-b959-4f21-843e-16599f649460');
+
+--- exemplo: youtube_merge / d815acd0-3cda-427b-a1e8-4a672cc19ae1 (alta) ---
+    UPDATE praise_materials SET praise_id = 'a546e132-2331-43a3-9c1b-6f85d788e9d8', merged_from_praise_id = 'd815acd0-3cda-427b-a1e8-4a672cc19ae1' WHERE id = 'e5e37bf0-1d09-4bfc-8042-098419c14b5d' AND praise_id = 'd815acd0-3cda-427b-a1e8-4a672cc19ae1';
+    DELETE FROM praises WHERE id = 'd815acd0-3cda-427b-a1e8-4a672cc19ae1' AND NOT EXISTS (SELECT 1 FROM praise_materials WHERE praise_id = 'd815acd0-3cda-427b-a1e8-4a672cc19ae1');
+
+{'recebidos': 11, 'ja_aplicado': 0, 'simulado': 11, 'aplicado': 0, 'falhou': 0}

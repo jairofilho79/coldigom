@@ -11,10 +11,12 @@ import { corsAllowOrigin } from './origins';
 import { registerAssetsRoutes } from './routes/assets';
 import { registerAuthRoutes } from './routes/auth';
 import { registerDriveRoutes } from './routes/drive';
+import { registerGesturesRoutes } from './routes/gestures';
 import { registerHealthRoutes } from './routes/health';
 import { registerMaterialsRoutes } from './routes/materials';
 import { registerPraisesRoutes } from './routes/praises';
 import { registerTagsRoutes } from './routes/tags';
+import { registerValidationRoutes } from './routes/validation';
 
 const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
 
@@ -25,7 +27,12 @@ app.use('/*', async (c, next) => {
     origin: corsAllowOrigin(origin, c.env.WEB_ORIGIN),
     credentials: true,
     allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization'],
+    // If-Match / If-None-Match: gravação condicional do editor de gestos e o 304
+    // do dicionário. Sem eles no preflight, o navegador nem manda o PUT.
+    allowHeaders: ['Content-Type', 'Authorization', 'If-Match', 'If-None-Match'],
+    // O assets.ts e o PUT /content já emitiam ETag; sem expor, o JavaScript de
+    // outra origem lia null e não tinha o token para mandar de volta.
+    exposeHeaders: ['ETag'],
   })(c, next);
 });
 
@@ -63,7 +70,9 @@ app.use('/*', async (c, next) => {
 registerAuthRoutes(app);
 registerPraisesRoutes(app);
 registerMaterialsRoutes(app);
+registerGesturesRoutes(app);
 registerTagsRoutes(app);
+registerValidationRoutes(app);
 registerDriveRoutes(app);
 registerAssetsRoutes(app);
 registerHealthRoutes(app);

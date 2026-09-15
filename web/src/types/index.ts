@@ -15,7 +15,7 @@ export interface Praise {
 }
 
 /** Os tipos que a tela do louvor desenha com apresentação própria. */
-export type KnownMaterialType = 'pdf' | 'mp3' | 'chord' | 'youtube';
+export type KnownMaterialType = 'pdf' | 'mp3' | 'chord' | 'youtube' | 'gestures';
 
 /**
  * O acervo guarda mais que os quatro acima — mid, gestures, txt e link vieram da
@@ -90,6 +90,26 @@ export interface ApiResponse<T> {
 
 export interface ApiError {
   error: string;
+}
+
+export type FindingConfidence = 'alta' | 'media' | 'baixa' | 'discussao';
+export type FindingStatus = 'pendente' | 'discussao' | 'aprovado' | 'rejeitado' | 'aplicado';
+export interface ValidationFinding {
+  id: string; run_id: string; detector: string;
+  target_type: 'material' | 'praise'; target_id: string; praise_id: string | null;
+  action: string; field: string | null;
+  current_value: string | null; proposed_value: string | null;
+  confidence: FindingConfidence;
+  evidence: Record<string, unknown> | string;
+  status: FindingStatus;
+  decided_at: string | null; decided_by: string | null; decision_note: string | null;
+  created_at: string;
+  target_name?: string | null; proposed_name?: string | null;
+}
+export interface FindingDecision { status: Exclude<FindingStatus, 'aplicado'>; decision_note?: string }
+export interface FindingListParams {
+  detector?: string; confidence?: FindingConfidence; status?: FindingStatus; praise_id?: string;
+  page?: number; limit?: number;
 }
 
 export interface TagWithCount extends Tag {

@@ -1554,6 +1554,26 @@ describe('API Routes', () => {
       );
     });
 
+    it('should return correct content type for m4a and wav', async () => {
+      const mockObject = { body: new Uint8Array([0x00, 0x00, 0x00, 0x20]) };
+      const mockR2 = createMockR2(mockObject);
+      const mockDB = createMockD1({});
+
+      const resM4a = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.m4a', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+      expect(resM4a.status).toBe(200);
+      expect(resM4a.headers.get('Content-Type')).toBe('audio/mp4');
+
+      const resWav = await app.request('/assets/praises/1b2b33ab-4dff-4014-8582-dcb9a92efbc8/file.wav', {}, {
+        DB: mockDB,
+        ASSETS: mockR2,
+      });
+      expect(resWav.status).toBe(200);
+      expect(resWav.headers.get('Content-Type')).toBe('audio/wav');
+    });
+
     it('should return correct content type for midi', async () => {
       const mockObject = { body: new Uint8Array([0x4D, 0x54, 0x68, 0x64]) };
       const mockR2 = createMockR2(mockObject);

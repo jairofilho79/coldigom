@@ -51,6 +51,16 @@ export function mensagemDeRede(): string {
 /** Erro do Drive vem com o corpo cru da resposta do Google grudado. */
 const ERRO_DO_DRIVE = /^Drive \w+ failed \((\d{3})\)/i;
 
+/**
+ * O tradutor troca "Drive not connected" pela frase em português e o `code` da
+ * resposta se perde no caminho — quem precisa reagir ao caso levando o usuário
+ * de volta à autorização não tem mais o texto do servidor para casar. Mora aqui
+ * junto da tradução para as duas mudarem na mesma edição.
+ */
+export function pedeReconexaoDoDrive(mensagem: string): boolean {
+  return /drive.?not.?connected|Drive não está conectado/i.test(mensagem);
+}
+
 export function mensagemAmigavel(bruta: string): string {
   for (const [padrao, texto] of TRADUCOES) {
     if (padrao.test(bruta)) return bruta.replace(padrao, texto);

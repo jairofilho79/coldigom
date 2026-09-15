@@ -40,7 +40,7 @@ export function mapSingleBulkFile(
   return {
     file: f,
     relPath: rel,
-    type: inferTypeFromExtension(f.name),
+    type: inferTypeFromExtension(f.name, f.type),
     material_kind: inference.materialKindId,
     inference,
     sizeBytes: f.size,
@@ -48,7 +48,7 @@ export function mapSingleBulkFile(
 }
 
 export function mapDriveScanFile(
-  f: { drive_file_id: string; name: string; rel_path: string; size_bytes?: number | null },
+  f: { drive_file_id: string; name: string; rel_path: string; mime_type?: string | null; size_bytes?: number | null },
   catalogIds: Set<string>
 ): BulkFileItem {
   const inference = inferMaterialKind({
@@ -59,7 +59,7 @@ export function mapDriveScanFile(
   return {
     driveFileId: f.drive_file_id,
     relPath: f.rel_path,
-    type: inferTypeFromExtension(f.name),
+    type: inferTypeFromExtension(f.name, f.mime_type),
     material_kind: inference.materialKindId,
     inference,
     sizeBytes: f.size_bytes ?? undefined,
@@ -100,7 +100,7 @@ export async function scanFolderFilesAsync(
 }
 
 export async function mapDriveFilesAsync(
-  files: Array<{ drive_file_id: string; name: string; rel_path: string; size_bytes?: number | null }>,
+  files: Array<{ drive_file_id: string; name: string; rel_path: string; mime_type?: string | null; size_bytes?: number | null }>,
   materialKinds: MaterialKindRef[],
   onProgress: (processed: number, total: number) => void,
   signal?: AbortSignal

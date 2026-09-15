@@ -1,6 +1,8 @@
-import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField } from '../types';
+import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
 import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
+import type { GestureDictionary, GestureEntry } from '../lib/gestures/dictionary';
+import type { GestureDocument } from '../lib/gestures/schema';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== null
@@ -322,6 +324,7 @@ export async function createMaterial(praiseId: string, material: {
   material_kind: string;
   type: string;
   url?: string;
+  source_material_id?: string;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${praiseId}/materials`,
@@ -523,6 +526,25 @@ export async function startDriveImport(
   return response.data;
 }
 
+export async function downloadDriveFileBlob(fileId: string): Promise<Blob> {
+  const res = await fetch(`${API_BASE_URL}/api/drive/files/${encodeURIComponent(fileId)}/download`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    let msg = `Falha ao baixar arquivo do Drive (${res.status})`;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed.error) msg = parsed.error;
+    } catch {
+      if (text) msg = text;
+    }
+    throw new Error(msg);
+  }
+  return res.blob();
+}
+
 export async function getImportJob(jobId: string): Promise<ImportJobSummary> {
   const response = await fetchJson<{ data: ImportJobSummary }>(
     `${API_BASE_URL}/api/import-jobs/${jobId}`
@@ -591,6 +613,44 @@ export async function createTag(body: { name: string; parent_id?: string | null 
   return response.data;
 }
 
+// ---------- fila de revisão da validação (spec §6) ----------
+
+export async function listValidationFindings(
+  params: FindingListParams = {},
+  signal?: AbortSignal
+): Promise<{ data: ValidationFinding[]; pagination: PaginationInfo }> {
+  const q = new URLSearchParams();
+  if (params.detector) q.set('detector', params.detector);
+  if (params.confidence) q.set('confidence', params.confidence);
+  if (params.status) q.set('status', params.status);
+  if (params.praise_id) q.set('praise_id', params.praise_id);
+  q.set('page', String(params.page ?? 1));
+  q.set('limit', String(params.limit ?? 100));
+  const r = await fetchJson<ApiResponse<ValidationFinding[]>>(
+    `${API_BASE_URL}/api/validation/findings?${q}`,
+    signal ? { signal } : undefined
+  );
+  return { data: r.data, pagination: r.pagination! };
+}
+
+export async function decideValidationFinding(id: string, decision: FindingDecision): Promise<ValidationFinding> {
+  const r = await fetchJson<ApiResponse<ValidationFinding>>(
+    `${API_BASE_URL}/api/validation/findings/${encodeURIComponent(id)}`,
+    { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(decision) }
+  );
+  return r.data;
+}
+
+export async function bulkDecideValidationFindings(
+  body: { ids: string[] } & FindingDecision
+): Promise<{ atualizados: number }> {
+  const r = await fetchJson<ApiResponse<{ atualizados: number }>>(
+    `${API_BASE_URL}/api/validation/findings/bulk`,
+    { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  return r.data;
+}
+
 export type AuthUser = { sub: string; email?: string; name?: string; picture?: string };
 
 export async function getMe(): Promise<AuthUser | null> {
@@ -610,6 +670,158 @@ export async function logout(): Promise<void> {
   } finally {
     clearAuthTokens();
   }
+}
+
+// ---------- gestos CIAs ----------
+
+export type GestureUsage = {
+  material_id: string;
+  praise_id: string;
+  praise_name: string;
+  praise_number: string | null;
+  count: number;
+};
+
+/**
+ * `cache: 'no-cache'` — a API responde este endpoint com `Cache-Control:
+ * public, max-age=300`. Sem isso, o navegador poderia servir um dicionário de
+ * até 5 minutos atrás logo depois de uma escrita (criar/editar gesto). Com
+ * `no-cache` o `If-None-Match` ainda vai, então um 304 continua barato.
+ */
+export async function getGestureDictionary(): Promise<GestureDictionary> {
+  return fetchJson<GestureDictionary>(`${API_BASE_URL}/api/gestures/dictionary`, { cache: 'no-cache' });
+}
+
+export async function getGesture(id: string): Promise<GestureEntry & { usages: GestureUsage[] }> {
+  const r = await fetchJson<ApiResponse<GestureEntry & { usages: GestureUsage[] }>>(`${API_BASE_URL}/api/gestures/dictionary/${id}`);
+  return r.data;
+}
+
+export async function getGestureUsageCounts(): Promise<{ gesture_id: string; materials: number }[]> {
+  const r = await fetchJson<ApiResponse<{ gesture_id: string; materials: number }[]>>(`${API_BASE_URL}/api/gestures/usage`);
+  return r.data;
+}
+
+export async function getGestureUsage(gestureId: string): Promise<GestureUsage[]> {
+  const r = await fetchJson<ApiResponse<GestureUsage[]>>(`${API_BASE_URL}/api/gestures/usage?gestureId=${encodeURIComponent(gestureId)}`);
+  return r.data;
+}
+
+export async function createGesture(input: {
+  name: string;
+  description?: string;
+  exampleTriggers?: string[];
+  id?: string;
+  image: File;
+}): Promise<GestureEntry> {
+  const form = new FormData();
+  form.set('name', input.name);
+  if (input.description !== undefined) form.set('description', input.description);
+  if (input.exampleTriggers) form.set('exampleTriggers', JSON.stringify(input.exampleTriggers));
+  if (input.id) form.set('id', input.id);
+  form.set('image', input.image);
+  // Sem content-type: o navegador põe o boundary do multipart.
+  const r = await fetchJson<ApiResponse<GestureEntry>>(`${API_BASE_URL}/api/gestures/dictionary`, { method: 'POST', body: form });
+  return r.data;
+}
+
+export async function updateGesture(
+  id: string,
+  updates: { name?: string; description?: string; exampleTriggers?: string[]; status?: 'active' | 'deprecated' }
+): Promise<GestureEntry> {
+  const r = await fetchJson<ApiResponse<GestureEntry>>(`${API_BASE_URL}/api/gestures/dictionary/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  return r.data;
+}
+
+async function subirFiguraDoGesto(id: string, sufixo: 'image' | 'gif', file: File): Promise<GestureEntry> {
+  const form = new FormData();
+  form.set('file', file);
+  const r = await fetchJson<ApiResponse<GestureEntry>>(`${API_BASE_URL}/api/gestures/dictionary/${id}/${sufixo}`, { method: 'POST', body: form });
+  return r.data;
+}
+export const uploadGestureImage = (id: string, file: File) => subirFiguraDoGesto(id, 'image', file);
+export const uploadGestureGif = (id: string, file: File) => subirFiguraDoGesto(id, 'gif', file);
+
+export async function replaceGesture(
+  id: string,
+  targetId: string,
+  rewriteDocuments: boolean
+): Promise<{ ok: true; reescritos: number; falhas: { materialId: string; motivo: string }[] }> {
+  return fetchJson(`${API_BASE_URL}/api/gestures/dictionary/${id}/replace-with`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ targetId, rewriteDocuments }),
+  });
+}
+
+/** 409 stale_write ou 412: alguém gravou antes. A tela oferece recarregar, nunca sobrescreve. */
+export class ConflitoDeGravacao extends Error {
+  constructor() {
+    super('O documento foi alterado por outra pessoa. Recarregue antes de salvar.');
+    this.name = 'ConflitoDeGravacao';
+  }
+}
+
+/**
+ * 400 com `code` e `path`: o servidor recusou o documento e diz em qual cartão.
+ *
+ * Campos declarados em vez de parâmetros de construtor: `erasableSyntaxOnly`
+ * no tsconfig do web recusa `constructor(public readonly code: string, …)`.
+ */
+export class DocumentoRecusado extends Error {
+  readonly code: string;
+  readonly path: string;
+
+  constructor(message: string, code: string, path: string) {
+    super(message);
+    this.name = 'DocumentoRecusado';
+    this.code = code;
+    this.path = path;
+  }
+}
+
+/**
+ * Grava o documento de gestos com If-Match. Não passa por fetchJson porque
+ * precisa do status e do corpo do erro (code, path) e do ETag da resposta —
+ * mas repete o essencial dela: credenciais, Bearer e renovação no 401.
+ */
+export async function putGesturesContent(
+  materialId: string,
+  doc: GestureDocument,
+  etag: string | null,
+  isAfterRefresh = false
+): Promise<{ etag: string | null }> {
+  const headers: Record<string, string> = { ...authHeaders(), 'content-type': 'application/json' };
+  if (etag) headers['If-Match'] = etag;
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/materials/${materialId}/content`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers,
+      body: JSON.stringify(doc),
+    });
+  } catch {
+    throw new Error(mensagemDeRede());
+  }
+  if (response.status === 401 && !isAfterRefresh && (await refreshSession())) {
+    return putGesturesContent(materialId, doc, etag, true);
+  }
+  if (response.status === 409 || response.status === 412) throw new ConflitoDeGravacao();
+  if (!response.ok) {
+    const corpo = (await response.json().catch(() => ({}))) as { error?: string; code?: string; path?: string };
+    if (response.status === 400 && corpo.code) {
+      throw new DocumentoRecusado(corpo.error ?? 'Documento recusado.', corpo.code, corpo.path ?? '');
+    }
+    const bruta = corpo.error || `HTTP ${response.status}`;
+    console.error('[api]', response.status, 'PUT gestures', bruta);
+    throw new Error(mensagemAmigavel(bruta));
+  }
+  return { etag: response.headers.get('ETag') };
 }
 
 export function getAssetUrl(r2Key: string): string {

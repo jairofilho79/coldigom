@@ -1,0 +1,9 @@
+{
+  "schema": "coldigom.gesture-dictionary/1",
+  "version": 1,
+  "generatedAt": "2026-09-04T00:00:00Z",
+  "gestures": [
+    { "id": "c687580e7682", "name": "Quero", "description": "Mãos ao peito", "exampleTriggers": ["Quero"], "image": "assets/cia/gestures/c687580e7682.png", "gif": null, "status": "active", "replacedBy": null, "updatedAt": "2026-09-04T00:00:00Z" },
+    { "id": "a1b2c3d4e5f6", "name": "Viver", "description": "Braços abertos", "exampleTriggers": ["viver", "vida"], "image": "assets/cia/gestures/a1b2c3d4e5f6.png", "gif": null, "status": "active", "replacedBy": null, "updatedAt": "2026-09-04T00:00:00Z" }
+  ]
+}

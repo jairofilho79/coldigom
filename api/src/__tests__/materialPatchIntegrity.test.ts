@@ -40,9 +40,14 @@ function ambiente(material: { type?: string; r2_key?: string | null } = {}) {
           gravados.push({ sql, args });
           return { meta: { changes: 1 } };
         }),
+        __sql: sql,
+        __args: args,
       })),
     })),
-    batch: vi.fn(async () => []),
+    batch: vi.fn(async (stmts: { __sql: string; __args: unknown[] }[]) => {
+      for (const s of stmts) gravados.push({ sql: s.__sql, args: s.__args });
+      return [];
+    }),
   };
 
   const assets = {

@@ -1,0 +1,341 @@
+from __future__ import annotations
+
+from core.snapshot import conectar
+from detectors.youtube_merge import detectar
+
+
+def _mundo(tmp_path):
+    conn = conectar(str(tmp_path / "snap.sqlite"))
+    conn.executescript(
+        """
+        CREATE TABLE praises (id TEXT PRIMARY KEY, name TEXT, number TEXT, author TEXT,
+                              rhythm TEXT, tonality TEXT, category TEXT, lyrics TEXT,
+                              group_id TEXT, created_at TEXT, updated_at TEXT);
+        CREATE TABLE praise_materials (id TEXT PRIMARY KEY, praise_id TEXT, material_kind TEXT,
+                              type TEXT, r2_key TEXT, file_path_legacy TEXT,
+                              source_material_id TEXT, merged_from_praise_id TEXT, url TEXT,
+                              created_at TEXT, is_reviewed INTEGER, reviewed_at TEXT,
+                              reviewed_by TEXT);
+        """
+    )
+    return conn
+
+
+def _so_yt(conn, pid, nome, letra=None):
+    conn.execute("INSERT INTO praises (id,name,lyrics) VALUES (?,?,?)", (pid, nome, letra))
+    conn.execute(
+        "INSERT INTO praise_materials (id,praise_id,type,material_kind,url) VALUES (?,?,?,?,?)",
+        (f"mat-{pid}", pid, "youtube", "k-audio", f"https://youtu.be/{pid}"),
+    )
+
+
+def _acervo(conn, pid, nome, letra=None):
+    conn.execute("INSERT INTO praises (id,name,lyrics) VALUES (?,?,?)", (pid, nome, letra))
+    conn.execute(
+        "INSERT INTO praise_materials (id,praise_id,type,material_kind,r2_key) VALUES (?,?,?,?,?)",
+        (f"mat-{pid}", pid, "pdf", "k-part", f"assets/{pid}.pdf"),
+    )
+
+
+LETRA = ("Medo tens que o tentador te va vencer nesta batalha "
+         "mas o Senhor esta contigo e nao ha de te esquecer jamais")
+
+
+def test_letra_e_nome_no_mesmo_alvo_e_faixa_alta(tmp_path):
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Medo tens", LETRA)
+    _acervo(conn, "ac1", "Medo tens", LETRA)
+    conn.commit()
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+    assert len(findings) == 1
+    f = findings[0]
+    assert f.confidence == "alta"
+    assert f.action == "merge_praise"
+    assert f.target_id == "yt1"
+    assert f.proposed == "ac1"
+    assert "letra" in f.evidence and "nome" in f.evidence
+
+
+def test_so_nome_e_faixa_media(tmp_path):
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "O amor de Deus é grande", None)
+    _acervo(conn, "ac1", "O amor de Deus e grande", "letra diferente qualquer coisa aqui agora")
+    conn.commit()
+    findings, _m, _a = detectar(conn, run_id="r1")
+    assert len(findings) == 1
+    assert findings[0].confidence == "media"
+    assert findings[0].proposed == "ac1"
+
+
+def test_so_letra_e_faixa_media(tmp_path):
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Salmo 130", LETRA)
+    _acervo(conn, "ac1", "Das profundezas clamo a ti", LETRA)
+    conn.commit()
+    findings, _m, _a = detectar(conn, run_id="r1")
+    assert len(findings) == 1
+    assert findings[0].confidence == "media"
+
+
+def test_dois_alvos_pela_letra_desce_para_media(tmp_path):
+    # Ambiguidade nunca e alta: e exatamente onde a fusao erraria.
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Medo tens", LETRA)
+    _acervo(conn, "ac1", "Medo tens", LETRA)
+    _acervo(conn, "ac2", "Medo tens", LETRA)
+    conn.commit()
+    findings, _m, _a = detectar(conn, run_id="r1")
+    assert all(f.confidence == "media" for f in findings)
+    assert {f.proposed for f in findings} == {"ac1", "ac2"}
+
+
+def test_sem_candidato_nao_emite_finding_mas_entra_no_formulario(tmp_path):
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Gadareno", None)
+    _acervo(conn, "ac1", "Outro louvor sem relacao nenhuma", "texto totalmente diferente disso")
+    conn.commit()
+    findings, motivos, alvos = detectar(conn, run_id="r1")
+    assert findings == []
+    assert "sem candidato" in motivos.tabela()
+    assert [a["target_id"] for a in alvos] == ["yt1"]
+
+
+def test_louvor_com_pdf_nao_e_so_youtube(tmp_path):
+    conn = _mundo(tmp_path)
+    _acervo(conn, "ac1", "Medo tens", LETRA)
+    conn.execute(
+        "INSERT INTO praise_materials (id,praise_id,type,material_kind,url) VALUES "
+        "('m9','ac1','youtube','k-audio','https://youtu.be/z')"
+    )
+    conn.commit()
+    _f, _m, alvos = detectar(conn, run_id="r1")
+    assert alvos == []
+
+
+def test_o_alvo_do_formulario_traz_evidencia_bruta_e_nao_a_proposta(tmp_path):
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Medo tens", LETRA)
+    _acervo(conn, "ac1", "Medo tens", LETRA)
+    conn.commit()
+    _f, _m, alvos = detectar(conn, run_id="r1")
+    a = alvos[0]
+    assert a["target_id"] == "yt1"
+    assert a["nome"] == "Medo tens"
+    assert a["url"].startswith("https://youtu.be/")
+    assert "proposed" not in a
+    assert "keeper" not in a
+
+
+def test_finding_id_e_estavel_entre_execucoes(tmp_path):
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Medo tens", LETRA)
+    _acervo(conn, "ac1", "Medo tens", LETRA)
+    conn.commit()
+    a, _m, _x = detectar(conn, run_id="r1")
+    b, _m2, _x2 = detectar(conn, run_id="r2")
+    assert a[0].finding_id == b[0].finding_id
+
+
+def test_achado_1_field_keeper_discrimina_finding_id_de_multiplos_candidatos_media(tmp_path):
+    """Achado 1: field=f'keeper:{alvo}' previne colisão de finding_id quando múltiplos
+    candidatos de faixa média surgem da mesma fonte.
+
+    Fonte só-YouTube que casa com dois alvos apenas por letra (não ambos
+    letra+nome) gera dois findings de faixa média. Sem field, os dois
+    findings colideriam no mesmo finding_id. O field os discrimina.
+    """
+    conn = _mundo(tmp_path)
+    # Fonte só-YouTube com uma letra específica (8+ palavras para gerar shingles)
+    _so_yt(conn, "yt1", "Nome fonte generica",
+            "uma letra com conteudo suficiente para gerar shingle aqui dentro")
+    # Primeiro alvo que casa apenas por letra
+    _acervo(conn, "ac1", "Nome alvo 1 diferente",
+            "uma letra com conteudo suficiente para gerar shingle aqui dentro")
+    # Segundo alvo que casa apenas por letra (mesmo shingle)
+    _acervo(conn, "ac2", "Nome alvo 2 diferente",
+            "uma letra com conteudo suficiente para gerar shingle aqui dentro")
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    # Dois findings de faixa média (ambiguidade por letra, sem confirmação de nome)
+    assert len(findings) == 2
+    assert all(f.confidence == "media" for f in findings)
+    assert {f.proposed for f in findings} == {"ac1", "ac2"}
+    assert all(f.target_id == "yt1" for f in findings)
+
+    # Sem field="keeper:{alvo}", os dois findings teriam o mesmo finding_id.
+    # Com o field, são todos distintos.
+    finding_ids = {f.finding_id for f in findings}
+    assert len(finding_ids) == 2, f"Esperava 2 finding_ids distintos, got {finding_ids}"
+
+
+def test_nome_minimo_barra_substring_quando_a_FONTE_tem_nome_curto(tmp_path):
+    """NOME_MINIMO guarda o MENOR dos dois nomes, não só o do candidato.
+
+    O caso que a constante existe para matar é o do comentário em
+    youtube_merge.py: fonte de nome curto ('Fé') dentro de dezenas de títulos
+    longos. A guarda antiga só media o candidato, então 'fe' (2) dentro de
+    'fe do coracao' (13 >= 8) casava — exatamente o que ela devia impedir.
+
+    Este teste mata o mutante NOME_MINIMO = 0: com o limiar zerado, 'fe' volta
+    a casar por substring e aparece um finding.
+    """
+    conn = _mundo(tmp_path)
+    # Fonte com nome muito curto, letra vazia para depender só de nome
+    _so_yt(conn, "yt1", "Fé", None)
+    # Alvo longo que CONTÉM o nome da fonte como substring
+    _acervo(conn, "ac1", "Fé do coração", None)
+    conn.commit()
+
+    findings, motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert findings == []
+    assert "sem candidato" in motivos.tabela()
+
+
+def test_nome_minimo_barra_substring_quando_o_CANDIDATO_tem_nome_curto(tmp_path):
+    """O outro lado do mesmo casamento continua guardado.
+
+    Espelho do teste acima: agora quem tem nome curto é o candidato ('Fé') e
+    quem é longo é a fonte ('Fé do coração'). Também não pode casar — e este
+    é o lado que a guarda antiga já cobria, então o teste é de regressão.
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Fé do coração", None)
+    _acervo(conn, "ac1", "Fé", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert findings == []
+
+
+def test_substring_casa_quando_os_dois_nomes_passam_do_minimo(tmp_path):
+    """A guarda não pode matar o casamento por substring que é legítimo.
+
+    Os dois nomes normalizados têm >= 8 caracteres, e um contém o outro:
+    'medo tens' dentro de 'medo tens que o tentador'. Continua casando (faixa
+    média, porque só o nome testemunha).
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Medo tens", None)
+    _acervo(conn, "ac1", "Medo tens que o tentador", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert len(findings) == 1
+    assert findings[0].proposed == "ac1"
+    assert findings[0].confidence == "media"
+
+
+def test_nome_minimo_e_seis_barra_nomes_genericos_curtos(tmp_path):
+    """NOME_MINIMO = 6, não 8 nem 5 — fronteira medida no acervo real.
+
+    'deus' (4) e 'creia' (5) são os únicos nomes de louvor do acervo com
+    menos de 6 caracteres normalizados, e são palavras genéricas que casam
+    por acidente dentro de dezenas de títulos — por isso continuam de fora do
+    casamento por substring mesmo abaixo do limiar.
+
+    Este teste morre se alguém baixar a constante para 5: 'creia' (5 >= 5)
+    passaria a casar com 'creia no senhor'.
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Deus", None)
+    _acervo(conn, "ac1", "Deus é fiel sempre", None)
+    _so_yt(conn, "yt2", "Creia", None)
+    _acervo(conn, "ac2", "Creia no Senhor", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert findings == []
+
+
+def test_nome_minimo_e_seis_deixa_passar_nomes_proprios_reais(tmp_path):
+    """Os nomes reais de 7 caracteres normalizados que motivaram baixar de 8.
+
+    'algemas' e 'salmo 5' são nomes próprios do acervo, não palavra genérica
+    — de 6 para cima o acervo só tem nome próprio e título específico. Com
+    NOME_MINIMO = 8 os dois perdiam o candidato por um caractere.
+
+    Este teste morre se alguém devolver a constante para 8: os dois deixariam
+    de casar por substring e a fonte cairia em 'sem candidato'.
+    """
+    conn = _mundo(tmp_path)
+    _so_yt(conn, "yt1", "Algemas", None)
+    _acervo(conn, "ac1", "Vem, meu filho Algemas", None)
+    _so_yt(conn, "yt2", "Salmo 5", None)
+    _acervo(conn, "ac2", "À minha Voz, ó Deus, Atende Salmo 5", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    assert {f.target_id for f in findings} == {"yt1", "yt2"}
+    proposto = {f.target_id: f.proposed for f in findings}
+    assert proposto["yt1"] == "ac1"
+    assert proposto["yt2"] == "ac2"
+
+
+def test_achado_2_nomes_identicos_casam_independente_de_tamanho(tmp_path):
+    """Achado 2b: Nomes idênticos casam sempre, mesmo que sejam muito curtos.
+
+    Mostra que NOME_MINIMO só afeta substring matching, não igualdade exata.
+    Quando o nome normalizado da fonte é idêntico ao do alvo, casam regardless.
+    """
+    conn = _mundo(tmp_path)
+    # Fonte e alvo com nome curto idêntico, letra vazia
+    _so_yt(conn, "yt1", "Fé", None)
+    _acervo(conn, "ac1", "Fé", None)
+    conn.commit()
+
+    findings, _motivos, _alvos = detectar(conn, run_id="r1")
+
+    # Casam por igualdade exata de nome, independente do limiar
+    assert len(findings) == 1
+    assert findings[0].proposed == "ac1"
+
+
+def test_achado_3_url_deterministica_orderby_id(tmp_path):
+    """Achado 3: Subconsulta de URL usa LIMIT 1 sem ORDER BY, resultando em
+    não-determinismo se há múltiplos materiais. Adicionar ORDER BY torna
+    determinístico.
+
+    Uma fonte com múltiplos materiais YouTube inseridos em ordem reversa (por id)
+    terá URL sempre determinística com ORDER BY (retorna a menor por id).
+    Sem ORDER BY, a ordem é não-determinística e o teste falha.
+    """
+    conn = _mundo(tmp_path)
+    # Fonte com dois materiais YouTube (múltiplas linhas na subconsulta)
+    conn.execute("INSERT INTO praises (id,name,lyrics) VALUES (?,?,?)",
+                 ("yt1", "Nome", None))
+    # Inserir em ordem reversa por id para forçar que a ordem natural
+    # não seja determinística
+    conn.execute(
+        "INSERT INTO praise_materials (id,praise_id,type,material_kind,url) VALUES (?,?,?,?,?)",
+        ("mat-yt1-z", "yt1", "youtube", "k-audio", "https://youtu.be/z"),
+    )
+    # Depois inserir o que deve ser o primeiro por ORDER BY id
+    conn.execute(
+        "INSERT INTO praise_materials (id,praise_id,type,material_kind,url) VALUES (?,?,?,?,?)",
+        ("mat-yt1-a", "yt1", "youtube", "k-audio", "https://youtu.be/a"),
+    )
+    # Alvo acervo sem relação para evitar findings
+    _acervo(conn, "ac1", "Outro nome", "letra diferente totalmente")
+    conn.commit()
+
+    # Rodar múltiplas vezes e coletar URLs da fonte
+    # Com ORDER BY m.id, deve sempre pegar "mat-yt1-a" (menor id)
+    urls_coletadas = set()
+    for run_id in ["r1", "r2", "r3"]:
+        _f, _m, alvos = detectar(conn, run_id=run_id)
+        url = alvos[0]["url"]
+        urls_coletadas.add(url)
+
+    # Com ORDER BY id, sempre retorna a mesma: a menor por id (mat-yt1-a).
+    # Sem ORDER BY, a ordem é não-determinística.
+    assert len(urls_coletadas) == 1, \
+        f"URL deveria ser determinística (sempre a menor por id), mas vimos {urls_coletadas}"
+    assert list(urls_coletadas)[0] == "https://youtu.be/a", \
+        f"Com ORDER BY id, deveria ser youtu.be/a, mas foi {list(urls_coletadas)[0]}"

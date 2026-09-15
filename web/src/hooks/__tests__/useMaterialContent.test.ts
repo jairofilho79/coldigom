@@ -11,7 +11,14 @@ describe('useMaterialContent', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Response('{title: X}\n[C]letra', { status: 200 })));
     const { result } = renderHook(() => useMaterialContent(KEY));
     await waitFor(() => expect(result.current.content.status).toBe('ready'));
-    expect(result.current.content).toEqual({ status: 'ready', source: '{title: X}\n[C]letra' });
+    expect(result.current.content).toEqual({ status: 'ready', source: '{title: X}\n[C]letra', etag: null });
+  });
+
+  it('guarda o ETag da resposta — é o token do If-Match do editor de gestos', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Response('{}', { status: 200, headers: { ETag: '"abc"' } })));
+    const { result } = renderHook(() => useMaterialContent(KEY));
+    await waitFor(() => expect(result.current.content.status).toBe('ready'));
+    expect(result.current.content).toMatchObject({ etag: '"abc"' });
   });
 
   it('404 vira absent, não erro — é o caminho normal de 97,5% dos registros', async () => {
@@ -96,7 +103,7 @@ describe('a guarda de corrida — a maquinaria que ninguém estava testando', ()
       initialProps: { k: 'assets/praises/p/antiga.chord' },
     });
     rerender({ k: 'assets/praises/p/nova.chord' });
-    await waitFor(() => expect(result.current.content).toEqual({ status: 'ready', source: 'conteudo NOVO' }));
+    await waitFor(() => expect(result.current.content).toEqual({ status: 'ready', source: 'conteudo NOVO', etag: null }));
 
     // Só agora a requisição da cifra anterior responde.
     await act(async () => {
@@ -104,7 +111,7 @@ describe('a guarda de corrida — a maquinaria que ninguém estava testando', ()
       await antiga.promessa;
     });
 
-    expect(result.current.content).toEqual({ status: 'ready', source: 'conteudo NOVO' });
+    expect(result.current.content).toEqual({ status: 'ready', source: 'conteudo NOVO', etag: null });
   });
 
   it('trocar de chave volta para loading em vez de mostrar a cifra anterior', async () => {
@@ -187,6 +194,6 @@ describe('a guarda de corrida — a maquinaria que ninguém estava testando', ()
       segunda.resolver(new Response('deu certo', { status: 200 }));
       await segunda.promessa;
     });
-    expect(result.current.content).toEqual({ status: 'ready', source: 'deu certo' });
+    expect(result.current.content).toEqual({ status: 'ready', source: 'deu certo', etag: null });
   });
 });

@@ -29,6 +29,8 @@ TABELAS = ("louvores", "catalog_meta")
 LADO_PLPCG = "plpcg"
 LADO_COLDIGOM = "coldigom"
 
+USER_AGENT = "coldigom-validate-acervo/1.0 (+https://github.com/jairofilho79/coldigom)"
+
 
 # --- caminho e arquivo -------------------------------------------------------
 
@@ -74,7 +76,9 @@ def baixar(caminho: str, cache: str = PLPCG_BAIXADOS, abrir=urllib.request.urlop
     """
     destino = os.path.join(cache, caminho_relativo(caminho))
     os.makedirs(os.path.dirname(destino), exist_ok=True)
-    with abrir(url_publica(caminho)) as resp, open(destino + ".part", "wb") as f:
+    # o Cloudflare do plpcg.com devolve 403 ao User-Agent padrão do urllib.
+    req = urllib.request.Request(url_publica(caminho), headers={"User-Agent": USER_AGENT})
+    with abrir(req) as resp, open(destino + ".part", "wb") as f:
         while True:
             b = resp.read(1 << 20)
             if not b:

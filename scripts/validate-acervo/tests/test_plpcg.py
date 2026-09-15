@@ -19,6 +19,7 @@ from core.plpcg import (
     pdfs_em,
     sha256_arquivo,
     url_publica,
+    USER_AGENT,
 )
 
 
@@ -68,9 +69,11 @@ class _Resp(io.BytesIO):
 
 def test_baixar_grava_no_cache_pela_url_publica_e_nao_deixa_part(tmp_path):
     urls = []
+    reqs = []
 
-    def abrir(url):
-        urls.append(url)
+    def abrir(req):
+        urls.append(req.full_url)
+        reqs.append(req)
         return _Resp(b"%PDF-fake")
 
     destino = baixar("assets/PES/Alto preço - CIFRA.pdf", cache=str(tmp_path), abrir=abrir)
@@ -78,6 +81,7 @@ def test_baixar_grava_no_cache_pela_url_publica_e_nao_deixa_part(tmp_path):
     with open(destino, "rb") as f:
         assert f.read() == b"%PDF-fake"
     assert urls == ["https://plpcg.com/assets/PES/Alto%20pre%C3%A7o%20-%20CIFRA.pdf"]
+    assert reqs[0].get_header("User-agent") == USER_AGENT
     assert not os.path.exists(destino + ".part")
 
 

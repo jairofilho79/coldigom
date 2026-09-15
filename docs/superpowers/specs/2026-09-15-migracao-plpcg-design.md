@@ -35,9 +35,7 @@ material é o mesmo arquivo dos dois lados.
   `plpcg-admin/scripts/merge-group-ids.py` — é testemunha forte.
 - PDFs: 4.620 dos 4.633 `pdf_id` resolvem para arquivo local em
   `dev/plpcjf/assets/`; 13 (prefixo `assets/`, entradas recentes) só existem
-  no R2 `pls-louvores` e se baixam de `https://plpcg.com/assets/<caminho>`
-  (medido em 15/09; a rodada real bateu 403 no download por padrão de
-  User-Agent do Cloudflare — os 13 PDFs existem e voltam 200 pra `curl`).
+  no R2 `pls-louvores` e se baixam de `https://plpcg.com/assets/<caminho>`.
 - **2.709 das 4.633 entradas compartilham o PDF com outra entrada.** A página
   da coletânea que contém os louvores 31–34 é o mesmo arquivo nas quatro
   entradas de "Cifra I"; partituras que atravessam página (737/738) idem. O

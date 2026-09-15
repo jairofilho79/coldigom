@@ -37,7 +37,7 @@ coldigui consome depois, em trabalho próprio, a partir do contrato daqui.
 - Mudanças no coldigui (regra de leitura está descrita abaixo só para o contrato
   servir a ela).
 
-## Dados — migração `019_gesture_videos.sql`
+## Dados — migração `020_gesture_videos.sql`
 
 ```sql
 CREATE TABLE IF NOT EXISTS gesture_video_occurrences (
@@ -58,7 +58,7 @@ Regras:
   `(gesture_id, material_id, seconds)`: a rota deduplica antes de gravar.
 - `seconds` é inteiro ≥ 0.
 - A migração é aplicada à mão, como a 018: `cd api && wrangler d1 execute coldigom
-  --remote --file=migrations/019_gesture_videos.sql`. Nunca `migrations apply`.
+  --remote --file=migrations/020_gesture_videos.sql`. Nunca `migrations apply`.
 - A coluna `gif_key` de `gesture_dictionary` fica como está, sem uso.
 
 ## Contrato — `coldigom.gesture-dictionary/1`, campo aditivo `videos`
@@ -183,6 +183,6 @@ Web:
 
 1. Branch `feat/gestos-videos` (a partir de `feat/gestos-novo-no-seletor`; PR para
    `develop` depois do #25).
-2. Migração 019 em `api/migrations/`, aplicada em produção pelo dono à mão **antes**
+2. Migração 020 em `api/migrations/`, aplicada em produção pelo dono à mão **antes**
    do deploy do Worker (a rota de leitura faz JOIN na tabela nova).
 3. Deploy segue a regra da casa: só quando `develop` for mesclado em `main`.

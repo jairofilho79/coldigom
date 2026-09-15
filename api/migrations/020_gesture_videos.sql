@@ -6,7 +6,7 @@
 -- linhas do par (a nula some). Toda escrita aqui passa por escreverNoDicionario()
 -- (api/src/gestures/dicionario.ts) para o ETag do dicionário mudar.
 --
--- Aplicar: cd api && wrangler d1 execute coldigom --remote --file=migrations/019_gesture_videos.sql
+-- Aplicar: cd api && wrangler d1 execute coldigom --remote --file=migrations/020_gesture_videos.sql
 
 CREATE TABLE IF NOT EXISTS gesture_video_occurrences (
   gesture_id  TEXT NOT NULL REFERENCES gesture_dictionary(id) ON DELETE CASCADE,

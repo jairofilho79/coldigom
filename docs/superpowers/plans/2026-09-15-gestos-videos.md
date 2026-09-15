@@ -16,7 +16,7 @@
 - Toda escrita no dicionário e nas ocorrências vai por `escreverNoDicionario(db, statements)` — nunca `db.batch` direto sem o bump.
 - Schema do dicionário continua `coldigom.gesture-dictionary/1`; `videos` é campo aditivo.
 - Mensagens de erro da API em inglês (o web traduz); textos da tela em pt-BR.
-- Migração aplicada à mão: `cd api && wrangler d1 execute coldigom --remote --file=migrations/019_gesture_videos.sql`. Nunca `wrangler d1 migrations apply`.
+- Migração aplicada à mão: `cd api && wrangler d1 execute coldigom --remote --file=migrations/020_gesture_videos.sql`. Nunca `wrangler d1 migrations apply`.
 - Catraca de cobertura do web (`web/vitest.config.ts`: 91 / 83 / 90 / 94) não pode cair; `npm run verify:strict` na raiz tem que passar antes do PR.
 - Commits terminam com:
   ```
@@ -31,7 +31,7 @@
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `api/migrations/019_gesture_videos.sql` (criar) | Tabela + índices. |
+| `api/migrations/020_gesture_videos.sql` (criar) | Tabela + índices. |
 | `api/src/gestures/dictionaryTypes.ts` (modificar) | `GestureVideo`, `GestureEntry.videos`, `LinhaDeOcorrencia`. |
 | `api/src/gestures/dicionario.ts` (modificar) | `agruparVideos` (puro), `videosDoDicionario`, `videosDoGesto`, `linhaParaEntrada(l, videos)`. |
 | `api/src/routes/gestures.ts` (modificar) | GETs com `videos`; `PUT`/`DELETE …/videos/:materialId`. |
@@ -50,7 +50,7 @@
 ### Task 1: Migração, tipos e leitura de `videos` no dicionário
 
 **Files:**
-- Create: `api/migrations/019_gesture_videos.sql`
+- Create: `api/migrations/020_gesture_videos.sql`
 - Modify: `api/src/gestures/dictionaryTypes.ts`
 - Modify: `api/src/gestures/dicionario.ts`
 - Modify: `api/src/routes/gestures.ts:56-92` (os dois GET)
@@ -72,7 +72,7 @@
 
 - [ ] **Step 1: Escrever a migração**
 
-`api/migrations/019_gesture_videos.sql`:
+`api/migrations/020_gesture_videos.sql`:
 
 ```sql
 -- Vídeos por gesto (spec docs/superpowers/specs/2026-09-15-gestos-videos-design.md).
@@ -83,7 +83,7 @@
 -- linhas do par (a nula some). Toda escrita aqui passa por escreverNoDicionario()
 -- (api/src/gestures/dicionario.ts) para o ETag do dicionário mudar.
 --
--- Aplicar: cd api && wrangler d1 execute coldigom --remote --file=migrations/019_gesture_videos.sql
+-- Aplicar: cd api && wrangler d1 execute coldigom --remote --file=migrations/020_gesture_videos.sql
 
 CREATE TABLE IF NOT EXISTS gesture_video_occurrences (
   gesture_id  TEXT NOT NULL REFERENCES gesture_dictionary(id) ON DELETE CASCADE,
@@ -350,8 +350,8 @@ Expected: tudo verde (o `all` dos bancos falsos antigos devolve `{ results: [] }
 - [ ] **Step 9: Commit**
 
 ```bash
-git add api/migrations/019_gesture_videos.sql api/src/gestures api/src/routes/gestures.ts api/src/__tests__/gesturesVideos.test.ts api/src/__tests__/gesturesDictionaryRead.test.ts
-git commit -m "feat(api): vídeos por gesto — migração 019 e campo aditivo videos no dicionário"
+git add api/migrations/020_gesture_videos.sql api/src/gestures api/src/routes/gestures.ts api/src/__tests__/gesturesVideos.test.ts api/src/__tests__/gesturesDictionaryRead.test.ts
+git commit -m "feat(api): vídeos por gesto — migração 020 e campo aditivo videos no dicionário"
 ```
 
 ---
@@ -1483,7 +1483,7 @@ git push -u origin feat/gestos-videos
 gh pr create --base develop --head feat/gestos-videos --title "Gestos: vídeos por gesto (ocorrências no YouTube)" --body "$(cat <<'EOF'
 ## O que muda
 
-- Migração **019** `gesture_video_occurrences` — **aplicar à mão antes do deploy do Worker**: `cd api && wrangler d1 execute coldigom --remote --file=migrations/019_gesture_videos.sql`.
+- Migração **020** `gesture_video_occurrences` — **aplicar à mão antes do deploy do Worker**: `cd api && wrangler d1 execute coldigom --remote --file=migrations/020_gesture_videos.sql`.
 - Cada entrada do dicionário ganha `videos` (aditivo; schema segue `/1`; o coldigui ignora até usar).
 - `PUT`/`DELETE /api/gestures/dictionary/:id/videos/:materialId`; apagar um material youtube com ocorrências bumpa a versão.
 - Página do gesto: seção **Vídeos** — lista com "Abrir no YouTube" no primeiro tempo, chips por ocorrência, tempos editáveis (`1:23, 2:21`), desligar, e "Adicionar vídeo" pela busca de louvor.
@@ -1505,4 +1505,4 @@ EOF
 
 - [ ] **Step 5: Avisar o dono**
 
-Na resposta final: a migração 019 é dele (`wrangler d1 execute … --remote`), tem que ir **antes** do deploy do Worker; o deploy só dispara quando `develop` for mesclado em `main`.
+Na resposta final: a migração 020 é dele (`wrangler d1 execute … --remote`), tem que ir **antes** do deploy do Worker; o deploy só dispara quando `develop` for mesclado em `main`.

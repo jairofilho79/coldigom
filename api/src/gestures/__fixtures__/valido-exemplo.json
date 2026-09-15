@@ -1,0 +1,40 @@
+{
+  "schema": "coldigom.gestures/1",
+  "title": "182 - QUERO VIVER PRA SEMPRE COM JESUS",
+  "dictionaryVersion": 3,
+  "items": [
+    {
+      "type": "coro",
+      "children": [
+        { "type": "gesture", "gestureId": "c687580e7682", "lyrics": [{ "trigger": "Quero", "text": "viver pra sempre com Jesus" }] },
+        { "type": "gesture", "gestureId": "a1b2c3d4e5f6", "lyrics": [{ "trigger": "viver", "text": ", viver com Ele" }] },
+        { "type": "gesture", "gestureId": "0f0f0f0f0f0f", "lyrics": [{ "trigger": "pra sempre", "text": "no céu" }, { "trigger": "", "text": "e na terra também" }] },
+        { "type": "gesture", "gestureId": "123456789abc", "lyrics": [{ "trigger": "com", "text": "todos os irmãos" }] },
+        { "type": "gesture", "gestureId": "deadbeef0001", "lyrics": [{ "trigger": "Jesus", "text": "é o meu Senhor" }] }
+      ]
+    },
+    {
+      "type": "repeat",
+      "count": 2,
+      "children": [
+        { "type": "gesture", "gestureId": "deadbeef0002", "lyrics": [{ "trigger": "Ele", "text": "me ama" }] },
+        {
+          "type": "link",
+          "children": [
+            { "type": "gesture", "gestureId": "deadbeef0003", "lyrics": [{ "trigger": "e", "text": "me guarda" }] },
+            { "type": "gesture", "gestureId": "deadbeef0004", "lyrics": [{ "trigger": "todo", "text": "dia" }] }
+          ]
+        }
+      ]
+    },
+    { "type": "text", "text": "(pausa para os instrumentos)" },
+    {
+      "type": "final",
+      "children": [
+        { "type": "gesture", "gestureId": "deadbeef0005", "lyrics": [{ "trigger": "Amém", "text": "!" }] }
+      ]
+    },
+    { "type": "instruction", "kind": "back_to_chorus" },
+    { "type": "instruction", "kind": "back_to_chorus_and_finish" }
+  ]
+}

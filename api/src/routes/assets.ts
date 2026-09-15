@@ -82,6 +82,11 @@ export function registerAssetsRoutes(app: App): void {
       // charset explícito: as cifras têm acentos ("Comigo Habita, Ó Deus") e sem
       // isto o navegador adivinha a codificação ao abrir o arquivo direto.
       chord: 'text/plain; charset=utf-8',
+      // O documento de gestos é JSON canônico (coldigom.gestures/1); as figuras
+      // do dicionário moram em assets/cia/gestures/{id}.png|gif.
+      gestures: 'application/json; charset=utf-8',
+      png: 'image/png',
+      gif: 'image/gif',
     };
   
     const contentType = contentTypes[ext || ''] || 'application/octet-stream';

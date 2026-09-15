@@ -267,3 +267,32 @@ CREATE TABLE IF NOT EXISTS validation_findings (
 CREATE INDEX IF NOT EXISTS idx_vf_status_conf ON validation_findings(status, confidence);
 CREATE INDEX IF NOT EXISTS idx_vf_detector ON validation_findings(detector);
 CREATE INDEX IF NOT EXISTS idx_vf_praise ON validation_findings(praise_id);
+
+-- Gestos CIAs: dicionário, versão (ETag) e uso por material. Ver migrations/018_gestures.sql.
+CREATE TABLE IF NOT EXISTS gesture_dictionary (
+  id               TEXT PRIMARY KEY,                       -- 12 hex
+  name             TEXT NOT NULL,
+  description      TEXT NOT NULL DEFAULT '',
+  example_triggers TEXT NOT NULL DEFAULT '[]',              -- JSON: string[]
+  image_key        TEXT,                                    -- assets/cia/gestures/{id}.png
+  gif_key          TEXT,                                    -- assets/cia/gestures/{id}.gif
+  status           TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'deprecated')),
+  replaced_by      TEXT,                                    -- id do gesto que o substituiu
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS gesture_dictionary_meta (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  version INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO gesture_dictionary_meta (id, version) VALUES (1, 0);
+
+CREATE TABLE IF NOT EXISTS gesture_usage (
+  material_id TEXT NOT NULL,
+  gesture_id  TEXT NOT NULL,
+  count       INTEGER NOT NULL,
+  PRIMARY KEY (material_id, gesture_id),
+  FOREIGN KEY (material_id) REFERENCES praise_materials(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_gesture_usage_gesture ON gesture_usage(gesture_id);

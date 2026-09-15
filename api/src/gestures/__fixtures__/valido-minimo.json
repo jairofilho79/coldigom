@@ -1,0 +1,8 @@
+{
+  "schema": "coldigom.gestures/1",
+  "title": "1 - MÍNIMO",
+  "dictionaryVersion": 0,
+  "items": [
+    { "type": "gesture", "gestureId": "000000000001", "lyrics": [{ "trigger": "", "text": "só leitura" }] }
+  ]
+}

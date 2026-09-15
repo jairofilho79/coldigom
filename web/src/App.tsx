@@ -3,9 +3,12 @@ import { AuthProvider } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { PraiseDetailPage } from './pages/PraiseDetailPage';
 import { ChordProPage } from './pages/ChordProPage';
+import { GesturesEditorPage } from './pages/GesturesEditorPage';
 import { PraiseMergeSelectPage } from './pages/PraiseMergeSelectPage';
 import { PraiseMergeImportPage } from './pages/PraiseMergeImportPage';
 import { ValidationQueuePage } from './pages/ValidationQueuePage';
+import { GestureDictionaryPage } from './pages/GestureDictionaryPage';
+import { GestureDetailPage } from './pages/GestureDetailPage';
 
 function App() {
   return (
@@ -15,7 +18,10 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/validacao" element={<ValidationQueuePage />} />
+            <Route path="/gestos/dicionario" element={<GestureDictionaryPage />} />
+            <Route path="/gestos/dicionario/:id" element={<GestureDetailPage />} />
             <Route path="/praise/:praiseId/cifra/:materialId" element={<ChordProPage />} />
+            <Route path="/praise/:praiseId/gestos/:materialId" element={<GesturesEditorPage />} />
             <Route path="/praise/:id/merge/:sourceId" element={<PraiseMergeImportPage />} />
             <Route path="/praise/:id/merge" element={<PraiseMergeSelectPage />} />
             <Route path="/praise/:id" element={<PraiseDetailPage />} />

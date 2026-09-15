@@ -10,6 +10,8 @@ import {
   materialKindsForaDoCatalogo,
 } from '../materialKindLabels';
 import { MAX_CHORD_CONTENT_BYTES, isSafeMaterialType } from '../uploadLimits';
+import { MAX_GESTURES_DOCUMENT_BYTES, MENSAGENS, validarDocumento } from '../gestures/schema';
+import { contarUsos } from '../gestures/usage';
 
 type LeituraDeCorpo = { excedeu: true } | { excedeu: false; texto: string };
 
@@ -84,64 +86,97 @@ export function registerMaterialsRoutes(app: App): void {
     const materialId = c.req.param('materialId');
     const rawContentType = c.req.header('content-type') || 'text/plain; charset=utf-8';
 
+    let row: { id: string; praise_id: string; type: string; r2_key: string | null } | null;
+    try {
+      row = (await c.env.DB.prepare(
+        `SELECT id, praise_id, type, r2_key FROM praise_materials WHERE id = ?`
+      )
+        .bind(materialId)
+        .first()) as typeof row;
+    } catch (error) {
+      console.error('Error loading material:', error);
+      return c.json({ error: 'Failed to upload content' }, 500);
+    }
+    if (!row) return c.json({ error: 'Material not found' }, 404);
+    // Dois tipos têm conteúdo editável por aqui. O resto (pdf, mp3, youtube…) sobe
+    // pelo bulk-upload ou é link, e um PUT neles seria gravar por cima de um binário.
+    const ehGestos = row.type === 'gestures';
+    if (!ehGestos && row.type !== 'chord') {
+      return c.json({ error: 'Material is not a chord' }, 400);
+    }
+    if (!row.r2_key) return c.json({ error: 'Material has no r2_key' }, 400);
+
     let body: string;
     try {
-      const leitura = await lerCorpoComTeto(c.req.raw, MAX_CHORD_CONTENT_BYTES);
+      const leitura = await lerCorpoComTeto(
+        c.req.raw,
+        ehGestos ? MAX_GESTURES_DOCUMENT_BYTES : MAX_CHORD_CONTENT_BYTES
+      );
       if (leitura.excedeu) {
-        return c.json(
-          {
-            error: `Cifra acima do limite de ${Math.round(MAX_CHORD_CONTENT_BYTES / 1024)} KB.`,
-          },
-          413
-        );
+        return ehGestos
+          ? c.json({ error: MENSAGENS.documento_grande, code: 'documento_grande', path: '' }, 413)
+          : c.json(
+              { error: `Cifra acima do limite de ${Math.round(MAX_CHORD_CONTENT_BYTES / 1024)} KB.` },
+              413
+            );
       }
       body = leitura.texto;
     } catch {
       return c.json({ error: 'Invalid body' }, 400);
     }
 
-    // Corpo vazio respondia 200 e substituía o .chord por nada. A única defesa
-    // era do lado da tela; o review-app grava por token e não passa por ela.
-    // A regra aqui é a mais simples que se sustenta sozinha — "tem de sobrar
-    // caractere depois de tirar o espaço" —, de propósito: replicar a gramática
-    // do cliente daria duas regras divergentes em vez de uma rede.
-    if (body.trim().length === 0) {
+    // Gestos: o corpo precisa ser um documento válido ANTES de qualquer gravação.
+    // O caminho do erro vai na resposta — é o que leva o revisor ao cartão certo.
+    let usos: Map<string, number> | null = null;
+    if (ehGestos) {
+      let valor: unknown;
+      try {
+        valor = JSON.parse(body);
+      } catch {
+        return c.json({ error: MENSAGENS.json_invalido, code: 'json_invalido', path: '' }, 400);
+      }
+      const resultado = validarDocumento(valor);
+      if (!resultado.ok) {
+        return c.json(
+          { error: MENSAGENS[resultado.erro.codigo], code: resultado.erro.codigo, path: resultado.erro.caminho },
+          400
+        );
+      }
+      usos = contarUsos(resultado.doc);
+    } else if (body.trim().length === 0) {
+      // Corpo vazio respondia 200 e substituía o .chord por nada. A única defesa
+      // era do lado da tela; o review-app grava por token e não passa por ela.
+      // A regra aqui é a mais simples que se sustenta sozinha — "tem de sobrar
+      // caractere depois de tirar o espaço" —, de propósito: replicar a gramática
+      // do cliente daria duas regras divergentes em vez de uma rede.
       return c.json({ error: 'A cifra não pode ficar vazia.' }, 400);
     }
 
     try {
-      const row = await c.env.DB.prepare(
-        `SELECT id, praise_id, type, r2_key FROM praise_materials WHERE id = ?`
-      )
-        .bind(materialId)
-        .first() as { id: string; praise_id: string; type: string; r2_key: string | null } | null;
-
-      if (!row) return c.json({ error: 'Material not found' }, 404);
-      if (row.type !== 'chord') return c.json({ error: 'Material is not a chord' }, 400);
-      if (!row.r2_key) return c.json({ error: 'Material has no r2_key' }, 400);
-
       // Confere e grava na MESMA instrução, como o PATCH do louvor já faz. O
       // cliente relia o arquivo e comparava antes de gravar: entre a comparação
       // e o PUT cabia outra gravação. Sem If-Match, grava como antes — o PLPCG e
       // o review-app não mandam o header.
       const opcoes: R2PutOptions = {
-        httpMetadata: { contentType: rawContentType.trim() || 'text/plain; charset=utf-8' },
+        httpMetadata: {
+          contentType: ehGestos
+            ? 'application/json; charset=utf-8'
+            : rawContentType.trim() || 'text/plain; charset=utf-8',
+        },
       };
       const ifMatch = normalizarIfMatch(c.req.header('if-match'));
       if (ifMatch) opcoes.onlyIf = { etagMatches: ifMatch };
 
-      const gravado = (await c.env.ASSETS.put(
-        storageKeyFor(row.r2_key),
-        body,
-        opcoes
-      )) as R2Object | null;
+      const gravado = (await c.env.ASSETS.put(storageKeyFor(row.r2_key), body, opcoes)) as R2Object | null;
 
       // Só com onlyIf o R2 devolve null, e é aí que null significa "outra
       // gravação chegou primeiro". Sem If-Match, o retorno não carrega decisão.
       if (ifMatch && !gravado) {
         return c.json(
           {
-            error: 'A cifra foi alterada por outra pessoa. Recarregue antes de salvar.',
+            error: ehGestos
+              ? 'O documento de gestos foi alterado por outra pessoa. Recarregue antes de salvar.'
+              : 'A cifra foi alterada por outra pessoa. Recarregue antes de salvar.',
             code: 'stale_write',
           },
           409
@@ -152,13 +187,27 @@ export function registerMaterialsRoutes(app: App): void {
       // que a marca existe para saber o que ainda precisa de olho humano; texto
       // novo nunca teve esse olho, venha de quem vier. Condicionar a marca ao
       // autor seria adivinhar que reler o próprio texto conta como revisar.
-      await c.env.DB.prepare(
+      const limparMarca = c.env.DB.prepare(
         `UPDATE praise_materials
             SET is_reviewed = 0, reviewed_at = NULL, reviewed_by = NULL
           WHERE id = ?`
-      )
-        .bind(row.id)
-        .run();
+      ).bind(row.id);
+
+      if (usos) {
+        // Uso e marca no mesmo lote: se um falhar, o dicionário não fica
+        // contando um documento que não existe nem a marca some à toa.
+        await c.env.DB.batch([
+          c.env.DB.prepare(`DELETE FROM gesture_usage WHERE material_id = ?`).bind(row.id),
+          ...[...usos].map(([gestureId, count]) =>
+            c.env.DB.prepare(
+              `INSERT INTO gesture_usage (material_id, gesture_id, count) VALUES (?, ?, ?)`
+            ).bind(row.id, gestureId, count)
+          ),
+          limparMarca,
+        ]);
+      } else {
+        await limparMarca.run();
+      }
 
       // O token de upload é segredo estático compartilhado e não tem identidade:
       // sem este registro, qualquer cifra podia ser substituída sem rastro de
@@ -169,6 +218,7 @@ export function registerMaterialsRoutes(app: App): void {
           msg: 'material.content.write',
           material_id: row.id,
           praise_id: row.praise_id,
+          tipo: row.type,
           bytes: new TextEncoder().encode(body).byteLength,
           credential: autor ? 'session' : 'token',
           sub: autor?.sub ?? null,
@@ -178,14 +228,9 @@ export function registerMaterialsRoutes(app: App): void {
       // Sem o ETag novo o cliente não consegue salvar duas vezes seguidas.
       if (gravado?.httpEtag) c.header('ETag', gravado.httpEtag);
 
-      return c.json({
-        ok: true,
-        material_id: row.id,
-        praise_id: row.praise_id,
-        r2_key: row.r2_key,
-      });
+      return c.json({ ok: true, material_id: row.id, praise_id: row.praise_id, r2_key: row.r2_key });
     } catch (error) {
-      console.error('Error uploading chord content:', error);
+      console.error('Error uploading content:', error);
       return c.json({ error: 'Failed to upload content' }, 500);
     }
   });
@@ -329,7 +374,15 @@ export function registerMaterialsRoutes(app: App): void {
         .first<Pick<MaterialRow, 'praise_id' | 'r2_key'>>();
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
 
-      await c.env.DB.prepare(`DELETE FROM praise_materials WHERE id = ?`).bind(materialId).run();
+      // gesture_usage tem ON DELETE CASCADE, mas a migração 018 cai sobre um
+      // banco já existente: apagamos explicitamente, e as duas exclusões vão
+      // no MESMO batch — como statements separadas, uma janela entre elas
+      // deixava a contagem de uso do dicionário mentir sobre um material que
+      // já não existe mais.
+      await c.env.DB.batch([
+        c.env.DB.prepare(`DELETE FROM gesture_usage WHERE material_id = ?`).bind(materialId),
+        c.env.DB.prepare(`DELETE FROM praise_materials WHERE id = ?`).bind(materialId),
+      ]);
 
       if (row.r2_key) {
         try {

@@ -1,0 +1,30 @@
+[
+  {
+    "results": [
+      {
+        "dic": 0,
+        "versao": 0,
+        "usos": 0,
+        "materiais": 254
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "IAD",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 6.0106
+      },
+      "duration": 6.0106,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 20795392,
+      "rows_read": 21012,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

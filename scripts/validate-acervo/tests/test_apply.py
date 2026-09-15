@@ -162,6 +162,15 @@ def test_acao_de_fase_futura_diz_qual_fase(tmp_path):
         sql_para(f, conn)
 
 
+def test_acao_da_migracao_plpcg_diz_fase_c(tmp_path):
+    conn = _mundo(tmp_path)
+    f = Finding(run_id="r1", detector="plpcg_crosswalk", target_type="plpcg",
+                target_id="Q29sQWR1bHRvcy8wMDEucGRm", action="link_plpcg",
+                confidence="alta", evidence={})
+    with pytest.raises(NotImplementedError, match="Fase C"):
+        sql_para(f, conn)
+
+
 def test_estado_anterior_guarda_o_suficiente_para_desfazer(tmp_path):
     conn = _mundo(tmp_path)
     antes = estado_anterior(_merge(), conn)

@@ -107,3 +107,10 @@ def test_promovido_vira_alta_mantem_o_id_e_registra_o_motivo():
     # o original nao muda: quem chamou ainda tem o finding de faixa media
     assert f.confidence == "media"
     assert "promocao" not in f.evidence
+
+
+def test_acoes_da_migracao_plpcg_sao_aceitas():
+    for acao in ("link_plpcg", "import_plpcg_material", "create_praise_plpcg"):
+        f = _finding(action=acao, target_type="plpcg", target_id="Q29sQWR1bHRvcy8wMDEucGRm",
+                     praise_id=None)
+        assert f.action == acao

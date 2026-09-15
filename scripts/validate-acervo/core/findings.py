@@ -15,6 +15,12 @@ ACOES = (
     "merge_praise",
     "set_group_id",
     "move_material",
+    # Migração PLPCG (spec 2026-09-15, §7). Entram no contrato na Fase A para
+    # o detector emitir findings com a ação certa; o apply só as implementa
+    # na Fase C e até lá recusa nominalmente.
+    "link_plpcg",
+    "import_plpcg_material",
+    "create_praise_plpcg",
 )
 
 
@@ -28,7 +34,7 @@ def finding_id(detector: str, target_id: str, field: str | None) -> str:
 class Finding:
     run_id: str
     detector: str
-    target_type: str          # material | praise
+    target_type: str          # material | praise | plpcg | plpcg_grupo
     target_id: str
     action: str
     confidence: str

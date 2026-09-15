@@ -24,7 +24,7 @@ const praise = {
 
 const dicionario = {
   schema: 'coldigom.gesture-dictionary/1' as const, version: 3, generatedAt: 't',
-  gestures: [{ id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/c687580e7682.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' }],
+  gestures: [{ id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/c687580e7682.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't' }],
 };
 
 function montar({ asset = EXEMPLO, status = 200, etag = '"v1"', autenticado = true, praiseObj = praise }: { asset?: string; status?: number; etag?: string; autenticado?: boolean; praiseObj?: PraiseDetail } = {}) {
@@ -98,7 +98,7 @@ describe('GesturesEditorPage', () => {
     const { put } = montar();
     put.mockResolvedValue({ etag: '"v2"' });
     vi.spyOn(api, 'createGesture').mockResolvedValue({
-      id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'assets/cia/gestures/dddddddddddd.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't',
+      id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'assets/cia/gestures/dddddddddddd.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't',
     });
     await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
     await user.click(screen.getByRole('button', { name: 'Adicionar gesto' }));

@@ -7,6 +7,8 @@ import {
   lerVersao,
   linhaParaEntrada,
   usosDoGesto,
+  videosDoDicionario,
+  videosDoGesto,
   type LinhaDoDicionario,
 } from '../gestures/dicionario';
 import { requireAuth } from '../middleware';
@@ -63,11 +65,12 @@ export function registerGesturesRoutes(app: App): void {
       const linhas = await c.env.DB
         .prepare(`SELECT ${COLUNAS} FROM gesture_dictionary ORDER BY name, id`)
         .all<LinhaDoDicionario>();
+      const videos = await videosDoDicionario(c.env.DB);
       const corpo = {
         schema: DICTIONARY_SCHEMA,
         version,
         generatedAt: new Date().toISOString(),
-        gestures: (linhas.results ?? []).map(linhaParaEntrada),
+        gestures: (linhas.results ?? []).map((l) => linhaParaEntrada(l, videos.get(l.id))),
       };
       return c.json(corpo, 200, { ETag: etag, 'Cache-Control': CACHE });
     } catch (error) {
@@ -83,7 +86,8 @@ export function registerGesturesRoutes(app: App): void {
       const linha = await lerLinha(c.env.DB, id);
       if (!linha) return c.json({ error: 'Gesture not found' }, 404);
       const usages = await usosDoGesto(c.env.DB, id);
-      return c.json({ data: { ...linhaParaEntrada(linha), usages } });
+      const videos = await videosDoGesto(c.env.DB, id);
+      return c.json({ data: { ...linhaParaEntrada(linha, videos), usages } });
     } catch (error) {
       console.error('Error reading gesture:', error);
       return c.json({ error: 'Failed to read gesture' }, 500);
@@ -161,7 +165,7 @@ export function registerGesturesRoutes(app: App): void {
         {
           data: linha
             ? linhaParaEntrada(linha)
-            : { id, name, description, exampleTriggers: exemplos, image: imageKey, gif: null, status: 'active', replacedBy: null, updatedAt: new Date().toISOString() },
+            : { id, name, description, exampleTriggers: exemplos, image: imageKey, gif: null, status: 'active', replacedBy: null, updatedAt: new Date().toISOString(), videos: [] },
         },
         201
       );
@@ -208,7 +212,8 @@ export function registerGesturesRoutes(app: App): void {
           .bind(name, description, JSON.stringify(exemplos ?? JSON.parse(linha.example_triggers || '[]')), status, replacedBy, id),
       ]);
       const depois = (await lerLinha(c.env.DB, id)) ?? linha;
-      return c.json({ data: linhaParaEntrada(depois) });
+      const videos = await videosDoGesto(c.env.DB, id);
+      return c.json({ data: linhaParaEntrada(depois, videos) });
     } catch (error) {
       console.error('Error updating gesture:', error);
       return c.json({ error: 'Failed to update gesture' }, 500);
@@ -241,10 +246,74 @@ export function registerGesturesRoutes(app: App): void {
           .bind(chave, id),
       ]);
       const depois = (await lerLinha(c.env.DB, id)) ?? linha;
-      return c.json({ data: linhaParaEntrada({ ...depois, image_key: chave }) });
+      const videos = await videosDoGesto(c.env.DB, id);
+      return c.json({ data: linhaParaEntrada({ ...depois, image_key: chave }, videos) });
     } catch (error) {
       console.error('Error uploading gesture image:', error);
       return c.json({ error: 'Failed to upload gesture image' }, 500);
+    }
+  });
+
+  // PUT …/:id/videos/:materialId — liga o gesto a um vídeo youtube de um louvor e
+  // substitui as ocorrências do par pelo que veio. `seconds: []` só liga (uma
+  // linha com seconds NULL); tempos apagam a nula. Tudo num batch com o bump.
+  app.put('/api/gestures/dictionary/:id/videos/:materialId', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const materialId = c.req.param('materialId') as string;
+    const body = (await c.req.json().catch(() => null)) as { seconds?: unknown } | null;
+    if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+    const seconds = body.seconds;
+    // Number.isInteger deixava passar 1e21: é matematicamente um inteiro, mas
+    // maior que 2^53 não tem representação exata em float64, e o SQLite grava
+    // como REAL. isSafeInteger é o teto real de "cabe certinho num INTEGER".
+    if (!Array.isArray(seconds) || !seconds.every((s) => Number.isSafeInteger(s) && (s as number) >= 0)) {
+      return c.json({ error: "Field 'seconds' must be an array of non-negative integers" }, 400);
+    }
+    const tempos = [...new Set(seconds as number[])].sort((a, b) => a - b);
+
+    try {
+      const linha = await lerLinha(c.env.DB, id);
+      if (!linha) return c.json({ error: 'Gesture not found' }, 404);
+      const material = await c.env.DB
+        .prepare(`SELECT id, type FROM praise_materials WHERE id = ?`)
+        .bind(materialId)
+        .first<{ id: string; type: string }>();
+      if (!material) return c.json({ error: 'Material not found' }, 404);
+      if (material.type !== 'youtube') return c.json({ error: 'Material is not a youtube video' }, 400);
+
+      const valores: (number | null)[] = tempos.length ? tempos : [null];
+      await escreverNoDicionario(c.env.DB, [
+        c.env.DB.prepare(`DELETE FROM gesture_video_occurrences WHERE gesture_id = ? AND material_id = ?`).bind(id, materialId),
+        ...valores.map((s) =>
+          c.env.DB.prepare(`INSERT INTO gesture_video_occurrences (gesture_id, material_id, seconds) VALUES (?, ?, ?)`).bind(id, materialId, s)
+        ),
+      ]);
+      return c.json({ data: linhaParaEntrada(linha, await videosDoGesto(c.env.DB, id)) });
+    } catch (error) {
+      console.error('Error linking gesture video:', error);
+      return c.json({ error: 'Failed to link gesture video' }, 500);
+    }
+  });
+
+  // DELETE …/:id/videos/:materialId — desliga o par inteiro (todas as ocorrências).
+  app.delete('/api/gestures/dictionary/:id/videos/:materialId', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const materialId = c.req.param('materialId') as string;
+    try {
+      const linha = await lerLinha(c.env.DB, id);
+      if (!linha) return c.json({ error: 'Gesture not found' }, 404);
+      const par = await c.env.DB
+        .prepare(`SELECT 1 AS um FROM gesture_video_occurrences WHERE gesture_id = ? AND material_id = ? LIMIT 1`)
+        .bind(id, materialId)
+        .first();
+      if (!par) return c.json({ error: 'Video is not linked to this gesture' }, 404);
+      await escreverNoDicionario(c.env.DB, [
+        c.env.DB.prepare(`DELETE FROM gesture_video_occurrences WHERE gesture_id = ? AND material_id = ?`).bind(id, materialId),
+      ]);
+      return c.json({ data: linhaParaEntrada(linha, await videosDoGesto(c.env.DB, id)) });
+    } catch (error) {
+      console.error('Error unlinking gesture video:', error);
+      return c.json({ error: 'Failed to unlink gesture video' }, 500);
     }
   });
 

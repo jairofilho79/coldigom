@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_SALTOS, adicionarAoIndice, buscar, indexar, normalizar, resolver, type GestureDictionary, type GestureEntry } from '../dictionary';
 
 const entrada = (id: string, extra: Partial<GestureEntry> = {}): GestureEntry => ({
-  id, name: id, description: '', exampleTriggers: [], image: `assets/cia/gestures/${id}.png`, gif: null,
+  id, name: id, description: '', exampleTriggers: [], image: `assets/cia/gestures/${id}.png`, gif: null, videos: [],
   status: 'active', replacedBy: null, updatedAt: 't', ...extra,
 });
 

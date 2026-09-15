@@ -30,6 +30,8 @@ import {
   createGesture,
   updateGesture,
   uploadGestureImage,
+  putGestureVideo,
+  deleteGestureVideo,
   replaceGesture,
   putGesturesContent,
   ConflitoDeGravacao,
@@ -467,6 +469,26 @@ describe('API Service — dicionário de gestos', () => {
     const init = mockFetch.mock.calls[0][1] as RequestInit;
     expect(init.method).toBe('POST');
     expect((init.body as FormData).get('file')).toBe(png);
+  });
+
+  it('putGestureVideo manda PUT JSON com os segundos e devolve a entrada', async () => {
+    mockFetch.mockResolvedValueOnce(okComData({ id: 'g1', videos: [{ materialId: 'y1', seconds: [83] }] }));
+    const r = await putGestureVideo('g1', 'y1', [83]);
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(String(url)).toContain('/api/gestures/dictionary/g1/videos/y1');
+    expect(init.method).toBe('PUT');
+    expect(JSON.parse(init.body)).toEqual({ seconds: [83] });
+    expect(init).toEqual(withCreds);
+    expect(r.videos[0].materialId).toBe('y1');
+  });
+
+  it('deleteGestureVideo manda DELETE e devolve a entrada', async () => {
+    mockFetch.mockResolvedValueOnce(okComData({ id: 'g1', videos: [] }));
+    const r = await deleteGestureVideo('g1', 'y1');
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(String(url)).toContain('/api/gestures/dictionary/g1/videos/y1');
+    expect(init.method).toBe('DELETE');
+    expect(r.videos).toEqual([]);
   });
 
   it('replaceGesture envia o alvo e a flag de reescrita', async () => {

@@ -149,7 +149,7 @@ describe('GesturesEditor — edição do cartão', () => {
     const user = userEvent.setup();
     const indice: Indice = {
       version: 1, porId: new Map(),
-      ativos: [{ id: 'aaaaaaaaaaaa', name: 'Quero', description: '', exampleTriggers: [], image: 'a.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't' }],
+      ativos: [{ id: 'aaaaaaaaaaaa', name: 'Quero', description: '', exampleTriggers: [], image: 'a.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't' }],
     };
     const { ultimo } = montar([0, 1], { indice });
     await user.click(screen.getByRole('button', { name: 'Adicionar gesto' }));
@@ -160,7 +160,7 @@ describe('GesturesEditor — edição do cartão', () => {
 
   it('"Novo gesto" no seletor avisa a página e insere o gesto criado depois do foco', async () => {
     const user = userEvent.setup();
-    const criado: GestureEntry = { id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'd.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't' };
+    const criado: GestureEntry = { id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'd.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't' };
     vi.spyOn(api, 'createGesture').mockResolvedValue(criado);
     const indice: Indice = { version: 1, porId: new Map(), ativos: [] };
     const onGestoCriado = vi.fn();

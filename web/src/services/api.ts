@@ -744,6 +744,22 @@ export async function uploadGestureImage(id: string, file: File): Promise<Gestur
   return r.data;
 }
 
+export async function putGestureVideo(id: string, materialId: string, seconds: number[]): Promise<GestureEntry> {
+  const r = await fetchJson<ApiResponse<GestureEntry>>(
+    `${API_BASE_URL}/api/gestures/dictionary/${id}/videos/${encodeURIComponent(materialId)}`,
+    { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ seconds }) }
+  );
+  return r.data;
+}
+
+export async function deleteGestureVideo(id: string, materialId: string): Promise<GestureEntry> {
+  const r = await fetchJson<ApiResponse<GestureEntry>>(
+    `${API_BASE_URL}/api/gestures/dictionary/${id}/videos/${encodeURIComponent(materialId)}`,
+    { method: 'DELETE' }
+  );
+  return r.data;
+}
+
 export async function replaceGesture(
   id: string,
   targetId: string,

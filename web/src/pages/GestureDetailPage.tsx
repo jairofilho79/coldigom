@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { StyledFileInput } from '../components/StyledFileInput';
+import { SecaoVideosDoGesto } from '../components/gestures/SecaoVideosDoGesto';
 import { useAuth } from '../context/useAuth';
 import { indexar, type Indice } from '../lib/gestures/dictionary';
 import {
@@ -135,6 +136,13 @@ export function GestureDetailPage() {
           </dl>
         )}
       </section>
+
+      <SecaoVideosDoGesto
+        gestureId={id}
+        videos={entrada.videos}
+        podeEditar={isAuthenticated}
+        onAlterado={(e) => setEntrada({ ...e, usages: entrada.usages })}
+      />
 
       <section className="cp-panel">
         <h2 className="cp-panel-title">Usado em</h2>

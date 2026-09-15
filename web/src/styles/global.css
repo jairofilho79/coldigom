@@ -3776,3 +3776,5 @@ button.linkish {
 .gd-video-cabeca { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .gd-video-tempos { display: flex; gap: 6px; flex-wrap: wrap; }
 .gd-chip { font-size: 0.85rem; padding: 2px 8px; border: 1px solid var(--border-default); border-radius: 999px; text-decoration: none; color: var(--text-primary); background: var(--bg-surface); }
+.gd-adicionar-video { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.gd-lista-louvores { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }

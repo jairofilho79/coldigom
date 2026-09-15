@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { GestureEntry, GestureVideo } from '../../../lib/gestures/dictionary';
 import * as api from '../../../services/api';
+import type { Praise, PraiseDetail } from '../../../types';
 import { SecaoVideosDoGesto } from '../SecaoVideosDoGesto';
 
 const videos: GestureVideo[] = [
@@ -80,5 +81,56 @@ describe('SecaoVideosDoGesto — edição', () => {
     expect(onAlterado).toHaveBeenCalledWith({ ...entrada, videos: [videos[1]] });
     await user.click(screen.getAllByRole('button', { name: 'Desligar' })[1]);
     expect(await screen.findByRole('status')).toHaveTextContent('Video is not linked to this gesture');
+  });
+});
+
+describe('SecaoVideosDoGesto — adicionar vídeo', () => {
+  const louvores = [
+    { id: 'p3', name: 'Três', number: '3' },
+    { id: 'p1', name: 'Nove', number: '9' },
+  ] as unknown as Praise[];
+  const detalheComYoutube = {
+    id: 'p3', name: 'Três', number: '3', materials: [
+      { id: 'pdf3', type: 'pdf', material_kind_name: 'Partitura', url: null },
+      { id: 'y3', type: 'youtube', material_kind_name: 'Vídeo CIAs', url: 'https://youtu.be/ccccccccccc' },
+    ],
+  } as unknown as PraiseDetail;
+
+  it('busca o louvor, mostra só os materiais youtube e liga com seconds vazio', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, 'searchPraises').mockResolvedValue({ data: louvores, pagination: { page: 1, limit: 10, total: 2, totalPages: 1 } } as never);
+    vi.spyOn(api, 'getPraise').mockResolvedValue(detalheComYoutube);
+    const put = vi.spyOn(api, 'putGestureVideo').mockResolvedValue(entrada);
+    const { onAlterado } = montar();
+    await user.click(screen.getByRole('button', { name: 'Adicionar vídeo' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar louvor' }), 'tr');
+    await user.click(await screen.findByRole('button', { name: '3 - Três' }));
+    expect(screen.queryByText('Partitura')).toBeNull();
+    await user.click(await screen.findByRole('button', { name: 'Vídeo CIAs' }));
+    await waitFor(() => expect(put).toHaveBeenCalledWith('aaaaaaaaaaaa', 'y3', []));
+    expect(onAlterado).toHaveBeenCalledWith(entrada);
+    expect(screen.getByRole('status')).toHaveTextContent('Vídeo ligado.');
+    expect(screen.queryByRole('searchbox', { name: 'Buscar louvor' })).toBeNull();
+  });
+
+  it('louvor sem youtube avisa; material já ligado aparece desabilitado', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, 'searchPraises').mockResolvedValue({ data: louvores, pagination: { page: 1, limit: 10, total: 2, totalPages: 1 } } as never);
+    vi.spyOn(api, 'getPraise')
+      .mockResolvedValueOnce({ id: 'p3', name: 'Três', number: '3', materials: [{ id: 'pdf3', type: 'pdf', url: null }] } as unknown as PraiseDetail)
+      .mockResolvedValueOnce({ id: 'p1', name: 'Nove', number: '9', materials: [{ id: 'y1', type: 'youtube', material_kind_name: 'Vídeo', url: 'https://youtu.be/aaaaaaaaaaa' }] } as unknown as PraiseDetail);
+    montar();
+    await user.click(screen.getByRole('button', { name: 'Adicionar vídeo' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar louvor' }), 'x');
+    await user.click(await screen.findByRole('button', { name: '3 - Três' }));
+    expect(await screen.findByText('Este louvor não tem vídeo do YouTube.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '9 - Nove' }));
+    const jaLigado = await screen.findByRole('button', { name: /Vídeo.*já ligado/ });
+    expect(jaLigado).toBeDisabled();
+  });
+
+  it('sem sessão não há "Adicionar vídeo"', () => {
+    montar(false);
+    expect(screen.queryByRole('button', { name: 'Adicionar vídeo' })).toBeNull();
   });
 });

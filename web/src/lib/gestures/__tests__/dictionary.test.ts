@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_SALTOS, buscar, indexar, normalizar, resolver, type GestureDictionary, type GestureEntry } from '../dictionary';
+import { MAX_SALTOS, adicionarAoIndice, buscar, indexar, normalizar, resolver, type GestureDictionary, type GestureEntry } from '../dictionary';
 
 const entrada = (id: string, extra: Partial<GestureEntry> = {}): GestureEntry => ({
   id, name: id, description: '', exampleTriggers: [], image: `assets/cia/gestures/${id}.png`, gif: null,
@@ -77,5 +77,29 @@ describe('buscar', () => {
   it('não devolve depreciados, e termo vazio lista por nome até o limite', () => {
     expect(buscar(i, 'velho')).toEqual([]);
     expect(buscar(i, '', 2).map((g) => g.name)).toEqual(['Coração', 'Quero']);
+  });
+});
+
+describe('adicionarAoIndice', () => {
+  const i = indexar(dic);
+  const novo = entrada('dddddddddddd', { name: 'Amor', exampleTriggers: ['amor'] });
+
+  it('devolve um índice novo com a entrada no mapa e entre os ativos, em ordem de nome', () => {
+    const j = adicionarAoIndice(i, novo);
+    expect(j).not.toBe(i);
+    expect(i.porId.has('dddddddddddd')).toBe(false);
+    expect(j.porId.get('dddddddddddd')).toBe(novo);
+    expect(j.ativos.map((g) => g.name)).toEqual(['Amor', 'Coração', 'Quero', 'Viver']);
+    expect(buscar(j, 'am')).toEqual([novo]);
+  });
+
+  it('avança a versão: o servidor incrementou ao criar', () => {
+    expect(adicionarAoIndice(i, novo).version).toBe(5);
+  });
+
+  it('substitui uma entrada de mesmo id em vez de duplicar', () => {
+    const j = adicionarAoIndice(i, entrada('aaaaaaaaaaaa', { name: 'Quero (novo)' }));
+    expect(j.ativos.filter((g) => g.id === 'aaaaaaaaaaaa')).toHaveLength(1);
+    expect(j.porId.get('aaaaaaaaaaaa')?.name).toBe('Quero (novo)');
   });
 });

@@ -737,14 +737,12 @@ export async function updateGesture(
   return r.data;
 }
 
-async function subirFiguraDoGesto(id: string, sufixo: 'image' | 'gif', file: File): Promise<GestureEntry> {
+export async function uploadGestureImage(id: string, file: File): Promise<GestureEntry> {
   const form = new FormData();
   form.set('file', file);
-  const r = await fetchJson<ApiResponse<GestureEntry>>(`${API_BASE_URL}/api/gestures/dictionary/${id}/${sufixo}`, { method: 'POST', body: form });
+  const r = await fetchJson<ApiResponse<GestureEntry>>(`${API_BASE_URL}/api/gestures/dictionary/${id}/image`, { method: 'POST', body: form });
   return r.data;
 }
-export const uploadGestureImage = (id: string, file: File) => subirFiguraDoGesto(id, 'image', file);
-export const uploadGestureGif = (id: string, file: File) => subirFiguraDoGesto(id, 'gif', file);
 
 export async function replaceGesture(
   id: string,

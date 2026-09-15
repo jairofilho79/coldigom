@@ -36,6 +36,17 @@ export function indexar(dic: GestureDictionary): Indice {
   return { version: dic.version, porId, ativos };
 }
 
+/**
+ * Índice com um gesto recém-criado (ou reescrito), sem baixar o dicionário de
+ * novo. A versão avança em um porque o servidor incrementa a cada escrita — é
+ * o carimbo que o documento leva em `dictionaryVersion` ao salvar.
+ */
+export function adicionarAoIndice(indice: Indice, entrada: GestureEntry): Indice {
+  const porId = new Map(indice.porId);
+  porId.set(entrada.id, entrada);
+  return indexar({ schema: 'coldigom.gesture-dictionary/1', version: indice.version + 1, generatedAt: '', gestures: [...porId.values()] });
+}
+
 export type Resolucao =
   | { ok: true; entrada: GestureEntry; idFinal: string; viaAlias: boolean }
   | { ok: false; motivo: 'ausente' | 'ciclo' | 'estouro'; idFinal: string };

@@ -1,13 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { GestureDocument, Item } from '../../../lib/gestures/schema';
 import { itemEm, type Caminho } from '../../../lib/gestures/flatten';
-import type { Indice } from '../../../lib/gestures/dictionary';
+import type { GestureEntry, Indice } from '../../../lib/gestures/dictionary';
+import * as api from '../../../services/api';
 import type { Resultado } from '../../../lib/gestures/edit';
 import { GesturesEditor } from '../GesturesEditor';
 
@@ -15,9 +16,9 @@ const FIXTURES = resolve(__dirname, '..', '..', '..', '..', '..', 'api', 'src', 
 const exemplo = JSON.parse(readFileSync(resolve(FIXTURES, 'valido-exemplo.json'), 'utf8')) as GestureDocument;
 
 /** A página real guarda doc e foco em estado e aplica cada Resultado; o harness faz o mesmo. */
-function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho, onFocoSpy }: {
+function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho, onFocoSpy, onGestoCriado }: {
   inicial: GestureDocument; focoInicial: Caminho | null; onMudar: (r: Resultado) => void; indice?: Indice | null; erroNoCaminho?: string | null;
-  onFocoSpy?: (c: Caminho | null) => void;
+  onFocoSpy?: (c: Caminho | null) => void; onGestoCriado?: (g: GestureEntry) => void;
 }) {
   const [doc, setDoc] = useState(inicial);
   const [foco, setFoco] = useState<Caminho | null>(focoInicial);
@@ -29,11 +30,12 @@ function Harness({ inicial, focoInicial, onMudar, indice = null, erroNoCaminho, 
       onFoco={(c) => { onFocoSpy?.(c); setFoco(c); }}
       onMudar={(r) => { onMudar(r); setDoc(r.doc); setFoco(r.foco); }}
       erroNoCaminho={erroNoCaminho}
+      onGestoCriado={onGestoCriado}
     />
   );
 }
 
-function montar(foco: Caminho | null = null, extras: { indice?: Indice | null; erroNoCaminho?: string | null } = {}) {
+function montar(foco: Caminho | null = null, extras: { indice?: Indice | null; erroNoCaminho?: string | null; onGestoCriado?: (g: GestureEntry) => void } = {}) {
   const onMudar = vi.fn<(r: Resultado) => void>();
   const onFocoSpy = vi.fn<(c: Caminho | null) => void>();
   const utils = render(<Harness inicial={exemplo} focoInicial={foco} onMudar={onMudar} onFocoSpy={onFocoSpy} {...extras} />);
@@ -154,6 +156,32 @@ describe('GesturesEditor — edição do cartão', () => {
     await user.click(screen.getByRole('button', { name: /Quero/ }));
     expect(ultimo().foco).toEqual([0, 2]);
     expect(itemEm(ultimo().doc, [0, 2])).toMatchObject({ gestureId: 'aaaaaaaaaaaa' });
+  });
+
+  it('"Novo gesto" no seletor avisa a página e insere o gesto criado depois do foco', async () => {
+    const user = userEvent.setup();
+    const criado: GestureEntry = { id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'd.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't' };
+    vi.spyOn(api, 'createGesture').mockResolvedValue(criado);
+    const indice: Indice = { version: 1, porId: new Map(), ativos: [] };
+    const onGestoCriado = vi.fn();
+    const { ultimo } = montar([0, 1], { indice, onGestoCriado });
+    await user.click(screen.getByRole('button', { name: 'Adicionar gesto' }));
+    await user.click(screen.getByRole('button', { name: 'Novo gesto' }));
+    await user.type(screen.getByRole('textbox', { name: 'Nome' }), 'Amor');
+    await user.upload(screen.getByLabelText('Figura PNG'), new File(['x'], 'a.png', { type: 'image/png' }));
+    await user.click(screen.getByRole('button', { name: 'Criar gesto' }));
+    await waitFor(() => expect(onGestoCriado).toHaveBeenCalledWith(criado));
+    expect(itemEm(ultimo().doc, [0, 2])).toMatchObject({ gestureId: 'dddddddddddd' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    vi.restoreAllMocks();
+  });
+
+  it('sem onGestoCriado o seletor não oferece "Novo gesto"', async () => {
+    const user = userEvent.setup();
+    const indice: Indice = { version: 1, porId: new Map(), ativos: [] };
+    montar([0, 1], { indice });
+    await user.click(screen.getByRole('button', { name: 'Adicionar gesto' }));
+    expect(screen.queryByRole('button', { name: 'Novo gesto' })).toBeNull();
   });
 
   it('o cartão do erro do servidor fica marcado', () => {

@@ -30,7 +30,6 @@ import {
   createGesture,
   updateGesture,
   uploadGestureImage,
-  uploadGestureGif,
   replaceGesture,
   putGesturesContent,
   ConflitoDeGravacao,
@@ -460,16 +459,14 @@ describe('API Service — dicionário de gestos', () => {
     expect(JSON.parse(init.body)).toEqual({ name: 'Novo nome', status: 'deprecated' });
   });
 
-  it('uploadGestureImage e uploadGestureGif mandam o arquivo para o sufixo certo', async () => {
+  it('uploadGestureImage manda o arquivo em multipart para …/image', async () => {
     mockFetch.mockResolvedValueOnce(okComData({ id: 'g1' }));
     const png = new File(['x'], 'a.png', { type: 'image/png' });
     await uploadGestureImage('g1', png);
     expect(String(mockFetch.mock.calls[0][0])).toContain('/api/gestures/dictionary/g1/image');
-
-    mockFetch.mockResolvedValueOnce(okComData({ id: 'g1' }));
-    const gif = new File(['x'], 'a.gif', { type: 'image/gif' });
-    await uploadGestureGif('g1', gif);
-    expect(String(mockFetch.mock.calls[1][0])).toContain('/api/gestures/dictionary/g1/gif');
+    const init = mockFetch.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBe('POST');
+    expect((init.body as FormData).get('file')).toBe(png);
   });
 
   it('replaceGesture envia o alvo e a flag de reescrita', async () => {

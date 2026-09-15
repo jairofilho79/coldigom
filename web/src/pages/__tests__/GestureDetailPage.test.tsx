@@ -44,9 +44,12 @@ describe('GestureDetailPage', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Quero' })).toBeInTheDocument());
     expect(document.querySelector('img')?.getAttribute('src')).toContain('aaaaaaaaaaaa.png');
     // F5: a imagem carrega uma versão na query — sem isso o navegador continua
-    // mostrando a figura velha depois de "Trocar figura"/"Enviar GIF", porque a
-    // chave (o nome do arquivo) não muda.
+    // mostrando a figura velha depois de "Trocar figura", porque a chave (o
+    // nome do arquivo) não muda.
     expect(document.querySelector('img')?.getAttribute('src')).toContain('?v=');
+    // GIF saiu de uso: nem placeholder nem input. A referência em movimento vai
+    // ser o vídeo do louvor no YouTube.
+    expect(screen.queryByText(/GIF/)).toBeNull();
     expect(screen.getByRole('link', { name: /182/ })).toHaveAttribute('href', '/praise/p1/gestos/g1');
     expect(screen.getAllByText(/2 vez/).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Salvar alterações' })).toBeNull();
@@ -106,6 +109,7 @@ describe('GestureDetailPage', () => {
     const trocar = vi.spyOn(api, 'uploadGestureImage').mockResolvedValue(entrada);
     await waitFor(() => expect(screen.getByLabelText('Trocar figura')).toBeInTheDocument());
     const png = new File(['x'], 'a.png', { type: 'image/png' });
+    expect(screen.queryByLabelText(/GIF/)).toBeNull();
     await user.upload(screen.getByLabelText('Trocar figura'), png);
     await waitFor(() => expect(trocar).toHaveBeenCalledWith('aaaaaaaaaaaa', png));
   });

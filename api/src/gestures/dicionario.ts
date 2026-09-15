@@ -14,8 +14,8 @@ export type { GestureDictionary, GestureEntry, LinhaDoDicionario, Uso } from './
 
 export const COLUNAS = `id, name, description, example_triggers, image_key, gif_key, status, replaced_by, created_at, updated_at`;
 
-export function chaveDaFigura(id: string, ext: 'png' | 'gif'): string {
-  return `assets/cia/gestures/${id}.${ext}`;
+export function chaveDaFigura(id: string): string {
+  return `assets/cia/gestures/${id}.png`;
 }
 
 /** 12 hex aleatórios — mesma forma dos ids que vêm do pdf_extractor. */
@@ -40,7 +40,7 @@ export function linhaParaEntrada(l: LinhaDoDicionario): GestureEntry {
     exampleTriggers,
     // image_key nulo só acontece entre o INSERT e o upload da figura; o
     // contrato promete string, e a chave canônica é derivável do id.
-    image: l.image_key ?? chaveDaFigura(l.id, 'png'),
+    image: l.image_key ?? chaveDaFigura(l.id),
     gif: l.gif_key,
     status: l.status,
     replacedBy: l.replaced_by,

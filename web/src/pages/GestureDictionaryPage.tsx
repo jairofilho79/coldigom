@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { GestureThumb } from '../components/gestures/GestureThumb';
 import { useAuth } from '../context/useAuth';
 import { indexar, normalizar, type GestureEntry, type Indice } from '../lib/gestures/dictionary';
-import { createGesture, getGestureDictionary, getGestureUsageCounts } from '../services/api';
+import { getGestureDictionary, getGestureUsageCounts } from '../services/api';
+import { NovoGestoForm } from '../components/gestures/NovoGestoForm';
 
 /** Lista densa do dicionário: figura, nome, id, gatilhos, status e uso. Gestão, não leitura. */
 export function GestureDictionaryPage() {
@@ -16,26 +17,36 @@ export function GestureDictionaryPage() {
   const [mostrarSubstituidos, setMostrarSubstituidos] = useState(false);
   const [contagemIndisponivel, setContagemIndisponivel] = useState(false);
 
-  const carregar = useCallback(async () => {
-    setErro(null);
-    try {
-      const dic = await getGestureDictionary();
-      setIndice(indexar(dic));
-      try {
-        const contagens = await getGestureUsageCounts();
-        setUsos(new Map(contagens.map((c) => [c.gesture_id, c.materials])));
-        setContagemIndisponivel(false);
-      } catch {
-        setUsos(new Map());
-        setContagemIndisponivel(true);
-      }
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Falha ao carregar o dicionário');
-    }
-  }, []);
+  // Recarrega quando `tentativa` muda ("Tentar de novo", gesto criado). Tudo
+  // assíncrono dentro do efeito, sem setState síncrono — a regra do compilador
+  // do React recusa; `cancelado` descarta a resposta de uma montagem antiga.
+  const [tentativa, setTentativa] = useState(0);
+  const recarregar = () => setTentativa((n) => n + 1);
   useEffect(() => {
-    void carregar();
-  }, [carregar]);
+    let cancelado = false;
+    getGestureDictionary()
+      .then(async (dic) => {
+        if (cancelado) return;
+        setErro(null);
+        setIndice(indexar(dic));
+        try {
+          const contagens = await getGestureUsageCounts();
+          if (cancelado) return;
+          setUsos(new Map(contagens.map((c) => [c.gesture_id, c.materials])));
+          setContagemIndisponivel(false);
+        } catch {
+          if (cancelado) return;
+          setUsos(new Map());
+          setContagemIndisponivel(true);
+        }
+      })
+      .catch((e: unknown) => {
+        if (!cancelado) setErro(e instanceof Error ? e.message : 'Falha ao carregar o dicionário');
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [tentativa]);
 
   const linhas = useMemo(() => {
     if (!indice) return [];
@@ -47,36 +58,6 @@ export function GestureDictionaryPage() {
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
   }, [indice, busca, mostrarSubstituidos]);
 
-  // formulário de gesto novo
-  const [nome, setNome] = useState('');
-  const [descricao, setDescricao] = useState('');
-  const [gatilhos, setGatilhos] = useState('');
-  const [figura, setFigura] = useState<File | null>(null);
-  const [criando, setCriando] = useState(false);
-  const [erroDoForm, setErroDoForm] = useState<string | null>(null);
-
-  const criar = async () => {
-    if (!nome.trim() || !figura) return;
-    setCriando(true);
-    setErroDoForm(null);
-    try {
-      await createGesture({
-        name: nome.trim(),
-        description: descricao.trim(),
-        exampleTriggers: gatilhos.split(',').map((s) => s.trim()).filter(Boolean),
-        image: figura,
-      });
-      setNome('');
-      setDescricao('');
-      setGatilhos('');
-      setFigura(null);
-      await carregar();
-    } catch (e) {
-      setErroDoForm(e instanceof Error ? e.message : 'Falha ao criar o gesto');
-    } finally {
-      setCriando(false);
-    }
-  };
 
   return (
     <main className="page-container gd-page">
@@ -88,7 +69,7 @@ export function GestureDictionaryPage() {
         </div>
       </header>
 
-      {erro ? <div className="cp-state cp-state--error"><div className="cp-state-title">{erro}</div><button type="button" className="cp-retry" onClick={() => void carregar()}>Tentar de novo</button></div> : null}
+      {erro ? <div className="cp-state cp-state--error"><div className="cp-state-title">{erro}</div><button type="button" className="cp-retry" onClick={recarregar}>Tentar de novo</button></div> : null}
 
       {contagemIndisponivel ? <p className="cp-review-error" role="status">Contagem de uso indisponível — tente recarregar.</p> : null}
 
@@ -102,16 +83,7 @@ export function GestureDictionaryPage() {
       {isAuthenticated ? (
         <details className="gd-novo" open>
           <summary>Novo gesto</summary>
-          <div className="edit-grid">
-            <div className="edit-field"><label htmlFor="gd-nome">Nome</label><input id="gd-nome" value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-            <div className="edit-field"><label htmlFor="gd-desc">Descrição</label><input id="gd-desc" value={descricao} onChange={(e) => setDescricao(e.target.value)} /></div>
-            <div className="edit-field"><label htmlFor="gd-gat">Gatilhos de exemplo</label><input id="gd-gat" placeholder="separados por vírgula" value={gatilhos} onChange={(e) => setGatilhos(e.target.value)} /></div>
-            <div className="edit-field"><label htmlFor="gd-png">Figura PNG</label><input id="gd-png" type="file" accept="image/png,.png" onChange={(e) => setFigura(e.target.files?.[0] ?? null)} /></div>
-            <div className="edit-actions">
-              <button type="button" className="auth-btn" disabled={criando || !nome.trim() || !figura} onClick={() => void criar()}>Criar gesto</button>
-              {erroDoForm ? <span className="cp-review-error" role="status">{erroDoForm}</span> : null}
-            </div>
-          </div>
+          <NovoGestoForm onCriado={recarregar} />
         </details>
       ) : null}
 

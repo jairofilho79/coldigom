@@ -3743,6 +3743,7 @@ button.linkish {
 .ge-picker-nome { font-weight: 600; }
 .ge-picker-exemplos { color: var(--text-secondary); font-size: 0.8rem; }
 .ge-picker-aviso { padding: 16px; color: var(--text-secondary); }
+.ge-picker-form { padding: 12px; overflow: auto; }
 
 .ge-page { max-width: 1400px; }
 .ge-abas { display: none; gap: 6px; margin: 8px 0; }

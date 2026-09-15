@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { GestureDocument, InstructionKind, Item } from '../../lib/gestures/schema';
 import { INSTRUCTION_KINDS } from '../../lib/gestures/schema';
-import type { Indice } from '../../lib/gestures/dictionary';
+import type { GestureEntry, Indice } from '../../lib/gestures/dictionary';
 import { achatar, chaveDoCaminho, irmaosContiguos, ordenar, pai, type Caminho, type Cartao } from '../../lib/gestures/flatten';
 import {
   adicionarLinha, definirInstrucao, definirRepeticoes, desagrupar, editarLinha, editarTexto, envolver, inserirApos, mover,
@@ -21,6 +21,8 @@ type Props = {
   erroNoCaminho?: string | null;
   /** Contador: quando muda, abre o seletor em modo inserir (Ctrl+Enter da página). */
   abrirSeletor?: number;
+  /** Gesto criado de dentro do seletor: a página põe no índice; aqui ele entra no documento. */
+  onGestoCriado?: (entrada: GestureEntry) => void;
 };
 
 const ROTULO_DO_TIPO: Record<string, string> = {
@@ -34,7 +36,7 @@ const mesmoCaminho = (a: Caminho | null, b: Caminho | null) => JSON.stringify(a)
  * projeção de `achatar`. Seleção contígua entre irmãos é estado daqui; o foco é
  * da página, porque a pré-visualização ao lado o acompanha.
  */
-export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCaminho, abrirSeletor }: Props) {
+export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCaminho, abrirSeletor, onGestoCriado }: Props) {
   const cartoes = useMemo(() => achatar(doc), [doc]);
   const [selecao, setSelecao] = useState<Caminho[]>([]);
   const [vezes, setVezes] = useState(2);
@@ -258,6 +260,7 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
         indice={indice}
         aberto={picker !== null}
         onFechar={() => setPicker(null)}
+        onCriado={onGestoCriado}
         onEscolher={(id) => {
           if (!picker) return;
           if (picker.modo === 'trocar' && picker.caminho) onMudar(trocarGesto(doc, picker.caminho, id));

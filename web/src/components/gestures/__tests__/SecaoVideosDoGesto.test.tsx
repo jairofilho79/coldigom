@@ -72,6 +72,17 @@ describe('SecaoVideosDoGesto — edição', () => {
     expect(put).not.toHaveBeenCalled();
   });
 
+  it('campo Tempos reflete os tempos salvos depois que a lista é atualizada', () => {
+    const v: GestureVideo = { materialId: 'y1', praiseId: 'p1', praiseNumber: '9', praiseName: 'Nove', url: 'https://youtu.be/aaaaaaaaaaa', seconds: [] };
+    const { rerender } = render(
+      <MemoryRouter><SecaoVideosDoGesto gestureId="aaaaaaaaaaaa" videos={[v]} podeEditar onAlterado={vi.fn()} /></MemoryRouter>
+    );
+    rerender(
+      <MemoryRouter><SecaoVideosDoGesto gestureId="aaaaaaaaaaaa" videos={[{ ...v, seconds: [10, 141] }]} podeEditar onAlterado={vi.fn()} /></MemoryRouter>
+    );
+    expect(screen.getByRole('textbox', { name: 'Tempos' })).toHaveValue('0:10, 2:21');
+  });
+
   it('Desligar chama a API e avisa a página; erro da API aparece', async () => {
     const user = userEvent.setup();
     const del = vi.spyOn(api, 'deleteGestureVideo').mockResolvedValueOnce({ ...entrada, videos: [videos[1]] }).mockRejectedValueOnce(new Error('Video is not linked to this gesture'));

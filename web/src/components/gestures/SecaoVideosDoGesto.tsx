@@ -48,7 +48,10 @@ export function SecaoVideosDoGesto({ gestureId, videos, podeEditar, onAlterado }
         <ul className="gd-videos">
           {videos.map((v) => (
             <ItemDeVideo
-              key={v.materialId}
+              // `texto` só nasce do `seconds` salvo; sem a chave carregar os
+              // tempos, remontar não acontece e o campo fica com o texto
+              // digitado antes do salvar, enquanto os chips já mudaram.
+              key={`${v.materialId}:${v.seconds.join(',')}`}
               video={v}
               podeEditar={podeEditar}
               ocupado={ocupado}

@@ -1,11 +1,28 @@
 from __future__ import annotations
 
+import argparse
 import difflib
+import os
 import re
 import sqlite3
+import sys
+import time
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
+
+from core.findings import Finding, Motivos, write_findings
+from core.paths import HASHES_DB, OUT, PLPCG_DB, SNAPSHOT_DB, ensure_out
+from core.plpcg import (
+    LADO_PLPCG,
+    abrir_hashes,
+    conectar as conectar_plpcg,
+    entradas,
+    hashes_coldigom,
+    hashes_de,
+    meta,
+)
+from core.snapshot import conectar
 
 DETECTOR = "plpcg_crosswalk"
 
@@ -49,6 +66,8 @@ TAGS_POR_CLASSE = {
     "PES": ("PES",),
     "PES CIAs": ("PES", "CIAs"),
 }
+
+CATEGORIAS = ("Partitura", "Cifra nível I", "Cifra nível II", "Cifra", "Gestos em Gravura")
 
 FAIXAS_CROSSWALK = ("alta", "media", "faltante", "ambiguo", "sem_louvor")
 
@@ -384,3 +403,196 @@ def cruzar(entrada: dict, acervo: Acervo, sha: str | None, hc: dict[str, set[str
     # material traz a sua
     r.candidatos = _candidatos(P, [e for e in evid if e in EVIDENCIAS_L], H, Pth, acervo, fam)
     return r
+
+
+# --- findings -----------------------------------------------------------------
+
+def _finding(run_id: str, e: dict, sha: str | None, r: Resultado, checksum: str) -> Finding:
+    confidence, acao = CONTRATO[r.faixa]
+    return Finding(
+        run_id=run_id,
+        detector=DETECTOR,
+        target_type="plpcg",
+        target_id=e["pdf_id"],
+        praise_id=r.praise_id,
+        action=acao,
+        confidence=confidence,
+        proposed=r.material_id,
+        evidence={
+            "faixa": r.faixa,
+            "evidencias": r.evidencias,
+            "nome": e["nome"],
+            "numero": e["numero"],
+            "classificacao": e["classificacao"],
+            "categoria": e["categoria"],
+            "group_id": e["group_id"],
+            "short_id": e["short_id"],
+            "path": e["caminho"],
+            "sha256": sha,
+            "kind_esperado": KIND_ESPERADO[e["categoria"]],
+            "kind_coldigom": r.kind_coldigom,
+            "material_id": r.material_id,
+            "nota": r.nota,
+            "candidatos": r.candidatos,
+            "checksum": checksum,
+        },
+    )
+
+
+def _mais_parecido(gslug: str, acervo: Acervo) -> dict | None:
+    """O nome mais próximo no coldigom, como aviso: 'se isto já existe, é
+    provavelmente este'. cutoff=0 devolve sempre o melhor, por pior que seja."""
+    if not acervo.por_slug:
+        return None
+    perto = difflib.get_close_matches(gslug, list(acervo.por_slug), n=1, cutoff=0.0)
+    if not perto:
+        return None
+    pid = acervo.por_slug[perto[0]][0]
+    score = difflib.SequenceMatcher(None, gslug, perto[0]).ratio()
+    return {"praise_id": pid, "nome": acervo.praises[pid]["name"], "score": round(score, 2)}
+
+
+def _finding_grupo(run_id: str, gid: str, itens: list[tuple[dict, Resultado]],
+                   acervo: Acervo, checksum: str) -> Finding:
+    """Um louvor que só existe no PLPCG (D4): praise + tags + um import por entrada."""
+    gnum, gslug = gid.split(":", 1)
+    nome = Counter(e["nome"] for e, _ in itens).most_common(1)[0][0]
+    classificacao = itens[0][0]["classificacao"]
+    # number só quando o grupo é numerado E é coletânea: um avulso com
+    # número no PLPCG é número de pasta, não da coletânea (spec §7).
+    numero = gnum if gnum.isdigit() and classe_base(classificacao).startswith("Coletânea") else ""
+    return Finding(
+        run_id=run_id,
+        detector=DETECTOR,
+        target_type="plpcg_grupo",
+        target_id=gid,
+        praise_id=None,
+        action="create_praise_plpcg",
+        confidence="alta",
+        proposed=nome,
+        evidence={
+            "faixa": "sem_louvor",
+            "nome": nome,
+            "numero": numero,
+            "classificacao": classificacao,
+            "tags": tags_propostas(classificacao),
+            "entradas": [
+                {"pdf_id": e["pdf_id"], "categoria": e["categoria"], "path": e["caminho"],
+                 "kind": KIND_ESPERADO[e["categoria"]]}
+                for e, _ in itens
+            ],
+            "parecido": _mais_parecido(gslug, acervo),
+            "checksum": checksum,
+        },
+    )
+
+
+def detectar(
+    snap: sqlite3.Connection,
+    todas: list[dict],
+    checksum: str,
+    hp: dict[str, str],
+    hc: dict[str, set[str]],
+    run_id: str,
+) -> tuple[list[Finding], Motivos]:
+    acervo = Acervo.carregar(snap)
+    findings: list[Finding] = []
+    motivos = Motivos()
+    por_grupo: dict[str, list[tuple[dict, Resultado]]] = defaultdict(list)
+
+    for e in todas:
+        if e["categoria"] not in KIND_ESPERADO:
+            motivos.excluir(f"categoria fora do mapa: {e['categoria']}")
+            continue
+        if ":" not in (e.get("group_id") or ""):
+            motivos.excluir("sem group_id — o PLPCG não diz qual louvor é")
+            continue
+        r = cruzar(e, acervo, hp.get(e["caminho"]), hc)
+        findings.append(_finding(run_id, e, hp.get(e["caminho"]), r, checksum))
+        por_grupo[e["group_id"]].append((e, r))
+
+    # Um grupo inteiro sem louvor é um louvor novo. Grupo misto (uma entrada
+    # achou o louvor pelo hash, outra não) NÃO é: vai para o site.
+    for gid, itens in sorted(por_grupo.items()):
+        if all(r.faixa == "sem_louvor" for _, r in itens):
+            findings.append(_finding_grupo(run_id, gid, itens, acervo, checksum))
+
+    return findings, motivos
+
+
+def resumo(findings: list[Finding]) -> str:
+    """A tabela do spec §2.3 (categoria × faixa) e o resumo por louvor."""
+    ents = [f for f in findings if f.target_type == "plpcg"]
+    tab = Counter((f.evidence["categoria"], f.evidence["faixa"]) for f in ents)
+    linhas = [
+        "| categoria | " + " | ".join(FAIXAS_CROSSWALK) + " | total |",
+        "|---|" + "---|" * (len(FAIXAS_CROSSWALK) + 1),
+    ]
+    for cat in CATEGORIAS:
+        ns = [tab[(cat, fx)] for fx in FAIXAS_CROSSWALK]
+        linhas.append(f"| {cat} | " + " | ".join(str(n) for n in ns) + f" | {sum(ns)} |")
+    tot = [sum(tab[(c, fx)] for c in CATEGORIAS) for fx in FAIXAS_CROSSWALK]
+    linhas.append("| **total** | " + " | ".join(str(n) for n in tot) + f" | {len(ents)} |")
+
+    por_grupo: dict[str, list[str]] = defaultdict(list)
+    for f in ents:
+        por_grupo[f.evidence["group_id"]].append(f.evidence["faixa"])
+    g: Counter = Counter()
+    for fx in por_grupo.values():
+        if all(x == "alta" for x in fx):
+            g["todas alta"] += 1
+        elif all(x == "sem_louvor" for x in fx):
+            g["ausente no coldigom"] += 1
+        elif "sem_louvor" in fx or "ambiguo" in fx:
+            g["precisa de revisão"] += 1
+        else:
+            g["alta/média/faltante sem ambiguidade"] += 1
+    linhas += ["", f"Louvores do PLPCG (grupos): {len(por_grupo)}"]
+    for k in ("todas alta", "alta/média/faltante sem ambiguidade", "precisa de revisão", "ausente no coldigom"):
+        linhas.append(f"- {k}: {g[k]}")
+
+    ev = Counter("+".join(f.evidence["evidencias"]) for f in ents if f.evidence["faixa"] == "alta")
+    linhas += ["", "Evidência na faixa alta:"]
+    for k, n in ev.most_common():
+        linhas.append(f"- {k}: {n}")
+    return "\n".join(linhas)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--db", default=SNAPSHOT_DB, help="snapshot do coldigom")
+    ap.add_argument("--plpcg", default=PLPCG_DB, help="exportação do PLPCG (python3 -m core.plpcg)")
+    ap.add_argument("--hashes", default=HASHES_DB)
+    ap.add_argument("--out", default=os.path.join(OUT, "plpcg_crosswalk"))
+    args = ap.parse_args(argv)
+
+    ensure_out()
+    os.makedirs(args.out, exist_ok=True)
+    run_id = time.strftime("%Y-%m-%dT%H%MZ-", time.gmtime()) + DETECTOR
+
+    snap = conectar(args.db)
+    plp = conectar_plpcg(args.plpcg)
+    h = abrir_hashes(args.hashes)
+    todas = entradas(plp)
+    checksum = meta(plp).get("checksum", "")
+
+    findings, motivos = detectar(snap, todas, checksum, hashes_de(h, LADO_PLPCG), hashes_coldigom(h), run_id)
+
+    print(f"\n{DETECTOR} — {len(todas)} entradas do PLPCG (checksum {checksum[:12]})")
+    print("exclusões:")
+    print(motivos.tabela())
+    texto = resumo(findings)
+    print()
+    print(texto)
+
+    fj = os.path.join(args.out, "findings.jsonl")
+    write_findings(findings, fj)
+    with open(os.path.join(args.out, "resumo.md"), "w", encoding="utf-8") as f:
+        f.write(f"# {DETECTOR} — {run_id}\n\nchecksum do catálogo PLPCG: `{checksum}`\n\n{texto}\n")
+    print(f"\nfindings: {fj}")
+    print(f"resumo:   {os.path.join(args.out, 'resumo.md')}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

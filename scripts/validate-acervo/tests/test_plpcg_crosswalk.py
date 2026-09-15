@@ -9,7 +9,9 @@ from detectors.plpcg_crosswalk import (
     chaves_plpcg,
     classe_ok,
     cruzar,
+    detectar,
     numero_int,
+    resumo,
     slug,
     tags_propostas,
 )
@@ -468,3 +470,131 @@ def test_nome_aproximado_sem_material_do_kind_fica_em_media_nao_faltante(tmp_pat
     assert r.faixa == "media" and "nome~" in r.evidencias
     assert r.praise_id == "p1" and r.material_id is None
     assert r.nota == "louvor casado, sem material desse kind"
+
+
+# --- detectar / resumo ---------------------------------------------------------
+
+def test_detectar_emite_um_finding_por_entrada_com_o_contrato(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "m31", "p31", "Sheet Music")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                 "Partitura", "031:meu-deus-meu-pai", short_id="0457")
+    findings, motivos = detectar(conn, [e], "chk-1", {e["caminho"]: "sha-31"}, {"sha-31": {"m31"}}, "r1")
+    assert motivos.total() == 0
+    assert len(findings) == 1
+    f = findings[0]
+    assert (f.detector, f.target_type, f.target_id) == ("plpcg_crosswalk", "plpcg", e["pdf_id"])
+    assert (f.action, f.confidence) == ("link_plpcg", "alta")
+    assert f.praise_id == "p31" and f.proposed == "m31" and f.field is None
+    ev = f.evidence
+    assert ev["faixa"] == "alta" and ev["evidencias"] == ["num", "hash"]
+    assert ev["short_id"] == "0457" and ev["group_id"] == "031:meu-deus-meu-pai"
+    assert ev["path"] == "ColAdultos/031.pdf" and ev["sha256"] == "sha-31"
+    assert ev["kind_esperado"] == "Sheet Music" and ev["kind_coldigom"] == "Sheet Music"
+    assert ev["checksum"] == "chk-1" and ev["candidatos"][0]["material_id"] == "m31"
+
+
+def test_faixas_viram_confidence_e_acao_pelo_contrato(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "a31", "p31", "Audio", tipo="mp3")
+    _praise(conn, "p1", "Alto preço", "", ("Avulsos",))
+    _material(conn, "mA", "p1", "Choir")
+    _material(conn, "mB", "p1", "Score")
+    conn.commit()
+    faltante = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                        "Partitura", "031:meu-deus-meu-pai")
+    ambiguo = _entrada("Adicionados/Alto preço/Partitura.pdf", "Alto preço", "", "Avulsos Diversos",
+                       "Partitura", "avulso:alto-preco")
+    findings, _ = detectar(conn, [faltante, ambiguo], "chk", {}, {}, "r1")
+    por_id = {f.target_id: f for f in findings}
+    assert (por_id[faltante["pdf_id"]].action, por_id[faltante["pdf_id"]].confidence) == ("import_plpcg_material", "alta")
+    assert (por_id[ambiguo["pdf_id"]].action, por_id[ambiguo["pdf_id"]].confidence) == ("link_plpcg", "baixa")
+    assert por_id[ambiguo["pdf_id"]].proposed is None
+
+
+def test_grupo_todo_sem_louvor_ganha_finding_de_criacao(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Ainda há esperança", "", ("Avulsos",))
+    conn.commit()
+    cifra = _entrada("Adicionados/Ainda há tempo/Cifra.pdf", "Ainda há tempo", "", "Avulsos Diversos",
+                     "Cifra", "avulso:ainda-ha-tempo")
+    gestos = _entrada("Adicionados/Ainda há tempo/Gestos CIAs.pdf", "Ainda há tempo", "", "Avulsos Diversos",
+                      "Gestos em Gravura", "avulso:ainda-ha-tempo")
+    findings, _ = detectar(conn, [cifra, gestos], "chk", {}, {}, "r1")
+    assert len(findings) == 3
+    entradas_ = [f for f in findings if f.target_type == "plpcg"]
+    assert all((f.action, f.confidence, f.praise_id) == ("import_plpcg_material", "media", None) for f in entradas_)
+    assert all(f.evidence["faixa"] == "sem_louvor" for f in entradas_)
+
+    g = next(f for f in findings if f.target_type == "plpcg_grupo")
+    assert g.target_id == "avulso:ainda-ha-tempo"
+    assert (g.action, g.confidence, g.proposed) == ("create_praise_plpcg", "alta", "Ainda há tempo")
+    assert g.evidence["numero"] == "" and g.evidence["tags"] == ["Avulsos"]
+    assert [x["pdf_id"] for x in g.evidence["entradas"]] == [cifra["pdf_id"], gestos["pdf_id"]]
+    assert g.evidence["entradas"][1]["kind"] == "CIAs Gestures"
+    assert g.evidence["parecido"]["praise_id"] == "p1" and 0 < g.evidence["parecido"]["score"] < 1
+
+
+def test_grupo_numerado_da_coletanea_e_criado_com_numero_e_tags(tmp_path):
+    conn = _mundo(tmp_path)
+    conn.commit()
+    e = _entrada("ColCIAs/999.pdf", "Novo hino", "999", "Coletânea CIAs", "Partitura", "999:novo-hino")
+    findings, _ = detectar(conn, [e], "chk", {}, {}, "r1")
+    g = next(f for f in findings if f.target_type == "plpcg_grupo")
+    assert g.evidence["numero"] == "999" and g.evidence["tags"] == ["CIAs", "Coletânea"]
+    assert g.evidence["parecido"] is None
+
+
+def test_grupo_misto_nao_ganha_finding_de_criacao(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Nome completamente outro", "", ("Avulsos",))
+    _material(conn, "m1", "p1", "Chord Chart")
+    conn.commit()
+    com_hash = _entrada("Adicionados/Zzz qqq/Cifra.pdf", "Zzz qqq", "", "Avulsos Diversos", "Cifra", "avulso:zzz-qqq")
+    sem_nada = _entrada("Adicionados/Zzz qqq/Gestos CIAs.pdf", "Zzz qqq", "", "Avulsos Diversos",
+                        "Gestos em Gravura", "avulso:zzz-qqq")
+    findings, _ = detectar(conn, [com_hash, sem_nada], "chk", {com_hash["caminho"]: "sha-1"}, {"sha-1": {"m1"}}, "r1")
+    assert [f.target_type for f in findings] == ["plpcg", "plpcg"]
+    assert findings[0].evidence["faixa"] == "media" and findings[1].evidence["faixa"] == "sem_louvor"
+
+
+def test_categoria_fora_do_mapa_e_excluida_com_motivo(tmp_path):
+    conn = _mundo(tmp_path)
+    conn.commit()
+    e = _entrada("Adicionados/X/Video.pdf", "X", "", "Avulsos Diversos", "Vídeo", "avulso:x")
+    findings, motivos = detectar(conn, [e], "chk", {}, {}, "r1")
+    assert findings == [] and motivos.total() == 1
+    assert "categoria fora do mapa: Vídeo" in motivos.tabela()
+
+
+def test_finding_id_nao_muda_entre_rodadas(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "m31", "p31", "Sheet Music")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                 "Partitura", "031:meu-deus-meu-pai")
+    a, _ = detectar(conn, [e], "chk", {}, {}, "r1")
+    b, _ = detectar(conn, [e], "chk", {}, {}, "r2")
+    assert a[0].finding_id == b[0].finding_id and a[0].run_id != b[0].run_id
+
+
+def test_resumo_reproduz_a_tabela_por_categoria_e_faixa(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "m31", "p31", "Sheet Music")
+    conn.commit()
+    alta = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                    "Partitura", "031:meu-deus-meu-pai")
+    novo = _entrada("Adicionados/Zzz/Cifra.pdf", "Zzz", "", "Avulsos Diversos", "Cifra", "avulso:zzz")
+    findings, _ = detectar(conn, [alta, novo], "chk", {alta["caminho"]: "s"}, {"s": {"m31"}}, "r1")
+    texto = resumo(findings)
+    assert "| Partitura | 1 | 0 | 0 | 0 | 0 | 1 |" in texto
+    assert "| Cifra | 0 | 0 | 0 | 0 | 1 | 1 |" in texto
+    assert "| **total** | 1 | 0 | 0 | 0 | 1 | 2 |" in texto
+    assert "Louvores do PLPCG (grupos): 2" in texto
+    assert "- todas alta: 1" in texto and "- ausente no coldigom: 1" in texto
+    assert "- num+hash: 1" in texto

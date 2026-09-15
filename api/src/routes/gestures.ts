@@ -7,6 +7,8 @@ import {
   lerVersao,
   linhaParaEntrada,
   usosDoGesto,
+  videosDoDicionario,
+  videosDoGesto,
   type LinhaDoDicionario,
 } from '../gestures/dicionario';
 import { requireAuth } from '../middleware';
@@ -63,11 +65,12 @@ export function registerGesturesRoutes(app: App): void {
       const linhas = await c.env.DB
         .prepare(`SELECT ${COLUNAS} FROM gesture_dictionary ORDER BY name, id`)
         .all<LinhaDoDicionario>();
+      const videos = await videosDoDicionario(c.env.DB);
       const corpo = {
         schema: DICTIONARY_SCHEMA,
         version,
         generatedAt: new Date().toISOString(),
-        gestures: (linhas.results ?? []).map(linhaParaEntrada),
+        gestures: (linhas.results ?? []).map((l) => linhaParaEntrada(l, videos.get(l.id))),
       };
       return c.json(corpo, 200, { ETag: etag, 'Cache-Control': CACHE });
     } catch (error) {
@@ -83,7 +86,8 @@ export function registerGesturesRoutes(app: App): void {
       const linha = await lerLinha(c.env.DB, id);
       if (!linha) return c.json({ error: 'Gesture not found' }, 404);
       const usages = await usosDoGesto(c.env.DB, id);
-      return c.json({ data: { ...linhaParaEntrada(linha), usages } });
+      const videos = await videosDoGesto(c.env.DB, id);
+      return c.json({ data: { ...linhaParaEntrada(linha, videos), usages } });
     } catch (error) {
       console.error('Error reading gesture:', error);
       return c.json({ error: 'Failed to read gesture' }, 500);
@@ -161,7 +165,7 @@ export function registerGesturesRoutes(app: App): void {
         {
           data: linha
             ? linhaParaEntrada(linha)
-            : { id, name, description, exampleTriggers: exemplos, image: imageKey, gif: null, status: 'active', replacedBy: null, updatedAt: new Date().toISOString() },
+            : { id, name, description, exampleTriggers: exemplos, image: imageKey, gif: null, status: 'active', replacedBy: null, updatedAt: new Date().toISOString(), videos: [] },
         },
         201
       );

@@ -69,10 +69,10 @@ existe em outro louvor, quando o candidato único não tem material da família.
 
 Nenhuma dessas ações escreve ainda: o `apply` as recusa nominalmente
 ("chega com a Fase C da migração PLPCG"). A migração 019
-(`api/migrations/019_plpcg_crosswalk.sql`) cria a tabela `plpcg_crosswalk`;
-aplicar com `cd api && wrangler d1 execute coldigom --remote
---file=migrations/019_plpcg_crosswalk.sql` só depois da confirmação do dono
-— até lá ela não existe em produção.
+(`api/migrations/019_plpcg_crosswalk.sql`) criou a tabela `plpcg_crosswalk`
+em produção em 15/09/2026, vazia (0 linhas, dois índices); é idempotente e
+pode ser re-aplicada com `cd api && wrangler d1 execute coldigom --remote
+--file=migrations/019_plpcg_crosswalk.sql`.
 
 **A ordem dos três passos é o portão de promoção (spec §5.2), não estilo.**
 Simular, medir com o gabarito preenchido, e só então aplicar. `core.gold`

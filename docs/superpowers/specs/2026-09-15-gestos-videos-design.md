@@ -105,7 +105,11 @@ Efeito colateral em rota existente: `DELETE /api/materials/:materialId` — o
 `ON DELETE CASCADE` já limpa as ocorrências, mas o ETag não mudaria. Quando o material
 apagado for `youtube` **e** tiver ocorrências, a exclusão vai no mesmo batch com o
 bump de versão (mesma razão do `gesture_usage`, já tratada ali). Não há rota de
-exclusão de louvor; a fusão de louvores move materiais, não os apaga.
+exclusão de louvor isolada, mas `POST /api/praises/:keeperId/merge` apaga o louvor
+fonte (`DELETE FROM praises WHERE id = ?`) depois de mover só os materiais
+escolhidos para importar: os que ficam para trás — e, com a 020, as ocorrências
+de vídeo deles — somem pela cascata, sem bump; os importados mudam de
+`praise_id` e continuam vivos.
 
 Sem rota nova para escolher o louvor: a tela usa `GET /api/praises?q=` e
 `GET /api/praises/:id` (materiais já vêm com `type` e `url`).
@@ -186,3 +190,16 @@ Web:
 2. Migração 020 em `api/migrations/`, aplicada em produção pelo dono à mão **antes**
    do deploy do Worker (a rota de leitura faz JOIN na tabela nova).
 3. Deploy segue a regra da casa: só quando `develop` for mesclado em `main`.
+
+## Pendências (follow-up)
+
+1. Merge de louvores (`POST /api/praises/:keeperId/merge`) e
+   `PATCH /api/praises/:id` (nome/número) mudam `praiseId`/`praiseName`/
+   `praiseNumber` em `videos` sem bump — o coldigui só vê depois do próximo
+   bump de outra escrita ou da expiração do cache. `PATCH /api/materials/:id`
+   já bumpa quando toca `url` ou `type` (ver acima); esses dois casos ficam.
+2. `linkNoTempo` não reconhece `/live/<id>`, `/embed/<id>`, nem
+   `youtube-nocookie.com`.
+3. A busca de louvor em "Adicionar vídeo" não tem debounce nem abort.
+4. Falta índice `UNIQUE (gesture_id, material_id, seconds)` como cinto e
+   suspensório contra ocorrência duplicada.

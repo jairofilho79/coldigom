@@ -8,7 +8,8 @@ import * as api from '../../services/api';
 import { GestureDetailPage } from '../GestureDetailPage';
 
 const base = {
-  id: 'aaaaaaaaaaaa', name: 'Quero', description: 'Mãos ao peito', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null, videos: [],
+  id: 'aaaaaaaaaaaa', name: 'Quero', description: 'Mãos ao peito', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null,
+  videos: [{ materialId: 'y1', praiseId: 'p1', praiseNumber: '182', praiseName: 'Quero viver', url: 'https://youtu.be/aaaaaaaaaaa', seconds: [83] }],
   status: 'active' as const, replacedBy: null, updatedAt: 't',
 };
 const entrada = {
@@ -50,7 +51,10 @@ describe('GestureDetailPage', () => {
     // GIF saiu de uso: nem placeholder nem input. A referência em movimento vai
     // ser o vídeo do louvor no YouTube.
     expect(screen.queryByText(/GIF/)).toBeNull();
-    expect(screen.getByRole('link', { name: /182/ })).toHaveAttribute('href', '/praise/p1/gestos/g1');
+    // "182" aparece duas vezes agora (o uso em "Usado em" e o vídeo em "Vídeos"),
+    // ambos com o mesmo nome acessível — desambigua pelo href.
+    const usoLink = screen.getAllByRole('link', { name: /182/ }).find((l) => l.getAttribute('href') === '/praise/p1/gestos/g1');
+    expect(usoLink).toBeDefined();
     expect(screen.getAllByText(/2 vez/).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Salvar alterações' })).toBeNull();
   });
@@ -119,5 +123,17 @@ describe('GestureDetailPage', () => {
     await waitFor(() => expect(screen.getByText(/Substituído por/)).toBeInTheDocument());
     expect(screen.getByRole('link', { name: /Viver/ })).toHaveAttribute('href', '/gestos/dicionario/bbbbbbbbbbbb');
     expect(screen.queryByRole('button', { name: 'Substituir' })).toBeNull();
+  });
+
+  it('mostra a seção Vídeos com o link no tempo e, ao desligar, troca a entrada pela resposta', async () => {
+    const user = userEvent.setup();
+    montar();
+    vi.spyOn(api, 'deleteGestureVideo').mockResolvedValue({ ...base, videos: [] });
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Vídeos' })).toBeInTheDocument());
+    expect(screen.getByRole('link', { name: 'Abrir no YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=aaaaaaaaaaa&t=83s');
+    await user.click(screen.getByRole('button', { name: 'Desligar' }));
+    expect(await screen.findByText('Nenhum vídeo ligado a este gesto.')).toBeInTheDocument();
+    // a lista de usos continua: a resposta da rota não traz usages, a página preserva os dela
+    expect(screen.getByRole('link', { name: /182/ })).toBeInTheDocument();
   });
 });

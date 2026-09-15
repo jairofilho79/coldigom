@@ -52,7 +52,8 @@ por `PLPCG_ADMIN_WORKER` e `PLPCJF_ASSETS`. O hash é incremental em
 recalculado; apague a linha para forçar.
 
 A **faixa do cruzamento** (§5.1 do spec) vive em `evidence["faixa"]`; o
-`confidence` do finding é o contrato do arnês, pelo mapa:
+`confidence` do finding é o contrato do arnês, pelo mapa — as cinco primeiras
+linhas vêm de `CONTRATO`; a do louvor inteiro é decidida em `_finding_grupo`:
 
 | faixa | confidence | action | quem decide |
 |---|---|---|---|
@@ -63,14 +64,23 @@ A **faixa do cruzamento** (§5.1 do spec) vive em `evidence["faixa"]`; o
 | sem_louvor (entrada) | media | `import_plpcg_material` | o site, ou o grupo abaixo |
 | sem_louvor (grupo inteiro, `target_type = plpcg_grupo`) | alta | `create_praise_plpcg` | o apply (D4), depois da pré-visualização no site |
 
+Evidência nova na faixa média: `hash-fora` — arquivo idêntico (mesmo sha256)
+existe em outro louvor, quando o candidato único não tem material da família.
+
 Nenhuma dessas ações escreve ainda: o `apply` as recusa nominalmente
-("chega com a Fase C da migração PLPCG"). A tabela `plpcg_crosswalk`
-(migração 019) já existe no D1, vazia.
+("chega com a Fase C da migração PLPCG"). A migração 019
+(`api/migrations/019_plpcg_crosswalk.sql`) cria a tabela `plpcg_crosswalk`;
+aplicar com `cd api && wrangler d1 execute coldigom --remote
+--file=migrations/019_plpcg_crosswalk.sql` só depois da confirmação do dono
+— até lá ela não existe em produção.
 
 **A ordem dos três passos é o portão de promoção (spec §5.2), não estilo.**
 Simular, medir com o gabarito preenchido, e só então aplicar. `core.gold`
 sai com código != 0 tanto quando a faixa alta erra quanto quando não há
 veredito nenhum para medir — gabarito em branco não é gabarito zerado.
+
+Cada rodada commita `resumo.md`; `findings.jsonl` (~7 MB) só entra no git na
+rodada que alimenta um gabarito ou uma `execucao/`.
 
 Testes: `python3 -m pytest tests/ -v`
 

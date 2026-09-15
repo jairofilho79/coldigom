@@ -292,6 +292,28 @@ export function registerGesturesRoutes(app: App): void {
     }
   });
 
+  // DELETE …/:id/videos/:materialId — desliga o par inteiro (todas as ocorrências).
+  app.delete('/api/gestures/dictionary/:id/videos/:materialId', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const materialId = c.req.param('materialId') as string;
+    try {
+      const linha = await lerLinha(c.env.DB, id);
+      if (!linha) return c.json({ error: 'Gesture not found' }, 404);
+      const par = await c.env.DB
+        .prepare(`SELECT 1 AS um FROM gesture_video_occurrences WHERE gesture_id = ? AND material_id = ? LIMIT 1`)
+        .bind(id, materialId)
+        .first();
+      if (!par) return c.json({ error: 'Video is not linked to this gesture' }, 404);
+      await escreverNoDicionario(c.env.DB, [
+        c.env.DB.prepare(`DELETE FROM gesture_video_occurrences WHERE gesture_id = ? AND material_id = ?`).bind(id, materialId),
+      ]);
+      return c.json({ data: linhaParaEntrada(linha, await videosDoGesto(c.env.DB, id)) });
+    } catch (error) {
+      console.error('Error unlinking gesture video:', error);
+      return c.json({ error: 'Failed to unlink gesture video' }, 500);
+    }
+  });
+
   // POST …/:id/replace-with — funde dois gestos: o de origem vira 'deprecated' com
   // replaced_by, SEMPRE e no batch. Reescrever os documentos é faxina opcional: a
   // resolução de alias já é do cliente, e reescrever N objetos no R2 numa

@@ -206,3 +206,24 @@ describe('PUT /api/gestures/dictionary/:id/videos/:materialId', () => {
     expect((await ligar('nao é json')).res.status).toBe(400);
   });
 });
+
+describe('DELETE /api/gestures/dictionary/:id/videos/:materialId', () => {
+  it('apaga o par num batch com o bump e responde a entrada', async () => {
+    const { db, lotes } = banco({ par: true });
+    const res = await app.request('/api/gestures/dictionary/c687580e7682/videos/y1', { method: 'DELETE', headers: await sessao() }, env(db));
+    expect(res.status).toBe(200);
+    expect(lotes).toHaveLength(1);
+    expect(lotes[0][0].sql).toMatch(/DELETE FROM gesture_video_occurrences WHERE gesture_id = \? AND material_id = \?/);
+    expect(lotes[0][0].args).toEqual(['c687580e7682', 'y1']);
+    bumpNoFim(lotes[0]);
+    expect(((await res.json()) as { data: { videos: unknown } }).data.videos).toEqual([]);
+  });
+
+  it('404 quando o par não existe ou o gesto não existe; nada é escrito', async () => {
+    const semPar = banco({ par: false });
+    expect((await app.request('/api/gestures/dictionary/c687580e7682/videos/y1', { method: 'DELETE', headers: await sessao() }, env(semPar.db))).status).toBe(404);
+    expect(semPar.lotes).toHaveLength(0);
+    const semGesto = banco({ linhas: [], par: true });
+    expect((await app.request('/api/gestures/dictionary/c687580e7682/videos/y1', { method: 'DELETE', headers: await sessao() }, env(semGesto.db))).status).toBe(404);
+  });
+});

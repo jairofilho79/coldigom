@@ -1,0 +1,62 @@
+praise_id: bb38bd5c-8f92-4557-8f08-8a5b3b097be5
+praise_name: Clama, ó igreja
+praise_number: '010'
+praise_author: R. C. B. Z.
+praise_rhythm: Básico
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 3X
+
+  CLAMA, Ó IGREJA,
+
+  CLAMA PELO SANGUE DE JESUS.
+
+  NESTE SANGUE HÁ PODER,
+
+  VIDA, PAZ, LIBERTAÇÃO,
+
+  NESTE SANGUE PODEROSO HÁ PERDÃO.
+
+  /FINAL
+
+  NESTE SANGUE PODEROSO HÁ PERDÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: bfa6b1e2-c865-48c0-936b-5b727330e7bc
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d56346c3-4683-4c80-ab01-05d38db5eddb
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3cebf1ad-b818-48ff-9657-3f4a798fd6ec
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c68c8f56-e9a0-4dd9-b658-89370a2de973
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 788179f5-a6e7-4571-a6fc-4496234cecb7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 3cebf1ad-b818-48ff-9657-3f4a798fd6ec
+- praise_material_id: a3b45c8d-c61e-45a5-9cb3-5935e0f17704
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: c68c8f56-e9a0-4dd9-b658-89370a2de973
+- praise_material_id: bee0e107-23bb-45f4-b825-27f678831987
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bfa6b1e2-c865-48c0-936b-5b727330e7bc
+  song_title: 10 - CLAMA, Ó IGREJA
+- praise_material_id: 37044276-a0f6-4821-8d94-3e64f0e250fe
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bfa6b1e2-c865-48c0-936b-5b727330e7bc
+  song_title: 11 - CLAMO A TI, MEU SENHOR E PAI (UMA NOVA CANÇÃO)

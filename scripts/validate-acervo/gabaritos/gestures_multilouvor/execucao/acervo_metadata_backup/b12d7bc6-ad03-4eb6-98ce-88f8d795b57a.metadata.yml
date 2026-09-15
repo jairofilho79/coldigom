@@ -1,0 +1,60 @@
+praise_id: b12d7bc6-ad03-4eb6-98ce-88f8d795b57a
+praise_name: Deus falou comigo
+praise_number: '060'
+praise_author: J.G.S.N.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  DEUS FALOU COMIGO,
+
+  DEUS QUER FALAR COM VOCÊ;
+
+  DEUS FALOU COMIGO
+
+  QUE A PORTA DO CÉU É JESUS,
+
+  A PORTA DO CÉU É JESUS,
+
+  A PORTA DO CÉU É JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3baeefbf-cbe9-4826-a3a4-5214938e5a68
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f736ba3a-50c6-4ed3-8a68-9a3e7590e24e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8cae062e-33e1-47f6-976a-2e82ea00380f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e312f265-c1b7-4dac-a86f-c7c85f9756cc
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 59bd5d09-3eb0-4896-b8ec-9081ae091b00
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 8cae062e-33e1-47f6-976a-2e82ea00380f
+- praise_material_id: 0ac6f01c-d499-457c-8573-f02e36eb7ac2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: e312f265-c1b7-4dac-a86f-c7c85f9756cc
+- praise_material_id: 67c0c02c-4727-453c-aed1-406b8d18f1a4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3baeefbf-cbe9-4826-a3a4-5214938e5a68
+  song_title: 60 - DEUS FALOU COMIGO
+- praise_material_id: 4bb8fa75-bfca-452d-9b16-295301aafec7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3baeefbf-cbe9-4826-a3a4-5214938e5a68
+  song_title: 61 - SEI QUE NA CRUZ SEU SANGUE VERTEU

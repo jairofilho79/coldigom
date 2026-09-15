@@ -1,0 +1,74 @@
+praise_id: e566ae2b-cc87-4d76-bcc6-4a752b072a36
+praise_name: Vou caminhando pra Jerusalém
+praise_number: '134'
+praise_author: E.H.M.R.
+praise_rhythm: Country
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VOU CAMINHANDO PRA JERUSALÉM,
+
+  A CADA DIA CHEGO MAIS PERTO,
+
+  QUEM ME CONDUZ É O MEU JESUS,
+
+  POIS NO CLAMOR SEU SANGUE LIMPA
+
+  E ANDO NA LUZ;
+
+
+  E TENHO ARMAS ESPIRITUAIS:
+
+  A ORAÇÃO, O LOUVOR,
+
+  O JEJUM E MADRUGADA
+
+  E A PALAVRA REVELADA
+
+  QUE ALIMENTA A ALMA,
+
+
+  E NOS ENSINA A VONTADE DO SENHOR.
+
+  VOU CAMINHANDO PRA JERUSALÉM.
+
+  SE VOCÊ QUISER, VENHA COMIGO TAMBÉM. (2X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 823b5138-9583-4f6f-b60c-a3acdc92b926
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d3df473d-be2d-453d-964e-0205a6f7f8ae
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1bb8ae76-d715-4719-a289-a749bd0f6cb5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3ff22665-d9df-4233-b95b-f07a31c773ae
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b430224a-ce86-4591-9d9f-af57c46f2223
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 1bb8ae76-d715-4719-a289-a749bd0f6cb5
+- praise_material_id: 337b8c17-eab4-4740-8b77-832ff70cd896
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 3ff22665-d9df-4233-b95b-f07a31c773ae
+- praise_material_id: e0f142ce-15c3-4747-a025-d2ef642ab255
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 823b5138-9583-4f6f-b60c-a3acdc92b926
+  song_title: 133 - JESUS VÊ A SUA IGREJA
+- praise_material_id: 3425c0e5-3a09-47c9-936f-b6c2df60a690
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 823b5138-9583-4f6f-b60c-a3acdc92b926
+  song_title: 134 - VOU CAMINHANDO PRA JELÉM

@@ -1,0 +1,74 @@
+praise_id: b2451fc6-f97f-42ba-9fbf-81c3dd186d83
+praise_name: A tua palavra é semente
+praise_number: '174'
+praise_author: Autor Desconhecido
+praise_rhythm: Balada
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'A TUA PALAVRA É SEMENTE
+
+  E TU ÉS O SEMEADOR,
+
+  O MEU CORAÇÃO É A TERRA
+
+  QUE TU SEMEASTE, SENHOR.
+
+
+  CORO
+
+  A TUA PALAVRA, A TUA PALAVRA,
+
+  A TUA PALAVRA, SENHOR;
+
+  A TUA PALAVRA, A TUA PALAVRA,
+
+  A TUA PALAVRA É AMOR.
+
+
+  MEDITANDO EU CERTO DIA
+
+  NA TUA PALAVRA, SENHOR,
+
+  SENTI QUE DO ALTO DESCIA
+
+  A GRAÇA DO CONSOLADOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 86fd2f34-0f5a-4994-9019-f6583dd134d8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 284e0fa2-784e-4729-8e7e-bf2e8d9b1ec5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5743fed3-49ae-42ba-adfa-24688c5577de
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6ea4a4f5-330b-4b59-8693-642692a0f99e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 99c7a072-6bdc-4d21-94a2-84196b96b926
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 284e0fa2-784e-4729-8e7e-bf2e8d9b1ec5
+- praise_material_id: 8b56f77e-4a8c-4069-bb87-acde72514211
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5743fed3-49ae-42ba-adfa-24688c5577de
+- praise_material_id: 10dabfd4-b683-42d9-96d9-d7300a48ad7b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 86fd2f34-0f5a-4994-9019-f6583dd134d8
+  song_title: 173 - OUÇO O CLAMOR DO BOM PASTOR
+- praise_material_id: 20894d91-834c-497b-9d8a-3fe8992caebe
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 86fd2f34-0f5a-4994-9019-f6583dd134d8
+  song_title: 174 - A TUA PALAVRA É SEMENTE

@@ -1,0 +1,75 @@
+praise_id: c6bd51a8-6a7a-435f-9ca4-4d2968377dbc
+praise_name: Meu Deus, meu pai
+praise_number: '001'
+praise_author: S.G.D.
+praise_rhythm: Fox
+praise_tonality: F
+praise_category: Clamor
+praise_lyrics: 'CANTAR 2X
+
+  MEU DEUS, MEU PAI,
+
+  A TI CLAMO, MEU SENHOR,
+
+  PELO SANGUE DE JESUS
+
+  DÁ-ME PAZ E COMUNHÃO
+
+  /FINAL
+
+  DÁ-ME PAZ E COMUNHÃO
+
+  '
+praise_tags:
+- c113296e-a8f6-4f07-83ba-f055c125542f
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+praise_materiais:
+- praise_material_id: 59282efb-6c57-4e47-8522-dfdb3483d64a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dbdd424e-864c-49e7-920d-16c5af83e7f8
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 882cb3f9-a10d-450a-a84d-34c19d63f46c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d59af707-49b2-4922-b0c2-16a0aad40af3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3cd06b36-2a56-4202-ac8b-3f8ee1b5d004
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  material_type: YOUTUBE
+  type: youtube
+  url: https://www.youtube.com/watch?v=1Kz2ZAk_G2Y&pp=ygUYbWV1IGRldXMgbWV1IHBhaSBjaWEgaWNt
+- praise_material_id: fd462854-c05a-4586-aae8-b7a12ff81ab0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  material_type: YOUTUBE
+  type: youtube
+  url: https://www.youtube.com/watch?v=bJMitkAG5MQ&pp=ygUYbWV1IGRldXMgbWV1IHBhaSBjaWEgaWNt
+- praise_material_id: e7098110-2a87-43d9-aa04-ae67ecc55c92
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 882cb3f9-a10d-450a-a84d-34c19d63f46c
+- praise_material_id: 714612d5-60e4-44a1-825e-869ba5f9836e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d59af707-49b2-4922-b0c2-16a0aad40af3
+- praise_material_id: a7381ddc-87f7-40aa-b119-acb3dde6d16f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 59282efb-6c57-4e47-8522-dfdb3483d64a
+  song_title: 01 - MEU DEUS, MEU PAI
+- praise_material_id: ded2580d-bde6-4541-a5b9-d050209f2fed
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 59282efb-6c57-4e47-8522-dfdb3483d64a
+  song_title: 02 - PAI, ESTOU A TE CLAMAR
+- praise_material_id: 33231080-b745-4416-aafd-866d5bea20eb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 59282efb-6c57-4e47-8522-dfdb3483d64a
+  song_title: 03 - CLAMO, Ó SENHOR, POR TEU SANGUE

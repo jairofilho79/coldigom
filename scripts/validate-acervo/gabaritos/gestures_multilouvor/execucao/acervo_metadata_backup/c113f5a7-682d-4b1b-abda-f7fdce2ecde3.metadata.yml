@@ -1,0 +1,69 @@
+praise_id: c113f5a7-682d-4b1b-abda-f7fdce2ecde3
+praise_name: Há uma linda morada
+praise_number: '185'
+praise_author: M.L.M.B.O; F.B.O.G.
+praise_rhythm: Fox Abafado
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HÁ UMA LINDA MORADA PRA MIM NO CÉU
+
+  QUE JESUS FOI ALI PREPARAR;
+
+  UM LUGAR DE DELÍCIAS E AMOR SEM FIM,
+
+  COM JESUS VOU PRA SEMPRE MORAR.
+
+
+  FINAL 2X
+
+  NA CIDADE DE DEUS,
+
+  NOVA JERUSALÉM,
+
+  ONDE O SOL NÃO PRECISA BRILHAR;
+
+  O CORDEIRO É A LUZ
+
+  QUE ILUMINA A CIDADE
+
+  ONDE VOU PARA SEMPRE MORAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9f3aec84-893c-4a37-b764-ef07b8ff8d40
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aa5af8ce-2884-49b6-aec5-54eb72715fe6
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6b5f05bd-d179-4a75-bdd1-29c80984db47
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5c5e6bb6-ee06-4016-b2a8-661f35e69abd
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 19375526-505d-4b71-be3d-d3a2762bc5ed
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 6b5f05bd-d179-4a75-bdd1-29c80984db47
+- praise_material_id: 17df2f82-900d-4941-97b2-db0cc03ca132
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5c5e6bb6-ee06-4016-b2a8-661f35e69abd
+- praise_material_id: 991e2aa3-eb50-4e63-af4c-78f3b46313b1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9f3aec84-893c-4a37-b764-ef07b8ff8d40
+  song_title: 184 - NO EXPRESSO VIAJAMOS
+- praise_material_id: 65b054b1-066c-4b01-9b92-3a0cf8ae97c1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9f3aec84-893c-4a37-b764-ef07b8ff8d40
+  song_title: 185 - HÁ UMA LINDA MORADA

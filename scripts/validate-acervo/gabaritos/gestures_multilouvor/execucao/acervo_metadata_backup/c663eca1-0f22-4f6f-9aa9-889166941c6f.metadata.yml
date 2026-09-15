@@ -1,0 +1,77 @@
+praise_id: c663eca1-0f22-4f6f-9aa9-889166941c6f
+praise_name: Esta canção
+praise_number: '230'
+praise_author: R.T.F.
+praise_rhythm: Básico
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ESTA CANÇÃO É PARA TI, JESUS,
+
+  DO MEU CORAÇÃO
+
+  TIREI ESTE LOUVOR:
+
+  /CANTAR 2X
+
+  MEU DEUS BENDITO,
+
+  GLÓRIA, GLÓRIA.
+
+
+  O MEU LOUVOR PERTENCE SÓ A TI,
+
+  TEUS ANJOS SEMPRE LOUVAM,
+
+  A ELES VOU ME UNIR.
+
+
+  FINAL 2X
+
+  PRA SEMPRE, GLÓRIA,
+
+  GLÓRIA, GLÓRIA;
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2b4162d6-ef4b-4284-b1bb-5a302434699d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5c81ab5b-a052-4cd1-ae55-e9ab24db27fb
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 931c5e41-65f6-4d56-8996-1d51b3614f14
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1d31345e-2828-4101-9a3d-1b867d3fbbb8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9fb4ac51-5dcc-4e95-8752-467ef2e65239
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 931c5e41-65f6-4d56-8996-1d51b3614f14
+- praise_material_id: c1d995a3-dfaf-4f9b-8207-88264e037e51
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 1d31345e-2828-4101-9a3d-1b867d3fbbb8
+- praise_material_id: 823d2606-16c8-4bca-8a70-d4195a617bd5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2b4162d6-ef4b-4284-b1bb-5a302434699d
+  song_title: 229 - CANTAI ALEGREMENTE A DEUS
+- praise_material_id: 879b066f-e900-44b5-8d43-91e75c4a2c8a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2b4162d6-ef4b-4284-b1bb-5a302434699d
+  song_title: 230 - ESTA CANÇÃO
+- praise_material_id: 9425d46b-98cb-40ed-ae0c-8f476918e673
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2b4162d6-ef4b-4284-b1bb-5a302434699d
+  song_title: 231 - TODO SER QUE TEM FÔLEGO

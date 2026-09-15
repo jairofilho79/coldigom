@@ -1,0 +1,74 @@
+praise_id: 59cebd65-d240-441c-93a2-2325adc7429b
+praise_name: Como é bom saber
+praise_number: '054'
+praise_author: H. H. Lemmel
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'COMO É BOM SABER QUE JESUS CRISTO
+
+  FOI MENINO ASSIM COMO EU,
+
+  QUE BRINCAVA E TRABALHAVA
+
+  COMO UM JOVEM GALILEU.
+
+
+  CORO
+
+  QUE PRAZER CONHECER CRISTO
+
+  QUE TAMBÉM FOI MENINO AQUI
+
+  E SABER QUE NO CÉU LINDO,
+
+  QUER TER-ME JUNTO A SI!
+
+
+  E É MELHOR SABER QUE JESUS CRISTO
+
+  JÁ SUBIU LÁ PARA O CÉU
+
+  E PREPARA UM LUGARZINHO
+
+  DE UM MENINO, ASSIM, COMO EU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7fbcf733-34b5-416a-a10c-3f61541f742e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bf5f1dcb-f5f2-4b98-ade8-2a3cb262474e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c6e16b18-92b6-4a8a-9ac5-ee2f58d8c95c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4683a3c6-25e6-4d96-ae18-85a28a2ac37f
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 838a848d-1869-4f6d-99d3-037c9a98cccf
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c6e16b18-92b6-4a8a-9ac5-ee2f58d8c95c
+- praise_material_id: 054b18ee-9581-4542-afa7-b3266610c723
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4683a3c6-25e6-4d96-ae18-85a28a2ac37f
+- praise_material_id: 1ff1317d-cc52-4af7-86ec-d9b051ea3641
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7fbcf733-34b5-416a-a10c-3f61541f742e
+  song_title: 54 - COMO É BOM SABER
+- praise_material_id: c8bc79f9-53d8-4c05-b721-4ac31f581608
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7fbcf733-34b5-416a-a10c-3f61541f742e
+  song_title: 55 - É SOMENTE TEU MEU CORAÇÃO

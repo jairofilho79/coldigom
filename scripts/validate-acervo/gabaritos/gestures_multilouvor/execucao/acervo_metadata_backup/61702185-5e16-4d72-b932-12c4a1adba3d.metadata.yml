@@ -1,0 +1,97 @@
+praise_id: 61702185-5e16-4d72-b932-12c4a1adba3d
+praise_name: O nome do meu Senhor!
+praise_number: 059
+praise_author: I.L.S.P.
+praise_rhythm: Básico
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'O NOME DO MEU SENHOR,
+
+  O QUE VENCEU A MORTE E A CRUZ,
+
+  O ÚNICO QUE É DIGNO DE LOUVOR,
+
+  O SEU NOME É JESUS!
+
+
+  *CORO
+
+  É FIEL, É A PAZ, É AMOR, É O SALVADOR!
+
+  É A ESPERANÇA ETERNA.
+
+
+  O MEU SENHOR DERRAMOU
+
+  O SEU PRECIOSO SANGUE NA CRUZ,
+
+  PERDOOU MEUS PECADOS, LAVOU-ME,
+
+  O SEU NOME É JESUS!
+
+
+  *CORO
+
+  É FIEL, É A PAZ, É AMOR, É O SALVADOR!
+
+  É A ESPERANÇA ETERNA.
+
+
+  AGORA VOU, FELIZ, TE ADORAR
+
+  POIS O TEU SANGUE ME LIMPOU.
+
+  CAMINHANDO VOU PARA A PÁTRIA,
+
+  Ó JESUS, VEM ME BUSCAR!
+
+
+  *CORO 2X
+
+  É FIEL, É A PAZ, É AMOR, É O SALVADOR!
+
+  É A ESPERANÇA ETERNA.
+
+  /FINAL
+
+  MINHA ESPERANÇA É JESUS!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7fe5020a-bfd0-4ee5-adf5-544a133c31d3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8a370b68-ddc9-4a8c-90a8-e346c73002f1
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e824c186-7253-48dd-83f2-00665f088259
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0c0aed85-3e83-4428-93d6-d1d4909a13a6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4289a961-c92e-450e-836b-9becffa92a2b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e824c186-7253-48dd-83f2-00665f088259
+- praise_material_id: e3d8176e-cf5e-49af-b891-5769488e656a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0c0aed85-3e83-4428-93d6-d1d4909a13a6
+- praise_material_id: 5494d2cc-4dec-4b80-959b-9c3780dafeb3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7fe5020a-bfd0-4ee5-adf5-544a133c31d3
+  song_title: 58 - VIVER É TÃO LINDO
+- praise_material_id: f4074274-c6e7-4c63-9b30-97461ead0c01
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7fe5020a-bfd0-4ee5-adf5-544a133c31d3
+  song_title: 59 - O NOME DO MEU SENHOR!

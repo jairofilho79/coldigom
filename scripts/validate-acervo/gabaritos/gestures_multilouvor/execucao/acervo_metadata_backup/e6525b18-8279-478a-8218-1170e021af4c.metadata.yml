@@ -1,0 +1,69 @@
+praise_id: e6525b18-8279-478a-8218-1170e021af4c
+praise_name: A Jesus irei louvar
+praise_number: '227'
+praise_author: L.E.C.T.M. & E.H.M.R.
+praise_rhythm: Valseado
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'A JESUS IREI LOUVAR,
+
+  POIS NA CRUZ SE DEU POR MIM.
+
+  O SEU SANGUE DERRAMOU,
+
+  MEU PECADO CARREGOU;
+
+  TODA DOR ELE LEVOU,
+
+  FOI QUEM PRIMEIRO ME AMOU.
+
+
+  FINAL 2X
+
+  COM QUERUBINS E SERAFINS
+
+  A JESUS IREI LOUVAR,
+
+  ALELUIA! GLÓRIA A DEUS!
+
+  LÁ NO CÉU EU VOU MORAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 956a955b-318f-49da-9ae3-a37af2e282ff
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: db2817a7-538b-4a4d-bdb6-5e934e76aa68
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5113fc76-225e-47d8-84d5-39b0b315982c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b8e9dcbe-2168-49bf-b7ee-6eb8fc1ff138
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2e8e5ae7-db14-4447-bae3-35d239df38f0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5113fc76-225e-47d8-84d5-39b0b315982c
+- praise_material_id: 33c6973e-8d3b-4854-9768-deed2f809a68
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: b8e9dcbe-2168-49bf-b7ee-6eb8fc1ff138
+- praise_material_id: 9274fbf3-4bfa-4373-86e1-dd4209dd8053
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 956a955b-318f-49da-9ae3-a37af2e282ff
+  song_title: 227 - A JESUS IREI LOUVAR
+- praise_material_id: 39bbf625-0069-47cd-bf63-4fa3e27ac965
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 956a955b-318f-49da-9ae3-a37af2e282ff
+  song_title: 228 - HOSANA AO FILHO DE DAVI

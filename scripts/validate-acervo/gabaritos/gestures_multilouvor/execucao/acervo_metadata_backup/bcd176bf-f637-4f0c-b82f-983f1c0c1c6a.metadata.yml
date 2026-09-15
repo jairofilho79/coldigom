@@ -1,0 +1,90 @@
+praise_id: bcd176bf-f637-4f0c-b82f-983f1c0c1c6a
+praise_name: Eu vou contar uma história (Zaqueu)
+praise_number: '064'
+praise_author: M.L.M.B.O. & F.B.O.G.
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'EU VOU CONTAR UMA HISTÓRIA
+
+  PRA VOCÊ NÃO ESQUECER.
+
+  A HISTÓRIA DE UM HOMEM
+
+  QUE A JESUS QUERIA VER.
+
+
+  SUBIU EM UMA ÁRVORE
+
+  PRA VER JESUS PASSAR
+
+  POIS ERA TÃO PEQUENO,
+
+  NÃO PODIA O AVISTAR.
+
+
+  OLHANDO PARA CIMA
+
+  JESUS ENCONTROU,
+
+  COM SUA VOZ SUAVE
+
+  ENTÃO ELE FALOU:
+
+
+  "ZAQUEU DESCE DEPRESSA
+
+  PORQUE HOJE ME CONVÉM
+
+  POUSAR EM TUA CASA,
+
+  VEM DEPRESSA, Ó SIM, VEM!"
+
+
+  ZAQUEU ENTÃO DESCEU
+
+  QUANDO JESUS O CONVIDOU,
+
+  JESUS MUDOU SUA VIDA,
+
+  EM OUTRO HOMEM SE TORNOU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0b1a5bfb-e6f4-4451-a76a-10c6d8bcd250
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d6f1e7b1-2a00-4d27-b6ef-f11c0eaa2968
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ec3dc295-b77e-4c8a-82ad-00379949b969
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 645e92c3-19b7-4013-a6a7-aafd6dd14b9f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a3188510-3a43-4a3d-82a0-6d7a40c6f1e9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ec3dc295-b77e-4c8a-82ad-00379949b969
+- praise_material_id: 304e7773-c0b4-4589-ae09-deeaffdcd21c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 645e92c3-19b7-4013-a6a7-aafd6dd14b9f
+- praise_material_id: 9c5c107a-6105-4245-b8df-543040b35d34
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0b1a5bfb-e6f4-4451-a76a-10c6d8bcd250
+  song_title: 64 - EU VOU CONTAR UMA HISTÓRIA (ZAQUEU)
+- praise_material_id: 649d147b-27d3-4105-82a8-75610225095d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0b1a5bfb-e6f4-4451-a76a-10c6d8bcd250
+  song_title: 65 - ONDE NASCEU JESUS?

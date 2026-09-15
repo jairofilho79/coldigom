@@ -1,0 +1,67 @@
+praise_id: 40f05b12-7dc2-4d64-a37f-a7833c35e3e3
+praise_name: Seu nome é maravilhoso
+praise_number: '052'
+praise_author: Autor Desconhecido
+praise_rhythm: Básico
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SEU NOME É MARAVILHOSO, (3X)
+
+  PAI DA ETERNIDADE, PRÍNCIPE DA PAZ.
+
+  /SEU NOME É CONSELHEIRO, (3X)
+
+  PAI DA ETERNIDADE, PRÍNCIPE DA PAZ.
+
+  /SEU NOME É DEUS FORTE, (3X)
+
+  PAI DA ETERNIDADE, PRÍNCIPE DA PAZ.
+
+
+  IREI SEGUI-LO PARA SEMPRE
+
+  POIS ELE DÁ FELICIDADE
+
+  SEU NOME É MARAVILHOSO
+
+  PAI DA ETERNIDADE, PRÍNCIPE DA PAZ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c6dc3fa4-cca9-4bde-b61f-947998b00c47
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 73f05cdb-4a67-4ae4-b505-b6eb7d8ac5bc
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4173250c-cba5-411c-8ef2-1d387ed090b1
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 20688008-e2fa-4dbc-afbd-cb2be05d0714
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 68af04bf-2e3e-4f47-b644-0dd4dce01d9e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4173250c-cba5-411c-8ef2-1d387ed090b1
+- praise_material_id: 74de2557-7687-4519-8ef0-ef376614fdbb
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 20688008-e2fa-4dbc-afbd-cb2be05d0714
+- praise_material_id: 65bb4786-c39b-484d-a344-961f51091852
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c6dc3fa4-cca9-4bde-b61f-947998b00c47
+  song_title: 52 - SEU NOME É MARAVILHOSO
+- praise_material_id: 80683375-ff62-4081-a5ab-400d1debace7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c6dc3fa4-cca9-4bde-b61f-947998b00c47
+  song_title: 53 - É BOM, É BOM DEMAIS

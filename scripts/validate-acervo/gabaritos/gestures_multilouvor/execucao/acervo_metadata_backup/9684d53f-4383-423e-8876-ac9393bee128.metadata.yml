@@ -1,0 +1,58 @@
+praise_id: 9684d53f-4383-423e-8876-ac9393bee128
+praise_name: Tua mão é poderosa
+praise_number: '113'
+praise_author: J.S.M.
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  TUA MÃO É PODEROSA
+
+  E O TEU NOME DOCE AMOR,
+
+  NÃO TE AFASTARÁS DE MIM,
+
+  NEM CONTENDES CONTRA MIM,
+
+  ANTES CUIDARÁS, SENHOR, DE MIM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 6ca12bcd-f4fa-4c51-ac4a-0258c51be927
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bba02849-935d-4bb3-b15e-d7b177950d01
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9ed263ea-c99c-4d4b-90ac-25cb4a744ebb
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 87e2a515-b27c-4d7d-9ec0-6a00d82c5212
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 98c4fdd3-0c72-4321-b771-73b897e078dc
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 9ed263ea-c99c-4d4b-90ac-25cb4a744ebb
+- praise_material_id: 7500d814-8b96-4c5b-9bf7-df8d7d322c54
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 87e2a515-b27c-4d7d-9ec0-6a00d82c5212
+- praise_material_id: c26abf6e-c86a-4b49-b0b1-cbf02f52a595
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 6ca12bcd-f4fa-4c51-ac4a-0258c51be927
+  song_title: 113 - TUA MÃO É PODEROSA
+- praise_material_id: 863eb0d2-f3a7-4722-adbb-c3868ea91d14
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 6ca12bcd-f4fa-4c51-ac4a-0258c51be927
+  song_title: 114 - O SENHOR É QUEM CUIDA DE MIM

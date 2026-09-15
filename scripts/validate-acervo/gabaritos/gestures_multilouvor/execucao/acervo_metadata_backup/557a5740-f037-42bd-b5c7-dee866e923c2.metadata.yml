@@ -1,0 +1,49 @@
+praise_id: 557a5740-f037-42bd-b5c7-dee866e923c2
+praise_name: Certo homem, príncipe dos judeus (Nicodemos)
+praise_number: 089
+praise_author: A.V.Q.S.
+praise_rhythm: Básico
+praise_tonality: Cm
+praise_category: Crianças e Adolescentes
+praise_lyrics: "CERTO HOMEM, PRÍNCIPE DOS JUDEUS,\nFOI AO MESTRE PERGUNTAR-LHE ASSIM:\n\
+  BEM SABEMOS QUE ÉS MESTRE\nVINDO DE DEUS.\n\nCOMO PODE ALGUÉM NASCER DE NOVO?\n\
+  AQUELE QUE NÃO NASCER DA ÁGUA \nE DO ESPÍRITO\nNÃO PODE VER O REINO DE DEUS.\nMAS\
+  \ AQUELE QUE PERMANECER FIEL\nATÉ O FIM, O VERÁ.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: bde3ab0a-8594-4e80-9802-0325bbf98f75
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1d48a5ac-448f-4957-a9e9-ecf5edfdbaa8
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8dd27951-593f-4d1f-8d8f-252547918ed1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 849af0f4-c5fc-4ec8-82ed-69def70df479
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 087a6edf-c279-4c1a-ace3-53ab65bd5748
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 8dd27951-593f-4d1f-8d8f-252547918ed1
+- praise_material_id: 859b5273-7c3d-4d92-a227-ea7b932c3a76
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 849af0f4-c5fc-4ec8-82ed-69def70df479
+- praise_material_id: 9081377f-a4d0-450d-8828-3f12e0234046
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bde3ab0a-8594-4e80-9802-0325bbf98f75
+  song_title: 89 - CERTO HOMEM, PRÍNCIPE DOS JUDEUS (NICODEMOS)
+- praise_material_id: 3dbb07df-c1dc-4840-bcef-2976ed2cc9b6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bde3ab0a-8594-4e80-9802-0325bbf98f75
+  song_title: 90 - ELE MORREU, MAS RESSURGIU

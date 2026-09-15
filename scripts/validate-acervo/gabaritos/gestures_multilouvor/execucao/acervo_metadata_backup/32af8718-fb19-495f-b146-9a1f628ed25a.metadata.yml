@@ -1,0 +1,76 @@
+praise_id: 32af8718-fb19-495f-b146-9a1f628ed25a
+praise_name: No expresso viajamos
+praise_number: '184'
+praise_author: A.D.
+praise_rhythm: Country
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NO EXPRESSO VIAJAMOS
+
+  PARA O BOM PAÍS DA LUZ,
+
+  É NOSSO PASSAPORTE O NOME DE JESUS;
+
+  É HORA DA PARTIDA E ENSEJO AINDA TÊM
+
+  AQUELES QUE QUISEREM
+
+  TER PASSAGEM NESSE TREM.
+
+
+  BEM-VINDOS SEJAM TODOS
+
+  PARA O TREM QUE PARTE JÁ,
+
+  ENTRADA PARA A PÁTRIA
+
+  JESUS A TODOS DÁ;
+
+
+  EIS O SINAL DE MARCHA,
+
+  SE QUERES IR TAMBÉM,
+
+  RECEBE O TEU BILHETE
+
+  DE PASSAGEM NESSE TREM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8d047f4a-9a35-4506-9d02-55b0ec940d87
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 201feee5-ffb3-41fd-894b-e2aa90f52afa
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1000a2fe-1581-4980-b630-54171be36cd7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 164d41cf-d6a9-4a16-8ef1-b381a06f09ca
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0c69926a-2d51-4c23-bad9-6d7e5e9f7df6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 1000a2fe-1581-4980-b630-54171be36cd7
+- praise_material_id: 59907fd0-826f-488d-9a22-2b07e2ed6f7e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 164d41cf-d6a9-4a16-8ef1-b381a06f09ca
+- praise_material_id: db16107b-067e-4a86-bd61-dd0fed715fcb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8d047f4a-9a35-4506-9d02-55b0ec940d87
+  song_title: 184 - NO EXPRESSO VIAJAMOS
+- praise_material_id: f51ca106-40e1-473d-ba2c-07c7edec0a3b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8d047f4a-9a35-4506-9d02-55b0ec940d87
+  song_title: 185 - HÁ UMA LINDA MORADA

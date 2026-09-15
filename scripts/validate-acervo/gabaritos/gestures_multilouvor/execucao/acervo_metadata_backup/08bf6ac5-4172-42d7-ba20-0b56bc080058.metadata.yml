@@ -1,0 +1,63 @@
+praise_id: 08bf6ac5-4172-42d7-ba20-0b56bc080058
+praise_name: Meu barco é pequeno
+praise_number: '132'
+praise_author: Autor Desconhecido
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'MEU BARCO É PEQUENO E GRANDE É O MAR,
+
+  JESUS SEGURA MINHA MÃO;
+
+  ELE É MEU PILOTO E TUDO VAI BEM
+
+  NA VIAGEM PRA JERUSALÉM.
+
+  /ELE É MEU PILOTO E TUDO VAI BEM
+
+  NA VIAGEM PRA JERUSALÉM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: cc635738-7747-4ae8-9514-1a25814cec6d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e1753584-ee19-4305-9b5b-396716d4f75b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2aba9283-5d51-4118-b970-3c0fb8505d0c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6afaa7b6-8b7c-4fe8-8d5b-83bb8fad01f0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: eebddf86-423e-4749-bed5-f70e308bc2a2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 2aba9283-5d51-4118-b970-3c0fb8505d0c
+- praise_material_id: c56d6ba7-97bb-494a-abae-92bb237794db
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6afaa7b6-8b7c-4fe8-8d5b-83bb8fad01f0
+- praise_material_id: f95b0e61-1373-4beb-983c-5f9cc29e3563
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: cc635738-7747-4ae8-9514-1a25814cec6d
+  song_title: 130 - MEU BOM PASTOR É CRISTO
+- praise_material_id: f61ac5e2-d47b-483f-9b1f-5f89ab81a970
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: cc635738-7747-4ae8-9514-1a25814cec6d
+  song_title: 131 - COM CRISTO NO BARCO
+- praise_material_id: 447455a0-32e2-413c-8226-41c8bfd62186
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: cc635738-7747-4ae8-9514-1a25814cec6d
+  song_title: 132 - MEU BARCO É PEQUENO

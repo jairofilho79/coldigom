@@ -1,0 +1,120 @@
+praise_id: 4eeaa652-54b6-48b1-89fa-3090b48c31dd
+praise_name: Vai raiar o dia
+praise_number: '221'
+praise_author: R.E.B.T.
+praise_rhythm: Fox
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: '*CORO
+
+  VAI RAIAR O DIA,
+
+  DIA DA VITÓRIA.
+
+  VAI RAIAR O DIA,
+
+  DIA EM A VITÓRIA ALCANÇAREMOS.
+
+
+  GLÓRIA E MAJESTADE
+
+  ESTÃO ANTE A FACE DO SENHOR
+
+  E FORMOSURA NO SEU SANTO LUGAR;
+
+  ANUNCIAI ENTRE AS NAÇÕES
+
+  A SUA GLÓRIA,
+
+  ENTRE OS POVOS
+
+  AS SUAS MARAVILHAS.
+
+
+  *CORO
+
+  VAI RAIAR O DIA,
+
+  DIA DA VITÓRIA.
+
+  VAI RAIAR O DIA,
+
+  DIA EM A VITÓRIA ALCANÇAREMOS.
+
+
+  DAI AO SENHOR DEVIDA GLÓRIA,
+
+  TRAZEI OFERTAS E ENTRAI
+
+  NOS SEUS ÁTRIOS;
+
+  ADORAI AO SENHOR EM SANTIDADE,
+
+  COM LOUVOR ADORAI A SUA FACE.
+
+
+  *CORO
+
+  VAI RAIAR O DIA,
+
+  DIA DA VITÓRIA.
+
+  VAI RAIAR O DIA,
+
+  DIA EM A VITÓRIA ALCANÇAREMOS.
+
+
+  DAI AO SENHOR A GLÓRIA E FORÇA,
+
+  BRAME O MAR E A SUA PLENITUDE;
+
+  ANUNCIAI A SALVAÇÃO DE DIA EM DIA
+
+  PORQUE EM BREVE
+
+  A VITÓRIA ALCANÇAREMOS.
+
+
+  *CORO 2X
+
+  VAI RAIAR O DIA,
+
+  DIA DA VITÓRIA.
+
+  VAI RAIAR O DIA,
+
+  DIA EM A VITÓRIA ALCANÇAREMOS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: a02b8c1d-3f33-4f14-943a-bf116cb92f84
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b29ce0e8-1b0b-482b-a6c6-b25f3b24a9c2
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5bc10c14-6de8-4f3f-ac96-278287d70d9a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5600b096-356d-4098-a7a9-2a605697bd74
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c9bb6f1c-440a-4b91-b055-482baa6fd4b8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5bc10c14-6de8-4f3f-ac96-278287d70d9a
+- praise_material_id: eb479470-8cdb-4707-8a16-d0cfd2e03b0f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5600b096-356d-4098-a7a9-2a605697bd74
+- praise_material_id: dcef7bb0-bdbf-4674-9e03-0cbe1d805b37
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a02b8c1d-3f33-4f14-943a-bf116cb92f84

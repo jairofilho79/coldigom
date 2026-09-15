@@ -1,0 +1,87 @@
+praise_id: 7d8d1048-b46b-4bf1-8a16-3e01021aafdb
+praise_name: Vem para o meio (Águas de salvação)
+praise_number: 068
+praise_author: E.H.M.R.
+praise_rhythm: Country
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VEM PARA O MEIO
+
+  DE UM POVO QUE SABE
+
+  O CAMINHO DA ETERNIDADE,
+
+  ONDE A PROFECIA APONTA A DIREÇÃO;
+
+  ESSE POVO SEGUE E ALCANÇA SALVAÇÃO.
+
+
+  VEM PARA O MEIO, JESUS ESTÁ AQUI.
+
+  MERGULHA NESSAS ÁGUAS DA SALVAÇÃO;
+
+  ESSAS ÁGUAS CURAM E NOVA CRIATURA
+
+  SERÁS, ENTÃO, PARA O LOUVOR DE DEUS.
+
+  /INSTRUMENTOS
+
+
+  VEM PARA O MEIO
+
+  DE UM POVO QUE SABE
+
+  O CAMINHO DA ETERNIDADE.
+
+  ONDE A PROFECIA APONTA A DIREÇÃO,
+
+  ESSE POVO SEGUE E ALCANÇA SALVAÇÃO.
+
+
+  VEM PARA O MEIO, JESUS ESTÁ AQUI.
+
+  MERGULHA NESSAS ÁGUAS DA SALVAÇÃO.
+
+  ESSAS ÁGUAS CURAM E NOVA CRIATURA
+
+  SERÁS, ENTÃO, PARA O LOUVOR DE DEUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7cac8c85-b650-4ad2-9483-0c87570852b1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ecca8ca6-1200-420b-9cae-127d6081ab29
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 07e9c440-ad3a-45a9-901c-39fed3dec365
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 489276fa-0f16-4555-9438-261169ffaefd
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5ec5cad7-828c-46fe-86f9-d1b201a0a2d8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 07e9c440-ad3a-45a9-901c-39fed3dec365
+- praise_material_id: 30baab19-981c-4c67-a323-f46192c4fba0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 489276fa-0f16-4555-9438-261169ffaefd
+- praise_material_id: 339a4b09-d2e1-4744-872c-b89e7a83fa3f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7cac8c85-b650-4ad2-9483-0c87570852b1
+  song_title: 68 - VEM PARA O MEIO (ÁGUAS DA SALVAÇÃO)
+- praise_material_id: b57ca844-d251-4f91-970e-af6ad08968b2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7cac8c85-b650-4ad2-9483-0c87570852b1
+  song_title: 69 - VOCÊ SABE O QUE É SALVAÇÃO?

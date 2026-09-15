@@ -1,0 +1,78 @@
+praise_id: 88f66bed-c07d-4250-85d8-d90714ef8d89
+praise_name: Sonhei com Jesus esta noite
+praise_number: 096
+praise_author: Waldemar Bourguignon
+praise_rhythm: Balada
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SONHEI COM JESUS ESTA NOITE,
+
+  UM CONSELHO ELE ME DEU:
+
+  /CANTAR 2X
+
+  "NÃO SIGAS POR OUTRO CAMINHO
+
+  QUE A PORTA DO CÉU SOU EU."
+
+
+  EU IMPLOREI A JESUS:
+
+  SENHOR, TEM DE MIM COMPAIXÃO,
+
+  /CANTAR 2X
+
+  EU VIVO VAGANDO NO MUNDO
+
+  SEM PAZ, SEM CONSOLAÇÃO.
+
+
+  UMA VOZ ME FALOU BAIXINHO
+
+  NO FUNDO DO CORAÇÃO:
+
+  /CANTAR 2X
+
+  "Ó, PECADOR, VEM DEPRESSA,
+
+  CRISTO TE DÁ SALVAÇÃO."
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c6c6fee3-0a80-48f8-91ce-0dfb017f854a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 634b1b8a-534c-42b6-aafd-de07fdf70a21
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 30d21f52-70b9-4506-89b7-c0ef5ccd85bf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 591cc4ec-1c79-4993-924c-cd84a62e675e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 13348a1c-fc5c-4e6b-babf-80b5d6312c56
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: c6c6fee3-0a80-48f8-91ce-0dfb017f854a
+- praise_material_id: b968b391-eb69-4954-935a-899604273c16
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 634b1b8a-534c-42b6-aafd-de07fdf70a21
+- praise_material_id: 2dfaad0e-00a4-427c-8814-673a098f4fd7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 30d21f52-70b9-4506-89b7-c0ef5ccd85bf
+  song_title: 96 – SONHEI COM JESUS ESTA NOITE
+- praise_material_id: 6e7ad31c-5983-4db0-bdf1-b52153e7860b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 30d21f52-70b9-4506-89b7-c0ef5ccd85bf
+  song_title: 97 - JESUS É O CAMINHO

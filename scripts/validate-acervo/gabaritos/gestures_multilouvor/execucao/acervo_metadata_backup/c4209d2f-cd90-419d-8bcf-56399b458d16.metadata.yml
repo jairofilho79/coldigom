@@ -1,0 +1,64 @@
+praise_id: c4209d2f-cd90-419d-8bcf-56399b458d16
+praise_name: É teu sangue, meu Senhor Jesus
+praise_number: '007'
+praise_author: J.J.G.
+praise_rhythm: Básico
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'É TEU SANGUE, MEU SENHOR JESUS,
+
+  QUE GARANTE A NOSSA COMUNHÃO.
+
+  É TEU SANGUE, MEU SENHOR JESUS,
+
+  QUE NOS TRAZ LIBERTAÇÃO.
+
+  /FINAL 2X
+
+  POR ISSO VOU CLAMAR
+
+  E O SENHOR VAI ME PURIFICAR
+
+  E PRONTO ESTAREI
+
+  PRA SERVIR NA CASA DO MEU REI!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 4b8a75e5-f87c-4da2-a79e-4736c043f97c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 765d90b0-7293-4f5e-b728-1335d710fcd2
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ab33f197-50c1-4435-a807-181c3dd3a5f7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7748783f-da5b-4acc-b7b0-b3d07329bb59
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4081937f-d9fb-40ac-a54d-130908d65288
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ab33f197-50c1-4435-a807-181c3dd3a5f7
+- praise_material_id: 3a9e4d77-b2fa-4d55-8a75-785f42942c85
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7748783f-da5b-4acc-b7b0-b3d07329bb59
+- praise_material_id: 9aff425c-fcf8-48a1-94fe-d0aa9a844458
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4b8a75e5-f87c-4da2-a79e-4736c043f97c
+  song_title: 06 - PERDOA-ME SENHOR
+- praise_material_id: ba43bc78-4d25-4dca-a998-805a16534865
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4b8a75e5-f87c-4da2-a79e-4736c043f97c
+  song_title: 07 - É TEU SANGUE, MEU SENHOR JESUS

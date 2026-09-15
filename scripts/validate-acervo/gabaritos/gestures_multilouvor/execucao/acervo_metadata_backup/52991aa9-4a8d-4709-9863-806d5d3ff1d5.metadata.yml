@@ -1,0 +1,51 @@
+praise_id: 52991aa9-4a8d-4709-9863-806d5d3ff1d5
+praise_name: Aquele que tem sede
+praise_number: 094
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: Dm
+praise_category: Crianças e Adolescentes
+praise_lyrics: "AQUELE QUE TEM SEDE\nVÁ À FONTE E BEBA,\nSUAS ÁGUAS DESSEDENTAM\n\
+  E TRAZEM VIDA.\n\nRIOS DE ÁGUAS CORRERÃO \nNO SEU INTERIOR,\nE A ALEGRIA QUE SALTA\n\
+  PARA A VIDA ETERNA.\n\nJESUS É ESSA FONTE DE VIDA,\nQUE SACIA A SEDE DA ALMA.\n\
+  VENHA A ELE E BEBA,\nE UMA VIDA ETERNA LHE DARÁ.\n\nAQUELE QUE TEM SEDE\nVÁ À FONTE\
+  \ E BEBA,\nSUAS ÁGUAS DESSEDENTAM\nE TRAZEM VIDA.\n\nFINAL\nRIOS DE ÁGUAS CORRERÃO\
+  \ \nNO SEU INTERIOR,\nE A ALEGRIA QUE SALTA\nPARA A VIDA ETERNA.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: adac61c2-77b9-408c-a83f-0ea9c268416e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b63474dc-2488-4a04-a46e-7066efce83b6
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 76ac115b-fc79-41d6-96fd-c70f66a57cf0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 11b034dc-1476-425a-9db9-737ccf3c99df
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2c528852-e651-417c-ac04-416ede188218
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 76ac115b-fc79-41d6-96fd-c70f66a57cf0
+- praise_material_id: 90064185-f38e-490f-a96c-7090a797152f
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 11b034dc-1476-425a-9db9-737ccf3c99df
+- praise_material_id: 7a8b87bb-5287-4b0e-8a3a-70d722ecfe57
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: adac61c2-77b9-408c-a83f-0ea9c268416e
+  song_title: 94 - AQUELE QUE TEM SEDE
+- praise_material_id: 3729a3e9-caf7-4f7e-af41-adc044fd491e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: adac61c2-77b9-408c-a83f-0ea9c268416e
+  song_title: 95 - DO PÃO DO CÉU

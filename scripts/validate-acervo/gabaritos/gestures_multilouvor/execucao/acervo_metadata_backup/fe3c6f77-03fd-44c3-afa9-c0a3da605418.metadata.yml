@@ -1,0 +1,77 @@
+praise_id: fe3c6f77-03fd-44c3-afa9-c0a3da605418
+praise_name: Quem irá (Preciosa semente)
+praise_number: '141'
+praise_author: S.G.D.
+praise_rhythm: Balada
+praise_tonality: Dm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  QUEM IRÁ, QUEM IRÁ
+
+  LEVAR A PRECIOSA SEMENTE?
+
+
+  AQUELE QUE LEVA A PRECIOSA SEMENTE
+
+  ANDANDO E CHORANDO
+
+  VOLTARÁ, SIM, COM ALEGRIA,
+
+  TRAZENDO CONSIGO OS SEUS MOLHOS, (2X)
+
+
+  CANTAR 2X
+
+  EU IREI, SIM IREI,
+
+  LEVAR A PALAVRA DE DEUS.
+
+
+  AQUELE QUE LEVA A PRECIOSA SEMENTE
+
+  ANDANDO E CHORANDO
+
+  VOLTARÁ, SIM, COM ALEGRIA,
+
+  TRAZENDO CONSIGO OS SEUS MOLHOS (3X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b624e23c-568a-489e-a728-b5a7ac928b80
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 341ebb1f-2f92-4946-8022-e5dec82565d3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9be0dd29-8d51-41dc-b241-a11c72708bfc
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 136e417c-b19a-43d2-9889-75c991f944a0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a59b327a-e55b-4f0b-9805-e74f51ef39a6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 9be0dd29-8d51-41dc-b241-a11c72708bfc
+- praise_material_id: b08554ed-49d3-4f59-adcd-fc117a9d92a0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 136e417c-b19a-43d2-9889-75c991f944a0
+- praise_material_id: 5b26cb08-6085-4243-bed3-cc870e2bad0a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b624e23c-568a-489e-a728-b5a7ac928b80
+  song_title: 141 - QUEM IRÁ? (PRECIOSA SEMENTE)
+- praise_material_id: b7e65a7a-bbbe-4f03-84fd-874be185f131
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b624e23c-568a-489e-a728-b5a7ac928b80
+  song_title: 142 - COMO UMA FOLHA AO VENTO

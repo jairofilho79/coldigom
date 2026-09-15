@@ -1,0 +1,69 @@
+praise_id: c3c481dc-0334-4937-8f57-7ba0ea053c4e
+praise_name: No céu um dia vamos morar
+praise_number: '206'
+praise_author: R.C.B.Z.
+praise_rhythm: Básico
+praise_tonality: C#
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  NO CÉU UM DIA NÓS VAMOS MORAR
+
+  COM JESUS, O BOM PASTOR,
+
+  FELIZES SEREMOS.
+
+  QUANTA ALEGRIA, MUITOS LOUVORES.
+
+  CANTAREMOS AO SENHOR, (3X)
+
+  NOSSO SALVADOR!
+
+
+  FINAL
+
+  CANTAREMOS AO SENHOR, (3X)
+
+  NOSSO SALVADOR,
+
+  NOSSO SALVADOR!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7e6f6bd6-0283-4a3b-9561-42bd25fdfdf3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 36da1d08-c867-4c79-aea7-87d90f3db2f3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: db7b399b-555a-475c-93f9-173c0e28cbf3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: baabb7e4-1eb5-4da3-9075-79035f6b3e0f
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3b968a52-c54b-4068-8edf-c8e3004c5a89
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: db7b399b-555a-475c-93f9-173c0e28cbf3
+- praise_material_id: 4e7390f0-3a99-47d0-94c6-f0217172012b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: baabb7e4-1eb5-4da3-9075-79035f6b3e0f
+- praise_material_id: 4f0af8a2-c690-4dcd-acdb-868e4f236995
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7e6f6bd6-0283-4a3b-9561-42bd25fdfdf3
+  song_title: 205 - A MINHA ALMA ESPERA
+- praise_material_id: d2d0d302-d205-4138-8f20-9ffcebe42d97
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7e6f6bd6-0283-4a3b-9561-42bd25fdfdf3
+  song_title: 206 - NO CÉU UM DIA NÓS VAMOS MORAR

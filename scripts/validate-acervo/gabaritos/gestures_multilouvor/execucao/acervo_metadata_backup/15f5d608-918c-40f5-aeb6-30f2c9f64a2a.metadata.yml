@@ -1,0 +1,80 @@
+praise_id: 15f5d608-918c-40f5-aeb6-30f2c9f64a2a
+praise_name: Onde nasceu Jesus
+praise_number: '065'
+praise_author: R.T.F.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ONDE NASCEU JESUS?
+
+  EU LOGO TE RESPONDO:
+
+  EM BELÉM, O MEU JESUS NASCEU.
+
+
+  QUEM É SEU PAI?
+
+  EU LOGO TE RESPONDO:
+
+  DE DEUS É FILHO E ELE TAMBÉM É DEUS.
+
+
+  EM QUE CIDADE CRESCEU?
+
+  EU LOGO TE RESPONDO:
+
+  EM NAZARÉ O MEU JESUS CRESCEU.
+
+
+  QUEM O BATIZOU?
+
+  EU LOGO TE RESPONDO:
+
+  FOI JOÃO BATISTA, NO RIO JORDÃO.
+
+
+  E DIGO MAIS, ELE ESTÁ VIVO,
+
+  FALA CONOSCO,
+
+  NOS TRAZENDO A PAZ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d6137317-d4fc-4f99-8249-c87e7c898ddd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 83651056-a4d2-440b-a8b5-870de0870e77
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 58f02203-482e-42e7-bbd8-3eb39b56e19f
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 81269988-b279-4922-b7d4-d1a5c95ca6d6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bde2d31c-275e-4a70-ab07-b10546c86a14
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 58f02203-482e-42e7-bbd8-3eb39b56e19f
+- praise_material_id: f9b59bea-f03a-4b3d-a568-7d610ef3c11f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 81269988-b279-4922-b7d4-d1a5c95ca6d6
+- praise_material_id: 522b8307-366e-4ff7-8308-6078737d8139
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d6137317-d4fc-4f99-8249-c87e7c898ddd
+  song_title: 64 - EU VOU CONTAR UMA HISTÓRIA (ZAQUEU)
+- praise_material_id: c1c948d6-086d-4012-a763-a8a909c69078
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d6137317-d4fc-4f99-8249-c87e7c898ddd
+  song_title: 65 - ONDE NASCEU JESUS?

@@ -1,0 +1,72 @@
+praise_id: 03e25972-436e-4676-89ee-293b027b7231
+praise_name: Eu quero andar sempre com Jesus
+praise_number: '036'
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'EU QUERO ANDAR SEMPRE COM JESUS,
+
+  À ETERNIDADE ELE ME CONDUZ;
+
+  E QUANDO A LUTA TIVER QUE ENFRENTAR
+
+  ELE ESTARÁ A ME PROTEGER.
+
+
+  SUSTENTA-ME, PEGA A MINHA MÃO,
+
+  LEVANTA-ME, DÁ-ME A SALVAÇÃO;
+
+  CRESCER COM ELE É O MAIOR TESOURO,
+
+  TRABALHAR PRA ELE É A MINHA ADORAÇÃO.
+
+  /FINAL
+
+  TRABALHAR PRA ELE É A MINHA ADORAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 5496e3d9-453d-4dc2-befa-e162cbe22ddf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7829f25e-539b-4494-af77-efb3c26b3595
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a79116cf-93aa-45d7-8d0f-4b86161bfd3c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d65bd37f-0ee5-4a8a-aa14-b7664a689fcb
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8833f69a-013d-47e7-905f-c488dd70d9f3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a79116cf-93aa-45d7-8d0f-4b86161bfd3c
+- praise_material_id: 622d2227-3918-44e9-b17f-e1ce118a3295
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d65bd37f-0ee5-4a8a-aa14-b7664a689fcb
+- praise_material_id: 923f6e76-47b4-436b-8b7f-8f83b0dae718
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5496e3d9-453d-4dc2-befa-e162cbe22ddf
+  song_title: 34 - TENHO UM SENHOR MUITO FORTE
+- praise_material_id: 472ad84a-9954-4c52-a900-ba5f17b7ae13
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5496e3d9-453d-4dc2-befa-e162cbe22ddf
+  song_title: 35 - QUERO SER COMO DAVI
+- praise_material_id: afb6cac3-288b-4cdf-85f3-57a4c4bbea90
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5496e3d9-453d-4dc2-befa-e162cbe22ddf
+  song_title: 36 - EU QUERO ANDAR SEMPRE COM JESUS

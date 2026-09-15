@@ -1,0 +1,70 @@
+praise_id: 5b9f8e39-79eb-4513-aaf8-ff90f5a45150
+praise_name: Vou para o meu lar
+praise_number: '200'
+praise_author: K.D.O.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CORO 2X
+
+  VOU PARA O MEU LAR,
+
+  JESUS JÁ PREPAROU O MEU LUGAR.
+
+
+  ESTÁ CHEGANDO A HORA DA PARTIDA,
+
+  JESUS JÁ VEM ME BUSCAR.
+
+  A TROMBETA VAI ECOAR
+
+  E VOU PARA O MEU LAR.
+
+
+  MINHA CANDEIA ESTÁ BEM ACESA
+
+  E ÓLEO NA BOTIJA TAMBÉM HÁ.
+
+  A TROMBETA VAI ECOAR
+
+  E VOU PARA O MEU LAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 09df3322-14d4-4244-90f3-d13421150485
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: addca22a-ff58-4190-9d83-71147098f6ac
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8a3968f0-8133-4f3e-85a3-9cb61e6df7a0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3ae0bbab-c48c-4970-ac3d-8a654ae3cb7d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8f41b024-6a21-474d-ac50-abca151a2936
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 8a3968f0-8133-4f3e-85a3-9cb61e6df7a0
+- praise_material_id: 999c5733-e974-4846-bb7a-dfa49aa62588
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 3ae0bbab-c48c-4970-ac3d-8a654ae3cb7d
+- praise_material_id: 8dc39531-20b0-4e6d-99a1-d3a109db7a17
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 09df3322-14d4-4244-90f3-d13421150485
+  song_title: 200 - VOU PARA O MEU LAR
+- praise_material_id: 7a434792-af0a-40f2-8cd3-a549832dacb1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 09df3322-14d4-4244-90f3-d13421150485
+  song_title: 201 - SOBRE AS NUVENS JESUS VEM

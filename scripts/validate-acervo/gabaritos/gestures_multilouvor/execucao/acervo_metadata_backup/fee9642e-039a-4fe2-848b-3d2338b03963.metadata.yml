@@ -1,0 +1,72 @@
+praise_id: fee9642e-039a-4fe2-848b-3d2338b03963
+praise_name: Jesus, o melhor amigo
+praise_number: '119'
+praise_author: A.V.
+praise_rhythm: Marcha
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS, O MELHOR AMIGO,
+
+  QUE SEMPRE ESTÁ PRESENTE.
+
+  NELE HÁ PODER PARA MUDAR O CRENTE.
+
+
+  CORO 2X
+
+  MESMO EM LUTAS E AFLIÇÕES
+
+  ELE RESPONDE ÀS NOSSAS ORAÇÕES.
+
+
+  JESUS TEM PODER.
+
+  MESMO EM GUERRAS E BATALHAS
+
+  VOCÊ VAI VENCER, PORQUE JESUS NÃO FALHA.
+
+  SE VOCÊ QUISER UMA BÊNÇÃO,
+
+  BASTA SOMENTE CRER.
+
+  É SÓ PEDIR A ELE QUE VOCÊ VAI RECEBER.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8b223270-8a2d-4c90-bfb3-f60561e07b16
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2cf2a35f-a998-4ac8-9589-40574f656dea
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b158147d-5ba8-4185-bf21-15881c3aed6d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4cfe2322-b5f9-42b9-98b7-560dc658a00e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1d25f6ba-e6f8-498d-84e0-879fa1d4ae50
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: b158147d-5ba8-4185-bf21-15881c3aed6d
+- praise_material_id: e855f52c-3772-4470-95c0-5493be356d2e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4cfe2322-b5f9-42b9-98b7-560dc658a00e
+- praise_material_id: 860f619e-1c14-448e-885a-1eb5a8bb641b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8b223270-8a2d-4c90-bfb3-f60561e07b16
+  song_title: 119 - JESUS, O MELHOR AMIGO
+- praise_material_id: 1e27e857-c009-4ae6-9726-417a376384e5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8b223270-8a2d-4c90-bfb3-f60561e07b16
+  song_title: 120 - PODERÁ CANTAR

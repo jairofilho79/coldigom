@@ -1,0 +1,102 @@
+praise_id: c997658b-7c7e-47f1-9796-f0b149623e9b
+praise_name: Cristo é meu amigo, é meu amigo
+praise_number: '128'
+praise_author: Autor Desconhecido
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  CRISTO É MEU AMIGO,
+
+  É MEU AMIGO,
+
+  SEGURA FIRME A MINHA MÃO!
+
+
+  QUANDO EU ANDO BEM,
+
+  QUANDO ESTOU DOENTE,
+
+  QUANDO ESTOU CONTENTE,
+
+  OU TRISTE ESTOU: ALELUIA!
+
+
+  CRISTO É MEU AMIGO,
+
+  É MEU AMIGO,
+
+  SEGURA FIRME A MINHA MÃO!
+
+
+  CANTAR 2X
+
+  CRISTO É MEU AMIGO,
+
+  É MEU AMIGO,
+
+  SEGURA FIRME A MINHA MÃO!
+
+
+  QUANDO EU ANDO BEM,
+
+  QUANDO ESTOU DOENTE,
+
+  QUANDO ESTOU CONTENTE,
+
+  OU TRISTE ESTOU: ALELUIA!
+
+
+  FINAL
+
+  CRISTO É MEU AMIGO,
+
+  É MEU AMIGO,
+
+  SEGURA FIRME A MINHA MÃO!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1da5d600-ce99-450a-9ce4-2770f7ad3d11
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0c6d68cb-b3f7-4888-ab11-6687cfa85fa7
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bd3be529-fa95-4d8c-9a43-771249108ce3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7762480e-7423-485d-b2f0-2b2057a1ce78
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 85c98e01-80de-4879-be7d-7ad4d0d6924c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: bd3be529-fa95-4d8c-9a43-771249108ce3
+- praise_material_id: 21fa9538-8964-4180-9af7-1671d63988ad
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7762480e-7423-485d-b2f0-2b2057a1ce78
+- praise_material_id: bc8d4fff-05ec-4d50-ba4b-34803e182b35
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1da5d600-ce99-450a-9ce4-2770f7ad3d11
+  song_title: 127 - CRISTO É VITÓRIA
+- praise_material_id: f0c805c7-4054-4159-9337-79e3f3c748b8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1da5d600-ce99-450a-9ce4-2770f7ad3d11
+  song_title: 128 - CRISTO É MEU AMIGO, É MEU AMIGO
+- praise_material_id: 5785a132-78e6-4295-8a17-591446309a35
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1da5d600-ce99-450a-9ce4-2770f7ad3d11
+  song_title: 129 - ONTEM, HOJE E PARA SEMPRE

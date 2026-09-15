@@ -1,0 +1,74 @@
+praise_id: 5902a4a7-85d4-4ccd-ae4a-d53e9d2c8f29
+praise_name: No caminho, ele me guiará
+praise_number: '104'
+praise_author: J. Camargo Jr
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NO CAMINHO ELE ME GUIARÁ,
+
+  ELE QUER BEM A TODO PECADOR,
+
+  O SEU AMOR POR MIM, VOCÊ OUVIU?
+
+  DEUS GOSTA DE VOCÊ.
+
+
+  CORO
+
+  DEUS GOSTA DE VOCÊ (2X)
+
+  O SEU AMOR VOCÊ VERÁ
+
+  POR TODA A PARTE QUE OLHAR;
+
+  DEUS GOSTA DE VOCÊ.
+
+
+  O SOL DOURADO ELE FAZ NASCER,
+
+  AS LINDAS FLORES ELE FAZ ABRIR,
+
+  QUANDO O DESERTO CHORA A CHUVA CAI,
+
+  DEUS GOSTA DE VOCÊ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3674fb92-21b3-418d-89a2-1c8ea016bde8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 037df7db-6df4-45a2-8b83-f48c2109bc6e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7d6ea39b-e1d4-43b9-a05c-36cb0d957fdc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ab8eb5cb-dcbf-4840-8664-4dfecd5d00bd
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 75aeb25a-3680-4217-8a8e-4f48f2520b02
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 7d6ea39b-e1d4-43b9-a05c-36cb0d957fdc
+- praise_material_id: 6843d488-5482-4fff-ac57-b0b9bdf92813
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ab8eb5cb-dcbf-4840-8664-4dfecd5d00bd
+- praise_material_id: 01a2b707-82ef-45d4-886d-036c2e79998c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3674fb92-21b3-418d-89a2-1c8ea016bde8
+  song_title: 103 - VINDE MENINOS
+- praise_material_id: d77646f3-9ab9-4706-999e-ae81fdf6cb0d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3674fb92-21b3-418d-89a2-1c8ea016bde8
+  song_title: 104 - NO CAMINHO ELE ME GUIARÁ

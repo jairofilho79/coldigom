@@ -1,0 +1,74 @@
+praise_id: 010400df-cb1c-42c6-9af9-cb9c47228e66
+praise_name: Quero viver para sempre com Jesus
+praise_number: '182'
+praise_author: S.G.D.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CORO
+
+  QUERO VIVER PARA SEMPRE COM JESUS,
+
+  QUERO BEBER DA ÁGUA DA VIDA,
+
+  QUERO COMER DA ÁRVORE DA VIDA,
+
+  COM JESUS ETERNAMENTE VOU VIVER!
+
+
+  VOU VIVER, SIM, VOU VIVER,
+
+  PASSEAR NO JARDIM DO MEU SENHOR;
+
+  A ÁRVORE DA VIDA NO MEIO DO JARDIM
+
+  É CERTEZA QUE JESUS ME PROMETEU.
+
+
+  PARA TRÁS O PECADO FICARÁ,
+
+  SEU DOMÍNIO NÃO ME ATINGIRÁ.
+
+  ESCOLHI MUITO BEM:
+
+  VIVER ETERNAMENTE COM JESUS!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 40d3190c-30cc-4e24-a98f-9d378ca082f3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3ee0266d-46e5-4971-b5ef-7cd9a5d0cbd1
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5ce4730d-14bc-4a07-b5c5-1bc4488ecc5a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8711c1c8-8b7a-4894-9566-f06548ba7e55
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0cc8cfbe-94f2-42b0-91b4-163302dbb483
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5ce4730d-14bc-4a07-b5c5-1bc4488ecc5a
+- praise_material_id: 86f3e741-a19c-4ac6-973a-e5a71af70e36
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 8711c1c8-8b7a-4894-9566-f06548ba7e55
+- praise_material_id: ddd49ff6-ed9e-410c-a5de-1eae0848903b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 40d3190c-30cc-4e24-a98f-9d378ca082f3
+  song_title: 181 - JERUSALÉM, CIDADE DO MEU REI
+- praise_material_id: bf0264f3-9618-4030-a29f-34241718ae58
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 40d3190c-30cc-4e24-a98f-9d378ca082f3
+  song_title: 182 - QUERO VIVER PRA SEMPRE COM JESUS

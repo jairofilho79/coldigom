@@ -1,0 +1,79 @@
+praise_id: 6107db3b-82d4-46d6-a19d-dfade4579a66
+praise_name: Neste dia especial
+praise_number: 085
+praise_author: I.B.J.
+praise_rhythm: Country
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NESTE DIA ESPECIAL,
+
+  VOU LHE APRESENTAR JESUS,
+
+  QUE DISSIPA TODO MAL
+
+  E FAZ RAIAR EM NÓS SUA LUZ.
+
+
+  CORO
+
+  JESUS É O BOM AMIGO,
+
+  ABRIGO NO TEMPORAL,
+
+  QUE NOS LIVRA DO PERIGO
+
+  E POR NÓS VENCEU O MAL.
+
+
+  ABRA SEU CORAÇÃO
+
+  E VENHA CONHECER JESUS,
+
+  COM AMOR E SEGURANÇA
+
+  À VIDA ETERNA NOS CONDUZ.
+
+
+  FINAL
+
+  SIM, POR NÓS VENCEU O MAL.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3770db99-ed31-4d28-93f7-5d7ca18ffb14
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 42aefec1-7da8-455d-817d-bfe87b1de7a3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2989fa83-8310-4a69-9049-4d856cf4f757
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aafe4e02-7331-4e6e-83fd-9270b4de48db
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5b420f32-ddc8-4a32-97d7-99bb01544367
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 2989fa83-8310-4a69-9049-4d856cf4f757
+- praise_material_id: 63b32e85-2e0c-45f6-8b10-ea96bce61188
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: aafe4e02-7331-4e6e-83fd-9270b4de48db
+- praise_material_id: 5d850a27-e856-44cb-9077-e448d7049c06
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3770db99-ed31-4d28-93f7-5d7ca18ffb14
+  song_title: 85 - NESTE DIA ESPECIAL
+- praise_material_id: d364dc00-7207-409d-bf89-8778ebefe0f3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3770db99-ed31-4d28-93f7-5d7ca18ffb14
+  song_title: 86 - UM DIA MORREU O MEU JESUS

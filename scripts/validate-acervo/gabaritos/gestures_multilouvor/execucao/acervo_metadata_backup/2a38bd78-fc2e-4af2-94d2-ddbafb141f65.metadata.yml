@@ -1,0 +1,71 @@
+praise_id: 2a38bd78-fc2e-4af2-94d2-ddbafb141f65
+praise_name: Quando oro ao Senhor
+praise_number: '020'
+praise_author: C.M.V.C.S.
+praise_rhythm: Valseado
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'QUANDO ORO AO SENHOR
+
+  SINTO PAZ EM MEU CORAÇÃO.
+
+  SUA PRESENÇA É TÃO REAL,
+
+  SUA GRAÇA ME SATISFAZ.
+
+  /PORQUE JESUS POR MIM MORREU
+
+  E VIVO ESTÁ A INTERCEDER AO PAI POR MIM.
+
+
+  CANTAR 2X
+
+  POSSO ENTÃO DESCANSAR,
+
+  PORQUE EU SEI QUE O SENHOR
+
+  TODO BEM FARÁ PRA MIM.
+
+  /FINAL
+
+  TODO BEM FARÁ PRA MIM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 56b6e0bf-3d4c-40d7-a0e7-41ba1d710918
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 12fb45e5-59d2-441d-a8d2-665f9b439c5a
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d7d4dc84-812a-49d4-bbf7-b00ccd2fa450
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e34c56bc-ae74-4e3e-baff-ee57a3740e4a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 77ec0a6a-a5ca-40d2-b095-b187fec9e84d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: d7d4dc84-812a-49d4-bbf7-b00ccd2fa450
+- praise_material_id: e95595ff-d674-475d-96f2-e505f864f6b7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e34c56bc-ae74-4e3e-baff-ee57a3740e4a
+- praise_material_id: 0e02296d-cf0a-4a1f-b7a2-7bc2f819f384
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 56b6e0bf-3d4c-40d7-a0e7-41ba1d710918
+  song_title: 20 - QUANDO ORO AO SENHOR
+- praise_material_id: f7f4bf57-53b9-4ebb-9aa9-82acb273709e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 56b6e0bf-3d4c-40d7-a0e7-41ba1d710918
+  song_title: 21 - SANTO, JUSTO, PRÍNCIPE DA VIDA

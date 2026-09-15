@@ -1,0 +1,67 @@
+praise_id: a2efe49e-d9e0-4e66-b66c-e22b6f4f63b7
+praise_name: O céu e a terra passarão
+praise_number: '124'
+praise_author: 'F.S.P. / Mús.: F.S.P.; E.H.M.R.'
+praise_rhythm: Fox
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  O CÉU E A TERRA PASSARÃO
+
+  MAS AS MINHAS PALAVRAS NÃO HÃO DE PASSAR.
+
+
+  EU SOU DEUS, SOU FIEL,
+
+  NÃO TEMAIS, NEM VOS ASSUSTEIS!
+
+  PROCLAMAI A VITÓRIA,
+
+  RENOVAI A VOSSA FÉ,
+
+  E O VOSSO ÂNIMO PORQUE
+
+  /FINAL 2X
+
+  A TERRA PROMETIDA VOS DAREI.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: e90d5a40-a1bc-4533-9a94-a5bb598d54b1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1e404bfe-6060-430c-87d0-9d047ed7f6bd
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 55319b91-228a-478c-a567-c6a2d377fc69
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 83d59f27-eca7-4128-9b62-ef6dc70d29a7
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7c4bc2db-6c3c-49ec-bdcb-8a19de791efb
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 55319b91-228a-478c-a567-c6a2d377fc69
+- praise_material_id: 42bbb178-54a5-4647-8306-668856460e44
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 83d59f27-eca7-4128-9b62-ef6dc70d29a7
+- praise_material_id: d18eee28-edd3-4561-81f8-deb46bc265db
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e90d5a40-a1bc-4533-9a94-a5bb598d54b1
+  song_title: 123 - NESTA BATALHA NÃO TEREIS QUE PELEJAR
+- praise_material_id: 33fcb37a-d70c-4952-b13b-cd00774a8c54
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e90d5a40-a1bc-4533-9a94-a5bb598d54b1
+  song_title: 124 - O CÉU E A TERRA PASSARÃO

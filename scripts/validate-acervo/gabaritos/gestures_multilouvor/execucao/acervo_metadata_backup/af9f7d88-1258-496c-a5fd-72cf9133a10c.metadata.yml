@@ -1,0 +1,72 @@
+praise_id: af9f7d88-1258-496c-a5fd-72cf9133a10c
+praise_name: Jesus me ama
+praise_number: '101'
+praise_author: Autor Desconhecido
+praise_rhythm: Valseado
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS ME AMA E QUER SALVAR-ME,
+
+  JESUS ME AMA E QUER-ME BEM.
+
+
+  CORO
+
+  POR ISSO EU CANTO, SEMPRE ELE AMA,
+
+  JESUS ME AMA, MEU SALVADOR.
+
+
+  ESTIVE PRESO NO VIL PECADO,
+
+  ESTIVE PRESO, MAS ME SALVOU.
+
+
+  CASTIGO DURO QUE EU MEREÇO,
+
+  JESUS SOFREU JÁ EM MEU LUGAR.
+
+
+  AGORA, QUERO NA MINHA VIDA,
+
+  AO MEU AMIGO SEMPRE AGRADAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7bf2ab48-7145-488b-b47f-97f19124e66c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0f33fff2-ad44-4878-9ffc-98c2c648d1e7
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 94831b0f-34e5-4817-8095-b54c315b57ef
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 37c01150-60d0-4258-af73-06d15dbc0279
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1d251278-2805-433a-8073-a89403b06d51
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 94831b0f-34e5-4817-8095-b54c315b57ef
+- praise_material_id: 3533d36c-d16e-4e87-ade4-565dccddcc98
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 37c01150-60d0-4258-af73-06d15dbc0279
+- praise_material_id: 3a1d2cbc-666b-4987-afe5-e9564f3159cd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7bf2ab48-7145-488b-b47f-97f19124e66c
+  song_title: 101 - JESUS ME AMA
+- praise_material_id: 40c5d5a4-12d4-4f37-9bb7-1e09123024e3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7bf2ab48-7145-488b-b47f-97f19124e66c
+  song_title: 102 - DAS MARAVILHAS QUE A BÍBLIA CONTEM

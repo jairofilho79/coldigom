@@ -1,0 +1,64 @@
+praise_id: 9fae7adc-0e6f-4cee-9ac9-b0ef0cec528e
+praise_name: Jesus, quando me lembro
+praise_number: 029
+praise_author: C.M.V.
+praise_rhythm: Guarânia
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS, QUANDO ME LEMBRO
+
+  DO DIA EM QUE A TI ME ENTREGUEI,
+
+  LEMBRO DO CALOR QUE SENTIA
+
+  E DO AMOR QUE ME INVADIA,
+
+  LEMBRO QUE A PALAVRA ABRIA
+
+  E TUA VOZ OUVIA DIZER:
+
+  /FINAL 2X
+
+  "VINDE A MIM, OS CANSADOS E OPRIMIDOS,
+
+  E EU VOS ALIVIAREI."
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3c6348e1-efea-45a6-8ca7-9c75237ee879
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 08c9a4db-1447-4019-8f95-4dcc0634ac32
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 77170ef1-1a50-4f54-b128-8a3616cf45d0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 67d52136-a5cc-4697-8ad4-f1646593c3f2
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4cdcd117-31e8-46a3-971c-d99477339173
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 77170ef1-1a50-4f54-b128-8a3616cf45d0
+- praise_material_id: 36843540-4eb0-4a92-ad75-9c8309fb4bb2
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 67d52136-a5cc-4697-8ad4-f1646593c3f2
+- praise_material_id: 0dd82c77-19a9-4bc2-96a0-cc2c26ac18a5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3c6348e1-efea-45a6-8ca7-9c75237ee879
+  song_title: 29 - JESUS, QUANDO ME LEMBRO
+- praise_material_id: 33e06a12-34b7-4f16-af3b-1ac85db6cc3e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3c6348e1-efea-45a6-8ca7-9c75237ee879
+  song_title: 30 - ELE VIVE EM MIM

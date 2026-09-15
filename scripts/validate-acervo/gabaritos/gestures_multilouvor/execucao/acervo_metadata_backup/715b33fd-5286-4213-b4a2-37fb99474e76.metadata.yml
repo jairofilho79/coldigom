@@ -1,0 +1,90 @@
+praise_id: 715b33fd-5286-4213-b4a2-37fb99474e76
+praise_name: Cristo é vitória
+praise_number: '127'
+praise_author: Wendell P. Lovelles
+praise_rhythm: Marcha
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CRISTO É VITÓRIA!
+
+  PROCLAMAI COM REAL PRAZER;
+
+  CRISTO É VITÓRIA!
+
+  E COM ELE VAMOS NÓS VENCER!
+
+
+  SE FALTAR PRAZER E LUZ,
+
+  TUDO NOS DÁ JESUS,
+
+  TEMOS VITÓRIA
+
+  POR QUEM JÁ VENCEU NA CRUZ.
+
+
+  CRISTO É VITÓRIA!
+
+  PROCLAMAI COM REAL PRAZER;
+
+  CRISTO É VITÓRIA!
+
+  E COM ELE VAMOS NÓS VENCER!
+
+
+  SE FALTAR PRAZER E LUZ,
+
+  TUDO NOS DÁ JESUS,
+
+  TEMOS VITÓRIA
+
+  POR QUEM JÁ VENCEU NA CRUZ.
+
+  /FINAL
+
+  POR QUEM JÁ VENCEU NA CRUZ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 339f6a1a-9518-4d9c-8c7b-ea1ca543345e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: da10b209-270e-4fdb-b681-2fa7bd6ed733
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 01133121-4422-4954-8a25-e3b01746be62
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 210d2503-67cd-4f20-a9eb-950de531a38e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b711daec-05be-435d-ad86-636b41d71fc7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 01133121-4422-4954-8a25-e3b01746be62
+- praise_material_id: 20963b67-ba73-4f4f-8996-5612daac9cbc
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 210d2503-67cd-4f20-a9eb-950de531a38e
+- praise_material_id: ed0a1de5-e5bf-4155-aef4-5582d8420eeb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 339f6a1a-9518-4d9c-8c7b-ea1ca543345e
+  song_title: 127 - CRISTO É VITÓRIA
+- praise_material_id: 8d22563d-1be8-4281-a379-a3750f368e9c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 339f6a1a-9518-4d9c-8c7b-ea1ca543345e
+  song_title: 128 - CRISTO É MEU AMIGO, É MEU AMIGO
+- praise_material_id: 2906ad21-7046-4165-bc8d-f6eaa69097c9
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 339f6a1a-9518-4d9c-8c7b-ea1ca543345e
+  song_title: 129 - ONTEM, HOJE E PARA SEMPRE

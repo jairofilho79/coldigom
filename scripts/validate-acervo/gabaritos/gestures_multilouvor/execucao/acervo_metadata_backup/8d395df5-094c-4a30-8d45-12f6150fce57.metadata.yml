@@ -1,0 +1,68 @@
+praise_id: 8d395df5-094c-4a30-8d45-12f6150fce57
+praise_name: Com Jesus vencedor serei
+praise_number: '125'
+praise_author: S.D.A.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'COM JESUS VENCEDOR SEREI! (2X)
+
+  VENCEDOR, VENCEDOR, VENCEDOR SEREI!
+
+  COM JESUS VENCEDOR SEREI!
+
+
+  NAS BATALHAS ELE ME ACOMPANHA. (2X)
+
+  MEU JESUS, MEU JESUS,
+
+  SEMPRE ME ACOMPANHA.
+
+  COM JESUS VENCEDOR SEREI!
+
+
+  ELE É O MEU SALVADOR. (2X)
+
+  SALVADOR, SALVADOR É O MEU JESUS!
+
+  COM JESUS VENCEDOR SEREI!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 64955a9f-e191-465e-976b-4513ec6782ba
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e8a096a1-a72d-4ad2-a64a-5d091734fb70
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7adbc5e6-480a-4043-acee-30d59697e5f8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: da687b8d-ac57-4ba5-b895-991b32665a2d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 124a679b-3b2b-4c39-a3ca-42808e5b2ccc
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7adbc5e6-480a-4043-acee-30d59697e5f8
+- praise_material_id: c9016aeb-74bc-4c19-af5d-8412112538c1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: da687b8d-ac57-4ba5-b895-991b32665a2d
+- praise_material_id: 9a557072-13c1-4bce-b7ca-5a49f25faef7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 64955a9f-e191-465e-976b-4513ec6782ba
+  song_title: 125 - COM JESUS VENCEDOR SEREI
+- praise_material_id: eb71748a-c549-4843-b4ac-2b5845c08194
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 64955a9f-e191-465e-976b-4513ec6782ba
+  song_title: 126 - DEUS FORTE COMO JEOVÁ

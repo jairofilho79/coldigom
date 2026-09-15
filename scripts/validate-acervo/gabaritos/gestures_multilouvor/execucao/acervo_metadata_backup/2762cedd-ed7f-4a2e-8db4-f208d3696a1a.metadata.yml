@@ -1,0 +1,63 @@
+praise_id: 2762cedd-ed7f-4a2e-8db4-f208d3696a1a
+praise_name: Das maravilhas que a Bíblia contém
+praise_number: '102'
+praise_author: Philip Paul Bliss
+praise_rhythm: Balada
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DAS MARAVILHAS QUE A BÍBLIA CONTÉM,
+
+  EIS A MAIS LINDA: JESUS ME QUER BEM;
+
+  CHEGO-ME A ELE, NINGUÉM ME DETÉM,
+
+  QUANDO ME LEMBRO DE QUE ME QUER BEM.
+
+
+  OH! QUE PRAZER! JESUS ME QUER BEM,
+
+  SIM, ME QUER BEM, A TI TAMBÉM;
+
+  OH! QUE PRAZER! JESUS ME QUER BEM,
+
+  SIM, ME QUER BEM, JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b0b7c557-311e-4b3e-a586-c1cc48dafddc
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d450e61d-797c-4301-a883-eef8e6baeffd
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 26246014-9d86-44f3-b1a0-5301d2921420
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dcef3da4-1162-484a-92c6-29e3a6662b20
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 34e0a0c2-e02e-47cf-bc9e-d51d902ab6f0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 26246014-9d86-44f3-b1a0-5301d2921420
+- praise_material_id: 84e0a1f7-a5c3-463f-9aed-1fa08e04b740
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: dcef3da4-1162-484a-92c6-29e3a6662b20
+- praise_material_id: 89aa0dc1-db7c-49ec-8f4c-be8d4e3fe31f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b0b7c557-311e-4b3e-a586-c1cc48dafddc
+  song_title: 101 - JESUS ME AMA
+- praise_material_id: 5fd6e0c5-fa92-439c-a75c-dabd9f85a887
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b0b7c557-311e-4b3e-a586-c1cc48dafddc
+  song_title: 102 - DAS MARAVILHAS QUE A BÍBLIA CONTEM

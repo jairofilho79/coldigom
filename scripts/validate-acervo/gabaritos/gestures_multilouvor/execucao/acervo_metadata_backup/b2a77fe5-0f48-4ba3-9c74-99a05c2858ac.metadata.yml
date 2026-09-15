@@ -1,0 +1,72 @@
+praise_id: b2a77fe5-0f48-4ba3-9c74-99a05c2858ac
+praise_name: Hoje é um grande dia
+praise_number: '108'
+praise_author: I.B.J. / E.H.M.R.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HOJE É UM GRANDE DIA, É DIA DE LOUVAR;
+
+  LOUVEMOS A JESUS QUE ESTÁ NESTE LUGAR;
+
+  HOJE É DIA DE VITÓRIA E VITÓRIA ELE NOS DÁ;
+
+  RECEBA JESUS, ELE QUER TE ABENÇOAR.
+
+
+  CORO
+
+  VENHAM TODOS JÁ, A JESUS VAMOS LOUVAR!
+
+  ACEITEM O SALVADOR
+
+  QUE VIDA ETERNA QUER LHES DAR!
+
+
+  HOJE AQUI ESTOU PARA TE LOUVAR
+
+  POR TANTAS MARAVILHAS, POR SEMPRE ME AMAR.
+
+  TUA OBRA EM MINHA VIDA, VOU ANUNCIAR,
+
+  OBRA DE ALEGRIA E ALEGRIA QUE É SEM PAR!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7fd1c6fb-bddc-4ff0-b781-f245ce14567d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5fb4b78c-ad0d-4631-b18a-19239d49f569
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 835d0bd5-f2ee-49d8-ab01-1f7709087811
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 64808c15-beed-4500-b2d7-4d65070e48a2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a09ab83e-f0a5-4abf-8542-a6212327fd90
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 835d0bd5-f2ee-49d8-ab01-1f7709087811
+- praise_material_id: 0efed0d9-0208-4ea3-87bb-e1ca90fba006
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 64808c15-beed-4500-b2d7-4d65070e48a2
+- praise_material_id: c1f70aa7-40a0-4145-bed3-836fabd89db6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7fd1c6fb-bddc-4ff0-b781-f245ce14567d
+  song_title: 107 - EU QUERO CANTAR
+- praise_material_id: 6cb913c4-cac1-490e-ac79-b324b4fc82ac
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7fd1c6fb-bddc-4ff0-b781-f245ce14567d
+  song_title: 108 - HOJE É UM GRANDE DIA

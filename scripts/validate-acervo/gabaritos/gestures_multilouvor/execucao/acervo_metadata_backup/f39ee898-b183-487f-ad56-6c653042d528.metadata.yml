@@ -1,0 +1,71 @@
+praise_id: f39ee898-b183-487f-ad56-6c653042d528
+praise_name: Te suplico, ó Deus, em oração
+praise_number: '014'
+praise_author: E.H.M.R.
+praise_rhythm: Básico
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'TE SUPLICO, Ó DEUS, EM ORAÇÃO.
+
+  POIS DESEJO DE TODO O CORAÇÃO
+
+  ENTENDER A TUA PALAVRA,
+
+  TER SABEDORIA E TEMOR PARA PRESERVAR-ME
+
+  NO TEU CAMINHO, SENHOR.
+
+
+  CANTAR 2X
+
+  COMO PRATA E COMO O OURO BUSCAREI.
+
+  COMO UM TESOURO ESCONDIDO, PROCURAREI;
+
+  A TUA PALAVRA ENTRARÁ EM MEU CORAÇÃO
+
+  DANDO-ME A LEVEZA DO PERDÃO
+
+  OS TEUS MANDAMENTOS SUAVES SERÃO
+
+  E UM LOUVOR DE GRATIDÃO ENTOAREI A TI, SENHOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 268bd7fa-94cd-4e6a-a4de-b60f82731cb8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 03eb5214-ac18-4f6f-97e3-c1ed3f6cfbd1
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1f42e814-5d87-4b9d-bbd0-79f7ec7de55c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9b3d38c0-564b-4582-9cc1-841bdaf6692e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: db4592cb-a593-489c-ba42-f7e738744e88
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 1f42e814-5d87-4b9d-bbd0-79f7ec7de55c
+- praise_material_id: a6d0c3e2-daec-4270-96c3-2b812f33eb5c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9b3d38c0-564b-4582-9cc1-841bdaf6692e
+- praise_material_id: e47fbed7-e14b-4943-976a-0e7416b61a7c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 268bd7fa-94cd-4e6a-a4de-b60f82731cb8
+  song_title: 14 - TE SUPLICO, Ó DEUS, EM ORAÇÃO
+- praise_material_id: 5a93e9ae-d3e3-421c-b6c8-abae7ef0f23a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 268bd7fa-94cd-4e6a-a4de-b60f82731cb8
+  song_title: 15 - JESUS VEM ME ABENÇOAR

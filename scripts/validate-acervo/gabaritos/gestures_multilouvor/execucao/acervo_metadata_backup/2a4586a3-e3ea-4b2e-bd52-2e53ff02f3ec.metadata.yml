@@ -1,0 +1,65 @@
+praise_id: 2a4586a3-e3ea-4b2e-bd52-2e53ff02f3ec
+praise_name: O Senhor é a minha luz e a minha salvação
+praise_number: 078
+praise_author: J.J.G.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  O SENHOR É A MINHA LUZ
+
+  E A MINHA SALVAÇÃO,
+
+  A QUEM EU TEMEREI?
+
+  DE QUEM ME RECEAREI?
+
+
+  BOM E RETO É O SENHOR,
+
+  POIS APONTA O CAMINHO AO PECADOR.
+
+  NELE HÁ O PERDÃO,
+
+  NELE ESPERO TODO DIA. (3X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 4f97737e-a54a-458f-a25d-e5c5beea00a6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7d3c44b6-e765-448d-bdb3-a5cdc51f04f8
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aeed78f3-fe61-4285-8c13-8bf47dbc02f8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4baf2b89-c1e3-4819-9aeb-a659e51b574b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c828cdff-5126-456a-99dc-17fd677031c1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: aeed78f3-fe61-4285-8c13-8bf47dbc02f8
+- praise_material_id: aca26958-2bef-4fd6-bf79-26e99ef47395
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4baf2b89-c1e3-4819-9aeb-a659e51b574b
+- praise_material_id: 5d80d511-1cc4-4e46-ad9d-6b678747adf0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4f97737e-a54a-458f-a25d-e5c5beea00a6
+  song_title: 77 - VOU CONTAR-VOS DE JESUS
+- praise_material_id: 86535bd9-fbcb-43f2-aabb-4b6cc1311c59
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4f97737e-a54a-458f-a25d-e5c5beea00a6
+  song_title: 78 - O SENHOR É A MINHA LUZ

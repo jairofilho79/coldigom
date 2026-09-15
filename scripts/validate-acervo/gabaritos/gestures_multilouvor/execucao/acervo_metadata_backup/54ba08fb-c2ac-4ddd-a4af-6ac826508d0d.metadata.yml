@@ -1,0 +1,67 @@
+praise_id: 54ba08fb-c2ac-4ddd-a4af-6ac826508d0d
+praise_name: Orar faz bem
+praise_number: '179'
+praise_author: F.S.P.
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ORAR FAZ BEM! (2X)
+
+  FAZ BEM À ALMA,
+
+  FAZ BEM AO CORAÇÃO,
+
+  ALEGRA A ALMA,
+
+  ALEGRA O CORAÇÃO!
+
+
+  ORAR FAZ BEM! (2X)
+
+  O NOSSO DEUS RESPONDE,
+
+  RETIRA A AFLIÇÃO!
+
+  O NOSSO DEUS RESPONDE,
+
+  CONFORTA O CORAÇÃO!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 006c75e3-833b-4241-8b52-84dfd1151309
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 28866eb5-ac75-40f5-9225-e2eadb3265c8
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 64f7f34a-1374-4b9d-b456-b24b92ab829a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9a7b5e86-30cf-4493-850d-29ae784c973c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: abfbfdbb-d34e-4a46-b2bd-ca3c150e7f1e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 64f7f34a-1374-4b9d-b456-b24b92ab829a
+- praise_material_id: 0bcdf0bb-9582-48ac-8333-b6bf21220b50
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9a7b5e86-30cf-4493-850d-29ae784c973c
+- praise_material_id: af3bf0af-166e-48b6-a0d8-c238889a19ea
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 006c75e3-833b-4241-8b52-84dfd1151309
+  song_title: 179 – ORAR FAZ BEM
+- praise_material_id: 438d3109-8978-4d88-bbbe-c5294f4bd38b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 006c75e3-833b-4241-8b52-84dfd1151309
+  song_title: 180 - QUERO SER FIEL

@@ -1,0 +1,58 @@
+praise_id: 93aec720-8415-4fcb-aba0-633d11e241ce
+praise_name: Ele vive em mim
+praise_number: '030'
+praise_author: S.P.F.M.
+praise_rhythm: Valseado
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ELE VIVE EM MIM, (2X)
+
+  A FLOR DO JARDIM, JESUS, ELE VIVE EM MIM.
+
+  /ELE É O MEU REI, (2X)
+
+  SÓ A ELE SERVIREI, ELE É MEU REI.
+
+  /ELE VAI VOLTAR, (2X)
+
+  VEM A CRISTO SEM TARDAR, ELE VAI VOLTAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: fb3e75bb-051b-42d1-bcd3-f3d799cc30e6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bf75c51c-931e-45a7-9183-0dc369cde183
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 51f8a363-9ed6-4233-b023-76015ca119f4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 76823de8-f08d-4708-9ad1-616f519f4c57
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4abc5cd4-1ded-4310-a667-e4264594fa92
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 51f8a363-9ed6-4233-b023-76015ca119f4
+- praise_material_id: 2fb958c1-c8a5-47ad-a649-9bf7538918a6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 76823de8-f08d-4708-9ad1-616f519f4c57
+- praise_material_id: 2fe56c82-f14a-4695-97c8-609ea013e9f5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fb3e75bb-051b-42d1-bcd3-f3d799cc30e6
+  song_title: 29 - JESUS, QUANDO ME LEMBRO
+- praise_material_id: b9547bea-8669-417d-a71b-d340c87d3ba4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fb3e75bb-051b-42d1-bcd3-f3d799cc30e6
+  song_title: 30 - ELE VIVE EM MIM

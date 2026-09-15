@@ -1,0 +1,74 @@
+praise_id: 47f80b90-00a7-4ead-b75a-6f6421d0ebdc
+praise_name: Sou o santo
+praise_number: '171'
+praise_author: N.R.R.A.
+praise_rhythm: Básico
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  SOU O SANTO, O VERDADEIRO,
+
+  TENHO A CHAVE DE DAVI;
+
+  A PORTA ABERTA ESTÁ,
+
+  PRA QUE POSSAS ME ADORAR!
+
+
+  GUARDASTE AS MINHAS PALAVRAS,
+
+  NÃO NEGASTE O MEU NOME;
+
+  TAMBÉM EU TE GUARDAREI,
+
+  EIS QUE VENHO SEM DEMORA.
+
+
+  FINAL 2X
+
+  ENTÃO, GUARDA O QUE TENS,
+
+  PARA QUE NINGUÉM
+
+  TOME A TUA COROA.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: efcaea76-c41a-467d-a96e-361f1866f53a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 159a4dcc-afdf-4ca0-b80d-64956acc9698
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e1178f5b-b9b8-4963-8081-f4a1b0c7569b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 737907b2-c6ee-4af6-8641-715d6f71b22a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 401ffee1-ec2d-4206-9f33-47d759365d8a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e1178f5b-b9b8-4963-8081-f4a1b0c7569b
+- praise_material_id: 60d51814-fbe6-420d-9a45-9f69818d548a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 737907b2-c6ee-4af6-8641-715d6f71b22a
+- praise_material_id: 9954da2b-6fcd-4366-8c18-2b84a4d885b5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: efcaea76-c41a-467d-a96e-361f1866f53a
+  song_title: 170 - NÓS SOMOS A CARTA DE CRISTO
+- praise_material_id: 4323e844-8e7a-4257-885c-45a0b6e7f185
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: efcaea76-c41a-467d-a96e-361f1866f53a
+  song_title: 171 - SOU O SANTO

@@ -1,0 +1,51 @@
+praise_id: cbe45953-1bed-4ae5-9438-5182b39e5012
+praise_name: Tem bom ânimo, pobre pecador
+praise_number: '063'
+praise_author: S.G.D.
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: "TEM BOM ÂNIMO POBRE PECADOR,\nJESUS ESTÁ PRESENTE PARA TE SALVAR;\n\
+  SALVOU ZAQUEU, O RICO QUE ERA POBRE,\nBUSCOU UM CEGO À BEIRA DO CAMINHO.\n\nBARTIMEU,\
+  \ QUE QUERES QUE EU TE FAÇA?\n/\"QUE EU VEJA!\" \nFOI A RESPOSTA PRONTA;\nVENDO\
+  \ AGORA O ROSTO DE JESUS,\nLOGO O SEGUIU LOUVANDO ALEGREMENTE.\n\nPODES TER TUDO\
+  \ OU NADA POSSUIR\nJESUS PERGUNTA AGORA:\n\"QUE QUERES QUE EU TE FAÇA?\"\nRESPONDE\
+  \ DEPRESSA: A TUA SALVAÇÃO;\nVIDA ETERNA JESUS TE DÁ AGORA.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d80985c2-f985-46a2-b8ba-2dd44b8bb87d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5694865d-d1a9-4d46-89f7-a1c09a565080
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 63944f2d-2d19-4e27-9514-ff3f04e398c7
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1df9b2b3-9576-4b6d-b664-9cc66284a55c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 589cd09c-5165-46ad-bb5b-106143f0f259
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 63944f2d-2d19-4e27-9514-ff3f04e398c7
+- praise_material_id: 38e1d3b5-af2a-47a1-858a-12b1721bb704
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 1df9b2b3-9576-4b6d-b664-9cc66284a55c
+- praise_material_id: 55d13fbb-624f-4c58-b6c4-933d385cb9af
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d80985c2-f985-46a2-b8ba-2dd44b8bb87d
+  song_title: 62 - É TÃO TRISTE NÃO VER A LUZ (O CEGO BARTIMEU)
+- praise_material_id: ed41f499-0279-4ef1-9bfd-3800afb3f517
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d80985c2-f985-46a2-b8ba-2dd44b8bb87d
+  song_title: 63 - TEM BOM ÂNIMO, POBRE PECADOR

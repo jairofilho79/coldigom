@@ -1,0 +1,95 @@
+praise_id: e94d1f56-fb81-49b2-b027-1087b87dc011
+praise_name: Haveremos de chegar
+praise_number: '105'
+praise_author: Autor Desconhecido
+praise_rhythm: Repique
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HAVEREMOS DE CHEGAR
+
+  PELO PODER DO SENHOR EM JERUSALÉM;
+
+  ONDE A FELICIDADE
+
+  PARA SEMPRE REINARÁ, EM JERUSALÉM.
+
+
+  *CORO
+
+  ALELUIA, CANTAREMOS,
+
+  LOUVANDO AO SALVADOR EM JERUSALÉM,
+
+  POIS ALI JAMAIS OS MALES
+
+  PODERÃO NOS ALCANÇAR,
+
+  NA FELIZ JERUSALÉM.
+
+  /INSTRUMENTOS
+
+
+  QUERES TU TAMBÉM ENTRAR
+
+  COM OS SALVOS POR JESUS EM JERUSALÉM?
+
+  É PRECISO, HOJE MESMO,
+
+  ACEITAR ESSA LUZ, CAMINHANDO À JERUSALÉM.
+
+
+  *CORO
+
+  ALELUIA, CANTAREMOS,
+
+  LOUVANDO AO SALVADOR EM JERUSALÉM,
+
+  POIS ALI JAMAIS OS MALES
+
+  PODERÃO NOS ALCANÇAR,
+
+  NA FELIZ JERUSALÉM.
+
+  /FINAL
+
+  NA FELIZ JERUSALÉM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 78532855-b6a0-4943-ac8a-205c82c25370
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d84247d0-0c92-46ee-b556-f3434704c126
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fbcdb96e-d14b-40b8-ac89-8fe4992b5235
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ae5ab153-37b2-4f5a-8f69-6329b23027fe
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: efeb96e8-0741-4c16-8cc4-734837190527
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: fbcdb96e-d14b-40b8-ac89-8fe4992b5235
+- praise_material_id: dbf8cfed-5568-4a53-8a15-dc7da6f46e02
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ae5ab153-37b2-4f5a-8f69-6329b23027fe
+- praise_material_id: 4fde1c98-8e89-4f46-b905-3ff7ec9ea06b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 78532855-b6a0-4943-ac8a-205c82c25370
+  song_title: 105 - HAVEREMOS DE CHEGAR
+- praise_material_id: afc069e0-d2d6-4ed4-ae4d-ce08a27b5341
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 78532855-b6a0-4943-ac8a-205c82c25370
+  song_title: 106 - JESUS CRISTO É O CAMINHO

@@ -1,0 +1,120 @@
+praise_id: 32039e1e-2824-4ce5-96d9-27d99a75bfce
+praise_name: Jerusalém anseio ver
+praise_number: '188'
+praise_author: J.S.M.
+praise_rhythm: Fox Abafado
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JERUSALÉM ANSEIO VER,
+
+  CIDADE SANTA CHEIA DE AMOR,
+
+  OH! COMO É LINDO SEU ESPLENDOR;
+
+  A LUZ QUE BRILHA, LUZ DO MEU SENHOR;
+
+
+  RUAS DE OURO ANDAREI,
+
+  JUNTO COM OS ANJOS TRILHAREI,
+
+  VEREI A FACE DE JESUS
+
+  E VIVEREI NA SUA LUZ.
+
+
+  IREI MORAR, COM JESUS VOU HABITAR
+
+  EM GRANDE GLÓRIA E ESPLENDOR
+
+  COM MEU SENHOR;
+
+  LÁ DOR NÃO HAVERÁ,
+
+  TRISTEZAS NEM DESILUSÕES,
+
+  SEMPRE ESTAREI
+
+  BEM PERTINHO DO MEU REI.
+
+  /INSTRUMENTOS
+
+
+  JERUSALÉM ANSEIO VER,
+
+  CIDADE SANTA CHEIA DE AMOR,
+
+  OH! COMO É LINDO SEU ESPLENDOR;
+
+  A LUZ QUE BRILHA, LUZ DO MEU SENHOR;
+
+
+  RUAS DE OURO ANDAREI,
+
+  JUNTO COM OS ANJOS TRILHAREI,
+
+  VEREI A FACE DE JESUS
+
+  E VIVEREI NA SUA LUZ.
+
+
+  IREI MORAR, COM JESUS VOU HABITAR
+
+  EM GRANDE GLÓRIA E ESPLENDOR
+
+  COM MEU SENHOR;
+
+  LÁ DOR NÃO HAVERÁ,
+
+  TRISTEZAS NEM DESILUSÕES,
+
+  SEMPRE ESTAREI
+
+  BEM PERTINHO DO MEU REI.
+
+
+  FINAL
+
+  SEMPRE ESTAREI
+
+  BEM PERTINHO DO MEU REI.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c7a6fe26-a77d-413b-9380-b5ef79fb9deb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f1de494d-de47-49df-8e2f-a6027a4b765e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5359f0ad-a56f-4a9b-a50e-8e218ec9e212
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 98a214eb-50d5-4cdd-a068-99d9f37132e4
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c2d3722b-4dd9-47f4-a784-3cd241f178b8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5359f0ad-a56f-4a9b-a50e-8e218ec9e212
+- praise_material_id: df79c697-d247-4d10-8cb1-401708e1f446
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 98a214eb-50d5-4cdd-a068-99d9f37132e4
+- praise_material_id: a89bae97-b3d9-4296-9315-cb836f5f4279
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c7a6fe26-a77d-413b-9380-b5ef79fb9deb
+  song_title: 187 - VARÕES GALILEUS
+- praise_material_id: cfa3bb5e-ef7f-448a-af5e-c15f2ac04e80
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c7a6fe26-a77d-413b-9380-b5ef79fb9deb
+  song_title: 188 - JERUSALÉM ANSEIO VER

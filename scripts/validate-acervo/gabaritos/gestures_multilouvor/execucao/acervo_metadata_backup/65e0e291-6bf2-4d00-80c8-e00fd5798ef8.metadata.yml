@@ -1,0 +1,81 @@
+praise_id: 65e0e291-6bf2-4d00-80c8-e00fd5798ef8
+praise_name: Igreja, corpo de Cristo
+praise_number: '190'
+praise_author: S.G.D.
+praise_rhythm: Guarânia
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'IGREJA, CORPO DE CRISTO,
+
+  FOSTE COMPRADA COM O SEU SANGUE,
+
+  A TI EU PERTENÇO,
+
+  JESUS JÁ ME SALVOU.
+
+
+  CORO
+
+  MINHA IGREJA É GLORIOSA,
+
+  É A NOIVA DO SENHOR,
+
+  JESUS VEM, SIM, BUSCÁ-LA,
+
+  EU VOU COM O SENHOR.
+
+
+  QUERES TU SUBIR TAMBÉM?
+
+  VEM DEPRESSA PARA JESUS,
+
+  ELE TE ESPERA COM AMOR,
+
+  VEM, VEM, DEPRESSA VEM.
+
+
+  FINAL
+
+  JESUS VEM, SIM, BUSCÁ-LA,
+
+  ORA VEM, SENHOR JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9a852919-a6a6-4163-a380-3c4097a4c139
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e2333567-7220-44be-a4a9-eb9ada0fd2b9
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b263ccdf-c3ee-40af-bd4d-db2faf8f17b3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e4942caf-cf43-4298-b073-ba26307729a1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: da0f811f-0939-4b02-bdeb-c8ce8d6f21b0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: b263ccdf-c3ee-40af-bd4d-db2faf8f17b3
+- praise_material_id: c4b3f5f1-b7b7-443d-9927-64ffb1727351
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e4942caf-cf43-4298-b073-ba26307729a1
+- praise_material_id: 5af05c33-607e-4f59-9b24-8c0e454e5769
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9a852919-a6a6-4163-a380-3c4097a4c139
+  song_title: 189 - UM DIA A IGREJA SUBIRÁ
+- praise_material_id: df71ed97-9ec8-4ff5-912d-ca689970f5e0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9a852919-a6a6-4163-a380-3c4097a4c139
+  song_title: 190 - IGREJA, CORPO DE CRISTO

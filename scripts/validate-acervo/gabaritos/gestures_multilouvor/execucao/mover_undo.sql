@@ -1,0 +1,2 @@
+UPDATE praise_materials SET praise_id = '55275018-7eda-4ee4-9465-1d7ab4aa840e', r2_key = 'assets/praises/55275018-7eda-4ee4-9465-1d7ab4aa840e/d86f070a-a8f2-4148-9091-b74381f40edf.gestures' WHERE id = 'd86f070a-a8f2-4148-9091-b74381f40edf';
+UPDATE praise_materials SET praise_id = '4366d1f8-cf08-45d2-9dbb-8e69d5e1d2c9', r2_key = 'assets/praises/4366d1f8-cf08-45d2-9dbb-8e69d5e1d2c9/179fa9bb-07f1-4150-a074-b13445562bf4.gestures' WHERE id = '179fa9bb-07f1-4150-a074-b13445562bf4';

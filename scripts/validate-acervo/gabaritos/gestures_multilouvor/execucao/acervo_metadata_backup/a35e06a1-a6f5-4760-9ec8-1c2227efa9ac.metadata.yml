@@ -1,0 +1,63 @@
+praise_id: a35e06a1-a6f5-4760-9ec8-1c2227efa9ac
+praise_name: É somente teu meu coração
+praise_number: '055'
+praise_author: Cristina Manera Vianna
+praise_rhythm: Básico 2
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'É SOMENTE TEU MEU CORAÇÃO, SENHOR,
+
+  É SOMENTE TEU MEU CORPO E MEU LOUVOR;
+
+  É SOMENTE TEU, MEU PAI, O MEU AMOR,
+
+  SOU SOMENTE TEU, MEU REDENTOR.
+
+
+  QUERO TE AMAR, MEU DEUS, Ó MEU SENHOR,
+
+  QUERO TE ADORAR, PRA SEMPRE, COM ARDOR;
+
+  QUERO A TI ORAR COM FÉ E COM FERVOR,
+
+  SOU SOMENTE TEU, MEU REDENTOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7f3a80e0-1760-4afc-9c2e-cc056fde9738
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d1b0de25-e8c6-4949-9587-0d65a2d31193
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cd388f5b-14a7-42a5-81a2-9047163f48f9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 81f286d9-b6fc-4ff0-b0b9-c3c27fbd0b88
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 07ec7e48-fae7-4ffc-87a9-a3f158e0b653
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: cd388f5b-14a7-42a5-81a2-9047163f48f9
+- praise_material_id: 5c7b814d-d8ac-40af-8e62-a02f82ada1bf
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 81f286d9-b6fc-4ff0-b0b9-c3c27fbd0b88
+- praise_material_id: 8775b31c-5418-4dad-97bd-21901ceca261
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7f3a80e0-1760-4afc-9c2e-cc056fde9738
+  song_title: 54 - COMO É BOM SABER
+- praise_material_id: 8115af7f-dd1e-4607-8a30-cfd9a442b94a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7f3a80e0-1760-4afc-9c2e-cc056fde9738
+  song_title: 55 - É SOMENTE TEU MEU CORAÇÃO

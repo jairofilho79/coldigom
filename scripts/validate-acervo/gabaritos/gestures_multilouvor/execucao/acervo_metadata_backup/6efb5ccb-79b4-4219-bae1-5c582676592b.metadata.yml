@@ -1,0 +1,49 @@
+praise_id: 6efb5ccb-79b4-4219-bae1-5c582676592b
+praise_name: Andando em espírito (Fruto do Espírito)
+praise_number: '148'
+praise_author: C.M.V.C.S.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: "ANDANDO EM ESPÍRITO \nVENCEREI A TENTAÇÃO,\nAGRADAREI A DEUS\nEM PERFEITA\
+  \ COMUNHÃO,\n\n\"POIS O FRUTO DO ESPÍRITO É:\nAMOR, GOZO, PAZ,\nLONGANIMIDADE, BENIGNIDADE,\n\
+  BONDADE, FÉ, MANSIDÃO, TEMPERANÇA”.\n\nFINAL 2X\nVIVENDO EM ESPÍRITO,\nANDANDO EM\
+  \ ESPÍRITO,\nASSIM SOMOS SERVOS FIÉIS DE CRISTO.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0e76258d-f6f9-4cf9-8661-80aa0f2f0c6e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6ffb3f44-9810-43b1-bdc2-05d85bf32ed3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0cf0f939-4be1-486d-bc03-9b86c1a20456
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d02d3000-3b7a-4a18-930f-bacc516c19ce
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9e05af88-dacd-4b14-bf9a-23d532469be1
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0cf0f939-4be1-486d-bc03-9b86c1a20456
+- praise_material_id: cd1818af-e071-41ac-8f2d-f015a92ac12e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d02d3000-3b7a-4a18-930f-bacc516c19ce
+- praise_material_id: d724fd58-bfe8-48aa-b8e9-803b1ffc9977
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0e76258d-f6f9-4cf9-8661-80aa0f2f0c6e
+  song_title: 147 - EM TUAS PISADAS
+- praise_material_id: 39fb07c0-55c2-4b05-bfd7-19f93edf2b0d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0e76258d-f6f9-4cf9-8661-80aa0f2f0c6e
+  song_title: 148 - ANDANDO EM ESPÍRITO (FRUTO DO ESPÍRITO)

@@ -1,0 +1,83 @@
+praise_id: 6deaaa50-631a-44ac-a6e5-59484dece374
+praise_name: Purificado com sangue estou
+praise_number: '013'
+praise_author: Mr. & Mrs. Seth Sykes
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'PURIFICADO COM SANGUE ESTOU,
+
+  QUAL NEVE ME TORNOU;
+
+  ÁGUA DA VIDA EM JESUS BEBI,
+
+  SATISFEITO ME SENTI.
+
+
+  PARA JESUS, LÁ NA CRUZ, EU OLHEI,
+
+  E O MEU FARDO AO CHÃO DEIXEI;
+
+  CANTANDO VOU: GLÓRIA AO SENHOR!
+
+  GLÓRIA A CRISTO, NOSSO DEUS!
+
+
+  PURIFICADO COM SANGUE ESTOU,
+
+  QUAL NEVE ME TORNOU;
+
+  ÁGUA DA VIDA EM JESUS BEBI,
+
+  SATISFEITO ME SENTI.
+
+
+  FINAL
+
+  PARA JESUS, LÁ NA CRUZ, EU OLHEI,
+
+  E O MEU FARDO AO CHÃO DEIXEI;
+
+  CANTANDO VOU: GLÓRIA AO SENHOR!
+
+  GLÓRIA A CRISTO, NOSSO DEUS!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1aa36f6e-29d8-4449-b963-5b16df6131d4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 11c8e03e-c162-4775-abf3-b559ca72fb9a
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 45b8d27c-255d-48a6-9f7f-43cb401d231e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bc2eae8e-728e-4a5c-be3f-77c376c45b16
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fc497fd5-d8fb-472d-8b8a-d9d7f28aed64
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 45b8d27c-255d-48a6-9f7f-43cb401d231e
+- praise_material_id: c92de519-b56f-47c4-aede-b8067f8c59f4
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: bc2eae8e-728e-4a5c-be3f-77c376c45b16
+- praise_material_id: f05f24da-ee35-4ab9-bbea-c554fd1af9c7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1aa36f6e-29d8-4449-b963-5b16df6131d4
+  song_title: 12 - PERDOA-ME SENHOR, SEGUNDO O SEU AMOR
+- praise_material_id: b97c545f-ced0-4158-8231-b646aabc13d0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1aa36f6e-29d8-4449-b963-5b16df6131d4
+  song_title: 13 - PURIFICADO COM SANGUE ESTOU

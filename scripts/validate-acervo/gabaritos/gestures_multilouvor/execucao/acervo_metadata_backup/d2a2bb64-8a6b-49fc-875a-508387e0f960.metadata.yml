@@ -1,0 +1,62 @@
+praise_id: d2a2bb64-8a6b-49fc-875a-508387e0f960
+praise_name: Tu és o Cristo, filho do Deus vivo
+praise_number: '072'
+praise_author: E.H.M.R.
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  TU ÉS O CRISTO,
+
+  O FILHO DO DEUS VIVO,
+
+  NOSSO SALVADOR, JESUS, NOME DOCE;
+
+  MORRESTE NA CRUZ PRA NOS SALVAR,
+
+  RESSUSCITASTE E NO CÉU ESTÁS,
+
+  VOLTARÁS E NOS LEVARÁS
+
+  PARA CONTIGO HABITAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 875fe072-1a19-425b-8749-4466c4082b60
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 492f2af1-928b-4e95-b367-344d4c247d64
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 86eff89c-0c21-4352-b187-6c17ef2445b8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 93e56c93-4f4d-43ae-884d-5aa233d8e907
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 96ea9d89-737f-4274-9252-1f27629730c8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 86eff89c-0c21-4352-b187-6c17ef2445b8
+- praise_material_id: c0a5b009-4d96-42d2-a1c4-b491ba812271
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 93e56c93-4f4d-43ae-884d-5aa233d8e907
+- praise_material_id: 8164c34c-2aa2-4b1e-8673-08012e70ad1a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 875fe072-1a19-425b-8749-4466c4082b60
+  song_title: 71 - JESUS VIU A MULTIDÃO (A MULTIPLICAÇÃO)
+- praise_material_id: 156a0de3-9a59-4b8f-b027-8302f4387621
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 875fe072-1a19-425b-8749-4466c4082b60
+  song_title: 72 - TU ÉS O CRISTO, O FILHO DO DEUS VIVO

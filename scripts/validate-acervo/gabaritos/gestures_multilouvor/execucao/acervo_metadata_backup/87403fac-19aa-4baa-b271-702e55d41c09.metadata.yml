@@ -1,0 +1,88 @@
+praise_id: 87403fac-19aa-4baa-b271-702e55d41c09
+praise_name: Varões galileus
+praise_number: '187'
+praise_author: R.D.B.
+praise_rhythm: Balada
+praise_tonality: Dm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VARÕES GALILEUS
+
+  NÃO VOS MARAVILHEIS,
+
+  /CANTAR 2X
+
+  ESTE MESMO JESUS
+
+  QUE HOJE VISTES SUBIR
+
+  VOLTARÁ OUTRA VEZ.
+
+
+  VARÕES GALILEUS
+
+  NÃO VOS MARAVILHEIS,
+
+  /CANTAR 2X
+
+  ESTE MESMO JESUS
+
+  QUE HOJE VISTES SUBIR
+
+  VOLTARÁ OUTRA VEZ.
+
+
+  E VOS LEVARÁ (E VOS LEVARÁ)
+
+  PARA UM LAR DE PAZ (UM LAR DE PAZ),
+
+  A CIDADE DE LUZ ONDE A DOR CESSARÁ;
+
+  PRANTO NÃO TEREIS (PRANTO NÃO TEREIS),
+
+  QUAIS OS ANJOS SEREIS (ANJOS SEREIS).
+
+  /CANTAR 2X
+
+  ESTE MESMO JESUS QUE HOJE VISTES SUBIR
+
+  VOLTARÁ OUTRA VEZ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 48984951-101d-4fdb-8272-52e8138f5c59
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fd3ed7f8-5415-47fa-936e-d4b61e6255df
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 061dfaaa-796a-4189-954e-6537f524161e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b6f5ab2a-b22b-4f63-acb4-f4416a602d83
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3c0b3f11-b085-433b-9fc9-66f2f623cb66
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 061dfaaa-796a-4189-954e-6537f524161e
+- praise_material_id: a05a7d56-4705-42d0-84d3-c421cefd719a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: b6f5ab2a-b22b-4f63-acb4-f4416a602d83
+- praise_material_id: 89bf3902-c961-4247-99e7-b62315977adf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 48984951-101d-4fdb-8272-52e8138f5c59
+  song_title: 187 - VARÕES GALILEUS
+- praise_material_id: 6f0f64e3-b13f-47d8-bb5f-6f7c44e80a63
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 48984951-101d-4fdb-8272-52e8138f5c59
+  song_title: 188 - JERUSALÉM ANSEIO VER

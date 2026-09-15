@@ -1,0 +1,85 @@
+praise_id: d0815328-a642-419c-a5f2-18a0350ecdcd
+praise_name: Disse Jesus aos Judeus (Eu trabalho também)
+praise_number: '178'
+praise_author: A.C.J.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DISSE JESUS AOS JUDEUS,
+
+  ASSIM JESUS LHES RESPONDEU:
+
+  "O MEU PAI TRABALHA ATÉ AGORA,
+
+  EU TRABALHO TAMBÉM!
+
+
+  EU TRABALHO TAMBÉM,
+
+  EU TRABALHO TAMBÉM,
+
+  O MEU PAI TRABALHA ATÉ AGORA,
+
+  E EU TRABALHO TAMBÉM!"
+
+
+  CONVÉM QUE EU FAÇA AS MESMAS OBRAS
+
+  DAQUELE QUE ME ENVIOU,
+
+  ENQUANTO É DIA, A NOITE VEM
+
+  QUANTO NÃO SE PODE TRABALHAR,
+
+  O MEU PAI TRABALHA ATÉ AGORA,
+
+  EU TRABALHO TAMBÉM!
+
+
+  QUERO TRABALHAR TAMBÉM,
+
+  QUERO TRABALHAR TAMBÉM,
+
+  COM O ESPÍRITO SANTO EM MINHA VIDA,
+
+  QUERO TRABALHAR TAMBÉM!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 76a51eac-1d2c-4f74-b58a-3af77ccb24e3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8bee9b5b-a1b8-4104-b358-8b69946e3786
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 17c941aa-1440-4818-a3f4-1caf840e0984
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 66084a48-3536-4703-8589-58635940c789
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c7f82eb6-0691-4e36-9db1-c9c633a79bd6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 17c941aa-1440-4818-a3f4-1caf840e0984
+- praise_material_id: 5d399a19-10e3-4814-a5b8-7f42ccd284e5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 66084a48-3536-4703-8589-58635940c789
+- praise_material_id: e1d0f3fc-a748-4518-bff1-d4670721a95e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 76a51eac-1d2c-4f74-b58a-3af77ccb24e3
+  song_title: 177 - FALA AO MEU CORAÇÃO!
+- praise_material_id: 2ddee186-1601-40d0-a19e-b3dbcbec3af5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 76a51eac-1d2c-4f74-b58a-3af77ccb24e3
+  song_title: 178 - DISSE JESUS AOS JUDEUS ( EU TRABALHO TAMBÉM

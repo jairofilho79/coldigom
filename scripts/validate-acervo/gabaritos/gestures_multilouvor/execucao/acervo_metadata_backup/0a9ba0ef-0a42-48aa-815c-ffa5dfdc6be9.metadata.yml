@@ -1,0 +1,83 @@
+praise_id: 0a9ba0ef-0a42-48aa-815c-ffa5dfdc6be9
+praise_name: Dons do Espírito Santo
+praise_number: '139'
+praise_author: G.B.M.
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DONS DO ESPÍRITO SANTO,
+
+  BÊNÇÃOS QUE ALMEJO TANTO,
+
+  SÃO COMO PEDRAS PRECIOSAS,
+
+  COMO O PERFUME DAS ROSAS.
+
+
+  SABEDORIA, CIÊNCIA, FÉ,
+
+  DONS DE CURAR E MARAVILHAS,
+
+  PROFECIA, DISCERNIMENTO,
+
+  LÍNGUAS ESTRANHAS, INTERPRETAÇÃO.
+
+  /INSTRUMENTOS
+
+
+  DONS DO ESPÍRITO SANTO,
+
+  BÊNÇÃOS QUE ALMEJO TANTO,
+
+  SÃO COMO PEDRAS PRECIOSAS,
+
+  COMO O PERFUME DAS ROSAS.
+
+
+  SABEDORIA, CIÊNCIA, FÉ,
+
+  DONS DE CURAR E MARAVILHAS,
+
+  PROFECIA, DISCERNIMENTO,
+
+  LÍNGUAS ESTRANHAS, INTERPRETAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: aab430de-9448-46a8-940b-53ff5de767a8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b07095ee-46db-43be-9d91-6184de84fa35
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ffd3cb30-087c-4eb7-8a0a-c9f0cd89a269
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b4c2561b-643e-43ab-ab79-3d884b669cba
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e16f20d8-c11b-4d01-a556-46b3c257e890
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ffd3cb30-087c-4eb7-8a0a-c9f0cd89a269
+- praise_material_id: 2fff84e1-e780-45c4-ac86-bcb3288c3c49
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: b4c2561b-643e-43ab-ab79-3d884b669cba
+- praise_material_id: 1f0be8e7-a687-401f-a951-2f43dbb48382
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: aab430de-9448-46a8-940b-53ff5de767a8
+  song_title: 139 - DONS DO ESPÍRITO SANTO
+- praise_material_id: 72e4375e-b7a8-40e9-92d9-83ce7090c15d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: aab430de-9448-46a8-940b-53ff5de767a8
+  song_title: 140 - UMA LUZ RESPLANDECENTE

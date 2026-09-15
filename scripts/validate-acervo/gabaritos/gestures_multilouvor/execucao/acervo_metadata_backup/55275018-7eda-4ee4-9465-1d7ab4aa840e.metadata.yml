@@ -1,0 +1,77 @@
+praise_id: 55275018-7eda-4ee4-9465-1d7ab4aa840e
+praise_name: Deus habita no meio dos louvores
+praise_number: '222'
+praise_author: E.A.M.S.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DEUS HABITA NO MEIO DOS LOUVORES, (2X)
+
+  Ó CANTAI, IGREJA, CANTAI,
+
+  Ó CANTAI, DEUS HABITA NO LOUVOR.
+
+
+  Ó CANTAI, CANTAI, CANTAI, (2X)
+
+  Ó CANTAI LOUVORES AO SENHOR;
+
+  DEUS HABITA NO MEIO DOS LOUVORES,
+
+  Ó CANTAI AO SENHOR.
+
+
+  DEUS HABITA NO MEIO DOS LOUVORES, (2X)
+
+  Ó CANTAI, IGREJA, CANTAI,
+
+  Ó CANTAI, DEUS HABITA NO LOUVOR.
+
+
+  Ó CANTAI, CANTAI, CANTAI, (2X)
+
+  Ó CANTAI LOUVORES AO SENHOR;
+
+  DEUS HABITA NO MEIO DOS LOUVORES,
+
+  Ó CANTAI AO SENHOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8b7e6b5a-e7b4-4130-ad07-7e1824566274
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f1397a1c-e9bf-4ea6-a49e-58a3295d7429
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f16485aa-7dbe-42d6-9b8a-aa1b94b84528
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dd4c1758-ae30-461e-9614-94cf434aadd0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 69d64dde-5beb-4a42-b7ed-cccc09c685d6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: f16485aa-7dbe-42d6-9b8a-aa1b94b84528
+- praise_material_id: 5b50683c-c822-4980-a0d2-85fd4473479a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: dd4c1758-ae30-461e-9614-94cf434aadd0
+- praise_material_id: d86f070a-a8f2-4148-9091-b74381f40edf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8b7e6b5a-e7b4-4130-ad07-7e1824566274
+  song_title: 221 - VAI RAIAR O DIA
+- praise_material_id: 012d39db-6565-4b98-9227-c54bf603d9ae
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8b7e6b5a-e7b4-4130-ad07-7e1824566274
+  song_title: 222 - DEUS HABITA NO MEIO DOS LOUVORES

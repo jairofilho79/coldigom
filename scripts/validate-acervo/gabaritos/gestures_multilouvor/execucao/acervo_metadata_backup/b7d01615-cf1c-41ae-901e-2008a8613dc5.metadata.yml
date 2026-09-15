@@ -1,0 +1,76 @@
+praise_id: b7d01615-cf1c-41ae-901e-2008a8613dc5
+praise_name: Sobre as nuvens Jesus vem
+praise_number: '201'
+praise_author: C.M.V.C.S.
+praise_rhythm: Marcha
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SOBRE AS NUVENS JESUS VEM
+
+  COMO REI E VENCEDOR,
+
+  SUA IGREJA VEM BUSCAR
+
+  CUMPRINDO SUA PROMESSA AO SEU POVO.
+
+
+  CANTAR 2X
+
+  QUE ALEGRIA VER NOSSO REI.
+
+  MARANATA, CANTAREMOS COM FERVOR,
+
+  POIS SEU BRADO É DE VITÓRIA,
+
+  ALELUIA, HONRA E GLÓRIA
+
+  LHE DAREMOS COM AMOR.
+
+
+  COMO IGREJA FIEL,
+
+  TODOS UNIDOS A UMA VOZ,
+
+  CANTAREMOS JESUS VEM VENCEDOR!
+
+  JESUS VEM VENCEDOR! (2X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8adccb69-03f5-480d-908c-4895567306a7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 43c3fd42-6d50-4f69-b449-9ffec4056edc
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 486ce1be-550c-4bb2-8807-17bda3e12c2b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 94749b57-e070-4320-a466-e3774943328e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8e24c44d-2f14-4afd-8c1a-355c7b334e0c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 486ce1be-550c-4bb2-8807-17bda3e12c2b
+- praise_material_id: 4c38ee8c-f288-4105-88be-aba9c94257f4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 94749b57-e070-4320-a466-e3774943328e
+- praise_material_id: 1caff660-3d23-4d0d-81ed-e4d882846306
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8adccb69-03f5-480d-908c-4895567306a7
+  song_title: 200 - VOU PARA O MEU LAR
+- praise_material_id: 2fd949ab-a7b6-42d7-ae5c-55fbabd895a3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8adccb69-03f5-480d-908c-4895567306a7
+  song_title: 201 - SOBRE AS NUVENS JESUS VEM

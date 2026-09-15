@@ -1,0 +1,59 @@
+praise_id: f317954e-1838-47d4-bfdd-2b803f770708
+praise_name: No meu coração
+praise_number: 099
+praise_author: Harry D. Clarke
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NO MEU CORAÇÃO, NO MEU CORAÇÃO
+
+  VEM HOJE ENTRAR, Ó CRISTO!
+
+  VEM HOJE ENTRAR, SIM, VEM MORAR
+
+  NO MEU CORAÇÃO, Ó CRISTO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1def149f-429a-4e7c-838f-249554d47e12
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 857adc32-d268-4b2c-bc53-a4836167183b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cbe314de-c20f-47c0-96ba-b205c87a7923
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 882a7e30-ad7f-4459-ae29-370c0fc1c423
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a073f320-f05c-4283-ad81-bafe4ae9e5d6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: cbe314de-c20f-47c0-96ba-b205c87a7923
+- praise_material_id: a1596bd8-ff95-453b-a7ae-543157cf28c4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 882a7e30-ad7f-4459-ae29-370c0fc1c423
+- praise_material_id: 618e1efb-e412-4026-a59a-6753fdc6278c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1def149f-429a-4e7c-838f-249554d47e12
+  song_title: 98 - EU ABRI MEU CORAÇÃO
+- praise_material_id: 9e222a82-54b5-4030-bf63-1387fa1766ad
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1def149f-429a-4e7c-838f-249554d47e12
+  song_title: 99 - NO MEU CORAÇÃO
+- praise_material_id: c690b7af-fa10-4eae-8a32-6af364a72fef
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1def149f-429a-4e7c-838f-249554d47e12
+  song_title: 100 - CRISTO SENTE AMOR POR MIM

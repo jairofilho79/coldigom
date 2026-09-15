@@ -1,0 +1,67 @@
+praise_id: 5d72a585-e246-4671-86fe-a54189d34a29
+praise_name: Jerusalém, cidade do meu Rei
+praise_number: '181'
+praise_author: E.H.M.R.
+praise_rhythm: Country
+praise_tonality: Gm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JERUSALÉM, CIDADE DO MEU REI,
+
+  A CADA DIA ANSEIO ESTAR ALI;
+
+  CONTEMPLAREI A FACE DO SENHOR,
+
+  AQUELE QUE ENTREGOU
+
+  SUA VIDA POR MIM.
+
+
+  CANTAR 2X
+
+  JAMAIS A MORTE VEREI,
+
+  POIS VIDA ETERNA ALCANCEI
+
+  QUANDO ENTREGUEI
+
+  MEU CORAÇÃO PARA JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 401d86d6-1244-41f5-a530-2540545ae19d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 71472667-9ff3-4b5b-9e7d-531c7dc51ed7
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f0b9a6c5-f51f-4a44-b0ff-fc03734c920f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a740c066-250a-4556-8434-ca2862b15575
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e572cdfb-2a5a-4b9b-82ff-accf62bf1c9f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f0b9a6c5-f51f-4a44-b0ff-fc03734c920f
+- praise_material_id: b3e5e98a-ec26-4bfa-9148-05a96739ead9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a740c066-250a-4556-8434-ca2862b15575
+- praise_material_id: 6be4882d-ea10-4be4-bbb6-15d20b4c5c48
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 401d86d6-1244-41f5-a530-2540545ae19d
+  song_title: 181 - JERUSALÉM, CIDADE DO MEU REI
+- praise_material_id: d43c8233-5833-4f03-8ff4-5d58234c2a6d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 401d86d6-1244-41f5-a530-2540545ae19d
+  song_title: 182 - QUERO VIVER PRA SEMPRE COM JESUS

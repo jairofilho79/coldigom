@@ -1,0 +1,58 @@
+praise_id: 7010936f-8ecc-4099-86b8-7eb81741fe74
+praise_name: Santo, Justo, Príncipe da Vida
+praise_number: '021'
+praise_author: M.S.A.
+praise_rhythm: Novo
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SANTO, JUSTO, PRÍNCIPE DA VIDA.
+
+  FILHO DE DEUS, JESUS, EMANUEL.
+
+  HOJE ESTÁ AQUI PARA LIBERTAR
+
+  /FINAL 2X
+
+  E ATRAVÉS DO SEU SANGUE
+
+  ENTRAMOS DIANTE DO PAI.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: e079385c-a1f2-4796-ad26-ad53db199649
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 026bbfaf-5288-442c-b799-a3c1531aa756
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 93ff2a0d-6386-4783-b0ad-675703bf79c5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9d709c15-53d8-400e-b3a6-9647c55d3164
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 18a4d798-b84a-41a2-9daf-d81cf06da5fa
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 93ff2a0d-6386-4783-b0ad-675703bf79c5
+- praise_material_id: a8979089-e36c-4344-b026-f4835f945e0c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9d709c15-53d8-400e-b3a6-9647c55d3164
+- praise_material_id: 89d1f01b-179c-45ac-a437-2c6d0351bc38
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e079385c-a1f2-4796-ad26-ad53db199649
+  song_title: 20 - QUANDO ORO AO SENHOR
+- praise_material_id: 06c2f2f2-32d5-443a-8e25-9f67811bd4a6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e079385c-a1f2-4796-ad26-ad53db199649
+  song_title: 21 - SANTO, JUSTO, PRÍNCIPE DA VIDA

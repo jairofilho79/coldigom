@@ -1,0 +1,72 @@
+praise_id: 51ba1467-9888-48e1-99cc-1fdd66bc0ee6
+praise_name: Uma luz resplandecente
+praise_number: '140'
+praise_author: C.M.V.
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'UMA LUZ RESPLANDECENTE
+
+  HÁ EM VOLTA DO TEU OLHAR,
+
+  TUA FACE RELUZENTE
+
+  VEM HOJE ME MOSTRAR.
+
+
+  SEI QUE UM DIA TU VIRÁS
+
+  E ENTÃO ME LEVARÁS
+
+  ANTES MESMO QUE EU PEÇA:
+
+  SENHOR, VEM ME BUSCAR!
+
+
+  SEGURA-ME PELA MÃO
+
+  QUANDO A VIDA ATRAVESSAR,
+
+  SEI QUE TU ESTÁS COMIGO
+
+  QUANDO O MAL ME ENCONTRAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2c61eed0-3f0a-4146-a1d3-f866bd83e5c3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a539de71-a41d-4aaf-ac05-319ff30501d3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d0683162-cd98-4989-b11a-035c84dc46c9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4fcae245-b6cf-40bf-83f3-81e0d11e7a2d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5d071c32-f0cb-4b81-b91c-1fa43942d7ef
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: d0683162-cd98-4989-b11a-035c84dc46c9
+- praise_material_id: 1171adb8-9df5-4860-882b-55bca0c671a0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 4fcae245-b6cf-40bf-83f3-81e0d11e7a2d
+- praise_material_id: 5c01c1da-8fb6-4f4c-9d32-04d63615c9b7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2c61eed0-3f0a-4146-a1d3-f866bd83e5c3
+  song_title: 139 - DONS DO ESPÍRITO SANTO
+- praise_material_id: c04b7d2a-852e-4fb0-9f73-c2a81d8c6cf8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2c61eed0-3f0a-4146-a1d3-f866bd83e5c3
+  song_title: 140 - UMA LUZ RESPLANDECENTE

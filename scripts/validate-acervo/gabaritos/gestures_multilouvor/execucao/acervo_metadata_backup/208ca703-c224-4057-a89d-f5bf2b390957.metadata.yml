@@ -1,0 +1,107 @@
+praise_id: 208ca703-c224-4057-a89d-f5bf2b390957
+praise_name: Jesus Cristo é o amado
+praise_number: 048
+praise_author: E.H.M.R.
+praise_rhythm: Básico
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS CRISTO É O AMADO
+
+  QUE MORREU PELO PECADOR
+
+  O SEU SANGUE CLAMA AO PAI
+
+  PARA REDENÇÃO.
+
+  PARA OBTERMOS PERDÃO,
+
+  SEGUNDO AS RIQUEZAS DE SUA GRAÇA.
+
+
+  *CORO
+
+  POR ESSE MOTIVO ESCOLHEMOS
+
+  FICAR CONTIGO, JESUS.
+
+  E HONRAR TEU SACRIFÍCIO
+
+  FEITO NO ALTAR DA CRUZ.
+
+  ESCOLHEMOS A VIDA E A BÊNÇÃO
+
+  PARA NÓS E A NOSSA HERANÇA
+
+  VIVERMOS SOB A TUA PROTEÇÃO.
+
+  /INSTRUMENTOS
+
+
+  JESUS CRISTO É O AMADO
+
+  QUE MORREU PELO PECADOR
+
+  O SEU SANGUE CLAMA AO PAI
+
+  PARA REDENÇÃO.
+
+  PARA OBTERMOS PERDÃO,
+
+  SEGUNDO AS RIQUEZAS DE SUA GRAÇA.
+
+
+  *CORO 2X
+
+  POR ESTE MOTIVO ESCOLHEMOS
+
+  FICAR CONTIGO, JESUS.
+
+  E HONRAR TEU SACRIFÍCIO
+
+  FEITO NO ALTAR DA CRUZ.
+
+  ESCOLHEMOS A VIDA E A BÊNÇÃO
+
+  PARA NÓS E A NOSSA HERANÇA
+
+  VIVERMOS SOB A TUA PROTEÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 62b5d1af-2a06-4ec6-857d-bded6d3efa11
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 340e8ee0-9520-4d15-b2c5-b390860eb184
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cc1311ac-3887-42d0-a7a1-a5036417a788
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 35837847-84d4-4d5f-b61a-834f22a8074d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0773dac1-7cbf-4d94-b742-c34067301d50
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: cc1311ac-3887-42d0-a7a1-a5036417a788
+- praise_material_id: f91fafac-34ee-4f4e-a498-29df88dd2644
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 35837847-84d4-4d5f-b61a-834f22a8074d
+- praise_material_id: 1d7784dd-3ead-4380-9e0c-eefaa470a078
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 62b5d1af-2a06-4ec6-857d-bded6d3efa11
+  song_title: 48 - JESUS CRISTO É O AMADO
+- praise_material_id: cd76f12c-8287-4b5f-b058-f1c68ea18644
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 62b5d1af-2a06-4ec6-857d-bded6d3efa11
+  song_title: 49 - A MINHA ALEGRIA É CRESCER COM O MEU SENHOR!

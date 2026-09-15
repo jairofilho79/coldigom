@@ -1,0 +1,52 @@
+praise_id: e91c543b-87ae-4d4b-87f7-f797ead73144
+praise_name: Dobro os meus joelhos
+praise_number: 009
+praise_author: A. C. C. C.
+praise_rhythm: Básico
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: "DOBRO OS MEU JOELHOS\nPARA A TI CLAMAR, SENHOR,\nTOCA O MEU INTERIOR,\
+  \ \nTOCA-ME SENHOR,\nDIANTE DE TI ESTOU PARA TE ADORAR;\n\nGUIA-ME SENHOR, PELO\
+  \ TEU AMOR,     \nPAZ E SEGURANÇA QUERO TER\nCOM JESUS MEU SENHOR.\n/INSTRUMENTOS\n\
+  \nDOBRO OS MEU JOELHOS\nPARA A TI CLAMAR, SENHOR,\nTOCA O MEU INTERIOR, \nTOCA-ME\
+  \ SENHOR,\nDIANTE DE TI ESTOU PARA TE ADORAR;\n\nGUIA-ME SENHOR, PELO TEU AMOR,\
+  \     \nPAZ E SEGURANÇA QUERO TER\nCOM JESUS\n/FINAL\nGUIA-ME SENHOR, PELO TEU AMOR,\
+  \     \nPAZ E SEGURANÇA QUERO TER\nCOM JESUS, MEU SENHOR.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: e5bc559a-ca16-4bbb-bfef-8db8d54aa5ad
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ef5401e9-f277-4f94-977a-bdb8e1fb51bc
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2d6582e2-26d7-4d4e-861a-20861eb1e022
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 60ef1137-7920-4343-9c9a-a07b15423510
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 29df6dea-8655-4b67-b2ee-a14aeaa93c86
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 2d6582e2-26d7-4d4e-861a-20861eb1e022
+- praise_material_id: 8adfa65f-4443-49dd-b39a-2e5ca4cc821a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 60ef1137-7920-4343-9c9a-a07b15423510
+- praise_material_id: 0c40f185-21fd-40c8-9c9c-6a1113ff88a3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e5bc559a-ca16-4bbb-bfef-8db8d54aa5ad
+  song_title: 08 - DIANTE DO TEU ALTAR
+- praise_material_id: 1d0cd97b-60af-4540-b40d-e22650b48e9a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e5bc559a-ca16-4bbb-bfef-8db8d54aa5ad
+  song_title: 09 - DOBRO OS MEUS JOELHOS

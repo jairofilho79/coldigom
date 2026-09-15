@@ -1,0 +1,86 @@
+praise_id: 0f29d7ad-9686-48ea-83b5-b82c4966fcdd
+praise_name: Na nova Jerusalém
+praise_number: '194'
+praise_author: M.M.F.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NA NOVA JERUSALÉM
+
+  COM CRISTO IREI MORAR,
+
+  POIS ELE ME PROMETEU
+
+  QUE UM DIA VIRÁ ME BUSCAR.
+
+
+  *CORO
+
+  NA NOVA JERUSALÉM, (3X)
+
+  COM CRISTO QUERO ESTAR.
+
+
+  SE VOCÊ QUISER MORAR
+
+  NA NOVA JERUSALÉM,
+
+  É SÓ A CRISTO ACEITAR
+
+  E CANTAR COMIGO TAMBÉM.
+
+
+  NA NOVA JERUSALÉM
+
+  COM CRISTO IREI MORAR,
+
+  POIS ELE ME PROMETEU
+
+  QUE UM DIA VIRÁ ME BUSCAR.
+
+
+  *CORO
+
+  NA NOVA JERUSALÉM, (3X)
+
+  COM CRISTO QUERO ESTAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 09339191-4ead-43bd-bc16-41aba4a9835a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: df8bf597-8f02-40b5-a198-1d2832935682
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a30c4d0e-bd79-43ca-ba58-abbed1464790
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9ae28455-b73f-4bd5-9687-26de2cf792d6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 57ae6683-9653-4426-b8ce-c6c2e9a5b122
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a30c4d0e-bd79-43ca-ba58-abbed1464790
+- praise_material_id: 32008d66-44cc-4253-9748-96cf4ccc6f6c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 9ae28455-b73f-4bd5-9687-26de2cf792d6
+- praise_material_id: 6f729d42-2355-44fe-aee6-ef1658744f19
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 09339191-4ead-43bd-bc16-41aba4a9835a
+  song_title: 193 - HÁ UMA IGREJA
+- praise_material_id: 7bcf50d2-d1ab-4ebf-89fd-1958dd567dce
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 09339191-4ead-43bd-bc16-41aba4a9835a
+  song_title: 194 - NA NOVA JERUSALÉM

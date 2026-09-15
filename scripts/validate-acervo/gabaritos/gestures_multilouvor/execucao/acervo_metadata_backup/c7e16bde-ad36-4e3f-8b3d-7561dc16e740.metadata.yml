@@ -1,0 +1,72 @@
+praise_id: c7e16bde-ad36-4e3f-8b3d-7561dc16e740
+praise_name: Poderá cantar
+praise_number: '120'
+praise_author: C.A.
+praise_rhythm: Básico
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CORO
+
+  PODERÁ CANTAR QUEM NA ROCHA ESTIVER,
+
+  PODERÁ CANTAR,
+
+  POIS COM JESUS FIRMADO ESTARÁ.
+
+
+  ESPEREI PELO SENHOR COM PACIÊNCIA
+
+  E ME FIRMOU OS PASSOS,
+
+  DE ESCORREGAR LIVROU-ME,
+
+  DEU-ME UM NOVO CANTO.
+
+
+  O CORAÇÃO FIRME EM CRISTO
+
+  POR VENDAVAIS NÃO VACILARÁ,
+
+  NÃO EM AREIA, MAS NA ROCHA,
+
+  OUVE SUA VOZ, QUE SEGURANÇA!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: ac4a7b66-df26-4590-8c9b-1142364d1893
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d3230bb5-3895-4664-a0b8-995ee496ad63
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c87e8a82-cb69-4c8f-8380-c6a2b7156c4e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 753c0f0d-43f3-473c-b740-fa938f3798b0
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5c78ae5c-d919-49c9-8553-e132774d6700
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: d3230bb5-3895-4664-a0b8-995ee496ad63
+- praise_material_id: c1bb9d7f-7cb2-4e23-99ec-ba3294e89023
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c87e8a82-cb69-4c8f-8380-c6a2b7156c4e
+- praise_material_id: c67e98cb-96e5-4fbf-8a1b-1220efe48f7b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ac4a7b66-df26-4590-8c9b-1142364d1893
+  song_title: 119 - JESUS, O MELHOR AMIGO
+- praise_material_id: cf4c4420-0a41-4c5d-8b2b-af7b56abe0eb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ac4a7b66-df26-4590-8c9b-1142364d1893
+  song_title: 120 - PODERÁ CANTAR

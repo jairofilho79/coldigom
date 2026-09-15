@@ -1,0 +1,85 @@
+praise_id: 3b8a4e51-421b-48c5-a7c5-03839ddf682c
+praise_name: Foi no caminho para Damasco
+praise_number: 083
+praise_author: S.G.D.
+praise_rhythm: Guarânia
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'FOI NO CAMINHO PARA DAMASCO
+
+  QUE O GRANDE SAULO, PERSEGUIDOR,
+
+  VIU GLORIOSA LUZ CELESTE,
+
+  QUE POR TERRA O DERRUBOU.
+
+
+  DESSA LUZ SURGIU A VOZ:
+
+  SAULO, SAULO, QUE ME PERSEGUES.
+
+  ELE, CAÍDO, RESPONDEU:
+
+  QUEM ÉS, SENHOR? QUEM ÉS, SENHOR?
+
+  /INSTRUMENTOS
+
+
+  EU SOU JESUS, QUE TU PERSEGUES.
+
+  QUE QUERES TU, SENHOR, QUE EU FAÇA?
+
+  LEVANTA-TE E OBEDECE.
+
+  NOVO CAMINHO JESUS TE DÁ.
+
+
+  /FINAL 2X
+
+  QUERO TAMBÉM SER DE JESUS,
+
+  TER ESTA LUZ, ME ILUMINAR.
+
+  E A CADA PASSO OUVIR SUA VOZ,
+
+  ATÉ O DIA QUE AO CÉU CHEGAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3588bf6f-6db5-46e6-8c62-dd96d13a383b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a34ac6b5-9c73-4b53-b13b-0e49b72603d0
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0e766274-572d-4e35-b2d6-93f9326bf189
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 62b16acc-0385-4011-8a36-6ba76a75fb80
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c35954fe-5adb-459c-8195-6c1fe48eceb8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0e766274-572d-4e35-b2d6-93f9326bf189
+- praise_material_id: 809143a4-6206-4085-b2e2-c29fce4912f5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 62b16acc-0385-4011-8a36-6ba76a75fb80
+- praise_material_id: fbbe652d-ceb1-4987-9e45-698823278670
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3588bf6f-6db5-46e6-8c62-dd96d13a383b
+  song_title: 83 - FOI NO CAMINHO PARA DAMASCO
+- praise_material_id: 82124c01-2e5a-42ad-8636-fd20a3526a32
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3588bf6f-6db5-46e6-8c62-dd96d13a383b
+  song_title: 84 - QUERES SER FELIZ?

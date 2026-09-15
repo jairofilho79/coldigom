@@ -1,0 +1,63 @@
+praise_id: 96f59a47-a46b-41dd-90ca-9f56681df147
+praise_name: Hoje eu não quero pedir
+praise_number: '232'
+praise_author: C.M.V.
+praise_rhythm: Marcha
+praise_tonality: Bm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HOJE EU NÃO QUERO PEDIR NADA A TI,
+
+  EU SÓ QUERO LOUVAR, MEU SENHOR,
+
+  POIS GRANDES COISAS FIZESTE POR MIM,
+
+  POR ISSO ALEGRE ESTOU.
+
+
+  A NOITE JÁ ACABOU, FOI-SE A DOR,
+
+  A ALEGRIA VOLTOU EM LOUVOR;
+
+  TUA PALAVRA É FIEL, CREIO ASSIM,
+
+  POR ISSO ALEGRE ESTOU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2529db72-8b44-4f3e-8634-54a90319aa4b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 71253771-a37f-480e-a1f5-2bfc04f9aaf1
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f89a95e8-da83-431b-9123-de5a9e295900
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5ff71678-5572-4fb3-a677-768e94a2bf4a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 836bf6fb-1a1f-43f5-8aa4-9f6b465136a2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: f89a95e8-da83-431b-9123-de5a9e295900
+- praise_material_id: 36754122-8715-4fdb-9cdf-c5fb3863fa29
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5ff71678-5572-4fb3-a677-768e94a2bf4a
+- praise_material_id: 18a634a9-249a-481f-ae3f-a49faf8421d9
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2529db72-8b44-4f3e-8634-54a90319aa4b
+  song_title: 232 - HOJE EU NÃO QUERO PEDIR
+- praise_material_id: f723ec78-0048-422b-8c95-8c1e44e9645a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2529db72-8b44-4f3e-8634-54a90319aa4b
+  song_title: 233 - NA CIDADE DE DAVI NASCEU O SALVADOR

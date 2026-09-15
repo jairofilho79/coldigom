@@ -1,0 +1,68 @@
+praise_id: 170cc373-3452-4919-ade3-4127b124faf1
+praise_name: Tenho um Senhor muito forte
+praise_number: '034'
+praise_author: E.H.M.R.
+praise_rhythm: Valseado
+praise_tonality: B
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'TENHO UM SENHOR MUITO FORTE, VENCEU A MORTE
+
+  PARA ME DAR UM LUGAR LÁ NO CÉU.
+
+  ESTE SENHOR É JESUS QUE ME CONDUZ
+
+  PARA UM LAR DE GOZO E DE PAZ.
+
+
+  QUERO SERVI-LO, QUERO LOUVÁ-LO,
+
+  JUSTO SENHOR, DEUS FORTE, MARAVILHOSO,
+
+  CONSELHEIRO, PAI DA ETERNIDADE,
+
+  PRÍNCIPE DA PAZ, JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9a142e84-5b8f-4272-9978-7e13f8d6df97
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7e1d0b60-6a8a-4ee4-a788-e2a313fb447f
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5189112f-add4-4af9-84d7-b78487f5c07c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 73b8af24-1f6f-4195-945c-fb89ff44ee33
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 87acf38a-3931-4458-8318-60dd760a19dc
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5189112f-add4-4af9-84d7-b78487f5c07c
+- praise_material_id: 0fda9b1a-e0e7-40c8-b658-4475dc0ce7c8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 73b8af24-1f6f-4195-945c-fb89ff44ee33
+- praise_material_id: 7944a1f0-beef-4412-9282-35f44acd74b4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9a142e84-5b8f-4272-9978-7e13f8d6df97
+  song_title: 34 - TENHO UM SENHOR MUITO FORTE
+- praise_material_id: ef9f9f0a-b312-4cd1-b996-896b14f2da29
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9a142e84-5b8f-4272-9978-7e13f8d6df97
+  song_title: 35 - QUERO SER COMO DAVI
+- praise_material_id: 8c337dce-ef6c-42d9-8d6c-d476ec3597f2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9a142e84-5b8f-4272-9978-7e13f8d6df97
+  song_title: 36 - EU QUERO ANDAR SEMPRE COM JESUS

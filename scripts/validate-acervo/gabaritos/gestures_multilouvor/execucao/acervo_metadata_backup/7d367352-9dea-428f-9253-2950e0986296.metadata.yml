@@ -1,0 +1,84 @@
+praise_id: 7d367352-9dea-428f-9253-2950e0986296
+praise_name: Jesus viu a multidão (A multiplicação)
+praise_number: '071'
+praise_author: M.L.M.B.O.
+praise_rhythm: Fox
+praise_tonality: Bm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS VIU A MULTIDÃO
+
+  E NÃO OS DEIXOU IR
+
+  ESTAVAM TÃO FAMINTOS,
+
+  COMO PODIAM PARTIR?
+
+  ENTÃO ELE ORDENOU;
+
+  "DAI-LHES DE COMER",
+
+  OS DISCÍPULOS PERGUNTARAM:
+
+  SENHOR, O QUE VAMOS FAZER?
+
+  /INSTRUMENTOS
+
+
+  CINCO PÃES E DOIS PEIXINHOS
+
+  CINCO MIL ALIMENTOU,
+
+  ASSENTADOS SOBRE A RELVA,
+
+  TODO O POVO SE FARTOU.
+
+
+  FINAL 2X
+
+  JESUS É A SOLUÇÃO,
+
+  ELE É A PROVISÃO,
+
+  O FILHO DO DEUS VIVO
+
+  FAZ A MULTIPLICAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c5737d85-f37f-4695-97d2-1c2c240cf2be
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bb4f1dbb-3989-4a82-9d1f-7a6adb76df8c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 08c3edd0-2c58-450f-98d8-54acaddceb63
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4be9e531-51f0-4f06-863b-358742d0d14f
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c4d735f8-bea0-46de-900b-7d18cf6f76d9
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 08c3edd0-2c58-450f-98d8-54acaddceb63
+- praise_material_id: bb923aea-a4b6-48a4-8744-8fa3c8e1e906
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4be9e531-51f0-4f06-863b-358742d0d14f
+- praise_material_id: dbec9134-35e5-41e1-974d-087fa26dea93
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5737d85-f37f-4695-97d2-1c2c240cf2be
+  song_title: 71 - JESUS VIU A MULTIDÃO (A MULTIPLICAÇÃO)
+- praise_material_id: e28936e1-8cd0-494b-a643-98ec42d74339
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5737d85-f37f-4695-97d2-1c2c240cf2be
+  song_title: 72 - TU ÉS O CRISTO, O FILHO DO DEUS VIVO

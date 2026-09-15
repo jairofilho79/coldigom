@@ -1,0 +1,77 @@
+praise_id: 1425097c-c10b-4aed-b0aa-2add0dead4be
+praise_name: Clamo a ti, meu Senhor e Pai (Uma nova Canção)
+praise_number: '011'
+praise_author: M.D.
+praise_rhythm: Básico
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CLAMO A TI, MEU SENHOR E PAI
+
+  E PROSTRADO AOS TEUS PÉS PEÇO PERDÃO.
+
+  CLAMO PELO SANGUE DE JESUS SOBRE MIM
+
+  E COM LOUVORES E CÂNTICOS TE ADORAREI.
+
+  A TUA GRAÇA SEJA SOBRE MIM, MEU SENHOR,
+
+  A TUA LUZ RESPLANDEÇA EM MIM.
+
+  /COLOCA NOS MEUS LÁBIOS UMA NOVA CANÇÃO,
+
+  UM HINO DE LOUVOR A DEUS PAI, A DEUS PAI.
+
+
+  CANTAR 2X
+
+  E PROSTRADO AOS TEUS PÉS
+
+  EM PLENA COMUNHÃO,
+
+  MEU SENHOR,
+
+  RENOVA TEU ESPÍRITO SOBRE MIM.
+
+  /FINAL
+
+  SOBRE NÓS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2f611e42-e02e-4a0e-a82d-aff82fce6e96
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 529081c1-1efa-4399-9259-75533374c260
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dfecb0cf-afc9-463d-8357-e756e95ae188
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ed8ca195-6fda-481f-aae4-edc249e66ec9
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 22382798-540f-45ef-ab72-24b1552b8894
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: dfecb0cf-afc9-463d-8357-e756e95ae188
+- praise_material_id: 2ab74d58-c7b5-4a27-be39-ab8af3057051
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ed8ca195-6fda-481f-aae4-edc249e66ec9
+- praise_material_id: 060ce1cf-d1b4-47ef-a8a2-6091460a0876
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2f611e42-e02e-4a0e-a82d-aff82fce6e96
+  song_title: 10 - CLAMA, Ó IGREJA
+- praise_material_id: a5e1416b-ec47-40e9-9095-f7b1e1412db3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2f611e42-e02e-4a0e-a82d-aff82fce6e96
+  song_title: 11 - CLAMO A TI, MEU SENHOR E PAI (UMA NOVA CANÇÃO)

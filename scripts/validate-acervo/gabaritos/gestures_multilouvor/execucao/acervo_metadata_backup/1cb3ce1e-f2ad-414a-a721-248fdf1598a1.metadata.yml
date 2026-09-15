@@ -1,0 +1,69 @@
+praise_id: 1cb3ce1e-f2ad-414a-a721-248fdf1598a1
+praise_name: Ele é a raiz
+praise_number: '027'
+praise_author: F.F.O.
+praise_rhythm: Básico
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ELE É A RAIZ, A RAIZ DE DAVI,
+
+  ELE É O LEÃO, O LEÃO DE JUDÁ,
+
+  ELE É A RAIZ, A RAIZ DE DAVI,
+
+  MARAVILHOSO, CONSELHEIRO,
+
+  PRÍNCIPE DA PAZ.
+
+
+  CANTAR 2X
+
+  E AGORA QUAL É A RAZÃO DA MINHA FÉ?
+
+  (EU VOU DIZER)
+
+  SIM, CRISTO, MEU AMADO SALVADOR.
+
+  /FINAL
+
+  SIM, CRISTO, MEU AMADO SALVADOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: af1d70ea-68db-4082-8bdf-2292acac69dd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d5738e06-1d76-42c3-acdb-a105cbff7c2c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c432179b-388e-478e-985a-a4639fd3bc8c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bb212318-980b-4a7f-9181-9f1aa06ffab6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 994a112e-e181-4fee-9307-3d29699b74a4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: c432179b-388e-478e-985a-a4639fd3bc8c
+- praise_material_id: 55f3b6e7-c33b-4d7f-9431-aabe4082ff6a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: bb212318-980b-4a7f-9181-9f1aa06ffab6
+- praise_material_id: 0e28bac6-c575-475f-b172-faa55deba3ab
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: af1d70ea-68db-4082-8bdf-2292acac69dd
+  song_title: 26 - EU SOU UMA OVELHINHA DE JESUS
+- praise_material_id: 7bbca98c-9329-4a9e-a60f-bb6ae69782bc
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: af1d70ea-68db-4082-8bdf-2292acac69dd
+  song_title: 27 - ELE É A RAIZ

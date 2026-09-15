@@ -1,0 +1,58 @@
+praise_id: afd46989-3555-4f89-8156-fc84d2f5b348
+praise_name: Flua em mim, Senhor
+praise_number: '135'
+praise_author: C.M.V.C.S.
+praise_rhythm: Básico
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  FLUA EM MIM SENHOR, O TEU ESPÍRITO,
+
+  FLUA EM MIM SENHOR, O TEU ESPÍRITO;
+
+  EU VOU TESTEMUNHAR DE TEU AMOR SEM PAR,
+
+  AO MUNDO ANUNCIAR
+
+  QUE CRISTO SALVA O PECADOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: a86d7ff4-ba11-4e3d-becb-8fa922389cf0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 93d08c17-579e-4fb9-bfea-50dba30bd00f
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0a0a073b-60a7-4401-89c6-91b598809d4d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5109166c-4162-4ea8-82bb-b7b719cdb6a1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 70621458-9a87-4341-ad39-66b2697316cb
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0a0a073b-60a7-4401-89c6-91b598809d4d
+- praise_material_id: 0eb9c9ce-7d6e-4003-bf9a-597031b3576d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5109166c-4162-4ea8-82bb-b7b719cdb6a1
+- praise_material_id: cd1d78f9-0d32-4ad0-8d5b-7379b790a2fd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a86d7ff4-ba11-4e3d-becb-8fa922389cf0
+  song_title: 135 - FLUA EM MIM, SENHOR
+- praise_material_id: 627a5c51-e5a6-4889-901f-58236db559d0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a86d7ff4-ba11-4e3d-becb-8fa922389cf0
+  song_title: 136 - LÂMPADA PARA MEUS PÉS

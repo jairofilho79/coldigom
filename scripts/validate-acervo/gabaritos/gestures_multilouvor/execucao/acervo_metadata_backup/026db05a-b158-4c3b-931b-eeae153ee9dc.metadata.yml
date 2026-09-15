@@ -1,0 +1,76 @@
+praise_id: 026db05a-b158-4c3b-931b-eeae153ee9dc
+praise_name: Deus forte como Jeová
+praise_number: '126'
+praise_author: Autor Desconhecido
+praise_rhythm: Country
+praise_tonality: Dm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  DEUS FORTE COMO JEOVÁ,
+
+  NÃO HÁ OUTRO QUE EU CONHEÇA.
+
+  /CANTAR 2X
+
+  DEUS DE VITÓRIA, VARÃO DE GUERRA,
+
+  DEUS PODEROSO É O SENHOR.
+
+
+  CANTAR 2X
+
+  ONDE, ONDE ESTÁ O TEU DEUS?
+
+  ONDE, ONDE ESTÁ O TEU DEUS?
+
+
+  FINAL 2X
+
+  MEU DEUS ESTÁ NO CÉU,
+
+  TAMBÉM NO MEU CORAÇÃO,
+
+  O DO MUNDO ESTÁ MORTO
+
+  MAS O MEU RESSUSCITOU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: a7805443-5d29-4d7e-9f5a-d64d23050464
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ea39adba-8ee0-4d1b-992f-014d8c4d8d69
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: abe9f988-3f71-41ec-806e-3fe259f1df6d
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c4be9202-c780-41b4-96f1-84912007f4f6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 029323e1-17ee-457f-a7ff-92122c9dea78
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a7805443-5d29-4d7e-9f5a-d64d23050464
+- praise_material_id: e56ea78f-0a23-4d88-860a-f8e54d67060f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c4be9202-c780-41b4-96f1-84912007f4f6
+- praise_material_id: 2c654243-5f5e-4fd2-a583-a9dc30bc606e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ea39adba-8ee0-4d1b-992f-014d8c4d8d69
+  song_title: 125 - COM JESUS VENCEDOR SEREI
+- praise_material_id: dcd0e350-5cfd-4cde-a008-b10dcb3b2eb0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ea39adba-8ee0-4d1b-992f-014d8c4d8d69
+  song_title: 126 - DEUS FORTE COMO JEOVÁ

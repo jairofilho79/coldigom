@@ -1,0 +1,85 @@
+praise_id: c3a27d9e-d169-4331-aeca-d5f52cbacf21
+praise_name: Nós somos uma voz
+praise_number: '149'
+praise_author: M.M.B.
+praise_rhythm: Marcha Marcial
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NÓS SOMOS UMA VOZ
+
+  QUE CLAMA NO DESERTO,
+
+  NESTE MUNDO DE ILUSÕES
+
+  PROCLAMAMOS A MENSAGEM DE SALVAÇÃO.
+
+
+  DEUS AMA O QUE SE APRESSA,
+
+  ELE AMA O EVANGELISTA,
+
+  AMA AQUELE QUE SE APRESSA
+
+  PRA ANUNCIAR A SALVAÇÃO
+
+  EM NOME DE JESUS.
+
+
+  NÓS SOMOS UMA VOZ
+
+  QUE CLAMA NO DESERTO,
+
+  NESTE MUNDO DE ILUSÕES
+
+  PROCLAMAMOS A MENSAGEM DE SALVAÇÃO.
+
+
+  DEUS AMA O QUE SE APRESSA,
+
+  ELE AMA O EVANGELISTA,
+
+  AMA AQUELE QUE SE APRESSA
+
+  PRA ANUNCIAR A SALVAÇÃO
+
+  EM NOME DE JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8a2682cc-6d9e-4378-a452-149669031213
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bf931268-3e22-4136-9765-9e107b0f75ac
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 18daf343-0f85-4b9b-a81d-78937c0bb409
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 63f96432-8af1-4106-8606-d1210cf0d961
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cb57ddf2-80d6-4c1e-abb6-984b882a2dc5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 18daf343-0f85-4b9b-a81d-78937c0bb409
+- praise_material_id: 30964e48-3142-4045-9566-d092a6680ea2
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 63f96432-8af1-4106-8606-d1210cf0d961
+- praise_material_id: 937328d3-c0de-4159-8557-ba60ce5fb9a6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8a2682cc-6d9e-4378-a452-149669031213
+  song_title: 149 - NÓS SOMOS UMA VOZ
+- praise_material_id: 9fbd495b-3506-4e11-a411-e108af11d4fa
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8a2682cc-6d9e-4378-a452-149669031213
+  song_title: 150 - CINCO SEIXOS

@@ -1,0 +1,63 @@
+praise_id: 1f2d367a-3854-4cbb-a091-5202a7cf4e1a
+praise_name: Senhor, eu te louvarei
+praise_number: '235'
+praise_author: M.M.F.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SENHOR, EU TE LOUVAREI,
+
+  EM TI ME ALEGRAREI,
+
+  DE TODO O MEU CORAÇÃO
+
+  LOUVORES A TI DAREI.
+
+
+  POIS TU NOS TENS SUSTENTADO
+
+  COM TUA MÃO DE PODER,
+
+  GOZO E ALEGRIA TENS DADO
+
+  A TODO QUE EM TI CRER.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7b7056ef-1e52-49f9-9022-798cba166d0f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7ece8ef5-9c03-4aa2-81fe-122c1ec1c292
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8f4f16a9-b432-4101-b16d-5c84ba550b67
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4396a584-e3a4-44d4-83c6-c67e1a6c4d73
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 50a7aab8-8a77-43af-93f8-7ad8cc5b2b93
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 8f4f16a9-b432-4101-b16d-5c84ba550b67
+- praise_material_id: 3d212485-3d77-469a-bc63-41f8b6b7885c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 4396a584-e3a4-44d4-83c6-c67e1a6c4d73
+- praise_material_id: 39f8643b-dec3-4585-bce4-50411a2cb7cb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7b7056ef-1e52-49f9-9022-798cba166d0f
+  song_title: 234 - SEI QUE SOU AMADO DO MEU SALVADOR
+- praise_material_id: e2fb0426-4688-4e4a-bec0-fccec0d472b9
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7b7056ef-1e52-49f9-9022-798cba166d0f
+  song_title: 235 - SENHOR, EU TE LOUVAREI

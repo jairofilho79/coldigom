@@ -1,0 +1,56 @@
+praise_id: 35a6812b-8cc3-4c49-a0e8-75739c723173
+praise_name: Eu quero cantar
+praise_number: '107'
+praise_author: Geraldo Gomes Pinheiro
+praise_rhythm: Balada
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  EU QUERO CANTAR,
+
+  EU QUERO FALAR
+
+  QUE JESUS SALVA E CURA,
+
+  QUE JESUS DEU-ME PAZ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 6d59ff9f-f098-4d04-a3ae-ea7af8cad87b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d998c81a-b808-43f7-a59d-5edfe0bb1d28
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 875a0ff5-d0ae-42ca-807b-89456d262ffa
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1096713e-9423-4fc4-b3e7-d2a4c32de105
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2ed8f713-3098-424e-876c-910c27812c45
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 875a0ff5-d0ae-42ca-807b-89456d262ffa
+- praise_material_id: 757f2689-a757-458c-9a13-cf54f936f00d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 1096713e-9423-4fc4-b3e7-d2a4c32de105
+- praise_material_id: ed6ca36f-67c2-4d4b-9bad-40ee4339cfc2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 6d59ff9f-f098-4d04-a3ae-ea7af8cad87b
+  song_title: 107 - EU QUERO CANTAR
+- praise_material_id: 8b344e96-b3df-4279-8f5f-f1808c2ab355
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 6d59ff9f-f098-4d04-a3ae-ea7af8cad87b
+  song_title: 108 - HOJE É UM GRANDE DIA

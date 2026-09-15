@@ -1,0 +1,67 @@
+praise_id: 67da4b72-38b0-48aa-80cc-50ab9d3f6812
+praise_name: Do pão do céu
+praise_number: 095
+praise_author: Autor Desconhecido
+praise_rhythm: Básico
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DO PÃO DO CÉU ME NUTRIREI,
+
+  DA FONTE ETERNA BEBEREI;
+
+  "E QUEM BEBER," NOS DIZ JESUS,
+
+  "JAMAIS DE SEDE SOFRERÁ."
+
+
+  CANTAR 2X
+
+  NÃO MAIS SEDE? QUE DIZEIS?
+
+  NÃO MAIS SEDE, ASSIM SERÁ!
+
+  /"E QUEM BEBER," NOS DIZ JESUS,
+
+  "JAMAIS DE SEDE SOFRERÁ."
+
+  SEDE NÃO TERÁ!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 29ea8315-7eb3-4c6b-96b5-ccc29f2a6f10
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9fb7b97d-5946-44c1-9e40-0ef875b26937
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9a85a325-e076-472c-87a5-0a951f82eec4
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2ab95921-d61c-46c9-9020-d702f122b34b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8b6594a6-47dd-46d2-8dd7-b1ad2be22a07
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9a85a325-e076-472c-87a5-0a951f82eec4
+- praise_material_id: 9f473835-7827-4689-b4a4-1b22d8cf0a52
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 2ab95921-d61c-46c9-9020-d702f122b34b
+- praise_material_id: 1792e9cb-2632-44b1-a4ff-6c7ae0bd2a0c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 29ea8315-7eb3-4c6b-96b5-ccc29f2a6f10
+  song_title: 94 - AQUELE QUE TEM SEDE
+- praise_material_id: 5af46c47-c170-4d7b-8288-e66e3408cb93
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 29ea8315-7eb3-4c6b-96b5-ccc29f2a6f10
+  song_title: 95 - DO PÃO DO CÉU

@@ -1,0 +1,74 @@
+praise_id: 170cb30f-c5ec-4554-920a-04b34820335a
+praise_name: Lâmpada para os meus pés
+praise_number: '136'
+praise_author: M.L.M.B.O.; F.B.O.G.
+praise_rhythm: Básico
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'LÂMPADA PARA MEUS PÉS,
+
+  O CAMINHO ILUMINA,
+
+  REVELADA POR DEUS,
+
+  GUIARÁ O MEU CORAÇÃO.
+
+
+  CORO
+
+  A BÍBLIA É UM TESOURO DESCOBERTO
+
+  PARA AQUELES QUE DE JESUS ESTÃO PERTO;
+
+  A MINHA BÍBLIA VOU SEMPRE LER
+
+  PARA MAIS DE JESUS CONHECER.
+
+
+  QUERO AMAR TUA PALAVRA,
+
+  GUARDÁ-LA SEMPRE EM MEU CORAÇÃO,
+
+  ENSINAR AS PESSOAS
+
+  QUE SÓ JESUS É A SALVAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 4a061b09-868d-4a8c-a625-5524ccc77d5c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 34e643d9-640f-4f4a-b2b4-98b5ffb6d688
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9fe58490-4c6c-4621-9296-110ea9bc198c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5bdb2193-fc53-4519-ac83-961643ccba51
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9fc06dfe-cb0d-455c-b13b-e0a9a01f118c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9fe58490-4c6c-4621-9296-110ea9bc198c
+- praise_material_id: e4cd7810-3268-4ce1-8baa-fef34011da1b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5bdb2193-fc53-4519-ac83-961643ccba51
+- praise_material_id: 8de66fe5-0389-4f77-ad27-707c9f37dee0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4a061b09-868d-4a8c-a625-5524ccc77d5c
+  song_title: 135 - FLUA EM MIM, SENHOR
+- praise_material_id: 02590a2c-60ae-4f85-bebb-07257948218e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4a061b09-868d-4a8c-a625-5524ccc77d5c
+  song_title: 136 - LÂMPADA PARA MEUS PÉS

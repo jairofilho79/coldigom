@@ -1,0 +1,72 @@
+praise_id: cd799802-5d55-4286-9570-f1a655c19924
+praise_name: Faze oração
+praise_number: '022'
+praise_author: Anônimo
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'FAZE ORAÇÃO BEM CEDINHO,
+
+  AO MEIO-DIA, SIM, TAMBÉM;
+
+  FAZE ORAÇÃO À NOITINHA,
+
+  QUE É DEUS QUE TE SUSTÉM.
+
+
+  JÁ DE MANHÃ DEUS ESCUTA,
+
+  AO MEIO-DIA, SIM, TAMBÉM;
+
+  MESMO TE VÊ À NOITINHA,
+
+  DE TUDO TE SUSTÉM.
+
+
+  JÁ DE MANHÃ DEUS RESPONDE,
+
+  AO MEIO-DIA, SIM, TAMBÉM;
+
+  FAZE ORAÇÃO À NOITINHA,
+
+  POIS ELE LOGO VEM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0f8be314-056b-42e0-a5ed-a50046adbe32
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6632f360-0e0c-4e6c-b4a9-48db3fa5285c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 18290405-e0b7-4301-97bb-cca0107a8ac3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 411deb58-a807-48da-84d5-6b7560f2645c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 310645e4-14a4-497c-81b4-3131a687a6a9
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 18290405-e0b7-4301-97bb-cca0107a8ac3
+- praise_material_id: 3b0f52e3-191d-4bad-beb2-a6a92ab3da46
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 411deb58-a807-48da-84d5-6b7560f2645c
+- praise_material_id: 52ab473e-c241-4fc3-a52b-de193bcfb0aa
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0f8be314-056b-42e0-a5ed-a50046adbe32
+  song_title: 22 - FAZE ORAÇÃO
+- praise_material_id: 468bab03-e719-4410-85d6-a86b7b103612
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0f8be314-056b-42e0-a5ed-a50046adbe32
+  song_title: 23 - QUANDO ISRAEL SAIU DO EGITO

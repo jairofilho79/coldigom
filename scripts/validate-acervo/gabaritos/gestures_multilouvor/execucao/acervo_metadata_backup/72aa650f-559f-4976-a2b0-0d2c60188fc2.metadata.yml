@@ -1,0 +1,65 @@
+praise_id: 72aa650f-559f-4976-a2b0-0d2c60188fc2
+praise_name: Tenho algo pra você
+praise_number: 091
+praise_author: P.L.C.
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'TENHO ALGO PRA VOCÊ NESTA CANÇÃO:
+
+  TEM ALGUÉM QUE MORA EM MEU CORAÇÃO.
+
+  ESTE ALGUÉM DESEJA DAR A VOCÊ O PERDÃO.
+
+
+  FINAL 2X
+
+  ESTE ALGUÉM É MUITO IMPORTANTE!
+
+  ESTÁ BEM PERTO DE VOCÊ
+
+  A TODO INSTANTE.
+
+  ELE SÓ POR NÓS MORREU NUMA CRUZ.
+
+  ESTE ALGUÉM, LHE DIGO, É: JESUS!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 821e969b-5f29-4574-9fd6-d48bd04b0241
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 355b32e1-46e9-4b0f-9ed6-a3746e5c2146
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c14f3220-711b-49f8-9d53-8373ae1c5ec3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fe2dea4d-73e4-4b5d-8938-05c5454874b0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aae53bbe-9f62-49e9-beab-08712f6f3a2a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: c14f3220-711b-49f8-9d53-8373ae1c5ec3
+- praise_material_id: 71314f64-04ed-43a4-8aae-67238bc3d007
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: fe2dea4d-73e4-4b5d-8938-05c5454874b0
+- praise_material_id: 36f1772e-7ef7-4093-ba0f-a0a271bcd42d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 821e969b-5f29-4574-9fd6-d48bd04b0241
+  song_title: 91 - TENHO ALGO PRA VOCÊ
+- praise_material_id: 050934a9-0b36-4cb0-96dc-d615c6f03a9e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 821e969b-5f29-4574-9fd6-d48bd04b0241
+  song_title: 92 - JESUS CURA E SALVA

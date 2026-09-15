@@ -1,0 +1,52 @@
+praise_id: a67287f2-6f88-4243-89ed-c32ca9cc0843
+praise_name: Diante do teu altar
+praise_number: 008
+praise_author: J.J.G.
+praise_rhythm: Básico
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: "DIANTE DO TEU ALTAR, SENHOR,\nOS MEUS JOELHOS VOU DOBRAR\nE POR TEU\
+  \ SANGUE VOU CLAMAR,\nPEDINDO: VEM PURIFICAR\nO MEU CORAÇÃO,\nQUE ESPERA EM TI COM\
+  \ GRATIDÃO!\n\nCANTAR 2X\nEU CLAMO PELA VIDA, \nA VIDA QUE HÁ EM TI, JESUS!\nPELO\
+  \ PODER DO SANGUE\nVERTIDO NA CRUZ!\n/INSTRUMENTOS\n\nDIANTE DO TEU ALTAR, SENHOR,\n\
+  OS MEUS JOELHOS VOU DOBRAR\nE POR TEU SANGUE VOU CLAMAR,\nPEDINDO: VEM PURIFICAR\n\
+  O MEU CORAÇÃO,\nQUE ESPERA EM TI COM GRATIDÃO!\n\nFINAL 2X\nEU CLAMO PELA VIDA,\
+  \ \nA VIDA QUE HÁ EM TI, JESUS!\nPELO PODER DO SANGUE\nVERTIDO NA CRUZ!\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7d526de0-33b5-4e21-ad09-55e9dbbf3fbe
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 374a64f9-f501-4a80-9395-1dc552d65c6a
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f9581865-1362-4007-82e8-679864ab9493
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7a96ee88-2509-4a26-bce9-9d78fd3e8756
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ec48e3bf-8ab9-4e49-b15b-bcdc7da1fc8f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f9581865-1362-4007-82e8-679864ab9493
+- praise_material_id: 4946bdc4-7afe-45bc-a366-eb475e74f24f
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7a96ee88-2509-4a26-bce9-9d78fd3e8756
+- praise_material_id: dde5d0c6-04c7-4113-835b-05d2ba0c2afa
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7d526de0-33b5-4e21-ad09-55e9dbbf3fbe
+  song_title: 08 - DIANTE DO TEU ALTAR
+- praise_material_id: 250c1406-c75f-447f-97bb-db02f3ad116f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7d526de0-33b5-4e21-ad09-55e9dbbf3fbe
+  song_title: 09 - DOBRO OS MEUS JOELHOS

@@ -1,0 +1,75 @@
+praise_id: 4366d1f8-cf08-45d2-9dbb-8e69d5e1d2c9
+praise_name: Está chegando a hora
+praise_number: ''
+praise_tags:
+- 45ab58b2-d293-45c7-aa75-090fcd968b24
+- 8d5f147b-a28c-425f-9ba8-101434030af9
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2e35f35b-3fde-4380-a537-64193de2280e
+  file_path_legacy: Avulsos PES CIAs/Está chegando a hora/Áudio.mp3
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  type: mp3
+- praise_material_id: 835707f3-82f2-4519-b817-0c3b0638fdee
+  file_path_legacy: Avulsos PES CIAs/Está chegando a hora/Cifra.pdf
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: pdf
+- praise_material_id: 24eca018-d905-4678-8e9d-6685f148439a
+  file_path_legacy: Avulsos PES CIAs/Está chegando a hora/Coro.pdf
+  material_kind: c2fb644f-697c-4d43-9d5f-22319fa0ce79
+  type: pdf
+- praise_material_id: 3af1ce55-8942-4f45-9cdc-c01c1c667c50
+  file_path_legacy: Avulsos PES CIAs/Está chegando a hora/Gestos CIAs.pdf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+- praise_material_id: 12887fbb-02f1-4e51-b9ee-3ec4c5795929
+  file_path_legacy: Avulsos PES CIAs/Está chegando a hora/Playback.mp3
+  material_kind: 64be7569-0246-4334-96c4-cb3cfb3ae5b2
+  type: mp3
+- praise_material_id: d17ce73d-8d49-43d4-ad1c-a0746b17ca61
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: chord
+  source_material_id: 835707f3-82f2-4519-b817-0c3b0638fdee
+- praise_material_id: 51f38a53-80f4-49cc-86b8-e2465820c729
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3af1ce55-8942-4f45-9cdc-c01c1c667c50
+  song_title: 246 - ESTÁ CHEGANDO A HORA
+- praise_material_id: 179fa9bb-07f1-4150-a074-b13445562bf4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3af1ce55-8942-4f45-9cdc-c01c1c667c50
+  song_title: 247 - JESUS VOLTARÁ
+praise_author: ''
+praise_rhythm: Valsa
+praise_tonality: E
+praise_category: ''
+praise_lyrics: 'ESTÁ CHEGANDO A HORA, O TREM JÁ VAI PARTIR
+
+  LEVANDO OS CORDEIRINHOS QUE VÃO AO CÉU SUBIR.
+
+  INSTRUMENTOS
+
+
+  JESUS ESTÁ CHAMANDO, A TODOS CONVIDANDO:
+
+  "VENHAM SEM DEMORA PRA NOVA JERUSÁLEM".
+
+  INSTRUMENTOS
+
+
+  VOCÊ, Ó PEQUENINO, POR QUE NÃO VEM TAMBÉM?
+
+  RECEBA O SEU BILHETE E ENTRE NESSE TREM.
+
+  INSTRUMENTOS
+
+  FINAL
+
+  E ALI JUNTOS ESTAREMOS NA CELESTIAL CIDADE,
+
+  COM CRISTO ANDAREMOS, SERÁ SÓ FELICIDADE.
+
+  INSTRUMENTOS
+
+  '

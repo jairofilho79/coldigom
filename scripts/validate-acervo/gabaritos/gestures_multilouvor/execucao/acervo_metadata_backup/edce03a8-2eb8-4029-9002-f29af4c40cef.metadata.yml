@@ -1,0 +1,71 @@
+praise_id: edce03a8-2eb8-4029-9002-f29af4c40cef
+praise_name: A igreja que ora é vitoriosa
+praise_number: '146'
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'A IGREJA QUE ORA É VITORIOSA,
+
+  SEMPRE ESTÁ NA DEPENDÊNCIA DO SENHOR;
+
+  A IGREJA QUE ORA É VITORIOSA,
+
+  MUITOS MILAGRES ACONTECEM.
+
+  /CANTAR 2X
+
+  PORQUE É UM CORPO VIVO
+
+  ONDE O CABEÇA É JESUS.
+
+
+  SE UMA BENÇÃO QUER
+
+  DOBRA OS SEUS JOELHOS,
+
+  CLAMA, ORA, BUSCA SUA FACE;
+
+  ORANDO, CANTANDO, VERÁS
+
+  O FRUTO DO ESPÍRITO SANTO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 302cff3d-fb37-4df8-956f-ddcf22320d22
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bdbe76e9-3fc0-4d6a-9c2b-893acab08aca
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1b4d4d8a-b82f-4367-8855-639defd5fa99
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 85fe875a-f37f-4dd9-b690-1cd6a0cda690
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 93210ac3-af37-4e6e-b45c-17bf36594620
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 1b4d4d8a-b82f-4367-8855-639defd5fa99
+- praise_material_id: 0f3f1010-633e-49fa-b7ad-697209a65778
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 85fe875a-f37f-4dd9-b690-1cd6a0cda690
+- praise_material_id: 575c2c5a-44b8-4ff3-adb7-c71b99a9802d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 302cff3d-fb37-4df8-956f-ddcf22320d22
+  song_title: 145 - REVELAÇÃO ABRE PRA VOCÊ
+- praise_material_id: 979e5e17-a382-4a9b-be45-8bfe4f513d4b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 302cff3d-fb37-4df8-956f-ddcf22320d22
+  song_title: 146 - A IGREJA QUE ORA É VITORIOSA

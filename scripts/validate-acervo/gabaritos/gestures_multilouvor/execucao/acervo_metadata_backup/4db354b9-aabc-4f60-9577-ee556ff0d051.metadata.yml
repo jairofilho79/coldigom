@@ -1,0 +1,78 @@
+praise_id: 4db354b9-aabc-4f60-9577-ee556ff0d051
+praise_name: Cristo, meu bom Mestre
+praise_number: '033'
+praise_author: C.M.V.
+praise_rhythm: Básico
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  CRISTO, MEU BOM MESTRE,
+
+  EU TE AMO E TE QUERO;
+
+  EU TE ADORO, MEU SENHOR E REI
+
+  /SENHOR, (SENHOR), MEU REI;
+
+  SENHOR, (SENHOR), MEU REI.
+
+
+  CANTAR 2X
+
+  CRISTO, MEU BOM MESTRE,
+
+  EU TE AMO E TE QUERO;
+
+  EU TE ADORO, MEU SENHOR E REI
+
+  /FINAL
+
+  SENHOR, (SENHOR), MEU REI;
+
+  SENHOR, (SENHOR), MEU REI.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c7fd0295-7668-4422-bbc0-b9068d8d0686
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f8b68ce4-881e-40c2-a4db-788c17832176
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fbb91ea6-e769-42b7-91b9-898422ba77bd
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 423db65e-484e-491b-969a-46f9b6b5f3ca
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 67c06615-e109-44d3-8ec0-a74cd48212ec
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: fbb91ea6-e769-42b7-91b9-898422ba77bd
+- praise_material_id: c22e63cf-e7ec-4bcc-bc3b-5a51f2c121ea
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 423db65e-484e-491b-969a-46f9b6b5f3ca
+- praise_material_id: 112e9006-54e7-484a-b17a-54070fe32a5e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c7fd0295-7668-4422-bbc0-b9068d8d0686
+  song_title: 31 - EU QUERO SER O SAL DA TERRA
+- praise_material_id: c65b8a08-0ee4-490c-8f5e-6fabeadbb4c4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c7fd0295-7668-4422-bbc0-b9068d8d0686
+  song_title: 32 - PRÍNCIPE DA PAZ
+- praise_material_id: b741156b-9468-43cb-b284-9ce3a78ae8f7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c7fd0295-7668-4422-bbc0-b9068d8d0686
+  song_title: 33 - CRISTO, MEU BOM MESTRE

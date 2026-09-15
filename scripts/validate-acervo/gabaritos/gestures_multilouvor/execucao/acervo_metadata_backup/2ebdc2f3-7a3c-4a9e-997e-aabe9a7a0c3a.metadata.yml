@@ -1,0 +1,87 @@
+praise_id: 2ebdc2f3-7a3c-4a9e-997e-aabe9a7a0c3a
+praise_name: Muitos motivos tenho
+praise_number: '237'
+praise_author: J.L.M.M.
+praise_rhythm: Básico
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'MUITOS MOTIVOS TENHO
+
+  PARA TE ADORAR, OH, DEUS!
+
+  TU ÉS PARA MIM O MARAVILHOSO,
+
+  O PRÍNCIPE DA PAZ.
+
+
+  *CORO
+
+  JESUS, TU ÉS PARA MIM O DEUS FIEL,
+
+  MARAVILHOSO,
+
+  OUTRO DEUS COMO O SENHOR NÃO HÁ.
+
+  /INSTRUMENTOS
+
+
+  HOJE AQUI ESTOU A TE GLORIFICAR
+
+  PELAS BÊNÇÃOS RECEBIDAS,
+
+  POR TUDO O QUE ME FAZ.
+
+
+  *CORO 2X
+
+  JESUS,
+
+  TU ÉS PARA MIM O DEUS FIEL,
+
+  MARAVILHOSO
+
+  OUTRO DEUS COMO O SENHOR NÃO HÁ.
+
+  /FINAL 2X
+
+  OUTRO DEUS COMO O SENHOR NÃO HÁ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: db8ac782-25ae-41fc-8eab-092d63319e21
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3e71f940-c9c8-4d88-87d9-f0d07e4c9875
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4834c34b-a854-4511-bc57-fa090d7a7f83
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f24f6106-0929-49b3-b21c-ff8e976bdf87
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0dcdb000-261c-4329-8288-b291ccb6639b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4834c34b-a854-4511-bc57-fa090d7a7f83
+- praise_material_id: 77aee343-2dbc-431c-bdc3-22dfb658c783
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f24f6106-0929-49b3-b21c-ff8e976bdf87
+- praise_material_id: 95674825-0c1d-43e8-ab6f-c77a4e74de54
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: db8ac782-25ae-41fc-8eab-092d63319e21
+  song_title: 236 - SENHOR DEUS, TU ÉS VARÃO DE GUERRA
+- praise_material_id: 6273b097-4c75-40b1-a34d-da027f9cdf14
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: db8ac782-25ae-41fc-8eab-092d63319e21
+  song_title: 237 - MUITOS MOTIVOS TENHO

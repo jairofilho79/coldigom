@@ -1,0 +1,92 @@
+praise_id: 18099d84-39e9-4359-9c8a-ec47d8d10b8a
+praise_name: Jesus ressuscitou! (Meu amigo Jesus)
+praise_number: '045'
+praise_author: I.E.R.A; A.S.M
+praise_rhythm: Balada
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: '*CORO 2X
+
+  JESUS RESSUSCITOU!
+
+  CANTAREI EM MEU CORAÇÃO
+
+  TODA GLÓRIA, HONRA E LOUVOR,
+
+  A JESUS, POR SUA PAZ E PERDÃO.
+
+
+  NO MEU CORAÇÃO NÃO HÁ TRISTEZAS,
+
+  POIS JESUS, COM SEU SANGUE, O LAVOU.
+
+  HOJE EU CANTO COM MUITA ALEGRIA,
+
+  ADORANDO AO MEU REI E SENHOR.
+
+
+  HOJE POSSO TESTEMUNHAR
+
+  DE UM AMIGO QUE SÓ ME QUER BEM.
+
+  DEU, NA CRUZ, SUA VIDA POR MIM,
+
+  PRA QUE EU VÁ NO CÉU MORAR TAMBÉM.
+
+
+  *CORO
+
+  JESUS RESSUSCITOU!
+
+  CANTAREI EM MEU CORAÇÃO
+
+  TODA GLÓRIA, HONRA E LOUVOR,
+
+  A JESUS, POR SUA PAZ E PERDÃO.
+
+
+  FINAL
+
+  TODA GLÓRIA, HONRA E LOUVOR,
+
+  A JESUS, POR SUA PAZ E PERDÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 12073d19-ad4e-4afb-89a9-d9185a98db50
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c754fae5-e92d-4174-ac0b-9e616ae5fe7a
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6d5a5c99-5ffb-4041-b35c-557f0ffe44f5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2e12a025-6719-40b9-95d1-03e7e4cc77ec
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cb6da09e-94d4-4ce2-bf62-71a61352fc0d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6d5a5c99-5ffb-4041-b35c-557f0ffe44f5
+- praise_material_id: 567df018-dd77-41ca-beea-d21c6878551b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 2e12a025-6719-40b9-95d1-03e7e4cc77ec
+- praise_material_id: 840a34c9-045d-4d87-89af-a71af04f79a6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 12073d19-ad4e-4afb-89a9-d9185a98db50
+  song_title: 45 - JESUS RESSUSCITOU (MEU AMIGO JESUS)
+- praise_material_id: 48f4b7a9-b1a4-4c6b-be64-0a7889fba383
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 12073d19-ad4e-4afb-89a9-d9185a98db50
+  song_title: 46 - COMO É BOM SERVIR A DEUS

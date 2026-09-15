@@ -1,0 +1,87 @@
+praise_id: 7ea65a57-09f3-465e-8b97-913c1fbd7cb6
+praise_name: A minha alma espera
+praise_number: '205'
+praise_author: N.R.R.A.
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'A MINHA ALMA ESPERA,
+
+  NO SENHOR ESPERA E JUNTOS VAMOS ADORAR,
+
+  O GRANDE REI SENHOR, O NOSSO EMANUEL.
+
+  E JUNTOS VAMOS ADORAR.
+
+
+  VEM SENHOR!
+
+  A TUA IGREJA ESPERA E NÃO VAI TARDAR.
+
+  /CANTAR 2X
+
+  A NOIVA PREPARADA ESTÁ
+
+  E A IGREJA SUBIRÁ.
+
+  /INSTRUMENTOS
+
+
+  A MINHA ALMA ESPERA,
+
+  NO SENHOR ESPERA E JUNTOS VAMOS ADORAR,
+
+  O GRANDE REI SENHOR, O NOSSO EMANUEL.
+
+  E JUNTOS VAMOS ADORAR.
+
+
+  VEM SENHOR!
+
+  A TUA IGREJA ESPERA E NÃO VAI TARDAR.
+
+  /FINAL 2X
+
+  A NOIVA PREPARADA ESTÁ
+
+  E A IGREJA SUBIRÁ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 062bee33-fc1e-483f-8a53-fdb9ea342d47
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a8bbdab1-8ab4-418a-af1b-6dc34380fb4d
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c761a512-64b6-499d-bd55-50d13633708c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 15447f06-b324-4058-a6b7-7a16e8fa29a8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ff35ed1d-b116-49ea-a7e4-4e3bd7fa5b8c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: c761a512-64b6-499d-bd55-50d13633708c
+- praise_material_id: 746568db-0b0d-4c72-8af2-2130201113fc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 15447f06-b324-4058-a6b7-7a16e8fa29a8
+- praise_material_id: 5847c3e7-ce0b-4674-9107-0c674879b772
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 062bee33-fc1e-483f-8a53-fdb9ea342d47
+  song_title: 205 - A MINHA ALMA ESPERA
+- praise_material_id: 93018a5d-8fc8-416e-a86f-38f65742313f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 062bee33-fc1e-483f-8a53-fdb9ea342d47
+  song_title: 206 - NO CÉU UM DIA NÓS VAMOS MORAR

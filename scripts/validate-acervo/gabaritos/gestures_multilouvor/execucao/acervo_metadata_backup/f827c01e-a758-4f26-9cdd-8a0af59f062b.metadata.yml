@@ -1,0 +1,59 @@
+praise_id: f827c01e-a758-4f26-9cdd-8a0af59f062b
+praise_name: Quero ser como Davi
+praise_number: '035'
+praise_author: C.M.V.C.S.
+praise_rhythm: Fox
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'QUERO SER COMO DAVI,
+
+  TÃO PEQUENINO NÃO CONFIAVA EM SI;
+
+  QUERO SER TEMENTE A DEUS
+
+  E ASSIM, VENCER O FILISTEU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c8391492-fc01-4c89-a248-cb92c2eab873
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3adfc869-1ad0-4846-99d2-9df720b236d7
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 03818e5c-733d-452b-8478-50d13922e177
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: eaf0c0de-8e85-4fe1-b3a8-f5bc0f242ab1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 967276ee-6c86-46be-bc4f-e8187a0e5084
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 03818e5c-733d-452b-8478-50d13922e177
+- praise_material_id: 78439e4c-bd34-40b8-95c7-2d921a346535
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: eaf0c0de-8e85-4fe1-b3a8-f5bc0f242ab1
+- praise_material_id: 68a9098a-cd76-4540-9a67-36bca61e4aa3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c8391492-fc01-4c89-a248-cb92c2eab873
+  song_title: 34 - TENHO UM SENHOR MUITO FORTE
+- praise_material_id: 7b92da38-7553-4d1e-bf38-9e259e554749
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c8391492-fc01-4c89-a248-cb92c2eab873
+  song_title: 35 - QUERO SER COMO DAVI
+- praise_material_id: ebb6e9d9-595b-4b58-876d-ab909de03764
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c8391492-fc01-4c89-a248-cb92c2eab873
+  song_title: 36 - EU QUERO ANDAR SEMPRE COM JESUS

@@ -1,0 +1,103 @@
+praise_id: 35f2865e-7599-4394-83f5-0591ad36bbb6
+praise_name: Quando Davi ao Senhor orava
+praise_number: 019
+praise_author: C.M.V.C.S.
+praise_rhythm: Fox Abafado
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'QUANDO DAVI AO SENHOR ORAVA,
+
+  PRA JERUSALÉM ESTAVA O SEU OLHAR,
+
+  PORQUE ELE SABIA QUE EM JERUSALÉM
+
+  O NOME DO SENHOR FIRMADO ESTÁ.
+
+
+  IGUAL A DAVI, TAMBÉM VOU ORAR
+
+  OLHANDO PRA JERUSALÉM CELESTIAL,
+
+  A CIDADE DE MEU REI E SENHOR,
+
+  QUE DO SEU TRONO IRÁ RESPONDER
+
+  À ORAÇÃO DE SEU SERVO FIEL.
+
+
+  CANTAR 2X
+
+  EU VOU ORAR, EU VOU ORAR,
+
+  PORQUE EU SEI QUE MEU SENHOR
+
+  VAI ME ESCUTAR.
+
+
+  QUANDO DAVI AO SENHOR ORAVA,
+
+  PRA JERUSALÉM ESTAVA O SEU OLHAR,
+
+  PORQUE ELE SABIA QUE EM JERUSALÉM
+
+  O NOME DO SENHOR FIRMADO ESTÁ.
+
+
+  IGUAL A DAVI, TAMBÉM VOU ORAR
+
+  OLHANDO PRA JERUSALÉM CELESTIAL,
+
+  A CIDADE DE MEU REI E SENHOR,
+
+  QUE DO SEU TRONO IRÁ RESPONDER
+
+  À ORAÇÃO DE SEU SERVO FIEL.
+
+
+  FINAL 2X
+
+  EU VOU ORAR, EU VOU ORAR,
+
+  PORQUE EU SEI QUE MEU SENHOR
+
+  VAI ME ESCUTAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2bd83a44-0126-439a-b1c5-12cd40ff08a0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 691bc497-8f07-4ca9-ac03-e52ce190e2b8
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 59fb4a34-48e6-4036-9dd9-37c4646ec8ae
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e7f2e044-2867-458f-be32-02220aecadd8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 69cc07b6-a5b2-4cf9-a058-f9771cf7c3a4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 59fb4a34-48e6-4036-9dd9-37c4646ec8ae
+- praise_material_id: 0f36f413-0a91-4e6c-9e4c-b95be2964469
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e7f2e044-2867-458f-be32-02220aecadd8
+- praise_material_id: 8e720857-4bde-47e0-b1cb-1e5812ffd220
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2bd83a44-0126-439a-b1c5-12cd40ff08a0
+  song_title: 18 - BUSCAI AO SENHOR
+- praise_material_id: 1a4d394b-73c5-4622-ae97-e7c687f65392
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2bd83a44-0126-439a-b1c5-12cd40ff08a0
+  song_title: 19 - QUANDO DAVI AO SENHOR ORAVA

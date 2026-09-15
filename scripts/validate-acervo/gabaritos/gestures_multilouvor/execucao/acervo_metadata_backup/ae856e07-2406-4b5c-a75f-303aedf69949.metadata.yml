@@ -1,0 +1,72 @@
+praise_id: ae856e07-2406-4b5c-a75f-303aedf69949
+praise_name: Um certo pastorzinho
+praise_number: '175'
+praise_author: Autor Desconhecido
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'UM CERTO PASTORZINHO, QUE SE CHAMOU DAVI,
+
+  ERA MUI PEQUENO, NÃO CONFIAVA EM SI;
+
+  ELE, COM OUSADIA, ORANDO SEMPRE A DEUS,
+
+  FOI ENFRENTAR, UM DIA, O HERÓI DOS FILISTEUS.
+
+
+  NA FUNDA UMA PEDRA COLOCOU,
+
+  E GIROU, GIROU, GIROU;
+
+  NA FUNDA UMA PEDRA COLOCOU,
+
+  E GIROU, GIROU, GIROU;
+
+
+  MAIS UMA VEZ, MAIS OUTRA VEZ,
+
+  MAIS UMA VEZ GIROU,
+
+  E A PEDRA ATIROU, O ALVO ACERTOU,
+
+  E O GIGANTE AO CHÃO TOMBOU!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 87482a83-0336-460b-98e4-1d8b1fd03e23
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1338e8c8-494e-4e56-8ab5-5611c970cd55
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 087765d8-2f32-4085-ba9e-61d4ac3e54c4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ef53aca7-477b-4a22-8c6e-526145341c76
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 787ff21a-02b1-400d-82e9-8fb6f96d4638
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 087765d8-2f32-4085-ba9e-61d4ac3e54c4
+- praise_material_id: a8d28438-3bb4-4ab0-a692-a21dd10e1f4f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ef53aca7-477b-4a22-8c6e-526145341c76
+- praise_material_id: e34a9b0d-16bc-4398-8d82-7a10ed745f35
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 87482a83-0336-460b-98e4-1d8b1fd03e23
+  song_title: 175 - UM CERTO PASTORZINHO
+- praise_material_id: 69407dd3-89cd-4f33-8581-817fc54ff8be
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 87482a83-0336-460b-98e4-1d8b1fd03e23
+  song_title: 176 - CRIA EM MIM Ó DEUS

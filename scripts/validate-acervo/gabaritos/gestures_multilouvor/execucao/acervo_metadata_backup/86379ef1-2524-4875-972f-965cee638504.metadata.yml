@@ -1,0 +1,67 @@
+praise_id: 86379ef1-2524-4875-972f-965cee638504
+praise_name: Do alto céu
+praise_number: '050'
+praise_author: F.S.P.
+praise_rhythm: Novo
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DO ALTO CÉU ELE ME AMOU,
+
+  DO MUNDO MAU ME RETIROU;
+
+  FIZ A ESCOLHA DA SALVAÇÃO,
+
+  EU ACEITEI O CORDEIRO DE DEUS.
+
+
+  SEU SANGUE LAVOU O MEU CORAÇÃO,
+
+  DE TODO PECADO ME PERDOOU;
+
+  SEU SANTO ESPÍRITO ME ALCANÇOU,
+
+  E HOJE SOU SALVO PELA GRAÇA DE DEUS.
+
+  /FINAL
+
+  E HOJE SOU SALVO PELA GRAÇA DE DEUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0b6b20b0-2154-4cac-8c00-85d0759c015b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b9336aec-a357-4401-a0e5-97ea9b5d4ccf
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a445be64-f632-4788-ae1c-131ea96f03c1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 91fd428c-d4ca-4b15-96d1-e6fa7ff1df72
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9911f2ee-6846-4aa2-bccd-8d71df2f0d06
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a445be64-f632-4788-ae1c-131ea96f03c1
+- praise_material_id: 73067542-4999-4e80-a255-bd5948a9b042
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 91fd428c-d4ca-4b15-96d1-e6fa7ff1df72
+- praise_material_id: 35f11247-af51-47a8-a838-ff2f6b68fa20
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0b6b20b0-2154-4cac-8c00-85d0759c015b
+  song_title: 50 - DO ALTO CÉU
+- praise_material_id: da4ff10e-3994-4b0b-8e9e-76506653c197
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0b6b20b0-2154-4cac-8c00-85d0759c015b
+  song_title: 51 - EIS-ME AQUI, SENHOR, EM TEU ALTAR

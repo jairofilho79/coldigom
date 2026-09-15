@@ -1,0 +1,83 @@
+praise_id: dca80154-ab4c-4c3e-9d2e-f838b9fb812f
+praise_name: Vinde, meninos
+praise_number: '103'
+praise_author: 'Let. e Mús.: George Frederick Root; Adap. Sarah Paulton Kalley'
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VINDE, MENINOS, VINDE A JESUS!
+
+  ELE GANHOU-VOS BÊNÇÃOS NA CRUZ,
+
+  OS PEQUENINOS ELE CONDUZ,
+
+  Ó VINDE AO SALVADOR!
+
+
+  CORO
+
+  QUE ALEGRIA! SEM PECADO OU MAL
+
+  REUNIR-NOS TODOS, AFINAL,
+
+  NA SANTA PÁTRIA CELESTIAL
+
+  COM NOSSO SALVADOR.
+
+
+  JÁ SEM DEMORA, HOJE CONVÉM
+
+  IR CAMINHANDO À GLÓRIA ALÉM;
+
+  JESUS VOS CHAMA, QUER VOSSO BEM,
+
+  Ó VINDE AO SALVADOR!
+
+
+  CRISTO VOS AMA, BEM ELE O DIZ,
+
+  QUER RECEBER-VOS NO BOM PAÍS;
+
+  QUER CONCEDER-VOS VIDA FELIZ,
+
+  Ó VINDE AO SALVADOR!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1a67ccaf-1d34-4f76-9d2f-7ce94e584c22
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f621c05f-79c5-42d2-b564-dba51ce7ecab
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 559b2de3-f4d9-495f-8ddd-b60128463ce3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4fede434-62cf-4446-8d7e-866fef96f404
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e407e2f9-f04d-43e2-ac77-8ba065a10cd5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 559b2de3-f4d9-495f-8ddd-b60128463ce3
+- praise_material_id: a5aa5d92-a4b6-4cda-a4a6-7ddf21a270e7
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4fede434-62cf-4446-8d7e-866fef96f404
+- praise_material_id: bcc27467-ea64-4fc5-b2b9-06667e16d143
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1a67ccaf-1d34-4f76-9d2f-7ce94e584c22
+  song_title: 103 - VINDE MENINOS
+- praise_material_id: 3f25d6dd-d1d5-4590-b458-899e410662f4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1a67ccaf-1d34-4f76-9d2f-7ce94e584c22
+  song_title: 104 - NO CAMINHO ELE ME GUIARÁ

@@ -1,0 +1,72 @@
+praise_id: 4fbeaf6e-3010-4042-b51a-ae3ae5040803
+praise_name: Andai na minha presença
+praise_number: '162'
+praise_author: F.S.P.
+praise_rhythm: Fox
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CORO 2X
+
+  ANDAI NA MINHA PRESENÇA,
+
+  ANDAI NA MINHA PRESENÇA
+
+  E VOS GUIAREI.
+
+
+  E VOS LEVAREI A UM LUGAR
+
+  CHEIO DE GOZO E DE PAZ.
+
+  FOME E SEDE JAMAIS TEREIS,
+
+  POIS COMEREIS DO PÃO DA VIDA.
+
+
+  E O MEU ESPÍRITO VOZ CONDUZIRÁ
+
+  À PÁTRIA CELESTIAL.
+
+  LUTAS E DORES NUNCA MAIS TEREIS,
+
+  POIS VIVEREIS COM O VOSSO REI.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7e848acc-60e2-445a-b0a2-d163a1268801
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bb90c1d3-7f4c-4039-80cb-f54652e29d3d
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 50bc0b36-9626-4d01-aa9b-a278b1208ea8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b6a81c6c-d607-448c-97ac-a484354a9530
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9d5c9b68-92b1-4287-a2a2-10a19bc9c237
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 50bc0b36-9626-4d01-aa9b-a278b1208ea8
+- praise_material_id: ee44d378-0f44-4071-945b-891e29c54794
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: b6a81c6c-d607-448c-97ac-a484354a9530
+- praise_material_id: 7f624642-56d3-49e3-8c53-44bee1613575
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7e848acc-60e2-445a-b0a2-d163a1268801
+  song_title: 162 - ANDAI NA MINHA PRESENÇA
+- praise_material_id: ad35b296-ea6c-4c4e-8eff-4100911bc6bc
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7e848acc-60e2-445a-b0a2-d163a1268801
+  song_title: 163 - DÁ-ME UM CORAÇÃO CHEIO DO TEU AMOR

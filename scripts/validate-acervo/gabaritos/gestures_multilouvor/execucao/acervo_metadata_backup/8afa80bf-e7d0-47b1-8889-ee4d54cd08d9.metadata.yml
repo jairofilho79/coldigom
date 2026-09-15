@@ -1,0 +1,51 @@
+praise_id: 8afa80bf-e7d0-47b1-8889-ee4d54cd08d9
+praise_name: Em breve estaremos na glória
+praise_number: '195'
+praise_author: E.H.M.R.
+praise_rhythm: Marcha
+praise_tonality: Dm
+praise_category: Crianças e Adolescentes
+praise_lyrics: "EM BREVE ESTAREMOS NA GLÓRIA,\nA CANTAR: ALELUIA AO CORDEIRO,\nAGUARDAMOS\
+  \ DIA E NOITE OUVIR O TOQUE\nDA TROMBETA DE DEUS ECOAR.\n\nVAMOS TER UMA GRANDE\
+  \ REUNIÃO\nNO CÉU COM O SALVADOR.\nO MOMENTO SE APROXIMA\nE A NOIVA SE APRONTA,\n\
+  AGUARDA O CHAMADO DO SENHOR.\n\nCANTAR 2X\nFELIZES SERVOS CHAMADOS\nPARA A GRANDE\
+  \ FESTA            \nQUE ACONTECERÁ BREVEMENTE:\nSERÃO AS BODAS DO CORDEIRO.\n/FINAL\n\
+  SERÃO AS BODAS DO CORDEIRO.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8e961831-986b-4486-a8d5-34e33c82be74
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0553c095-111d-4bea-945d-db6dc71886ac
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 18812754-16bc-4ea1-9d21-5c8ff0058b88
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 81510879-20ec-4283-9dc5-a829c59b821b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 30f9a1fc-3c6d-403d-b1e2-b549a7511661
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 18812754-16bc-4ea1-9d21-5c8ff0058b88
+- praise_material_id: ffee80bd-5698-4342-935e-d3e0d56e70d8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 81510879-20ec-4283-9dc5-a829c59b821b
+- praise_material_id: 03f72d51-8b60-49b7-9f30-ea0dfcf900e0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8e961831-986b-4486-a8d5-34e33c82be74
+  song_title: 195 - EM BREVE ESTAREMOS NA GLÓRIA
+- praise_material_id: 5625c98d-7e39-47aa-a689-6c83c595a5c0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8e961831-986b-4486-a8d5-34e33c82be74
+  song_title: 196 - JESUS NOS PROMETEU

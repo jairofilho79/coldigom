@@ -1,0 +1,58 @@
+praise_id: 08db3657-10d2-4db7-a7e3-e0afb69c6674
+praise_name: É bom, é bom demais
+praise_number: '053'
+praise_author: Autor Desconhecido
+praise_rhythm: Fox
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  É BOM, É BOM DEMAIS,
+
+  É MUITO BOM TER JESUS NO CORAÇÃO.
+
+  /CANTAR 2X
+
+  VIVER COM ELE, PERTINHO DELE,
+
+  É MUITO BOM TER JESUS NO CORAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9bb2078b-46b4-4dd0-a048-726fc726e784
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d2e68bed-5fb3-4cea-8b5d-f74ace0ad7d7
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 794c2583-12ab-4ed8-90f6-a92de745377f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 24b6ca75-cf6a-4cae-97b8-150844091a35
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3af921c7-984c-474c-8c7d-f41d7edab9a8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 794c2583-12ab-4ed8-90f6-a92de745377f
+- praise_material_id: 17d583b2-dd05-4d98-ae59-8dd756155e2b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 24b6ca75-cf6a-4cae-97b8-150844091a35
+- praise_material_id: b6036ca7-3626-4f3f-839a-94b26340debc
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9bb2078b-46b4-4dd0-a048-726fc726e784
+  song_title: 52 - SEU NOME É MARAVILHOSO
+- praise_material_id: f4d3844b-48b1-4bc2-b948-ea77496117e7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9bb2078b-46b4-4dd0-a048-726fc726e784
+  song_title: 53 - É BOM, É BOM DEMAIS

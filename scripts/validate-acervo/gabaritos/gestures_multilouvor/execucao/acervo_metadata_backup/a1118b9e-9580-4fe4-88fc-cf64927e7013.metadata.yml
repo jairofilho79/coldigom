@@ -1,0 +1,68 @@
+praise_id: a1118b9e-9580-4fe4-88fc-cf64927e7013
+praise_name: A minha alegria é crescer com o meu Senhor
+praise_number: 049
+praise_author: A.A.F.A.
+praise_rhythm: Country
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'A MINHA ALEGRIA É CRESCER COM O MEU SENHOR!
+
+  SENHOR DA MINHA VIDA, O MEU GRANDE AMOR!
+
+  A TI EU RENDEREI TODA GLÓRIA E LOUVOR,
+
+  AQUI TRABALHAREI NA TUA OBRA COM AMOR.
+
+
+  USA-ME SENHOR, PRA PREGAR AO PECADOR,
+
+  USA-ME SENHOR, NA TUA OBRA DE AMOR.
+
+  USA-ME SENHOR, PRA MINHA CASA EDIFICAR,
+
+
+  USA-ME SENHOR, QUERO A TI GLORIFICAR!
+
+  USA-ME SENHOR, EM TODO E QUALQUER LUGAR,
+
+  USA-ME SENHOR, ATÉ MEU JESUS VOLTAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 505923eb-3086-43d4-976f-05d79277c16f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 26b869c3-905a-493a-aec4-44d500f7b184
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 98f26430-423a-46f1-98ca-579e62ccb7e9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6cb55380-b64e-45e6-a797-a63c301be293
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 465b6421-070a-4f0b-b434-89e776eccb95
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 98f26430-423a-46f1-98ca-579e62ccb7e9
+- praise_material_id: 84d9c774-b5c5-4e8a-af02-b4e8f032c1ba
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6cb55380-b64e-45e6-a797-a63c301be293
+- praise_material_id: ee0aba63-f9d3-4d38-a5c3-f90ce7ac4a57
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 505923eb-3086-43d4-976f-05d79277c16f
+  song_title: 48 - JESUS CRISTO É O AMADO
+- praise_material_id: 766dc87b-cce4-43ca-a11b-137d785703ff
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 505923eb-3086-43d4-976f-05d79277c16f
+  song_title: 49 - A MINHA ALEGRIA É CRESCER COM O MEU SENHOR!

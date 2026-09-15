@@ -1,0 +1,50 @@
+praise_id: f2b2840c-a4f9-4e9b-ae8b-6809a38756c0
+praise_name: Jesus vê a sua igreja
+praise_number: '133'
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: "JESUS VÊ A SUA IGREJA\nCOMO FORTE EDIFÍCIO,\nFIRME E EDIFICADO PARA\
+  \ MORADA DE DEUS.\n\nCORO 2X\nNÃO É FEITA DE TIJOLO \nE MADEIRA, NÃO!\nÉ JESUS BEM\
+  \ VIVO NO CORAÇÃO.\n\nEDIFÍCIO ESPECIAL\nDESENHADO POR JESUS,\nPARA SEMPRE ERGUIDO\n\
+  PELO SANTO ESPÍRITO.\n\nVENHA PARA A IGREJA,\nVAMOS JUNTOS TRABALHAR.\nNESTA OBRA\
+  \ GLORIOSA\nATÉ JESUS VOLTAR.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9764ece3-285e-4a0c-aeb1-0de0a38b31d0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 43aa3354-90c4-4a7d-bd6d-d8a0586b653c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3a4ccebd-700b-43e6-a019-35f8e36fd737
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 78ece1b6-0d2c-4e77-8ae1-0b6bc507edfc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 653a24d0-4f8e-4613-aa7c-1a3f5964ca01
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 3a4ccebd-700b-43e6-a019-35f8e36fd737
+- praise_material_id: 7a8da798-737c-4257-abfa-ea83bc6a2f9b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 78ece1b6-0d2c-4e77-8ae1-0b6bc507edfc
+- praise_material_id: 61f03a05-406c-468d-a6b6-932725ca2acc
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9764ece3-285e-4a0c-aeb1-0de0a38b31d0
+  song_title: 133 - JESUS VÊ A SUA IGREJA
+- praise_material_id: 73d552b9-b5ce-45d6-9c96-2f15f7b48733
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9764ece3-285e-4a0c-aeb1-0de0a38b31d0
+  song_title: 134 - VOU CAMINHANDO PRA JELÉM

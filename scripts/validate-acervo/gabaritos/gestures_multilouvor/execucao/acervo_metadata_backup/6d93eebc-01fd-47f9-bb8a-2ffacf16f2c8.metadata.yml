@@ -1,0 +1,78 @@
+praise_id: 6d93eebc-01fd-47f9-bb8a-2ffacf16f2c8
+praise_name: Dá-me um coração cheio do teu amor
+praise_number: '163'
+praise_author: M.L.M.B.O.
+praise_rhythm: Básico
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DÁ-ME UM CORAÇÃO
+
+  CHEIO DO TEU AMOR,
+
+  QUE SEMPRE RECONHEÇA
+
+  TUA BONDADE, Ó MEU SENHOR.
+
+
+  UM CORAÇÃO QUE ESTREMEÇA
+
+  AO OUVIR TUA VOZ ASSIM
+
+  E QUE NUNCA SE ESQUEÇA
+
+  O QUE TU FAZES POR MIM.
+
+
+  CANTAR 2X
+
+  UM CORAÇÃO OBEDIENTE
+
+  À TUA REVELAÇÃO,
+
+  PURO E RENOVADO
+
+  PELA TUA SALVAÇÃO.
+
+  /FINAL
+
+  Ó SENHOR, AMÉM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0ed3cc4c-059a-4ab1-8f9c-70c7e7e52a83
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f8406479-960a-4e87-89f9-b1d6703cecd1
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 16476b34-f74c-4a3a-8c10-e10117fddcdc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5916e061-3dde-499f-894f-6b473a4d7def
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a0dc544a-2f53-4a75-b4db-d0f32ef27176
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 16476b34-f74c-4a3a-8c10-e10117fddcdc
+- praise_material_id: a1926c1a-826d-42e7-bdc2-3d6c42cda4fa
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5916e061-3dde-499f-894f-6b473a4d7def
+- praise_material_id: 67923eb3-6de1-427d-bd9d-ad7a5ca57b78
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0ed3cc4c-059a-4ab1-8f9c-70c7e7e52a83
+  song_title: 162 - ANDAI NA MINHA PRESENÇA
+- praise_material_id: f883e68b-2196-4a8d-84ce-009ef7a337bf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0ed3cc4c-059a-4ab1-8f9c-70c7e7e52a83
+  song_title: 163 - DÁ-ME UM CORAÇÃO CHEIO DO TEU AMOR

@@ -1,0 +1,113 @@
+praise_id: 7a734986-54c0-4461-935e-6f6591838b47
+praise_name: É tão triste não ver a luz (Cego bastimeu)
+praise_number: '062'
+praise_author: M.L.M.B.O.
+praise_rhythm: Novo
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'É TÃO TRISTE NÃO VER A LUZ,
+
+  A ESCURIDÃO DESSA VIDA VIVER,
+
+  À BEIRA DO CAMINHO
+
+  BARTIMEU VIVIA A SOFRER.
+
+
+  MAS UMA VOZ DE ESPERANÇA
+
+  AOS SEUS OUVIDOS UM DIA CHEGOU,
+
+  A MULTIDÃO O IMPEDIA
+
+  E O CEGO BEM ALTO GRITOU:
+
+
+  "OH! JESUS, FILHO DE DAVI,
+
+  TEM MISERICÓRDIA DE MIM;"
+
+  QUERIA VER O SOL NASCER,
+
+  A LUZ DA VIDA RESPLANDECER.
+
+
+  E JESUS TEVE COMPAIXÃO,
+
+  DEU-LHE CURA E REDENÇÃO,
+
+  E FELIZ PELO CAMINHO A JESUS SEGUIU.
+
+
+  É TÃO TRISTE NÃO VER A LUZ,
+
+  A ESCURIDÃO DESSA VIDA VIVER,
+
+  À BEIRA DO CAMINHO
+
+  BARTIMEU VIVIA A SOFRER.
+
+
+  MAS UMA VOZ DE ESPERANÇA
+
+  AOS SEUS OUVIDOS UM DIA CHEGOU,
+
+  A MULTIDÃO O IMPEDIA
+
+  E O CEGO BEM ALTO GRITOU:
+
+
+  "OH! JESUS, FILHO DE DAVI,
+
+  TEM MISERICÓRDIA DE MIM;"
+
+  QUERIA VER O SOL NASCER,
+
+  A LUZ DA VIDA RESPLANDECER.
+
+
+  E JESUS TEVE COMPAIXÃO,
+
+  DEU-LHE CURA E REDENÇÃO,
+
+  E FELIZ PELO CAMINHO A JESUS SEGUIU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7e91b94d-ebdc-46e8-a904-067df579e78c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cc5a2e39-b825-44f5-a3cf-d32e0b0d19c0
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 658c3c0d-4b36-4d62-bf48-c4491c0d313e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c4a8eee0-3c32-492e-831a-377fd9e47ec1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d494066b-d6b4-4322-9780-9422f3e548c6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 658c3c0d-4b36-4d62-bf48-c4491c0d313e
+- praise_material_id: 28ee8597-13c1-410a-8ddc-980584d6ef6f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c4a8eee0-3c32-492e-831a-377fd9e47ec1
+- praise_material_id: d985d8d0-0241-4fa8-83db-ca660bb7e91e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7e91b94d-ebdc-46e8-a904-067df579e78c
+  song_title: 62 - É TÃO TRISTE NÃO VER A LUZ (O CEGO BARTIMEU)
+- praise_material_id: b301fd6f-0c8f-4f6c-9c49-bcf93663f60f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7e91b94d-ebdc-46e8-a904-067df579e78c
+  song_title: 63 - TEM BOM ÂNIMO, POBRE PECADOR

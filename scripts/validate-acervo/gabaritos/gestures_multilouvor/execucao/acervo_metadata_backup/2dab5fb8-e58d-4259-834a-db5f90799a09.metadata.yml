@@ -1,0 +1,64 @@
+praise_id: 2dab5fb8-e58d-4259-834a-db5f90799a09
+praise_name: Ontem, hoje e para sempre
+praise_number: '129'
+praise_author: 'Let.: A. B. Simpson; Mús.: J.H. Burke'
+praise_rhythm: Balada
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ONTEM, HOJE E PARA SEMPRE O SALVADOR É IGUAL,
+
+  TODOS MUDAM, MENOS CRISTO,
+
+  ROCHA ETERNAL.
+
+
+  ROCHA ETERNAL, ROCHA ETERNAL,
+
+  TODOS MUDAM, MENOS CRISTO,
+
+  ROCHA ETERNAL.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8f6232b9-19d6-4f6d-975e-68c6871a69a8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 80be24dd-319b-41f2-99db-d3f55232e35a
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4f890344-9999-4504-86b0-ea4fed5c89e9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2e52ea56-00b4-4cd6-9e67-a7626c6a25db
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 919588d3-69b9-418b-8d2a-97031467e055
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4f890344-9999-4504-86b0-ea4fed5c89e9
+- praise_material_id: 55af0f8a-c49c-487b-afc9-3cbab09271a2
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 2e52ea56-00b4-4cd6-9e67-a7626c6a25db
+- praise_material_id: 4efe4176-44cd-4af7-81a3-fff19f531476
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8f6232b9-19d6-4f6d-975e-68c6871a69a8
+  song_title: 127 - CRISTO É VITÓRIA
+- praise_material_id: 669f4071-9fad-4b99-95ea-a38d217a448b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8f6232b9-19d6-4f6d-975e-68c6871a69a8
+  song_title: 128 - CRISTO É MEU AMIGO, É MEU AMIGO
+- praise_material_id: fbc57b2f-b7ba-4357-9a1d-ccac17e40481
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 8f6232b9-19d6-4f6d-975e-68c6871a69a8
+  song_title: 129 - ONTEM, HOJE E PARA SEMPRE

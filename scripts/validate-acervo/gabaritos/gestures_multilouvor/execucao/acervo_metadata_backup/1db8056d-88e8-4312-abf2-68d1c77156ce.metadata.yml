@@ -1,0 +1,84 @@
+praise_id: 1db8056d-88e8-4312-abf2-68d1c77156ce
+praise_name: Jesus é o caminho
+praise_number: 097
+praise_author: Autor Desconhecido
+praise_rhythm: Valseado
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  JESUS É O CAMINHO,
+
+  EU VOU AO CÉU COM ELE.
+
+  /*CORO 2X
+
+  EU VOU, EU VOU,
+
+  EU VOU AO CÉU COM ELE.
+
+
+  CANTAR 2X
+
+  JESUS É A VERDADE,
+
+  EU VOU AO CÉU COM ELE.
+
+  /*CORO 2X
+
+  EU VOU, EU VOU,
+
+  EU VOU AO CÉU COM ELE.
+
+
+  CANTAR 2X
+
+  JESUS É A MINHA VIDA,
+
+  EU VOU AO CÉU COM ELE.
+
+  /*CORO 2X
+
+  EU VOU, EU VOU,
+
+  EU VOU AO CÉU COM ELE.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 6db605de-38d4-40a8-bf42-9a0b5cdee5ba
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 07c9fed8-5614-4b4e-bcc3-5c77b4412d0c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 386dc24f-96da-4b2f-91f1-5f62051f6bd4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 43f4123d-43d5-4a5d-ae88-74a37c257e72
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 628543e6-ff43-4ee9-be7c-b39ee6155543
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 386dc24f-96da-4b2f-91f1-5f62051f6bd4
+- praise_material_id: e821ea07-9d30-455b-a551-860eebb1904d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 43f4123d-43d5-4a5d-ae88-74a37c257e72
+- praise_material_id: b68ef4be-2c9a-4427-9192-58bf5f13ab08
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 6db605de-38d4-40a8-bf42-9a0b5cdee5ba
+  song_title: 96 – SONHEI COM JESUS ESTA NOITE
+- praise_material_id: 894e34aa-75b0-4ce0-87ff-5321a4bc3dea
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 6db605de-38d4-40a8-bf42-9a0b5cdee5ba
+  song_title: 97 - JESUS É O CAMINHO

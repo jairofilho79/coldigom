@@ -1,0 +1,67 @@
+praise_id: 73ae1bf6-dde1-485e-8ad0-4550f82d8964
+praise_name: Eu sou uma ovelhinha de Jesus
+praise_number: '026'
+praise_author: M.C.H.O.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'EU SOU UMA OVELHINHA DE JESUS.
+
+  EU SOU UMA OVELHINHA DE JESUS.
+
+  JESUS É O BOM PASTOR,
+
+  JESUS CUIDA DE MIM
+
+  EU SOU UMA OVELHINHA DO SENHOR.
+
+
+  BEM CEDO AO LEVANTAR EU VOU ORAR,
+
+  AGRADECER A NOITE QUE ME DEU;
+
+  EU LOUVOR COM AMOR
+
+  E DIGO SEMPRE ASSIM:
+
+  EU SOU UM PEQUENINO DO SENHOR. (2X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 66ad0551-8dd0-4292-84cf-d92f51f70c2e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7bbb7386-55f0-46d4-9738-18a0feae04a3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3c7899bf-3771-40b1-8bd7-f345d149bf81
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aadabb5e-db9c-4806-82ee-8cdef737d663
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2bc28720-dbe1-4df1-88a2-7bce5c55a882
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 3c7899bf-3771-40b1-8bd7-f345d149bf81
+- praise_material_id: 7dffd0af-ea98-4cd4-9163-3ab86189d7cd
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: aadabb5e-db9c-4806-82ee-8cdef737d663
+- praise_material_id: 21f4e9ae-1b80-4f3b-93c3-edbf5ad8a063
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 66ad0551-8dd0-4292-84cf-d92f51f70c2e
+  song_title: 26 - EU SOU UMA OVELHINHA DE JESUS
+- praise_material_id: 7c07a485-5bab-406b-8890-e976a75d2327
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 66ad0551-8dd0-4292-84cf-d92f51f70c2e
+  song_title: 27 - ELE É A RAIZ

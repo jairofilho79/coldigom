@@ -1,0 +1,63 @@
+praise_id: 2ce95c78-9358-447d-ad49-052c113197a5
+praise_name: Eu abri meu coração
+praise_number: 098
+praise_author: Ruth Hatch
+praise_rhythm: Valsa
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  EU ABRI MEU CORAÇÃO
+
+  E JESUS VEIO HABITAR;
+
+  DE MANSO BATEU,
+
+  LOGO A PORTA ABRI EU
+
+  E ELE VEIO EM MIM MORAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d66df2de-21a4-42f8-b0e3-66feec010f27
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2eb4f2ff-f939-41ba-92bd-d7c11691e45e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e3f00429-de0f-4edc-bc73-ec98d229f232
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6803743b-8949-4679-abd2-3ff35db3733c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6a4951a0-31dd-4514-b5d8-7de4dac21abe
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: e3f00429-de0f-4edc-bc73-ec98d229f232
+- praise_material_id: 3d207c35-212d-4869-b997-7203b3394738
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6803743b-8949-4679-abd2-3ff35db3733c
+- praise_material_id: cee574d1-1ca9-4d0f-bf04-6812187d5f65
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d66df2de-21a4-42f8-b0e3-66feec010f27
+  song_title: 98 - EU ABRI MEU CORAÇÃO
+- praise_material_id: 0bb79971-6b8c-476d-bab7-ff3662951aed
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d66df2de-21a4-42f8-b0e3-66feec010f27
+  song_title: 99 - NO MEU CORAÇÃO
+- praise_material_id: 5e682269-e372-41b8-8779-28d02003ddb9
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d66df2de-21a4-42f8-b0e3-66feec010f27
+  song_title: 100 - CRISTO SENTE AMOR POR MIM

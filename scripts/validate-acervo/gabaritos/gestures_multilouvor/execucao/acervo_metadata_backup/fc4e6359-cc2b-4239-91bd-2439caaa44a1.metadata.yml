@@ -1,0 +1,66 @@
+praise_id: fc4e6359-cc2b-4239-91bd-2439caaa44a1
+praise_name: Pai celeste
+praise_number: '016'
+praise_author: J.S.M.
+praise_rhythm: Valseado
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'PAI CELESTE, PAI CELESTE,
+
+  VEM FICAR COMIGO,
+
+  PAI CELESTE.
+
+
+  JESUS CRISTO, JESUS CRISTO,
+
+  VEM FICAR COMIGO,
+
+  JESUS CRISTO.
+
+
+  SANTO ESPÍRITO, SANTO ESPÍRITO,
+
+  VEM FICAR COMIGO,
+
+  SANTO ESPÍRITO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3e2fe149-ed1d-4dd6-81c6-4146a9e7be8e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 06157fa8-c2f3-4315-8818-3fce4bb5268d
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6b3ce71d-cfb5-4f09-972f-bcb6909aca3c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a40aa7c7-0e85-4ee9-9f42-5941d1eabe88
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d8669851-7bc8-44ce-9057-5efc5288e395
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 6b3ce71d-cfb5-4f09-972f-bcb6909aca3c
+- praise_material_id: 2d84e0ea-d63e-4bc4-b521-d4ddf499d54f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a40aa7c7-0e85-4ee9-9f42-5941d1eabe88
+- praise_material_id: 02e28865-460b-43e3-a91b-709faefb4958
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3e2fe149-ed1d-4dd6-81c6-4146a9e7be8e
+  song_title: 16- PAI CELESTE
+- praise_material_id: 47e6deae-e82d-417d-9a61-3353d7e242b5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3e2fe149-ed1d-4dd6-81c6-4146a9e7be8e
+  song_title: 17 - QUANDO FALO COM DEUS

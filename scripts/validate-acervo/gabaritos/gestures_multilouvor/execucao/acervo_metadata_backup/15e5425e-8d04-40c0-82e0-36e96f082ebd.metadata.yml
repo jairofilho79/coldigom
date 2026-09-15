@@ -1,0 +1,80 @@
+praise_id: 15e5425e-8d04-40c0-82e0-36e96f082ebd
+praise_name: Você sabe o que é salvação
+praise_number: 069
+praise_author: E.H.M.R.
+praise_rhythm: Balada
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VOCÊ SABE O QUE É SALVAÇÃO?
+
+  É SENTIR UMA GRANDE ALEGRIA
+
+  QUE O MUNDO NÃO CONHECE,
+
+  NELE HÁ TREVAS E SOLIDÃO.
+
+
+  JESUS NOS DEU SALVAÇÃO
+
+  QUANDO LÁ NA CRUZ MORREU,
+
+  LEVOU OS NOSSOS PECADOS,
+
+  LIBERTOS AGORA ESTAMOS.
+
+
+  CANTAR 2X
+
+  DÊ A ELE O SEU LOUVOR,
+
+  UMA VIDA DE GRATIDÃO;
+
+  VEM AGORA E ENTREGUE
+
+  A JESUS SEU CORAÇÃO.
+
+  /FINAL
+
+  VEM AGORA E ENTREGUE
+
+  A JESUS SEU CORAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 590d67e9-0ce5-4f09-9db2-664f2935b138
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9b4e9302-aa1a-4daf-b240-a5eafcc60dfc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bf079c5b-45d1-47a4-a732-fc490e3d9853
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bf45d9d2-672f-4868-a40f-c2ff8e3d4724
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 569d7bbc-adf3-4154-b198-fd5bd00afb16
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 590d67e9-0ce5-4f09-9db2-664f2935b138
+- praise_material_id: 5516fd66-51ef-4192-bf3d-1c8ae39c637b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9b4e9302-aa1a-4daf-b240-a5eafcc60dfc
+- praise_material_id: eb5a35f5-b6f3-40bb-b691-9fe602192105
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bf079c5b-45d1-47a4-a732-fc490e3d9853
+  song_title: 68 - VEM PARA O MEIO (ÁGUAS DA SALVAÇÃO)
+- praise_material_id: 466da419-b1bf-4c91-a005-16c8b4779f15
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bf079c5b-45d1-47a4-a732-fc490e3d9853
+  song_title: 69 - VOCÊ SABE O QUE É SALVAÇÃO?

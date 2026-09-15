@@ -1,0 +1,91 @@
+praise_id: fe296940-517d-4128-9595-5dab5b5cf038
+praise_name: Sei que na cruz seu sangue verteu
+praise_number: '061'
+praise_author: L.P.S.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SEI QUE NA CRUZ SEU SANGUE VERTEU,
+
+  MORREU ALI MEU SENHOR,
+
+  MAS NO TERCEIRO DIA RESSUCITOU
+
+  PRA ME DAR O CÉU DE AMOR.
+
+
+  EU QUERO JESUS QUE ME SALVA (3X)
+
+  COM ELE QUERO IR AO CÉU.
+
+
+  LÁ NO CÉU, (3X)
+
+  QUERO MORAR COM MEU JESUS.
+
+  LÁ NO CÉU, (3X)
+
+  QUERO MORAR COM MEU JESUS.
+
+
+  SEI QUE NA CRUZ SEU SANGUE VERTEU,
+
+  MORREU ALI MEU SENHOR,
+
+  MAS NO TERCEIRO DIA RESSUCITOU
+
+  PRA ME DAR O CÉU DE AMOR.
+
+
+  EU QUERO JESUS QUE ME SALVA (3X)
+
+  COM ELE QUERO IR AO CÉU.
+
+
+  LÁ NO CÉU, (3X)
+
+  QUERO MORAR COM MEU JESUS.
+
+  LÁ NO CÉU, (3X)
+
+  QUERO MORAR COM MEU JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b1f918ff-0db9-420d-9b43-892bbb5d0b2d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a305364a-c118-414b-a3a4-87e6f5fd4858
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3254c016-27dd-4144-a9ff-ec94f0fc7619
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 31308ece-42b1-4ef4-baa9-9db05a252032
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 39b52502-407a-4423-b350-d788f2dba8e3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 3254c016-27dd-4144-a9ff-ec94f0fc7619
+- praise_material_id: 74cbb7aa-14f4-44e0-81c9-7e6ae904de23
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 31308ece-42b1-4ef4-baa9-9db05a252032
+- praise_material_id: 72df6b58-07ec-42f1-b7c7-780c6a98212d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b1f918ff-0db9-420d-9b43-892bbb5d0b2d
+  song_title: 60 - DEUS FALOU COMIGO
+- praise_material_id: cf4803be-18a2-4fd3-b554-f8d3095f2c26
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b1f918ff-0db9-420d-9b43-892bbb5d0b2d
+  song_title: 61 - SEI QUE NA CRUZ SEU SANGUE VERTEU

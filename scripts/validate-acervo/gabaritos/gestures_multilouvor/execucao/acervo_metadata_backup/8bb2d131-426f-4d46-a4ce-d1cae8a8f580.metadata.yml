@@ -1,0 +1,114 @@
+praise_id: 8bb2d131-426f-4d46-a4ce-d1cae8a8f580
+praise_name: Sou servo do Senhor
+praise_number: '044'
+praise_author: C.M.V.C.S.
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SOU SERVO DO SENHOR,
+
+  SERVI-LO É O MEU PRAZER,
+
+  POIS SALVO EM SUA GRAÇA,
+
+  POR SEU FILHO JESUS,
+
+  TORNOU-ME LIVRE.
+
+  EM JESUS POSSO IR DIRETO AO PAI,
+
+  COM OUSADIA ENTRAR
+
+  NO SANTO DOS SANTOS.
+
+
+  COMO REI E SACERDOTE
+
+  O SENHOR ME COLOCOU.
+
+  POSSO GOVERNAR, POSSO MINISTRAR,
+
+  AO SENHOR SEMPRE ADORAR,
+
+  EM ESPÍRITO E VERDADE
+
+  HOJE E ETERNAMENTE.
+
+
+  SOU SERVO DO SENHOR,
+
+  SERVI-LO É O MEU PRAZER,
+
+  POIS SALVO EM SUA GRAÇA,
+
+  POR SEU FILHO JESUS,
+
+  TORNOU-ME LIVRE.
+
+  EM JESUS POSSO IR DIRETO AO PAI,
+
+  COM OUSADIA ENTRAR
+
+  NO SANTO DOS SANTOS.
+
+
+  COMO REI E SACERDOTE
+
+  O SENHOR ME COLOCOU.
+
+  POSSO GOVERNAR, POSSO MINISTRAR,
+
+  AO SENHOR SEMPRE ADORAR,
+
+  EM ESPÍRITO E VERDADE
+
+  HOJE E ETERNAMENTE.
+
+  /FINAL
+
+  HOJE E ETERNAMENTE.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9431b4bd-8626-4a8f-af4a-cbf5ed5ab709
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6245cf40-ef3a-413e-b8af-4d5ed1ad2ddd
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6ee72d70-3503-4adf-9120-3bd481b90053
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ca133e53-37d0-4a8c-a7ea-7b3883f1e06a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 910181ea-246f-4f5a-88ab-8fa417bbea93
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6ee72d70-3503-4adf-9120-3bd481b90053
+- praise_material_id: df204277-2afa-4bcc-8fba-0365a86452d8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ca133e53-37d0-4a8c-a7ea-7b3883f1e06a
+- praise_material_id: e49c5e40-8bc5-409a-bc75-cdbe976f145f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9431b4bd-8626-4a8f-af4a-cbf5ed5ab709
+  song_title: 42 - MINHA VIDA E MEU CORAÇÃO
+- praise_material_id: 5f538c02-b34e-4833-9cc8-427c23d63568
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9431b4bd-8626-4a8f-af4a-cbf5ed5ab709
+  song_title: 43 - SOU FELIZ!
+- praise_material_id: fcdd9878-7da0-46fe-a280-9ed841cdaaec
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9431b4bd-8626-4a8f-af4a-cbf5ed5ab709
+  song_title: 44 - SOU SERVO DO SENHOR

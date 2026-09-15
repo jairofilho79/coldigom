@@ -1,0 +1,50 @@
+praise_id: 3c3adcdd-5181-4d65-9825-5080fa670bab
+praise_name: Sou um soldado do bom salvador
+praise_number: '138'
+praise_author: S.G.D.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: "SOU UM SOLDADO \nDO BOM SALVADOR,\nPOR JESUS LUTANDO\nCOM FÉ E AMOR.\n\
+  \nESPADA SEGURANDO\nBEM FIRME EM MINHA MÃO,\nA JESUS SEGUINDO\nO GRANDE CAPITÃO.\n\
+  \nAO CÉU EU VOU MARCHANDO,\nJESUS ME ESPERA LÁ,\nPRA FRENTE EU VOU ANDANDO,\nAO\
+  \ CÉU EU VOU CHEGAR.\n/UM, DOIS, TRÊS, QUATRO.\n\nSOU UM SOLDADO\nDO BOM SALVADOR,\n\
+  POR JESUS LUTANDO\nCOM FÉ E AMOR.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 5151fa4d-dcaf-4f0a-a185-9b58a891d317
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 88db48cd-882f-455c-bea0-d235730b5c10
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4f31a019-81f4-43ce-b4d3-9103754a78ff
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a59d0333-e23a-46c7-a396-15c402ce7854
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c0baa2e9-cb7f-497e-8b4d-5f44087c8dbd
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4f31a019-81f4-43ce-b4d3-9103754a78ff
+- praise_material_id: c8e65702-f053-4522-9884-3c57f706fb11
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a59d0333-e23a-46c7-a396-15c402ce7854
+- praise_material_id: 314a3a73-0f06-49c2-bde8-b6ea39133697
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5151fa4d-dcaf-4f0a-a185-9b58a891d317
+  song_title: 137 - NÃO POR FORÇA
+- praise_material_id: 59dc6e76-8a7b-4ff8-b69e-37d90c91ad14
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5151fa4d-dcaf-4f0a-a185-9b58a891d317
+  song_title: 138 - SOU UM SOLDADO DO BOM SALVADOR,

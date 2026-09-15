@@ -1,0 +1,58 @@
+praise_id: 123ab1f5-5a0d-4aa8-bf80-2c0e20e916ac
+praise_name: A vitória da igreja
+praise_number: ''
+praise_tags:
+- 45ab58b2-d293-45c7-aa75-090fcd968b24
+- 8d5f147b-a28c-425f-9ba8-101434030af9
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: e511cb22-b278-4e7e-8b75-e940b4e0ad5e
+  file_path_legacy: Avulsos PES CIAs/A vitória da igreja/Áudio.mp3
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  type: mp3
+- praise_material_id: 83131062-ab3f-4899-bfd7-2b70f6173f57
+  file_path_legacy: Avulsos PES CIAs/A vitória da igreja/Cifra.pdf
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: pdf
+- praise_material_id: a3dc5f4c-b940-4099-a775-7d454d602624
+  file_path_legacy: Avulsos PES CIAs/A vitória da igreja/Coro.pdf
+  material_kind: c2fb644f-697c-4d43-9d5f-22319fa0ce79
+  type: pdf
+- praise_material_id: fe5abf4c-bf90-4eb1-8b3f-59268b46af77
+  file_path_legacy: Avulsos PES CIAs/A vitória da igreja/Gestos CIAs.pdf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+- praise_material_id: 9def8d01-920a-4eae-af19-3f76494d8aba
+  file_path_legacy: Avulsos PES CIAs/A vitória da igreja/Playback.mp3
+  material_kind: 64be7569-0246-4334-96c4-cb3cfb3ae5b2
+  type: mp3
+- praise_material_id: f567076e-eada-4819-a8d9-94998627ff75
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: chord
+  source_material_id: 83131062-ab3f-4899-bfd7-2b70f6173f57
+- praise_material_id: bc3e75e3-c05b-4dae-815b-96be21df8898
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fe5abf4c-bf90-4eb1-8b3f-59268b46af77
+  song_title: 241 - EXALTAI EXALTAI
+- praise_material_id: a7a2baf5-78c3-4898-bd29-9d28e931895e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fe5abf4c-bf90-4eb1-8b3f-59268b46af77
+  song_title: 242 - EU CLAMO EU ORO
+- praise_material_id: e724a3b3-e3ee-4629-9d0b-ebea0f0d8c52
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fe5abf4c-bf90-4eb1-8b3f-59268b46af77
+  song_title: 243 - NA BATALHA EU ORO AO SENHOR
+praise_author: ''
+praise_rhythm: Básico
+praise_tonality: ''
+praise_category: ''
+praise_lyrics: "NA BATALHA EU ORO AO SENHOR,  \nNA BATALHA EU SUPLICO O SEU FAVOR\
+  \  \nE DE JOELHOS EU SOU MAIS QUE VENCEDOR,  \nGLORIFICO A DEUS, QUE ATENDE AO MEU\
+  \ CLAMOR.  \n\nBATALHA, ORAÇÃO, VITÓRIA, GLÓRIA A JESUS, (3X)  \nGLORIFICO A DEUS,\
+  \ QUE ATENDE AO MEU CLAMOR.  \n\nNA BATALHA EU ORO AO SENHOR,  \nNA BATALHA SUPLICO\
+  \ O SEU FAVOR  \nE DE JOELHOS EU SOU MAIS QUE VENCEDOR,  \nGLORIFICO A DEUS, QUE\
+  \ ATENDE AO MEU CLAMOR.  \n\nFINAL  \nBATALHA, ORAÇÃO, VITÓRIA, GLÓRIA A JESUS,\
+  \ (3X)  \nGLORIFICO A DEUS, QUE ATENDE AO MEU CLAMOR.  \n"

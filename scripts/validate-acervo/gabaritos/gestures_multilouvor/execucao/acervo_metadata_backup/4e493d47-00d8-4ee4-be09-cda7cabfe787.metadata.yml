@@ -1,0 +1,80 @@
+praise_id: 4e493d47-00d8-4ee4-be09-cda7cabfe787
+praise_name: Onde quer que tu fores, irei Jesus
+praise_number: '025'
+praise_author: E.H.M.R.
+praise_rhythm: Country
+praise_tonality: Em
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ONDE QUER QUE TU FORES IREI, JESUS,
+
+  A TI MINH''ALMA JÁ DEI;
+
+  SOU PARTE DO TEU CORPO,
+
+  PERTENÇO AO TEU POVO,
+
+  TU ÉS MEU REMIDOR.
+
+
+  CORO
+
+  A TUA PALAVRA ALIMENTA A ALMA DO PECADOR,
+
+  COLHEMOS EM TEU CAMPO, TRIGO, Ó SENHOR,
+
+  DELÍCIAS EM TUA MESA E CÂNTICOS DE LOUVOR;
+
+  ALEGRO-ME CONTIGO, TU ÉS MEU REMIDOR.
+
+
+  AJOELHO-ME A TEUS PÉS,
+
+  AGRADEÇO A SALVAÇÃO
+
+  QUE DE GRAÇA RECEBI, MEU SENHOR;
+
+  TUA VOZ É PODEROSA,
+
+  ORDENAS BÊNÇÃOS PARA MIM.
+
+  E ME CONFORTAS NOS TEUS BRAÇOS DE AMOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1979841a-75e3-49df-ae6f-7bee64dba56a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a1cc02aa-3d26-424f-934d-78279eeb8ed9
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cab112d7-3e9d-424a-a373-70361d786a8e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d4e8a6c8-14f3-44bf-93f0-a8836b2dc712
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: beece150-9549-4ac4-bbc0-4667c4118d32
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: cab112d7-3e9d-424a-a373-70361d786a8e
+- praise_material_id: 44356380-bd5c-4bb2-9219-6d64f287897a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d4e8a6c8-14f3-44bf-93f0-a8836b2dc712
+- praise_material_id: 600bb769-cea5-45de-a4ce-67031c497681
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1979841a-75e3-49df-ae6f-7bee64dba56a
+  song_title: 24 - UMA OVELINHA DE JESUS EU SOU
+- praise_material_id: e835f7e3-265d-4c20-aadf-d416804b36b2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1979841a-75e3-49df-ae6f-7bee64dba56a
+  song_title: 25 - ONDE QUER QUE TU FORES IREI

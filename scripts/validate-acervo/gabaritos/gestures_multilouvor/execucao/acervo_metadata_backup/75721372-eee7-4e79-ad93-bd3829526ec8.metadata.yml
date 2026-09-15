@@ -1,0 +1,78 @@
+praise_id: 75721372-eee7-4e79-ad93-bd3829526ec8
+praise_name: Clamo, ó Senhor
+praise_number: '004'
+praise_author: E.H.M.R.
+praise_rhythm: Balada
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CLAMO, Ó SENHOR, PELO SANGUE DE JESUS,
+
+  NA TUA PRESENÇA LIMPO QUERO ESTAR,
+
+  E SÓ LAVADO NESTE SANGUE
+
+  NO SANTO DOS SANTOS POSSO ENTRAR.
+
+  (2X)
+
+  LAVA-ME, SENHOR
+
+  VISITA-ME SENHOR,
+
+  COM O ESPÍRITO SANTO
+
+  O CONSOLADOR
+
+  TEREI PLENA COMUNHÃO
+
+  E A TUA PROTEÇÃO
+
+  '
+praise_tags:
+- c113296e-a8f6-4f07-83ba-f055c125542f
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+praise_materiais:
+- praise_material_id: 90becec0-cc8e-449a-8938-195a0b362212
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0c5b8cde-e5d8-45e9-a1d0-896159292f69
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ea2bf790-3fba-4b88-b352-97539476d421
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 199068f8-67d3-47f7-9b5f-4d079313da52
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1085775a-3613-4773-9aef-463af48c14e3
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  material_type: YOUTUBE
+  type: youtube
+  url: https://www.youtube.com/watch?v=jjsVIcB972s&pp=ygUZQ2xhbW8sIG_MgSBTZW5ob3IgY2lhIGljbQ%3D%3D
+- praise_material_id: d1ad714f-12e4-452c-8a45-6c9b95ff996c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  material_type: YOUTUBE
+  type: youtube
+  url: https://www.youtube.com/watch?v=YtNFBqaicPQ&pp=ygUZQ2xhbW8sIG_MgSBTZW5ob3IgY2lhIGljbQ%3D%3D
+- praise_material_id: f768ed91-ba3c-47dd-a516-0bc2c428ec49
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ea2bf790-3fba-4b88-b352-97539476d421
+- praise_material_id: 6ff3fe28-b611-4623-a1a9-54e1d93c5387
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 199068f8-67d3-47f7-9b5f-4d079313da52
+- praise_material_id: 2957957b-a391-4922-a43f-04d1a853e456
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 90becec0-cc8e-449a-8938-195a0b362212
+  song_title: 04 - CLAMO, Ó SENHOR
+- praise_material_id: da9fa866-26b7-4199-b8a9-03fcd0921993
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 90becec0-cc8e-449a-8938-195a0b362212
+  song_title: 05 - ESTOU AQUI PRA CONFESSAR

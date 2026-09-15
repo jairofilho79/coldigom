@@ -1,0 +1,61 @@
+praise_id: a23d9879-9740-4d57-88d2-449f5ab3cc7e
+praise_name: Não por força
+praise_number: '137'
+praise_author: C.M.V.
+praise_rhythm: Marcha Marcial
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  "NÃO POR FORÇA NEM POR VIOLÊNCIA,
+
+  MAS PELO MEU ESPÍRITO."
+
+
+  DIZ O SENHOR DOS EXÉRCITOS,
+
+  DIZ O SENHOR DOS EXÉRCITOS:
+
+  "NÃO POR FORÇA NEM POR VIOLÊNCIA,
+
+  MAS PELO MEU ESPÍRITO."
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2a9c228e-ba06-40d9-8bfb-34dae9af6234
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 41311077-5ee4-4ac4-aba4-58901bc4316f
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 56a4e5af-c7e1-44c4-a7c8-36558e79f791
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4e28177f-9373-4e22-b821-b2a59e31421a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9164a17f-a6db-4033-92f6-ddf752d92eef
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 56a4e5af-c7e1-44c4-a7c8-36558e79f791
+- praise_material_id: fb4f08c5-cf15-4ec1-8321-49cf00c2d5ef
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 4e28177f-9373-4e22-b821-b2a59e31421a
+- praise_material_id: d69174a1-f61a-4527-9646-103fed53f712
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2a9c228e-ba06-40d9-8bfb-34dae9af6234
+  song_title: 137 - NÃO POR FORÇA
+- praise_material_id: 2bf57fbb-75fb-46db-a724-2efee24b7d3d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2a9c228e-ba06-40d9-8bfb-34dae9af6234
+  song_title: 138 - SOU UM SOLDADO DO BOM SALVADOR,

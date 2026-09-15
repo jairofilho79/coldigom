@@ -1,0 +1,80 @@
+praise_id: 1bc5ac5c-058b-4cf7-b0b6-f597299e0716
+praise_name: Eu clamo, eu oro
+praise_number: ''
+praise_tags:
+- 45ab58b2-d293-45c7-aa75-090fcd968b24
+- 8d5f147b-a28c-425f-9ba8-101434030af9
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 8832c39a-9285-4d86-a778-8e486e5caeb3
+  file_path_legacy: Avulsos PES CIAs/Eu clamo, eu oro/Áudio.mp3
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  type: mp3
+- praise_material_id: de1a717b-c65d-40e7-b52b-43e20c64e6ae
+  file_path_legacy: Avulsos PES CIAs/Eu clamo, eu oro/Cifra.pdf
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: pdf
+- praise_material_id: af125010-7942-4379-b705-d0203cf31b3a
+  file_path_legacy: Avulsos PES CIAs/Eu clamo, eu oro/Coro.pdf
+  material_kind: c2fb644f-697c-4d43-9d5f-22319fa0ce79
+  type: pdf
+- praise_material_id: f3da19f7-d330-45dd-90d4-c10ed5c4a3f9
+  file_path_legacy: Avulsos PES CIAs/Eu clamo, eu oro/Gestos CIAs.pdf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+- praise_material_id: 1edbf476-e920-4fa9-b9c4-343566560828
+  file_path_legacy: Avulsos PES CIAs/Eu clamo, eu oro/Letra.pdf
+  material_kind: 3b55c854-aa8e-43cf-9433-ba49a0161d90
+  type: pdf
+- praise_material_id: 9802adcf-b7bb-4783-867a-7b911c3c6a2a
+  file_path_legacy: Avulsos PES CIAs/Eu clamo, eu oro/Playback.mp3
+  material_kind: 64be7569-0246-4334-96c4-cb3cfb3ae5b2
+  type: mp3
+- praise_material_id: 4a154fdd-02b7-4f29-bad6-d64cf8d09766
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: chord
+  source_material_id: de1a717b-c65d-40e7-b52b-43e20c64e6ae
+- praise_material_id: 910e1892-e494-4cb9-8485-8d0e7ff48d69
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f3da19f7-d330-45dd-90d4-c10ed5c4a3f9
+  song_title: 241 - EXALTAI EXALTAI
+- praise_material_id: d8d47a4f-6cc0-4237-a96e-79fc87b17760
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f3da19f7-d330-45dd-90d4-c10ed5c4a3f9
+  song_title: 242 - EU CLAMO EU ORO
+- praise_material_id: ff07ee43-ea23-43f6-8e69-c15113a973d5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f3da19f7-d330-45dd-90d4-c10ed5c4a3f9
+  song_title: 243 - NA BATALHA EU ORO AO SENHOR
+praise_author: ''
+praise_rhythm: ''
+praise_tonality: ''
+praise_category: ''
+praise_lyrics: 'EU CLAMO, EU ORO PELO SANGUE LÁ DA CRUZ,
+
+  EU CLAMO, EU ORO PELO ESPÍRITO QUE RELUZ.
+
+
+  QUANDO EU OLHO PARA A CRUZ,
+
+  SEI QUE A VITÓRIA CHEGARÁ,
+
+  POIS POR MIM MORREU JESUS
+
+  QUE NÃO ME ABANDONA NEM ME ABANDONARÁ.
+
+
+  EU CLAMO, EU ORO PELO SANGUE LÁ DA CRUZ,
+
+  EU CLAMO, EU ORO PELO ESPÍRITO QUE RELUZ.
+
+  FINAL
+
+  EU CLAMO, EU ORO PELO SANGUE LÁ DA CRUZ,
+
+  EU CLAMO, EU ORO PELO ESPÍRITO QUE RELUZ.
+
+  '

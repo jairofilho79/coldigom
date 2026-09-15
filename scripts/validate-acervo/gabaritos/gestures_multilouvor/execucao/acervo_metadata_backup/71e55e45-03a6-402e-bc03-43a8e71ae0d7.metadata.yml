@@ -1,0 +1,83 @@
+praise_id: 71e55e45-03a6-402e-bc03-43a8e71ae0d7
+praise_name: A minha casa firme está
+praise_number: '041'
+praise_author: M.M.F.
+praise_rhythm: Fox
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'A MINHA CASA FIRME ESTÁ,
+
+  FIRMADA NA ROCHA ELA ESTÁ.
+
+  PODEM A CHUVA E O VENTO SOPRAR,
+
+  QUE ELA NÃO SE ABALARÁ.
+
+
+  POIS ESTA CASA É O MEU CORAÇÃO,
+
+  NELA JESUS FAZ HABITAÇÃO.
+
+  QUERO FALAR NESTA MINHA CANÇÃO
+
+  QUE JESUS CRISTO É A SALVAÇÃO.
+
+
+  A MINHA CASA FIRME ESTÁ,
+
+  FIRMADA NA ROCHA ELA ESTÁ.
+
+  PODEM A CHUVA E O VENTO SOPRAR,
+
+  QUE ELA NÃO SE ABALARÁ.
+
+
+  FINAL
+
+  POIS ESTA CASA É O MEU CORAÇÃO,
+
+  NELA JESUS FAZ HABITAÇÃO.
+
+  QUERO FALAR NESTA MINHA CANÇÃO
+
+  QUE JESUS CRISTO É A SALVAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c5d6b975-ce7e-4ec6-bbf8-99125487ddb6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dd5b47a4-8a75-43bc-9402-b6f54830f0e6
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4696e2a6-a5a1-4180-86af-7cc4c64f7ff5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0d0ce061-0da7-4b60-903f-db45a10d968e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5f6077cc-d7f5-41d2-8f19-f908fa6c777c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4696e2a6-a5a1-4180-86af-7cc4c64f7ff5
+- praise_material_id: c3e52812-8074-4580-8db9-20d82215be0a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 0d0ce061-0da7-4b60-903f-db45a10d968e
+- praise_material_id: 31c445d8-8823-4d6c-82b2-49006ef42676
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5d6b975-ce7e-4ec6-bbf8-99125487ddb6
+  song_title: 40 - QUERO OUVIR (MEU QUERER)
+- praise_material_id: 2f2bf39a-b287-4108-af49-d7ac7506f2c4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5d6b975-ce7e-4ec6-bbf8-99125487ddb6
+  song_title: 41 - A MINHA CASA FIRME ESTÁ

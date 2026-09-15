@@ -1,0 +1,82 @@
+praise_id: a3b81206-d625-47f4-b714-5f703367d023
+praise_name: Cinco seixos
+praise_number: '150'
+praise_author: C.M.V.C.S
+praise_rhythm: Fox
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CINCO SEIXOS DO RIBEIRO DAVI COLOCOU
+
+  EM SEU ALFORJE DE PASTOR
+
+  QUANDO GOLIAS FOI A ENFRENTAR.
+
+  SEM MEDO DAVI FOI LUTAR.
+
+
+  DAVI OROU, CONFIOU EM DEUS,
+
+  PARA ASSIM VENCER O FILISTEU.
+
+  EM SEU CORAÇÃO HAVIA O LOUVOR,
+
+  A PALAVRA, O JEJUM E A ORAÇÃO
+
+  E NA MADRUGADA, SEMPRE A DEUS BUSCAVA
+
+  DEIXANDO O SENHOR SUA VIDA DIRIGIR.
+
+
+  E QUANDO GOLIAS FOI ENCONTRAR
+
+  SÓ UMA PEDRA EM SUA FUNDA COLOCOU.
+
+  E MIROU, GIROU, LANÇOU
+
+  NA TESTA DO GIGANTE A PEDRA CRAVOU
+
+  (TRUMMMM)
+
+  O GIGANTE CAIU, DAVI FOI VENCEDOR.
+
+  NO NOME DO SENHOR, NO NOME DO SENHOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 4bb15db9-f842-462c-9158-937794edfcab
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 21823872-f84b-48af-8d43-42778fa66785
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b776d57a-235a-4ba6-9c7d-4027eda4ad39
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aacfc402-d973-4134-aac4-abce40d1c144
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4b474475-4ccd-4aae-8535-127a090eb1b6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: b776d57a-235a-4ba6-9c7d-4027eda4ad39
+- praise_material_id: a9ac5985-5dfa-461d-977f-0fef5883ca62
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: aacfc402-d973-4134-aac4-abce40d1c144
+- praise_material_id: f0eb25f4-2523-4707-977d-4a1058a61246
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4bb15db9-f842-462c-9158-937794edfcab
+  song_title: 149 - NÓS SOMOS UMA VOZ
+- praise_material_id: 61aed426-381b-4659-b035-9d70fdd12ba3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4bb15db9-f842-462c-9158-937794edfcab
+  song_title: 150 - CINCO SEIXOS

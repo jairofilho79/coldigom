@@ -1,0 +1,99 @@
+praise_id: 2c92e4f6-4660-498f-ae88-a3a1958ccf87
+praise_name: Vou contar-vos de Jesus
+praise_number: '077'
+praise_author: S.G.D.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VOU CONTAR-VOS DE JESUS
+
+  O QUE JOÃO NOS ENSINOU:
+
+  ELE, POR AMOR, SE FEZ NOSSO SALVADOR.
+
+
+  DE ALUNOS QUE CHAMOU:
+
+  PEDRO, ANDRÉ, TIAGO E JOÃO,
+
+  FELIPE, BARTOLOMEU E MATEUS,
+
+  TIAGO, SIMÃO, TOMÉ,
+
+  JUDAS, O BOM AMIGO,
+
+  OUTRO JUDAS, O TRAIDOR.
+
+
+  JESUS A TODOS CHAMOU:
+
+  "EU SOU O CAMINHO, A VERDADE E A LUZ",
+
+  A ELES ENSINOU.
+
+
+  VOU CONTAR-VOS DE JESUS
+
+  O QUE JOÃO NOS ENSINOU:
+
+  ELE, POR AMOR, SE FEZ NOSSO SALVADOR.
+
+
+  DE ALUNOS QUE CHAMOU:
+
+  PEDRO, ANDRÉ, TIAGO E JOÃO,
+
+  FELIPE, BARTOLOMEU E MATEUS,
+
+  TIAGO, SIMÃO, TOMÉ,
+
+  JUDAS, O BOM AMIGO,
+
+  OUTRO JUDAS, O TRAIDOR.
+
+
+  JESUS A TODOS CHAMOU:
+
+  "EU SOU O CAMINHO, A VERDADE E A LUZ",
+
+  A ELES ENSINOU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 09590f90-d7b3-4946-a63b-d0e4dc881170
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 28b535a7-ea3d-47f4-82df-f53dcbf407ac
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ce9f4574-17cb-4fad-b03d-34c777c5555e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 564ff29d-d727-4eba-931a-e60b2abc64db
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fbff0fc8-2221-43f0-8c5a-c8989329791e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ce9f4574-17cb-4fad-b03d-34c777c5555e
+- praise_material_id: 6cd9c56b-8250-44fa-8d1a-43927a9f8884
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 564ff29d-d727-4eba-931a-e60b2abc64db
+- praise_material_id: 2280f306-7457-4ffa-a308-f53d3642417f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 09590f90-d7b3-4946-a63b-d0e4dc881170
+  song_title: 77 - VOU CONTAR-VOS DE JESUS
+- praise_material_id: dca8cb5e-8892-47af-954c-d84139d81ebf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 09590f90-d7b3-4946-a63b-d0e4dc881170
+  song_title: 78 - O SENHOR É A MINHA LUZ

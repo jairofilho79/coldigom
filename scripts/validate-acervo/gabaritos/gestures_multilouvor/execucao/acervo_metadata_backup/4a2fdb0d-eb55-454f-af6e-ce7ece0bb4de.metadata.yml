@@ -1,0 +1,72 @@
+praise_id: 4a2fdb0d-eb55-454f-af6e-ce7ece0bb4de
+praise_name: Buscai ao Senhor
+praise_number: 018
+praise_author: C.M.V.C.S.
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  "BUSCAI AO SENHOR ENQUANTO SE PODE ACHAR,
+
+  INVOCAI-O ENQUANTO ESTÁ PERTO."
+
+
+  "DEIXE O ÍMPIO O SEU CAMINHO,
+
+  E O HOMEM MALIGNO OS SEUS PENSAMENTOS
+
+  E SE CONVERTA AO SENHOR,
+
+  QUE DELE SE COMPADECERÁ;
+
+  TORNE PARA O NOSSO DEUS,
+
+  PORQUE GRANDIOSO É EM PERDOAR."
+
+
+  FINAL
+
+  "BUSCAI AO SENHOR ENQUANTO SE PODE ACHAR,
+
+  INVOCAI-O ENQUANTO ESTÁ PERTO."
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1f2b0e51-9c26-4262-a3d2-a41e80d04b9d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dffb015d-75d1-448d-a3fc-23f0a0d3ffeb
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7c298f40-2a18-424c-88a0-21da458b9e70
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0fa8a091-efdc-44ab-9efd-47febe26bf2c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c3061e40-f5cc-43a4-ba98-8ac61dfeab25
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7c298f40-2a18-424c-88a0-21da458b9e70
+- praise_material_id: 26ad019a-49bb-4a6c-90b4-25e2de16b13e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 0fa8a091-efdc-44ab-9efd-47febe26bf2c
+- praise_material_id: dca86532-9555-42d5-9b7b-f251f095d83d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1f2b0e51-9c26-4262-a3d2-a41e80d04b9d
+  song_title: 18 - BUSCAI AO SENHOR
+- praise_material_id: 940afa5d-a746-421d-8244-8b73941a59e1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1f2b0e51-9c26-4262-a3d2-a41e80d04b9d
+  song_title: 19 - QUANDO DAVI AO SENHOR ORAVA

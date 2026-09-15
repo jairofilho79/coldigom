@@ -1,0 +1,81 @@
+praise_id: 2272bd21-187b-463e-86da-0994bc6bc0b6
+praise_name: Nós somos a carta de Cristo
+praise_number: '170'
+praise_author: E.H.M.R.
+praise_rhythm: Marcha
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NÓS SOMOS A CARTA DE CRISTO,
+
+  A CARTA VIVA DE DEUS,
+
+  PARA SER LIDA POR TODOS,
+
+  REVELAR OS PROPÓSITOS DE DEUS.
+
+
+  O QUE COMUNICA ESSA CARTA?
+
+  O AMOR, O PERDÃO DE JESUS,
+
+  AS PROMESSAS DE VIDA ETERNA
+
+  NO CAMINHO QUE ELE NOS CONDUZ.
+
+
+  NÃO FOI ESCRITA NA PEDRA,
+
+  MAS NAS TÁBUAS DO CORAÇÃO.
+
+  E QUEM ESCREVEU ESSA CARTA
+
+  FOI O ESPÍRITO SANTO DE DEUS.
+
+
+  NÓS SOMOS A CARTA DE CRISTO,
+
+  A CARTA VIVA DE DEUS
+
+  TESTEMUNHANDO A TODOS
+
+  PRA SALVAR-NOS JESUS MORREU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: e3579833-a7c1-450a-9ef8-583325ee79cd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1e66df10-f38a-4f8f-89a6-5155a399f770
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1e0f4589-09f6-4ae6-86b5-52fbb202ae47
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: af47bf5b-407b-42b7-b63e-8bca3f927600
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 96f81530-672e-45d8-b8bf-2f17d2455468
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 1e0f4589-09f6-4ae6-86b5-52fbb202ae47
+- praise_material_id: 2af4600f-247c-4371-8179-c341b9a119c3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: af47bf5b-407b-42b7-b63e-8bca3f927600
+- praise_material_id: d3a18476-ecbf-4219-8070-8324513e0fed
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e3579833-a7c1-450a-9ef8-583325ee79cd
+  song_title: 170 - NÓS SOMOS A CARTA DE CRISTO
+- praise_material_id: bf2ee6d3-1ffd-4ee0-b9e4-4c2f23db4664
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: e3579833-a7c1-450a-9ef8-583325ee79cd
+  song_title: 171 - SOU O SANTO

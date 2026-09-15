@@ -1,0 +1,89 @@
+praise_id: 476f9af1-e083-4c79-bd15-018d75405bea
+praise_name: Cristo sente seu amor por mim
+praise_number: '100'
+praise_author: 'Let.: Anna Bartlett Warner; Trad. Stuart Edmund McNair; Mús. William
+  Batchelder Bradbury'
+praise_rhythm: Country
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CRISTO SENTE AMOR POR MIM,
+
+  COM CERTEZA EU CREIO ASSIM,
+
+  POR AMOR DE MIM MORREU,
+
+  VIVO ESTÁ, POR MIM, NO CÉU.
+
+
+  CORO
+
+  CRISTO NOS AMA,
+
+  CRISTO NOS CHAMA,
+
+  CRISTO PROCLAMA
+
+  TÃO GRANDE SALVAÇÃO.
+
+
+  CRISTO TEM POR MIM AMOR
+
+  E SE FEZ MEU SALVADOR,
+
+  HOJE AINDA TEM PRAZER
+
+  EM MENINOS RECEBER.
+
+
+  POR GOZAR SEU RICO AMOR
+
+  HEI DE AMAR MEU SALVADOR,
+
+  E DESEJO AQUI MOSTRAR
+
+  SEU AMOR TÃO EXEMPLAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3bc08489-c27b-4596-aecf-d29168b85b8c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 81c7e5ac-467c-4d3c-89ec-ed602972fd3b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 488429e4-f3d0-40b6-a0cf-8f2148dc29ba
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 566b05b9-7f58-49d9-8d76-9d5ff813dcd0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bd14375d-a2e6-40f3-b1af-f1750cf29426
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 488429e4-f3d0-40b6-a0cf-8f2148dc29ba
+- praise_material_id: 49df8bd9-0c28-4b78-a053-0ecdecf099c6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 566b05b9-7f58-49d9-8d76-9d5ff813dcd0
+- praise_material_id: 7cb618fc-1ea8-4049-9636-c405136abea6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3bc08489-c27b-4596-aecf-d29168b85b8c
+  song_title: 98 - EU ABRI MEU CORAÇÃO
+- praise_material_id: 7f459fed-8fde-401c-8656-a86b5ce5a4bb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3bc08489-c27b-4596-aecf-d29168b85b8c
+  song_title: 99 - NO MEU CORAÇÃO
+- praise_material_id: 0f9243b3-5782-4110-b9e0-e39f12b49e7d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3bc08489-c27b-4596-aecf-d29168b85b8c
+  song_title: 100 - CRISTO SENTE AMOR POR MIM

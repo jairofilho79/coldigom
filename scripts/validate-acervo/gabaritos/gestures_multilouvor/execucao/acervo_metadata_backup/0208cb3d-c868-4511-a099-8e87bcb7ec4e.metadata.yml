@@ -1,0 +1,74 @@
+praise_id: 0208cb3d-c868-4511-a099-8e87bcb7ec4e
+praise_name: Eu vim aqui, Senhor
+praise_number: '225'
+praise_author: J.L.M.M.
+praise_rhythm: Básico
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'EU VIM AQUI, SENHOR, PARA AGRADECER
+
+  POR TUDO O QUE TENS FEITO POR MIM;
+
+  ALEGRE ESTOU POR MAIS UM DIA
+
+  NA TUA PRESENÇA, Ó DEUS.
+
+
+  CORO 2X
+
+  GLÓRIA A JESUS,
+
+  MARAVILHOSO ÉS PRA MIM,
+
+  ÉS FORTE E PODEROSO
+
+  E CUMPRE SUAS PROMESSAS.
+
+
+  O MEU PRAZER É TE LOUVAR
+
+  PORQUE O SENHOR É FIEL;
+
+  EU SEI QUE APENAS PEQUENO SOU,
+
+  MAS SIRVO A TI POR AMOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 191131ba-7ffb-4338-b6ec-6e970a28ef7f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9201cd4f-c528-4dd1-9b3f-feeecdedcc7b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5e81d482-93ed-4c99-8226-800c801b579f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4aa3f6a1-3944-4878-9391-76636199a2bf
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0156f59c-4649-41a2-8a1e-709a00678c05
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5e81d482-93ed-4c99-8226-800c801b579f
+- praise_material_id: e5e372e0-23d7-4591-91d1-40c68e83b361
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 4aa3f6a1-3944-4878-9391-76636199a2bf
+- praise_material_id: f3008ea4-26d8-46bf-968d-5b6c2b86c14b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 191131ba-7ffb-4338-b6ec-6e970a28ef7f
+  song_title: 225 - EU VIM AQUI, SENHOR
+- praise_material_id: 74b29801-5c7e-408e-b688-c09d6974fe61
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 191131ba-7ffb-4338-b6ec-6e970a28ef7f
+  song_title: 226 - IREI CANTAR E ADORAR O REI JESUS

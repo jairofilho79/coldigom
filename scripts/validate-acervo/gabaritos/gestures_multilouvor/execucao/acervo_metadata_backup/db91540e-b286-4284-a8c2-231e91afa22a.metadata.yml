@@ -1,0 +1,87 @@
+praise_id: db91540e-b286-4284-a8c2-231e91afa22a
+praise_name: Quero ser santo para o Senhor
+praise_number: '165'
+praise_author: C.M.V.C.S.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'QUERO SER SANTO PARA O SENHOR,
+
+  QUERO SER PURO EM SEU AMOR,
+
+  EM TODO O TEMPO TESTEMUNHAR
+
+  DE SEU AMOR E GRAÇA SEM PAR.
+
+
+  QUERO LEVAR A MENSAGEM DE SALVAÇÃO
+
+  PARA ESTE MUNDO QUE ESTÁ NA ESCURIDÃO.
+
+  E QUANDO CRISTO VIER NOS BUSCAR
+
+  POSSAMOS TODOS NO CÉU IR MORAR.
+
+
+  QUERO SER SANTO PARA O SENHOR,
+
+  QUERO SER PURO EM SEU AMOR,
+
+  EM TODO O TEMPO TESTEMUNHAR
+
+  DE SEU AMOR E GRAÇA SEM PAR.
+
+
+  QUERO LEVAR A MENSAGEM DE SALVAÇÃO
+
+  PARA ESTE MUNDO QUE ESTÁ NA ESCURIDÃO.
+
+  E QUANDO CRISTO VIER NOS BUSCAR
+
+  POSSAMOS TODOS NO CÉU IR MORAR.
+
+  /FINAL
+
+  QUERO SER SANTO, QUERO SER PURO
+
+  PARA O SENHOR!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1ad24348-6efb-42c3-9b95-da1e24fd1239
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ca78a36c-4edd-4c96-a27f-1791b3c80b42
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 47050237-46c2-4c05-b7e0-e8eaa6da4723
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 853fd694-cd3f-4f1c-ba0b-47cc4a07ae90
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 74e489f8-1d8a-4768-b943-5bf186ba948c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 47050237-46c2-4c05-b7e0-e8eaa6da4723
+- praise_material_id: 8eef9ba7-c8a3-4491-9a02-92d4434ff66a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 853fd694-cd3f-4f1c-ba0b-47cc4a07ae90
+- praise_material_id: c97b06d3-9617-4620-9e8e-6ad82cb70b73
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1ad24348-6efb-42c3-9b95-da1e24fd1239
+  song_title: 165 - QUERO SER SANTO PARA O SENHOR
+- praise_material_id: 14084ea7-500d-4de3-be38-7a0879138719
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1ad24348-6efb-42c3-9b95-da1e24fd1239
+  song_title: 166 - BRILHANDO, BRILHANDO

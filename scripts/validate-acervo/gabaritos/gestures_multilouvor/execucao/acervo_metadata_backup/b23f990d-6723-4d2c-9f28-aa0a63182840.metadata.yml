@@ -1,0 +1,83 @@
+praise_id: b23f990d-6723-4d2c-9f28-aa0a63182840
+praise_name: Ouço o clamor do bom Pastor
+praise_number: '173'
+praise_author: 'Let.: Alexcenah Thomas; Mús.: William Augustus Ogdem'
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'OUÇO O CLAMOR DO BOM PASTOR
+
+  PELO DESERTO ASSOLADOR,
+
+  SEUS CORDEIRINHOS A CHAMAR,
+
+  MUI DESEJOSO DE OS SALVAR.
+
+
+  CORO
+
+  VAI BUSCAR, VAI BUSCAR!
+
+  VAI BUSCAR MEUS CORDEIRINHOS, VAI!
+
+  VAI BUSCAR, VAI BUSCAR!
+
+  TRAZE-OS PARA O MEU APRISCO.
+
+
+  QUEM NÃO DESEJA TRABALHAR
+
+  E OS CORDEIRINHOS SEUS BUSCAR
+
+  E ENCAMINHÁ-LOS A JESUS,
+
+  FONTE DE VIDA, AMOR E LUZ?
+
+
+  PELOS DESERTOS A SOFRER,
+
+  OUVE OS SEUS GRITOS AO MORRER,
+
+  E O MESTRE CLAMA: "VAI BUSCAR!"
+
+  PARA QUE OS POSSA, ENTÃO, SALVAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 43ffcdf5-350d-462c-a286-f45054cf13c2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 287ad5f8-156f-4214-ac90-820dab3d9e17
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 125d54ab-5790-4a32-8f64-c7c900768733
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 53e70da4-d2ee-4b90-9506-101f4d461964
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cf72aa19-f4a1-48ad-8b6c-edc76ddcbd54
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 125d54ab-5790-4a32-8f64-c7c900768733
+- praise_material_id: 55635176-43a2-462a-a8d4-cb65653fa82e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 53e70da4-d2ee-4b90-9506-101f4d461964
+- praise_material_id: 4028db8c-5cc7-4292-9762-011274defdc1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 43ffcdf5-350d-462c-a286-f45054cf13c2
+  song_title: 173 - OUÇO O CLAMOR DO BOM PASTOR
+- praise_material_id: e652221e-ec3c-4eeb-9a94-edf009bdc739
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 43ffcdf5-350d-462c-a286-f45054cf13c2
+  song_title: 174 - A TUA PALAVRA É SEMENTE

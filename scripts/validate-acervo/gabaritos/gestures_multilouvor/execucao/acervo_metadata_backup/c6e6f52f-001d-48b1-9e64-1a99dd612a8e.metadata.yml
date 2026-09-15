@@ -1,0 +1,65 @@
+praise_id: c6e6f52f-001d-48b1-9e64-1a99dd612a8e
+praise_name: Eu quero ser o sal da terra
+praise_number: '031'
+praise_author: C.M.V.
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  EU QUERO SER O SAL DA TERRA,
+
+  EU QUERO SER A LUZ DO MUNDO,
+
+  /FINAL 2X
+
+  EU QUERO BRILHAR,
+
+  EU QUERO BRILHAR,
+
+  EU QUERO BRILHAR ATÉ JESUS VOLTAR
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d9a14437-dfce-4a4c-825f-902084f03c8c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 48cc8add-6b4a-46f6-b036-26f9bf693175
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1a17bc62-728b-405d-923e-039d42f0bd1e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ccce5850-a7bb-46e8-84d1-d9f33c95b674
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: eb8c2341-f814-4e90-94e2-d61bd2930c8b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 1a17bc62-728b-405d-923e-039d42f0bd1e
+- praise_material_id: d1cb8d77-6e1f-44b6-aada-7dc1cb326491
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ccce5850-a7bb-46e8-84d1-d9f33c95b674
+- praise_material_id: a7b81803-1d39-4fe0-88a1-1f499cff2b19
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d9a14437-dfce-4a4c-825f-902084f03c8c
+  song_title: 31 - EU QUERO SER O SAL DA TERRA
+- praise_material_id: 154a6058-633d-4aa2-b1d3-27c2941cce39
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d9a14437-dfce-4a4c-825f-902084f03c8c
+  song_title: 32 - PRÍNCIPE DA PAZ
+- praise_material_id: 98563575-f885-4077-844c-dd2a38f7045d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d9a14437-dfce-4a4c-825f-902084f03c8c
+  song_title: 33 - CRISTO, MEU BOM MESTRE

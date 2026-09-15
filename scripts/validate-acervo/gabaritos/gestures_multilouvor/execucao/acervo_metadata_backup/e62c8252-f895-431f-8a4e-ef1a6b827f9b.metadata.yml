@@ -1,0 +1,63 @@
+praise_id: e62c8252-f895-431f-8a4e-ef1a6b827f9b
+praise_name: Cristo é meu amigo
+praise_number: '122'
+praise_author: L.T.G.F.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CRISTO É MEU AMIGO,
+
+  ELE ESTÁ COMIGO.
+
+  ALELUIA, ALELUIA, ALELUIA, ALELUIA,
+
+  ELE ESTÁ COMIGO.
+
+
+  CRISTO É MEU AMIGO,
+
+  ELE ESTÁ CONTIGO.
+
+  ALELUIA, ALELUIA, ALELUIA, ALELUIA,
+
+  ELE ESTÁ COMIGO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7b7c61a3-5e1c-4ba5-934d-bc7c3a8374ec
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 98143383-ee9f-4755-8d78-c0c621b260a6
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a8dd38b3-edbf-4a69-8a2c-db7b2d45cffa
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bd639f2d-9b54-4e54-8e27-bb437f635b01
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f96ce2bb-488a-4b7f-b7c7-b0bdecb13b21
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a8dd38b3-edbf-4a69-8a2c-db7b2d45cffa
+- praise_material_id: cb34dfe0-524c-46cb-8088-79f3bf27a024
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: bd639f2d-9b54-4e54-8e27-bb437f635b01
+- praise_material_id: e56bb22a-59a1-498d-97b6-b3c218e7f3cb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7b7c61a3-5e1c-4ba5-934d-bc7c3a8374ec
+  song_title: 121 - MEU BARQUINHO
+- praise_material_id: 3b5a33e4-48e3-495f-807d-9a7e33b3a66d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7b7c61a3-5e1c-4ba5-934d-bc7c3a8374ec
+  song_title: 122 - CRISTO É MEU AMIGO

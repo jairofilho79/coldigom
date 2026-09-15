@@ -1,0 +1,65 @@
+praise_id: 1ca790b5-52b2-4b11-9b83-369a7e795282
+praise_name: Consola-me, Espírito Santo
+praise_number: '112'
+praise_author: C.M.V.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  CONSOLA-ME, ESPÍRITO SANTO,
+
+  CONSOLA-ME, ESPÍRITO SANTO,
+
+  PARA QUE EU POSSA AGUARDAR COM FÉ
+
+  A VINDA DO FILHO DO DEUS DE ABRAÃO;
+
+  CONSOLA-ME, CONSOLA-ME,
+
+  CONSOLA-ME, SENHOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 7bf3ea52-7e89-4516-beb6-13eddf7eb917
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 92f7c633-51e5-4afd-9aa4-7ab2d79f2bad
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0a6ac7b4-4f05-47ca-8021-e0ccb010a3d3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 160d4328-e914-4695-b0c0-491709f912ec
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9ce22fa5-0d9b-407d-92b2-20a3358dfc71
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0a6ac7b4-4f05-47ca-8021-e0ccb010a3d3
+- praise_material_id: b6cc8027-e514-42c7-aef9-1a761326c767
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 160d4328-e914-4695-b0c0-491709f912ec
+- praise_material_id: f59a37f6-91c9-45a7-ad86-d67e5a66ee57
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7bf3ea52-7e89-4516-beb6-13eddf7eb917
+  song_title: 110 - EU TUDO POSSO NAQUELE QUE ME FORTALECE
+- praise_material_id: ab170b44-62c7-479f-af6c-04794947484e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7bf3ea52-7e89-4516-beb6-13eddf7eb917
+  song_title: 111 - ENTREGA O TEU CAMINHO
+- praise_material_id: 4881cc89-04e9-4c0f-915b-a2665db1db8c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 7bf3ea52-7e89-4516-beb6-13eddf7eb917
+  song_title: 112 - CONSOLA-ME, ESPÍRITO SANTO

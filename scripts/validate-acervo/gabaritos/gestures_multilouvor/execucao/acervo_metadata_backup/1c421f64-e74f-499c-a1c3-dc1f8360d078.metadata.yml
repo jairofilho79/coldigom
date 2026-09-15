@@ -1,0 +1,71 @@
+praise_id: 1c421f64-e74f-499c-a1c3-dc1f8360d078
+praise_name: Deus ama você
+praise_number: 079
+praise_author: J.J.G.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'DEUS AMA VOCÊ E ELE QUER LHE SALVAR,
+
+  ELE VAI OPERAR EM SEU CORAÇÃO.
+
+  A VIDA QUE UM DIA VOCÊ NÃO CONHECIA,
+
+  GOZO, PAZ E ALEGRIA EM JESUS ENCONTROU.
+
+
+  CANTAR 2X
+
+  ELE É O CAMINHO,
+
+  A VERDADE E A VIDA
+
+  E OFERECE A VOCÊ SALVAÇÃO.
+
+  BASTA ABRIR A PORTA DO CORAÇÃO,
+
+  PRA SENTIR A SUA PAZ E PERDÃO.
+
+  /FINAL
+
+  PRA SENTIR A SUA PAZ E PERDÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d45596e1-16ab-41dd-844f-df8e36337e5a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a9284c44-7aa7-4ac2-bc41-f89a0c802acd
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f7fdc89f-8c45-4e02-80a1-5d3dac50eab8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f1067569-fe33-44b4-89c6-98abcbc4d539
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bfd6f411-6f93-4d9d-a2ed-43f066013f8a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f7fdc89f-8c45-4e02-80a1-5d3dac50eab8
+- praise_material_id: 4c0049a0-508d-428c-8f0e-60cecbfe902e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: f1067569-fe33-44b4-89c6-98abcbc4d539
+- praise_material_id: 4e90c60b-5da5-4dc1-993f-6b351a9140c4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d45596e1-16ab-41dd-844f-df8e36337e5a
+  song_title: 79 - DEUS AMA VOCÊ
+- praise_material_id: 1b69913d-3866-495a-9350-836a1d41cced
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d45596e1-16ab-41dd-844f-df8e36337e5a
+  song_title: 80 - EXISTE UM LUGAR

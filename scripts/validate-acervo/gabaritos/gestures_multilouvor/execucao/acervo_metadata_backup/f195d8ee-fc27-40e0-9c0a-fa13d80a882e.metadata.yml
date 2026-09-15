@@ -1,0 +1,85 @@
+praise_id: f195d8ee-fc27-40e0-9c0a-fa13d80a882e
+praise_name: Fui lavado no sangue do Cordeiro
+praise_number: ''
+praise_tags:
+- 45ab58b2-d293-45c7-aa75-090fcd968b24
+- 8d5f147b-a28c-425f-9ba8-101434030af9
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d5017e59-59cf-478d-a1dc-b7c4ab9f1d9d
+  file_path_legacy: Avulsos PES CIAs/Fui lavado no sangue do Cordeiro/Áudio.mp3
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  type: mp3
+- praise_material_id: cb8f0612-6327-40a4-a4e2-bc2769340974
+  file_path_legacy: Avulsos PES CIAs/Fui lavado no sangue do Cordeiro/Cifra.pdf
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: pdf
+- praise_material_id: 9835336e-3614-4418-8f27-6a23e20dca2f
+  file_path_legacy: Avulsos PES CIAs/Fui lavado no sangue do Cordeiro/Gestos CIAs.pdf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+- praise_material_id: a78d49f2-41de-492f-87ee-395d40da1dc9
+  file_path_legacy: Avulsos PES CIAs/Fui lavado no sangue do Cordeiro/Letra.pdf
+  material_kind: 3b55c854-aa8e-43cf-9433-ba49a0161d90
+  type: pdf
+- praise_material_id: 12ea281f-9d2d-474a-a8b5-b5f1a7348cfe
+  file_path_legacy: Avulsos PES CIAs/Fui lavado no sangue do Cordeiro/Melodia.pdf
+  material_kind: c2fb644f-697c-4d43-9d5f-22319fa0ce79
+  type: pdf
+- praise_material_id: faba931f-0c04-4b03-a165-82e89aa279f4
+  file_path_legacy: Avulsos PES CIAs/Fui lavado no sangue do Cordeiro/Playback.mp3
+  material_kind: 64be7569-0246-4334-96c4-cb3cfb3ae5b2
+  type: mp3
+- praise_material_id: de0ff7cb-9915-4c90-8f31-09b1abf7fa42
+  material_kind: e2274af6-a19f-4186-93cd-e3810ce75e2c
+  type: chord
+  source_material_id: cb8f0612-6327-40a4-a4e2-bc2769340974
+- praise_material_id: 9f00e94d-def9-49cb-a786-40d1913b52d1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9835336e-3614-4418-8f27-6a23e20dca2f
+  song_title: AVULSO 3 - FUI LAVADO NO SANGUE DO CORDEIRO
+- praise_material_id: f647a1ba-f733-47d1-8070-18c3276181df
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9835336e-3614-4418-8f27-6a23e20dca2f
+  song_title: AVULSO 4 - QUEM TEM OUVIDOS
+praise_author: ''
+praise_rhythm: Fox
+praise_tonality: ''
+praise_category: ''
+praise_lyrics: '*CORO
+
+  FUI LAVADO NO SANGUE DO CORDEIRO,
+
+  ALELUIA, GLÓRIA E ALELUIA!
+
+  FUI LAVADO NO SANGUE DO CORDEIRO,
+
+  ALELUIA, GLÓRIA E ALELUIA!
+
+
+  AGORA ESTOU AQUI
+
+  E VOU LOUVAR MEU SALVADOR,
+
+  ALELUIA, GLÓRIA A DEUS!
+
+
+  CORO
+
+  FUI LAVADO NO SANGUE DO CORDEIRO,
+
+  ALELUIA, GLÓRIA E ALELUIA!
+
+  FUI LAVADO NO SANGUE DO CORDEIRO,
+
+  ALELUIA, GLÓRIA E ALELUIA!
+
+  FINAL
+
+  A JESUS, HONRA E LOUVOR,
+
+  ALELUIA AO MEU SALVADOR!
+
+  '

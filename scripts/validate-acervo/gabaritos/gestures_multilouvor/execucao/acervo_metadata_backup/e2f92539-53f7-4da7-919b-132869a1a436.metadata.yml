@@ -1,0 +1,72 @@
+praise_id: e2f92539-53f7-4da7-919b-132869a1a436
+praise_name: Todo ser que tem fôlego
+praise_number: '231'
+praise_author: C.M.V.
+praise_rhythm: Balada
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'TODO SER QUE TEM FÔLEGO LOUVE,
+
+  LOUVE AO PAI, O SENHOR DOS SENHORES;
+
+  TODO SER QUE TEM FÔLEGO LOUVE,
+
+  LOUVE A JESUS, NOSSO REDENTOR.
+
+
+  TODO SER QUE TEM FÔLEGO LOUVE,
+
+  LOUVE AO ESPÍRITO SANTO DE DEUS;
+
+  /FINAL 2X
+
+  LOUVE, LOUVE,
+
+  LOUVE COM CÂNTICO NOVO
+
+  E TODO SEU SER.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: f04004bf-0219-46b0-9944-0b7acade34bf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d7530343-9cd7-48c0-9f55-3c5ffc0a8f44
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0b4f82be-3385-43bc-a08d-d684f2a856af
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ba54637c-43b8-48d4-9a2b-2e682293f9e0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8c433b09-96ad-476c-9975-7d0e33655f23
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0b4f82be-3385-43bc-a08d-d684f2a856af
+- praise_material_id: 47ea4235-0eb8-43ec-ae9b-ebd58bf86f7a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ba54637c-43b8-48d4-9a2b-2e682293f9e0
+- praise_material_id: 880bb9e3-9c7d-46f9-9c45-d2cd85de6f4e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f04004bf-0219-46b0-9944-0b7acade34bf
+  song_title: 229 - CANTAI ALEGREMENTE A DEUS
+- praise_material_id: 0ab1ebd4-78ba-4073-8de7-bc8f462f77d5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f04004bf-0219-46b0-9944-0b7acade34bf
+  song_title: 230 - ESTA CANÇÃO
+- praise_material_id: 3dd83e6d-5051-43e4-9708-4f5df540f6f2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f04004bf-0219-46b0-9944-0b7acade34bf
+  song_title: 231 - TODO SER QUE TEM FÔLEGO

@@ -1,0 +1,74 @@
+praise_id: 1465ac29-e67c-498d-8238-40a22fc8ccd3
+praise_name: Meu barquinho
+praise_number: '121'
+praise_author: C.A.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'MEU BARQUINHO NAVEGA NO MAR,
+
+  MUI FELIZ VIVO SEMPRE A CANTAR,
+
+  GRANDES ONDAS VÊM PARA O NAUFRAGAR,
+
+  NÃO TENHO MEDO, VOU A ÂNCORA LANÇAR.
+
+
+  CORO
+
+  VOU A JESUS, VOU A ÂNCORA LANÇAR.
+
+  VOU A JESUS, POR SEU SANGUE VOU CLAMAR
+
+  E FELIZ VOU AO PORTO CHEGAR.
+
+  ALELUIA! ALELUIA É O MEU CANTAR!
+
+
+  MEU JESUS É AMIGO FIEL,
+
+  POR SUA MÃO ME CONDUZ ''TÉ AO CÉU
+
+  E SE UM DIA VIER A AFLIÇÃO,
+
+  NÃO TENHO MEDO, POIS É ELE O CAPITÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 553bbd90-30cf-4107-af7a-ee2377926fbf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c964297d-8e61-4221-a115-26a0cb56ae8f
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6202ba27-039c-41c1-a8b7-1c9d876b20b5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9ab7e102-aeb2-460b-92b3-a114f9327b97
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d2991403-f9b1-445a-b682-202b215d22a3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6202ba27-039c-41c1-a8b7-1c9d876b20b5
+- praise_material_id: cb2a1a04-c477-40aa-aae6-8b6531af145e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 9ab7e102-aeb2-460b-92b3-a114f9327b97
+- praise_material_id: e8762416-22bf-4d8f-b77a-13522ebaa162
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 553bbd90-30cf-4107-af7a-ee2377926fbf
+  song_title: 121 - MEU BARQUINHO
+- praise_material_id: 2d571e73-4bc2-472b-862c-8f568d887fe4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 553bbd90-30cf-4107-af7a-ee2377926fbf
+  song_title: 122 - CRISTO É MEU AMIGO

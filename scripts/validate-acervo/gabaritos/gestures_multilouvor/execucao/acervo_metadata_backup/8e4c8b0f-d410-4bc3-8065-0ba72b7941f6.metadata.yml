@@ -1,0 +1,56 @@
+praise_id: 8e4c8b0f-d410-4bc3-8065-0ba72b7941f6
+praise_name: Nasceu um novo dia
+praise_number: '066'
+praise_author: J.S.M.
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  NASCEU UM NOVO DIA,
+
+  BRILHOU A LUZ DO SEU AMOR;
+
+  A PAZ VEIO ENTÃO REINAR
+
+  QUANDO JESUS EM MIM HABITOU.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 05953552-b767-4861-b51d-83ffe900e36f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ec0e7eca-9fc7-47ea-977c-b10c361149ec
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0f092527-1a39-4bb5-8785-49b76a08f7b8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9210478a-a573-4458-8fca-99686e03c399
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bc5d38a2-809d-4c29-bef4-941d0d5986b3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 0f092527-1a39-4bb5-8785-49b76a08f7b8
+- praise_material_id: dc97d50d-e6fa-438f-9942-379ee1039348
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9210478a-a573-4458-8fca-99686e03c399
+- praise_material_id: c8bc342f-2d56-4c2c-a778-f9674b3e82db
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 05953552-b767-4861-b51d-83ffe900e36f
+  song_title: 66 - NASCEU UM NOVO DIA
+- praise_material_id: 0742301d-9292-4cb8-ab86-be15ecea59a4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 05953552-b767-4861-b51d-83ffe900e36f
+  song_title: 67 - MARAVILHA É O AMOR DE DEUS

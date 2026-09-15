@@ -1,0 +1,70 @@
+praise_id: bfe6bb8b-e666-4e9e-921f-d5b3d8e25532
+praise_name: Como é bom servir a Deus
+praise_number: '046'
+praise_author: A.S.L.T.
+praise_rhythm: Básico
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'COMO É BOM SERVIR A DEUS
+
+  CONHECÊ-LO CADA VEZ MAIS
+
+  E VIVENDO NO SEU AMOR
+
+  SENTIR SUA PROTEÇÃO.
+
+
+  CORO 2X
+
+  QUE ME TRAZ SEGURANÇA, VIDA,
+
+  AMOR, PAZ E ALEGRIA.
+
+
+  COM MEU DEUS EU SEI QUE SOU
+
+  MAIS QUE VENCEDOR.
+
+  VOU PASSANDO AS PROVAÇÕES
+
+  FIRMADO NO SEU AMOR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: ceacc742-304c-4992-b1f7-094123fb7442
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8468fe7e-b6e0-4ea7-9976-3c098e520b74
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9e108bb0-92ef-4770-8d60-d7c71d725a94
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b8993b3e-20fd-458e-a2e1-e6173cb881ee
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5442eeb7-c379-46f0-b8a0-ade0ca335c77
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9e108bb0-92ef-4770-8d60-d7c71d725a94
+- praise_material_id: 947b2361-3860-4aff-bc04-205e790faf56
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: b8993b3e-20fd-458e-a2e1-e6173cb881ee
+- praise_material_id: 1b2e5e88-842e-4c77-b701-0d09600147d4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ceacc742-304c-4992-b1f7-094123fb7442
+  song_title: 45 - JESUS RESSUSCITOU (MEU AMIGO JESUS)
+- praise_material_id: 8a742e22-7f97-4d8c-902f-23b63232115f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ceacc742-304c-4992-b1f7-094123fb7442
+  song_title: 46 - COMO É BOM SERVIR A DEUS

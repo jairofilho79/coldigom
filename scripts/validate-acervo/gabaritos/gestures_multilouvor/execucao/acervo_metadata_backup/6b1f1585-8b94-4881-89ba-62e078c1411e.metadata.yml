@@ -1,0 +1,63 @@
+praise_id: 6b1f1585-8b94-4881-89ba-62e078c1411e
+praise_name: Nesta batalha não tereis que pelejar
+praise_number: '123'
+praise_author: I.B.S.A.
+praise_rhythm: Fox
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NESTA BATALHA NÃO TEREIS QUE PELEJAR;
+
+  AGUARDAI, FICAI PARADOS,
+
+  E VEDE A SALVAÇÃO DO SENHOR
+
+  PARA CONVOSCO, Ó JUDÁ E JERUSALÉM.
+
+
+  NÃO TEMAIS, NEM VOS ASSUSTEIS;
+
+  AMANHÃ SAÍ-LHES AO ENCONTRO,
+
+  PORQUE O SENHOR SERÁ CONVOSCO.
+
+  NESTA BATALHA NÃO TEREIS QUE PELEJAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b0ae4f24-f81b-4b7e-b9f4-f007a7d9e5f0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9f650b86-ad57-49fb-9796-de9a86826fdd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6fdb881a-c92f-4d6a-8f58-f8a5d1d15a67
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5e4b1680-c5cd-4550-8703-32c774862052
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7de13c16-0c4a-4372-b17f-e8e143fdd066
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: b0ae4f24-f81b-4b7e-b9f4-f007a7d9e5f0
+- praise_material_id: 0d6fe11e-91ee-45dc-8a1b-e37917e726e7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6fdb881a-c92f-4d6a-8f58-f8a5d1d15a67
+- praise_material_id: 4d2fefff-53ab-4bdc-a703-127ee7773dde
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9f650b86-ad57-49fb-9796-de9a86826fdd
+  song_title: 123 - NESTA BATALHA NÃO TEREIS QUE PELEJAR
+- praise_material_id: 8c49a4d0-ebb9-40c4-929d-c6e3cd0af2f1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9f650b86-ad57-49fb-9796-de9a86826fdd
+  song_title: 124 - O CÉU E A TERRA PASSARÃO

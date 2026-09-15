@@ -1,0 +1,71 @@
+praise_id: 5640d408-9526-4b1a-85e3-5132a7e1502e
+praise_name: Uma ovelhinha de Jesus eu sou
+praise_number: '024'
+praise_author: C.M.V.C.S.
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'UMA OVELHINHA DE JESUS EU SOU,
+
+  SEMPRE ESTÁ COMIGO, É MEU BOM PASTOR;
+
+  ME MOSTRA O CAMINHO EM QUE DEVO ANDAR,
+
+  É MEU AMADO SALVADOR.
+
+
+  ME LIVRA DO PERIGO,
+
+  ESTENDE O SEU CAJADO,
+
+  É MEU MELHOR AMIGO,
+
+  DO MAL ESTOU GUARDADO.
+
+  EM TODA A MINHA VIDA EU O AMAREI,
+
+  E PARA SEMPRE VIVEREI COM JESUS.
+
+  /FINAL
+
+  E PARA SEMPRE VIVEREI COM JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1741ffb7-deb0-4c2e-b23b-0b03f8b819b2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e0157b28-6b43-4220-a931-51afaeb0e696
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: eb05d857-4016-4ba8-9fef-5b7ced886828
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 786c5135-38f7-4e8a-8f32-b96c1d90bf95
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7086590b-1e6a-4a67-ab4a-c2d53e9dfe1f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: eb05d857-4016-4ba8-9fef-5b7ced886828
+- praise_material_id: bc2fa3d5-6447-4600-9112-d2662decaebf
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 786c5135-38f7-4e8a-8f32-b96c1d90bf95
+- praise_material_id: c1c598b4-b286-4562-9810-6e7c860cb41f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1741ffb7-deb0-4c2e-b23b-0b03f8b819b2
+  song_title: 24 - UMA OVELINHA DE JESUS EU SOU
+- praise_material_id: 758b0da9-5562-4970-9a7d-f5e9e83f7830
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1741ffb7-deb0-4c2e-b23b-0b03f8b819b2
+  song_title: 25 - ONDE QUER QUE TU FORES IREI

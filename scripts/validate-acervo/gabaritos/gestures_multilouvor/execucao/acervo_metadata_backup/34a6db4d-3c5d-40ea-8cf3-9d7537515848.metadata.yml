@@ -1,0 +1,69 @@
+praise_id: 34a6db4d-3c5d-40ea-8cf3-9d7537515848
+praise_name: Cristo é o Senhor
+praise_number: '056'
+praise_author: Autor Desconhecido
+praise_rhythm: Básico
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CRISTO É O SENHOR, DONO DO MEU VIVER,
+
+  ELE ME SALVOU, COM SEU SANGUE ME LAVOU;
+
+  BREVE VOLTARÁ E AO CÉU ME LEVARÁ,
+
+  PRA SEMPRE COM ELE VOU ESTAR.
+
+  /INSTRUMENTOS
+
+
+  CRISTO É O SENHOR, DONO DO MEU VIVER,
+
+  ELE ME SALVOU, COM SEU SANGUE ME LAVOU;
+
+  BREVE VOLTARÁ E AO CÉU ME LEVARÁ,
+
+  PRA SEMPRE COM ELE VOU ESTAR.
+
+  /FINAL
+
+  PRA SEMPRE COM ELE VOU ESTAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 06a33cc8-2336-4f17-8666-d18076fe0ead
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8152a005-1d52-4576-9bce-0f4d0484e01c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 26380401-d521-461d-84fe-cf5f959fcc8e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d3372132-f24a-4161-b435-7a378db80145
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b3ab35e6-2a1a-4c6a-bbf0-784fdee6d8ce
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 26380401-d521-461d-84fe-cf5f959fcc8e
+- praise_material_id: 37342e2f-2336-4a8e-b619-30f99ed69cc2
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d3372132-f24a-4161-b435-7a378db80145
+- praise_material_id: dc8687d2-42d6-457a-b3ae-40da176283d6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 06a33cc8-2336-4f17-8666-d18076fe0ead
+  song_title: 56 - CRISTO É O SENHOR
+- praise_material_id: cfc4c337-da81-417d-aea6-a3c18455de6f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 06a33cc8-2336-4f17-8666-d18076fe0ead
+  song_title: 57 - HÁ UMA LINDA CANÇÃO DE AMOR

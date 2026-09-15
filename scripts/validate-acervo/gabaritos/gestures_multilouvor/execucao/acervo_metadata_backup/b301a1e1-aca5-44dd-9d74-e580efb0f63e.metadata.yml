@@ -1,0 +1,65 @@
+praise_id: b301a1e1-aca5-44dd-9d74-e580efb0f63e
+praise_name: Hosana ao Filho de Davi
+praise_number: '228'
+praise_author: C.M.V.
+praise_rhythm: Repique
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HOSANA AO FILHO DE DAVI,
+
+  HOSANA AO REI DE ISRAEL;
+
+  BENDITO O QUE VEM
+
+  EM NOME DO SENHOR,
+
+  HOSANA, HOSANA.
+
+
+  HOSANA AO QUE VEM
+
+  EM NOME DO SENHOR,
+
+  HOSANA, HOSANA;
+
+  HOSANA NAS MAIORES ALTURAS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c6f9fd94-f276-4fa3-b869-cd7222b9b2c6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 61813c4f-0a98-4ffd-a34e-dd13096cc8a2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 35a1a302-9ee0-4694-a345-e515366a3440
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 32c75346-4fc9-480c-a5fd-76c5facfc6e0
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a443bf3f-2814-4893-a1d8-42a73a08ac50
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c6f9fd94-f276-4fa3-b869-cd7222b9b2c6
+- praise_material_id: 01c6dd66-f5d0-4ddf-966b-4f5e10fa43da
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 61813c4f-0a98-4ffd-a34e-dd13096cc8a2
+- praise_material_id: 6646d8c3-7d54-43c4-a0ba-182836cc7e0d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 35a1a302-9ee0-4694-a345-e515366a3440
+  song_title: 227 - A JESUS IREI LOUVAR
+- praise_material_id: 117a40ff-b24c-4817-934d-5da3e5118d35
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 35a1a302-9ee0-4694-a345-e515366a3440
+  song_title: 228 - HOSANA AO FILHO DE DAVI

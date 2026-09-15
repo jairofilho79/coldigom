@@ -1,0 +1,65 @@
+praise_id: 20a3d5b0-5f4a-43ed-a395-8e2fe4218f2e
+praise_name: Jesus Cristo é o caminho
+praise_number: '106'
+praise_author: G.G.P.
+praise_rhythm: Valseado
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS CRISTO É O CAMINHO
+
+  E O GUIA DE VALOR;
+
+  ELE SALVA TODO AQUELE
+
+  QUE CONFIA EM SEU AMOR,
+
+
+  JESUS CRISTO É O CAMINHO,
+
+  JESUS CRISTO ME SALVOU,
+
+  /FINAL 2X
+
+  EU FUI SALVO PELA GRAÇA
+
+  QUE EM MIM DEPOSITOU
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 5b3f1a45-b46e-49f6-b5eb-bc893d9adab6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1150516e-2e8b-441e-b1b3-23bb6dbe586b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ec0b6dc9-e63c-4fb7-a9a9-535032d8a222
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3927926e-b39f-4499-a1cc-a8a63b617094
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1a1ad1d1-58ea-42ee-8bbe-c5f6eac4f7f9
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ec0b6dc9-e63c-4fb7-a9a9-535032d8a222
+- praise_material_id: 1e037c64-1f6d-4f92-90f0-29861016015b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 3927926e-b39f-4499-a1cc-a8a63b617094
+- praise_material_id: 68792361-407a-4b2e-94ee-8f780973caa8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5b3f1a45-b46e-49f6-b5eb-bc893d9adab6
+  song_title: 105 - HAVEREMOS DE CHEGAR
+- praise_material_id: 06ab7c8f-33c0-4b54-9f39-44d7bdb4880a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5b3f1a45-b46e-49f6-b5eb-bc893d9adab6
+  song_title: 106 - JESUS CRISTO É O CAMINHO

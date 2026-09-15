@@ -1,0 +1,63 @@
+praise_id: fe59d2c1-963f-4a86-a755-812a352d52ad
+praise_name: O Senhor é quem cuida de mim
+praise_number: '114'
+praise_author: C.M.V.C.S.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'O SENHOR É QUEM CUIDA DE MIM. (2X)
+
+  NADA HEI DE TEMER,
+
+  COM JESUS VOU VENCER,
+
+  POIS EU SEI QUE ELE CUIDA DE MIM.
+
+
+  A JESUS SERVIREI COM AMOR,
+
+  POIS EU SEI QUE ELE É MEU SALVADOR.
+
+  AO MEU LADO ESTÁ, NUNCA VAI ME DEIXAR,
+
+  POIS EU SEI QUE ELE CUIDA DE MIM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 3425f825-aa67-4878-b09b-339dcf1568c7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 93c10a7f-df07-4f86-9ed9-d3347ada82f3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e091069e-b307-4686-9e42-9b253618a106
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 99e3c499-da9a-44de-8f02-82014f72f12a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f184a2ad-d530-4bbb-bc0f-5f04c4ade1f4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: e091069e-b307-4686-9e42-9b253618a106
+- praise_material_id: 1cdc79d3-dc07-4a89-ab58-2665d4603be4
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 99e3c499-da9a-44de-8f02-82014f72f12a
+- praise_material_id: ce08be9b-98b0-4512-afdf-77ab30a35c66
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3425f825-aa67-4878-b09b-339dcf1568c7
+  song_title: 113 - TUA MÃO É PODEROSA
+- praise_material_id: 48876b64-332c-4f7a-a676-dff73e6a278a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 3425f825-aa67-4878-b09b-339dcf1568c7
+  song_title: 114 - O SENHOR É QUEM CUIDA DE MIM

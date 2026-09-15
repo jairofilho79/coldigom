@@ -1,0 +1,58 @@
+praise_id: 38ab4ce4-9938-474e-bee2-5126e04d581e
+praise_name: Revelação abre pra você
+praise_number: '145'
+praise_author: M.L.M.B.O.
+praise_rhythm: Country
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'REVELAÇÃO ABRE PARA VOCÊ
+
+  CONHECIMENTO DE DEUS E SEU PODER;
+
+  O ESPÍRITO SANTO MOSTRA AO QUE CRER
+
+  /CANTAR 2X
+
+  COISAS MARAVILHOSAS
+
+  QUE O HOMEM SEM DEUS NÃO VÊ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: fdd18861-2966-414f-8c7a-73231994a303
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1cb50cfd-6a0e-487c-92a4-db1dae17f385
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8086599f-1aee-4410-9ec3-affac945198a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2efbb218-3f17-43ba-8bc0-4c63008fed16
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 96e219a0-4700-4037-93da-0415c22c29ab
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 8086599f-1aee-4410-9ec3-affac945198a
+- praise_material_id: 9aa6bfd5-506d-47d2-8c76-167514410fdf
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 2efbb218-3f17-43ba-8bc0-4c63008fed16
+- praise_material_id: efad6610-b67a-4bc3-9047-61d61bf15946
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fdd18861-2966-414f-8c7a-73231994a303
+  song_title: 145 - REVELAÇÃO ABRE PRA VOCÊ
+- praise_material_id: 20fac1ea-d31d-4aa9-9a52-1ca761a4ffee
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fdd18861-2966-414f-8c7a-73231994a303
+  song_title: 146 - A IGREJA QUE ORA É VITORIOSA

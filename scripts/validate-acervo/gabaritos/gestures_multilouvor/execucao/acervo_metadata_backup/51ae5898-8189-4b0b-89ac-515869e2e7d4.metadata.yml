@@ -1,0 +1,49 @@
+praise_id: 51ae5898-8189-4b0b-89ac-515869e2e7d4
+praise_name: Tenho um coração alegre
+praise_number: 038
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: Em
+praise_category: Crianças e Adolescentes
+praise_lyrics: "TENHO UM CORAÇÃO ALEGRE\nPORQUE ESTOU NA CASA DO PAI;\nO MEU PAI CUIDA\
+  \ DE MIM, \nNELE TENHO PAZ.\n\nNÃO DEIXAREI SUA CASA\nPORQUE AQUI HÁ FARTURA DE\
+  \ PÃO.\nNÃO DEIXAREI JESUS\nPOIS NELE HÁ SALVAÇÃO.\n\nTENHO UM CORAÇÃO ALEGRE\n\
+  PORQUE ESTOU NA CASA DO PAI;\nO MEU PAI CUIDA DE MIM,\nNELE TENHO PAZ, NELE HÁ SALVAÇÃO.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 54bb271a-70e2-4add-8e0f-d3c9ac3540c6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f714f32b-5a35-4295-8a19-a8e11765bb4f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 45e34257-d2a1-4f5a-b339-a210e8c47f93
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0f20ece3-5693-4bcc-9f03-b13ef4297045
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 51988786-6364-4dfc-8f0d-c16b7bd5a275
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 54bb271a-70e2-4add-8e0f-d3c9ac3540c6
+- praise_material_id: 6b4d347e-b1b0-4573-8584-5511afa53dfc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 0f20ece3-5693-4bcc-9f03-b13ef4297045
+- praise_material_id: 2cca2e3e-b2db-435b-903f-bf64022cf11d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f714f32b-5a35-4295-8a19-a8e11765bb4f
+  song_title: 37 - NO MEU CORAÇÃO HÁ UM TESOURO (PRÍNCIPE DA VIDA)
+- praise_material_id: ebbcccf1-bc39-4324-8621-c60887dcd01f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f714f32b-5a35-4295-8a19-a8e11765bb4f
+  song_title: 38 - TENHO UM CORAÇÃO ALEGRE

@@ -1,0 +1,76 @@
+praise_id: 485acaa5-154f-4b58-997d-230de261135c
+praise_name: Maravilha é o amor de Deus
+praise_number: '067'
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'MARAVILHA, MARAVILHA,
+
+  MARAVILHA É O AMOR DE DEUS
+
+  REVELADO NO CALVÁRIO,
+
+  JESUS POR NÓS MORREU.
+
+
+  MARAVILHA É ANUNCIAR ESSE AMOR
+
+  PRA VOCÊ QUE HOJE ESTÁ AQUI;
+
+  VEM CONHECÊ-LO, VEM RECEBÊ-LO
+
+  E A ALEGRIA INUNDARÁ TEU SER.
+
+
+  MARAVILHA, MARAVILHA,
+
+  MARAVILHA É A SALVAÇÃO.
+
+  NÃO MORREREMOS! SIM ESTAREMOS!
+
+  ETERNAMENTE COM O NOSSO DEUS!
+
+  /FINAL
+
+  ETERNAMENTE COM O NOSSO DEUS!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: a42dce3a-862a-427e-a5ad-2a36024576fe
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5a276742-bab0-4eb3-8193-cacc23b4b72b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2e23ec66-d7da-4cc6-b84c-4eafa2f10661
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2ef771e6-6572-498f-ab72-ad850a17a3c3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 29a3848d-5f4d-425b-9a6f-28283a092043
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 2e23ec66-d7da-4cc6-b84c-4eafa2f10661
+- praise_material_id: 379971c1-4cbe-4ec3-8049-825c0ce20634
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 2ef771e6-6572-498f-ab72-ad850a17a3c3
+- praise_material_id: eb16ed21-7b32-4ff4-89ac-01ffa15fc61f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a42dce3a-862a-427e-a5ad-2a36024576fe
+  song_title: 66 - NASCEU UM NOVO DIA
+- praise_material_id: 04cbf67e-972e-4275-88da-6f2c11f477bd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a42dce3a-862a-427e-a5ad-2a36024576fe
+  song_title: 67 - MARAVILHA É O AMOR DE DEUS

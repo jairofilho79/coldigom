@@ -1,0 +1,69 @@
+praise_id: 62f3a6b7-4d1f-4935-9bec-d1dea6bdd2d0
+praise_name: Perdoa-me, Senhor, segundo o Seu amor
+praise_number: '012'
+praise_author: F.S.P.
+praise_rhythm: Básico
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'PERDOA-ME SENHOR, SEGUNDO O SEU AMOR,
+
+  LAVA-ME COM O SANGUE DE JESUS
+
+  E ENVIA A TUA LUZ.
+
+  PURIFICA-ME, SENHOR, COM O SANGUE DE JESUS
+
+  NOVA CRIATURA EM TI EU SOU
+
+  PRONTO PARA O TEU LOUVOR.
+
+
+  FINAL 2X
+
+  POSSO AGORA TE ADORAR,
+
+  POSSO TE GLORIFICAR,
+
+  MEU CORAÇÃO LIBERTO ESTÁ
+
+  CHEIO DE ALEGRIA E PAZ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0280b546-8044-4a15-be76-bdc8ec1ae4cd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0581c9bd-6489-40ac-acb5-e9e4494dd446
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e1141ac7-e75e-40f4-abf0-98da7268d666
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a144ba22-0b19-478f-8167-9262c3aeb729
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 28668fef-1b78-43d6-9e0c-4b9073ae474a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e1141ac7-e75e-40f4-abf0-98da7268d666
+- praise_material_id: a98946cd-18a9-482a-9faf-051d11ceb6f8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a144ba22-0b19-478f-8167-9262c3aeb729
+- praise_material_id: 93cb113d-1071-4a02-b830-7d55652584da
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0280b546-8044-4a15-be76-bdc8ec1ae4cd
+  song_title: 12 - PERDOA-ME SENHOR, SEGUNDO O SEU AMOR
+- praise_material_id: 4b1e2366-abae-49ea-88a4-558856e26bbd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0280b546-8044-4a15-be76-bdc8ec1ae4cd
+  song_title: 13 - PURIFICADO COM SANGUE ESTOU

@@ -1,0 +1,62 @@
+praise_id: 4ad93b59-1433-4d6b-a1af-32adcb61be20
+praise_name: Existe um lugar
+praise_number: 080
+praise_author: M.M.F.
+praise_rhythm: Valsa
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'EXISTE UM LUGAR
+
+  QUE MEU JESUS FOI PREPARAR.
+
+  SE VOCÊ QUISER CHEGAR LÁ,
+
+  É SÓ A ELE SE ENTREGAR.
+
+  ESSE LUGAR É O CÉU DE LUZ,
+
+  ONDE HABITA O MEU JESUS.
+
+  SE QUISER PAZ, ALEGRIA E PERDÃO,
+
+  ENTREGUE A ELE O SEU CORAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: f8235518-be16-4a48-b845-5ccde3a1783c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2000b477-54d5-47d0-820f-a28681a272d7
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e8293209-fb8d-49ef-a8ea-2da5d5649710
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bbc0c018-b6b0-4335-8435-3aec2d9af756
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e285ee51-5d03-4401-8a18-ddaba2ec62a6
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e8293209-fb8d-49ef-a8ea-2da5d5649710
+- praise_material_id: 115bae96-48c4-4faf-a096-29d11231bdcd
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: bbc0c018-b6b0-4335-8435-3aec2d9af756
+- praise_material_id: 9014c0ec-ba01-4594-87d1-42080ef988db
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f8235518-be16-4a48-b845-5ccde3a1783c
+  song_title: 79 - DEUS AMA VOCÊ
+- praise_material_id: eef8aeb1-acc3-42a3-8ee1-b1806df6a004
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f8235518-be16-4a48-b845-5ccde3a1783c
+  song_title: 80 - EXISTE UM LUGAR

@@ -1,0 +1,61 @@
+praise_id: 6879d89b-dfc5-4c2e-b5af-65b38e6c7d44
+praise_name: Jesus, vem me abençoar
+praise_number: '015'
+praise_author: L.G.A.M.
+praise_rhythm: Guarânia
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS, VEM ME ABENÇOAR,
+
+  SENTIR A TUA FACE.
+
+  JESUS, VEM FICAR PERTINHO,
+
+  DAS CRIANÇAS VEM CUIDAR.
+
+
+  FINAL 2X
+
+  JESUS É MEU, (3X)
+
+  É ELE QUEM CUIDA DE MIM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 1d05bf53-1cfc-452a-83e7-6b20268f5b9a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 059e2593-fd81-4105-b834-9e3caf1947e2
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5a6504fb-9cc5-4333-b6ad-9ea00bd77f8e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d27a2460-ba7d-460d-8abe-ebebd8862d63
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b4aef1ad-a9c3-4ed4-a328-b7d6619f7355
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5a6504fb-9cc5-4333-b6ad-9ea00bd77f8e
+- praise_material_id: 1919d266-f3b0-4be3-a6f8-f32c8b20f0e7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d27a2460-ba7d-460d-8abe-ebebd8862d63
+- praise_material_id: 963eb5d8-5c29-4e15-89ff-5f7b7d13d000
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1d05bf53-1cfc-452a-83e7-6b20268f5b9a
+  song_title: 14 - TE SUPLICO, Ó DEUS, EM ORAÇÃO
+- praise_material_id: 2fe81539-d508-480f-8b14-6d2aedf9d40e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 1d05bf53-1cfc-452a-83e7-6b20268f5b9a
+  song_title: 15 - JESUS VEM ME ABENÇOAR

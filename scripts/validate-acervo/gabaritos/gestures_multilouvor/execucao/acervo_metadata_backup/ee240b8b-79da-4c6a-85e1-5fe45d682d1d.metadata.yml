@@ -1,0 +1,59 @@
+praise_id: ee240b8b-79da-4c6a-85e1-5fe45d682d1d
+praise_name: Sei que Cristo voltará
+praise_number: '212'
+praise_author: Autor Desconhecido
+praise_rhythm: Country
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SEI QUE CRISTO VOLTARÁ,
+
+  POIS NA BÍBLIA ESCRITO ESTÁ,
+
+  JOÃO CARTOZE, UM, DOIS, TRÊS
+
+  LEDE, POIS, E SABEREIS.
+
+
+  SEI QUE ELE VOLTA, (3X)
+
+  NA BÍBLIA ESCRITO ESTÁ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 084c8534-0f57-4ec1-ba4d-40cd5e2d0573
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 02755ae3-1937-4fc7-94c1-e7b64e78a416
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ec6f978f-8aed-45b7-a033-c67816115e83
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 070ca67c-9140-4a09-a9d7-ee70ff1477ce
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 459691e1-904b-4903-82a8-f8abc8ae3a8c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ec6f978f-8aed-45b7-a033-c67816115e83
+- praise_material_id: f4451c15-c0d8-4fe5-9d59-88681b19a452
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 070ca67c-9140-4a09-a9d7-ee70ff1477ce
+- praise_material_id: ded65d43-4a48-43fc-8e93-57e60afc81b6
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 084c8534-0f57-4ec1-ba4d-40cd5e2d0573
+  song_title: 212 - SEI QUE CRISTO VOLTARÁ
+- praise_material_id: 289c543d-68a5-4cd7-9fbf-3da629ecf400
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 084c8534-0f57-4ec1-ba4d-40cd5e2d0573
+  song_title: 213 - LÁ NO DOCE PORVIR

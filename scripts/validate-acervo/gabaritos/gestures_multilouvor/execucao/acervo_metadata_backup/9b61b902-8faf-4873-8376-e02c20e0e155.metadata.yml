@@ -1,0 +1,74 @@
+praise_id: 9b61b902-8faf-4873-8376-e02c20e0e155
+praise_name: Jesus é a nossa vitória
+praise_number: '239'
+praise_author: ''
+praise_rhythm: Toada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS É A NOSSA VITÓRIA
+
+  ELE NOS LEVA PARA A SUA GLÓRIA
+
+  NOS GUARDA DE TODO O PERIGO
+
+  JESUS É NOSSO GRANDE AMIGO.
+
+
+  EU SOU FELIZ, POIS CONHECI A JESUS
+
+  E HOJE EU CAMINHO EM SUA LUZ
+
+  NA ETERNIDADE COM JESUS VOU MORAR
+
+  E COM OS ANJOS PARA SEMPRE O ADORAR:
+
+
+  VIVA O REI, VIVA O REI
+
+  VIVA O REI, VIVA O REI
+
+  VIVA O REI,
+
+  VIVA O REI JESUS!
+
+  VIVA O REI JESUS!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c78fe6e5-f83f-4adf-9c91-20d6e84b9c9a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7c340d41-4b45-4c55-bc08-05c7bda59149
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 907f8a72-aece-489e-ad9c-04d903758d3d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 13678d07-a255-4bdc-993f-5919a0afcf91
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d71cac7a-db21-455c-9f16-ddb1cb8c5a3b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 907f8a72-aece-489e-ad9c-04d903758d3d
+- praise_material_id: 01ad047d-8148-4f58-ac41-315481895d2e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 13678d07-a255-4bdc-993f-5919a0afcf91
+- praise_material_id: f14ed9dd-8eef-4849-8e53-fa754f2ebd22
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c78fe6e5-f83f-4adf-9c91-20d6e84b9c9a
+  song_title: 238 - EU VOU CANTAR
+- praise_material_id: 18ee8843-7c1a-4b8f-87e7-e74b77d82ea9
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c78fe6e5-f83f-4adf-9c91-20d6e84b9c9a
+  song_title: 239 - JESUS É A NOSSA VITÓRIA

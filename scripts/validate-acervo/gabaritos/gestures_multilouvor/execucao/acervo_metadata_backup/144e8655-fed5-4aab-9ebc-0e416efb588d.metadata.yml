@@ -1,0 +1,73 @@
+praise_id: 144e8655-fed5-4aab-9ebc-0e416efb588d
+praise_name: Clamo, ó Senhor por teu sangue
+praise_number: '003'
+praise_author: C.M.V.
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Clamor
+praise_lyrics: 'CLAMO, Ó SENHOR POR TEU SANGUE, (2X)
+
+  SANGUE QUE POR MIM FOI VERTIDO,
+
+  SANGUE DE UMA NOVA ALIANÇA.
+
+  /FINAL (2X)
+
+  SENHOR, DERRAMA TEU SANGUE
+
+  SOBRE MIM, Ó SENHOR.
+
+  '
+praise_tags:
+- c113296e-a8f6-4f07-83ba-f055c125542f
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+praise_materiais:
+- praise_material_id: 5234d394-df72-4e4f-8fa5-1adf7a08d06b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 80070813-1d80-4a56-94d0-a8b4792c6dad
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 95b7aeb0-641f-4088-8ea3-aad6fc7e6939
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c11fe358-3cea-4f84-a0d5-070a06ac1d98
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cd26da2b-293d-44d1-bfe3-890dae717542
+  material_kind: 8860ed67-6b33-4e08-9064-adb93a5f5c2a
+  material_type: YOUTUBE
+  type: youtube
+  url: https://www.youtube.com/watch?v=eHwRiFeVegU&pp=ygUoQ2xhbW8sIG_MgSBTZW5ob3IgcG9yIHRldSBzYW5ndWUgY2lhIGljbQ%3D%3D
+- praise_material_id: 07a7d110-7c75-480a-baaf-7ced7e08e44c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  material_type: YOUTUBE
+  type: youtube
+  url: https://www.youtube.com/watch?v=kui_4XeqF-I&pp=ygUoQ2xhbW8sIG_MgSBTZW5ob3IgcG9yIHRldSBzYW5ndWUgY2lhIGljbQ%3D%3D
+- praise_material_id: 81e24aba-9a98-4096-bde1-a4364e09fabb
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 95b7aeb0-641f-4088-8ea3-aad6fc7e6939
+- praise_material_id: 42a8e384-36ad-48a5-9d31-30ca172ab385
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c11fe358-3cea-4f84-a0d5-070a06ac1d98
+- praise_material_id: 2dd932ad-2ba1-409b-96be-760f5c16fe6a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5234d394-df72-4e4f-8fa5-1adf7a08d06b
+  song_title: 01 - MEU DEUS, MEU PAI
+- praise_material_id: 0e8f6fd7-b1bf-46c8-a74a-51755b45109e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5234d394-df72-4e4f-8fa5-1adf7a08d06b
+  song_title: 02 - PAI, ESTOU A TE CLAMAR
+- praise_material_id: 6710a02c-41a4-4f71-9ee4-27fccdbef77f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 5234d394-df72-4e4f-8fa5-1adf7a08d06b
+  song_title: 03 - CLAMO, Ó SENHOR, POR TEU SANGUE

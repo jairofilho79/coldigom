@@ -1,0 +1,52 @@
+praise_id: 990b8102-9e66-4f3b-ae57-fa9390de7a81
+praise_name: Ele morreu, mas ressurgiu
+praise_number: 090
+praise_author: E.C.L.
+praise_rhythm: Toada
+praise_tonality: B
+praise_category: Crianças e Adolescentes
+praise_lyrics: "ELE MORREU, MAS RESSURGIU;\nPLENA PAZ ENCHEU O MEU VIVER;\nJESUS É\
+  \ TUDO O QUE SEMPRE QUIS,\nJESUS ME TROUXE O SEU PERDÃO.\n\nQUERO FALAR DESTA SALVAÇÃO,\n\
+  POR ONDE QUER QUE EU POSSA ANDAR,\nJESUS É TUDO, ELE É A PAZ\nQUE VOCÊ PODE ENCONTRAR.\
+  \ (2X)\n/INSTRUMENTOS \n\nCRISTO, O SENHOR, É QUEM ME CONDUZ,\nLIVRA-ME DO MAL E\
+  \ DA TENTAÇÃO.\nE O SEU AMOR SEMPRE TRADUZ\nVIDA REAL E O CÉU PRA MIM!\n\nCRISTO\
+  \ JESUS É O MEU SENHOR\nSEMPRE PRESENTE NO MEU CORAÇÃO.\nBREVE VIRÁ DO CÉU ME BUSCAR.\n\
+  QUE ALEGRIA SERÁ! (2X)\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: bb719f9b-8d97-4575-a082-2b325b48ceab
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ddd95a0b-744b-42f6-a267-139f3c25c127
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3cd6c106-036a-41c4-a640-33c122c65484
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 14e7a5da-9182-40c8-a1df-54647d73a45c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7886de29-afb9-4b33-8ddc-ae047ba9d53e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 3cd6c106-036a-41c4-a640-33c122c65484
+- praise_material_id: 88847516-750f-4785-adda-92b924ec26d2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 14e7a5da-9182-40c8-a1df-54647d73a45c
+- praise_material_id: ea62fcf0-85e3-4269-8f1e-0bced41dbab7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bb719f9b-8d97-4575-a082-2b325b48ceab
+  song_title: 89 - CERTO HOMEM, PRÍNCIPE DOS JUDEUS (NICODEMOS)
+- praise_material_id: e5ec4927-f2a2-45b4-aa49-d765b7425b83
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bb719f9b-8d97-4575-a082-2b325b48ceab
+  song_title: 90 - ELE MORREU, MAS RESSURGIU

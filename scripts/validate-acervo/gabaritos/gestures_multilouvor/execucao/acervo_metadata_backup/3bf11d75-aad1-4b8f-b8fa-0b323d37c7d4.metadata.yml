@@ -1,0 +1,65 @@
+praise_id: 3bf11d75-aad1-4b8f-b8fa-0b323d37c7d4
+praise_name: Lá do doce porvir
+praise_number: '213'
+praise_author: Autor Desconhecido
+praise_rhythm: Balada
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'LÁ NO DOCE PORVIR,
+
+  LÁ NO DOCE PORVIR,
+
+  MANSÃO DE LUZ IREI TER COM JESUS,
+
+  AH! QUE PRAZER ME ENCONTRAR ALI!
+
+
+  SIM, NO DOCE PORVIR,
+
+  SIM, NO DOCE PORVIR,
+
+  QUANDO A LUTA FINDAR
+
+  E A VITÓRIA ALCANÇAR,
+
+  SIM, NO DOCE PORVIR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b48101c3-28ab-439b-87e9-544e4c419cbb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a8f410db-e40c-478c-8577-909f0f9a5f1b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 658bbc4c-f787-495e-bd00-ad4f104c9528
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3df772ba-c35c-439e-9fff-a9d3ce298956
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 416c0729-93f0-4449-ac77-d9d3c3963a0d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 658bbc4c-f787-495e-bd00-ad4f104c9528
+- praise_material_id: 2fb7ed9f-96c7-4e91-a18f-24a9b253a4a4
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 3df772ba-c35c-439e-9fff-a9d3ce298956
+- praise_material_id: 1c68fcf6-da73-427a-bf8a-9d8d1cec48a1
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b48101c3-28ab-439b-87e9-544e4c419cbb
+  song_title: 212 - SEI QUE CRISTO VOLTARÁ
+- praise_material_id: bc78a084-7cde-4f61-8df0-d98c3f3d3c5b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b48101c3-28ab-439b-87e9-544e4c419cbb
+  song_title: 213 - LÁ NO DOCE PORVIR

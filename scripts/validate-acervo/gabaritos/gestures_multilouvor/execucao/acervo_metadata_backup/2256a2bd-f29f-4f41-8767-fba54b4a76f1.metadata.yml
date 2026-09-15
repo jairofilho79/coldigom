@@ -1,0 +1,80 @@
+praise_id: 2256a2bd-f29f-4f41-8767-fba54b4a76f1
+praise_name: Quero ouvir (meu querer)
+praise_number: '040'
+praise_author: F.T.R.
+praise_rhythm: Básico
+praise_tonality: F
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'QUERO OUVIR A TUA VOZ, Ó MEU SENHOR,
+
+  A FALAR TÃO PURA E MEIGA AO CORAÇÃO
+
+  E SENTIR O TOQUE DO TEU SANTO ESPÍRITO
+
+  PRA QUE EU POSSA RENOVAR A COMUNHÃO.
+
+
+  CORO 2X
+
+  QUERO LOUVAR, COM ALEGRIA EM MEU VIVER
+
+  RENOVAR A MINHA FÉ,
+
+  ENTREGAR TODO O MEU SER.
+
+  /INSTRUMENTOS
+
+
+  QUERO FALAR DESTE SEU IMENSO AMOR.
+
+  E DIZER A TODO O MUNDO
+
+  QUE JESUS É O SALVADOR.
+
+  QUE LÁ NA CRUZ ELE MORREU
+
+  PRA NOS SALVAR
+
+  DERRAMOU SEU SANGUE PURO
+
+  E A VIDA ETERNA DÁ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 10ea2fbe-a627-4072-a441-643e09cab296
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a9aba5b6-3fbe-4937-b4ca-761deca43f61
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 51dfd71e-4ff4-4b66-9d92-013eca6dd524
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a67b9fd7-f2d7-4f27-8bfd-365e78838e39
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d842316d-7e5c-433c-9871-19e3812f95b2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 51dfd71e-4ff4-4b66-9d92-013eca6dd524
+- praise_material_id: c1d1a97b-9a13-4dff-91e8-7fb8bd395af0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a67b9fd7-f2d7-4f27-8bfd-365e78838e39
+- praise_material_id: bd587431-b098-4d7a-9c45-bfd1a0a8505e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 10ea2fbe-a627-4072-a441-643e09cab296
+  song_title: 40 - QUERO OUVIR (MEU QUERER)
+- praise_material_id: 3fed4e85-5fd3-4704-a31d-5fea2af573c7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 10ea2fbe-a627-4072-a441-643e09cab296
+  song_title: 41 - A MINHA CASA FIRME ESTÁ

@@ -1,0 +1,77 @@
+praise_id: 164645b1-6fdc-4d6d-bbd9-a3047fe21c6b
+praise_name: Irei cantar e adorar o Rei Jesus
+praise_number: '226'
+praise_author: C.M.V.C.S.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'IREI CANTAR E ADORAR
+
+  AO REI JESUS
+
+  QUE POR AMOR MORREU
+
+  NA CRUZ PRA ME SALVAR;
+
+  ALEGRE SOU POIS SALVO ESTOU
+
+  E ETERNAMENTE COM O SENHOR
+
+  NAS MANSÕES CELESTIAIS IREI MORAR.
+
+
+  FINAL 2X
+
+  OH! ALELUIA,
+
+  HONRA E GLÓRIA AO REI JESUS!
+
+  LÁ NO CÉU ETERNAMENTE IREI CANTAR!
+
+  ADORAREI AO MEU SENHOR,
+
+  PROSTRADO AOS PÉS DO SALVADOR
+
+  QUE ENTRONIZADO ESTÁ
+
+  POIS ELE É O REI DOS REIS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 44b54555-3c3c-49c5-a95d-ed3f81aa7266
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 60bb7da0-b0dd-4371-a42e-31037b2a19ea
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2b572721-9efd-4059-9b2f-cf362af4887c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d0fe97f7-afdb-443c-9878-f50271b64442
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e5709146-0c07-41fd-af19-3399adc2331b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 2b572721-9efd-4059-9b2f-cf362af4887c
+- praise_material_id: 3d4b587c-df3e-4894-8e57-3b1df0c57235
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: d0fe97f7-afdb-443c-9878-f50271b64442
+- praise_material_id: feb459cb-7bac-4b68-b91f-45dae53eb73d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 44b54555-3c3c-49c5-a95d-ed3f81aa7266
+  song_title: 225 - EU VIM AQUI, SENHOR
+- praise_material_id: f38819d4-57db-47ff-bc27-8ffc98de75d7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 44b54555-3c3c-49c5-a95d-ed3f81aa7266
+  song_title: 226 - IREI CANTAR E ADORAR O REI JESUS

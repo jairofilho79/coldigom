@@ -1,0 +1,84 @@
+praise_id: d8a7b948-6ba4-4164-a452-f5e7a07e2c62
+praise_name: Fala ao meu coração, Jesus
+praise_number: '177'
+praise_author: Autor Desconhecido
+praise_rhythm: Fox
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  FALA AO MEU CORAÇÃO, JESUS!
+
+  FALA AO MEU CORAÇÃO, JESUS!
+
+  /CANTAR 2X
+
+  FALA, FALA, FALA,
+
+  FALA AO MEU CORAÇÃO.
+
+
+  CANTAR 2X
+
+  VIVE EM MEU CORAÇÃO, JESUS!
+
+  VIVE EM MEU CORAÇÃO, JESUS!
+
+  /CANTAR 2X
+
+  VIVE, VIVE, VIVE,
+
+  VIVE EM MEU CORAÇÃO.
+
+
+  CANTAR 2X
+
+  REINA EM MEU CORAÇÃO, JESUS!
+
+  REINA EM MEU CORAÇÃO, JESUS!
+
+  /CANTAR 2X
+
+  FALA, VIVE, REINA,
+
+  REINA EM MEU CORAÇÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 42e2c0e9-5180-4b4c-9df5-a6ab017bff3a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4a247fca-140b-46e1-8d55-944500c77e60
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3e3303d7-a966-45e0-9f97-40507f802f2d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f3b662a0-afaf-4703-94a9-cb7307c0eb5e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fa8ff68a-1526-4be0-9449-140415f87de2
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 3e3303d7-a966-45e0-9f97-40507f802f2d
+- praise_material_id: f60447b8-6e20-4a1a-b751-d5d243f60860
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f3b662a0-afaf-4703-94a9-cb7307c0eb5e
+- praise_material_id: 5af7faea-b95e-4e68-a507-228c2f6e2696
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 42e2c0e9-5180-4b4c-9df5-a6ab017bff3a
+  song_title: 177 - FALA AO MEU CORAÇÃO!
+- praise_material_id: 84ddb206-9a0f-4b0d-9e71-4edad0caed03
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 42e2c0e9-5180-4b4c-9df5-a6ab017bff3a
+  song_title: 178 - DISSE JESUS AOS JUDEUS ( EU TRABALHO TAMBÉM

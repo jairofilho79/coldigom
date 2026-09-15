@@ -1,0 +1,63 @@
+praise_id: dba5da32-ba1f-48a3-965c-6a432aa4c69f
+praise_name: Um dia a igreja subirá
+praise_number: '189'
+praise_author: A.C.A.T.C.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'UM DIA A IGREJA SUBIRÁ,
+
+  BEM MAIS PERTINHO DE JESUS VAMOS FICAR;
+
+  BEM MAIS PERTINHO,
+
+  BEM MAIS PERTINHO,
+
+
+  BEM MAIS PERTINHO VAMOS JUNTOS CELEBRAR,
+
+  BEM MAIS PERTINHO,
+
+  BEM MAIS PERTINHO,
+
+  BEM MAIS PERTINHO DE JESUS VAMOS FICAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9c8a0b66-7e87-4361-9370-8cbef61171db
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: fe7dba9b-3f86-42fb-9a21-2e8b00719cce
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 68396745-a737-4be9-8238-1f07b34ca2e3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e52ba3f5-9914-47d0-a252-4915360103e5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 21101466-b5be-4950-9a7e-65eb2d450162
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 68396745-a737-4be9-8238-1f07b34ca2e3
+- praise_material_id: b4bef456-23e1-4376-a2cc-e60cc9f568b0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: e52ba3f5-9914-47d0-a252-4915360103e5
+- praise_material_id: 2baf4791-b7e6-405d-b777-893a680078b2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9c8a0b66-7e87-4361-9370-8cbef61171db
+  song_title: 189 - UM DIA A IGREJA SUBIRÁ
+- praise_material_id: 1d9a54d2-7b7d-410d-bb92-9a5d8654a278
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9c8a0b66-7e87-4361-9370-8cbef61171db
+  song_title: 190 - IGREJA, CORPO DE CRISTO

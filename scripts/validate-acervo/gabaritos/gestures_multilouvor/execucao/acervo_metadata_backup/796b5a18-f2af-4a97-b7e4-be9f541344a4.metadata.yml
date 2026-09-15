@@ -1,0 +1,62 @@
+praise_id: 796b5a18-f2af-4a97-b7e4-be9f541344a4
+praise_name: Queres ser feliz
+praise_number: 084
+praise_author: M.S.A.
+praise_rhythm: Country
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  QUERES SER FELIZ,
+
+  CONHECER JESUS?
+
+  ELE VAI TE DAR ALEGRIA,
+
+  VIDA E PAZ.
+
+  EU JÁ SOU FELIZ,
+
+  DEI MEU CORAÇÃO
+
+  E JESUS EM MIM VEIO HABITAR
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: af0d1461-ad29-4803-abbd-b119a102ada2
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4ca106e0-4ff8-4a5a-be23-080dd3cabb79
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 43fda07e-dd14-4b16-ba22-cf49eab0c972
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f4e70be3-9b35-436d-85f5-fa3126d708f3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 552fbce5-b2ac-4930-bab0-dffea2eb28d3
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 43fda07e-dd14-4b16-ba22-cf49eab0c972
+- praise_material_id: 50bb20eb-697d-4aee-8163-04b7ff8e590e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f4e70be3-9b35-436d-85f5-fa3126d708f3
+- praise_material_id: 576f1430-0234-4c73-95b6-a48bc1f22abf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: af0d1461-ad29-4803-abbd-b119a102ada2
+  song_title: 83 - FOI NO CAMINHO PARA DAMASCO
+- praise_material_id: 51e3e1a6-66ee-457e-a888-8713ef7e1f50
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: af0d1461-ad29-4803-abbd-b119a102ada2
+  song_title: 84 - QUERES SER FELIZ?

@@ -1,0 +1,85 @@
+praise_id: 8c101bf7-7eb2-443b-b710-fe7dab29bc89
+praise_name: Quero ser fiel (Jesus está vivo)
+praise_number: '180'
+praise_author: K.R.S.S.
+praise_rhythm: Repique
+praise_tonality: Bm
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'QUERO SER FIEL A TI, JESUS,
+
+  FAZER SEMPRE A TUA VONTADE,
+
+  GUARDAR A TUA PALAVRA,
+
+  QUE É LUZ E VIDA PARA O MEU CAMINHO.
+
+
+  *CORO
+
+  SER FIEL, SER FIEL, SER FIEL ATÉ O FIM.
+
+  SER FIEL, SER FIEL ATÉ MEU JESUS VOLTAR!
+
+
+  QUERO ANDAR NA TUA LUZ, SENHOR,
+
+  SÓ ASSIM ESTOU SEGURO;
+
+  QUERO PROCLAMAR EM ALTA VOZ:
+
+  "JESUS RESSUSCITOU AO TERCEIRO DIA,
+
+  ESTÁ VIVO E REINA EM MEU VIVER".
+
+
+  *CORO
+
+  SER FIEL, SER FIEL, SER FIEL ATÉ O FIM.
+
+  SER FIEL, SER FIEL ATÉ MEU JESUS VOLTAR!
+
+  /FINAL
+
+  JESUS ESTÁ VIVO, REINA EM MEU VIVER,
+
+  E EM BREVE VOLTARÁ!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 86834732-de45-44b2-98e6-74b92b5c386c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1c98033f-5b6a-4e9f-8967-5e786ae78272
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f1c08b99-c0d5-432e-9e42-81e78f39131e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 39179ded-802f-4971-adc0-bb9d691987fe
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ebbed5e3-2613-4a06-8a98-9a9539b60465
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f1c08b99-c0d5-432e-9e42-81e78f39131e
+- praise_material_id: 0e8cec10-4865-4262-84af-2a62d2a4e877
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 39179ded-802f-4971-adc0-bb9d691987fe
+- praise_material_id: 283d5377-ff7d-453a-b6a0-96c0573b81f4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 86834732-de45-44b2-98e6-74b92b5c386c
+  song_title: 179 – ORAR FAZ BEM
+- praise_material_id: 36d1e139-74bb-4f36-8bff-56e7a674d91d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 86834732-de45-44b2-98e6-74b92b5c386c
+  song_title: 180 - QUERO SER FIEL

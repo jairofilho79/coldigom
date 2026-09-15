@@ -1,0 +1,83 @@
+praise_id: ab997279-5b64-4290-9cd6-7f260323cfb2
+praise_name: Na cidade de Davi nasceu o Salvador
+praise_number: '233'
+praise_author: E.H.M.R.
+praise_rhythm: Fox
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NA CIDADE DE DAVI NASCEU O SALVADOR,
+
+  CRISTO, O SENHOR;
+
+  MULTIDÕES DE ANJOS
+
+  LOUVARAM A DEUS DIZENDO:
+
+
+  *CORO 2X
+
+  GLÓRIA A DEUS NAS ALTURAS,
+
+  PAZ NA TERRA,
+
+  BOA VONTADE PARA COM OS HOMENS.
+
+
+  JESUS NASCEU NUM LUGAR TÃO SIMPLES,
+
+  FOI NO MEU CORAÇÃO;
+
+  ACHOU LUGAR PRA NASCER EM MIM
+
+  POIS ABRI MEU CORAÇÃO
+
+  E AGORA O SIRVO, SIRVO, SIM.
+
+
+  FINAL 2X
+
+  GLÓRIA A DEUS NAS ALTURAS,
+
+  PAZ NA TERRA,
+
+  BOA VONTADE PARA COM OS HOMENS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: a29f5513-fc47-43e7-9407-2c9b4e67a343
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: adfcf9ef-f118-47c9-96a6-6c79b53f16fd
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ebe07165-fb21-4564-8eff-97f33baaf083
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 96e9b8b8-a40a-409c-a424-a3c636b51243
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5f77b926-e542-422f-b4ce-484ee6df2d8d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ebe07165-fb21-4564-8eff-97f33baaf083
+- praise_material_id: a6c605aa-d07c-45c3-b126-7bf90a74a5a8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 96e9b8b8-a40a-409c-a424-a3c636b51243
+- praise_material_id: 5f3eeb3f-8006-4eb3-935c-46ed64699233
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a29f5513-fc47-43e7-9407-2c9b4e67a343
+  song_title: 232 - HOJE EU NÃO QUERO PEDIR
+- praise_material_id: 19f2331c-bb30-41fb-9f87-82d251c88e48
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a29f5513-fc47-43e7-9407-2c9b4e67a343
+  song_title: 233 - NA CIDADE DE DAVI NASCEU O SALVADOR

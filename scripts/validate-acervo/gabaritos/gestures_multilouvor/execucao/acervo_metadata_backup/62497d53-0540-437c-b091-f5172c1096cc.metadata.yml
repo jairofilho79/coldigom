@@ -1,0 +1,52 @@
+praise_id: 62497d53-0540-437c-b091-f5172c1096cc
+praise_name: Em tuas pisadas
+praise_number: '147'
+praise_author: M.L.M.B.O.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: "EM TUAS PISADAS \nCOLOCO OS MEUS PÉS,\nASSIM BEM FIRMADO, NÃO VACILAREI;\n\
+  OS TEUS PRECEITOS, SENHOR, OS GUARDEI.\nAS TUAS PALAVRAS SÃO MEU ALIMENTO\nVIVER\
+  \ NA TUA OBRA É O MEU SUSTENTO.\n\nCANTAR 2X\nQUE BOM SENHOR, CONHECER A JESUS.\n\
+  CAMINHO, VIDA, VERDADE E LUZ.\n/INSTRUMENTOS\n\nEM TUAS PISADAS \nCOLOCO OS MEUS\
+  \ PÉS,\nASSIM BEM FIRMADO, NÃO VACILAREI;\nOS TEUS PRECEITOS, SENHOR, OS GUARDEI.\n\
+  AS TUAS PALAVRAS SÃO MEU ALIMENTO\nVIVER NA TUA OBRA É O MEU SUSTENTO.\n\nCANTAR\
+  \ 2X\nQUE BOM SENHOR, CONHECER A JESUS.\nCAMINHO, VIDA, VERDADE E LUZ.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0d4a8c03-0590-495f-bca6-b11513556ae4
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7e501b88-8d0a-435a-be06-28fa2ebad0a0
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 97b41538-1f86-448a-a250-46b576f02b38
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2bc65933-6921-4659-be00-047db2010db1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: adf2c275-02cd-4c9c-bd93-3bdf9f8d9b6b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 97b41538-1f86-448a-a250-46b576f02b38
+- praise_material_id: 26b08f19-2c98-4a08-9513-fdeafe12c2e3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 2bc65933-6921-4659-be00-047db2010db1
+- praise_material_id: 80323828-6bb7-469d-84af-fe9dad80099d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0d4a8c03-0590-495f-bca6-b11513556ae4
+  song_title: 147 - EM TUAS PISADAS
+- praise_material_id: f29ff085-8ceb-40ed-a77b-92b792b07d60
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0d4a8c03-0590-495f-bca6-b11513556ae4
+  song_title: 148 - ANDANDO EM ESPÍRITO (FRUTO DO ESPÍRITO)

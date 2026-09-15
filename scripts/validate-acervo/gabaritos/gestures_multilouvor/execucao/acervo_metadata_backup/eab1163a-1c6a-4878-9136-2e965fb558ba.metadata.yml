@@ -1,0 +1,72 @@
+praise_id: eab1163a-1c6a-4878-9136-2e965fb558ba
+praise_name: Estou aqui pra confessar
+praise_number: '005'
+praise_author: E.E.M.R.
+praise_rhythm: Valseado
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ESTOU AQUI PRA CONFESSAR
+
+  A TI OS MEUS PECADOS
+
+  PRECISO DO TEU PERDÃO,
+
+  DA TUA COMUNHÃO
+
+
+  ESTOU AQUI PRA TE PEDIR:
+
+  LIMPA MEU CORAÇÃO,
+
+  COMO A BRANCA LÃ
+
+  TORNA-O, SENHOR.
+
+
+  SUSTENTA-ME EM TUAS MÃOS, JESUS,
+
+  PROTEGIDO EM TEUS BRAÇOS QUERO ESTAR;
+
+  ESCONDE-ME DE TODA A MALDADE
+
+  E SEMPRE CONTIGO VOU ANDAR. (2X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: f3e893bb-13b4-4db4-8d5b-a50da8a08b94
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bdd0c01a-4f8f-48e0-a036-e55cba440201
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 16b08359-22be-40a8-82d8-2ec0deff658f
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5df56d6f-0f13-4769-84bb-12b4bae39faf
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c637ead2-c9a5-4b03-9819-3940256cc3f4
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 16b08359-22be-40a8-82d8-2ec0deff658f
+- praise_material_id: 37ad3777-3d23-42a6-ab97-32ad6d1c6f12
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5df56d6f-0f13-4769-84bb-12b4bae39faf
+- praise_material_id: 27ae8c00-3f59-40ee-8fae-edc5cb6da50b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f3e893bb-13b4-4db4-8d5b-a50da8a08b94
+  song_title: 04 - CLAMO, Ó SENHOR
+- praise_material_id: 0e13c01c-e4b3-44c1-bfaf-387a6d98236f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f3e893bb-13b4-4db4-8d5b-a50da8a08b94
+  song_title: 05 - ESTOU AQUI PRA CONFESSAR

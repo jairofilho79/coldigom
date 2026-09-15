@@ -1,0 +1,62 @@
+praise_id: c81cbace-c9e2-420b-a4db-e265a94add6b
+praise_name: Cria em mim, ó Deus
+praise_number: '176'
+praise_author: Autor Desconhecido
+praise_rhythm: Country
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  CRIA EM MIM, Ó DEUS,
+
+  UM CORAÇÃO PURO
+
+  E RENOVA DENTRO EM MIM
+
+  UM ESPÍRITO RETO.
+
+  /FINAL
+
+  E RENOVA DENTRO EM MIM
+
+  UM ESPÍRITO RETO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 4f3c593b-61d7-43f1-a44b-3c569cefeadd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2be8d8ad-ff3f-4960-bfe9-d0b0982dc587
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 208dadaf-0f5d-4179-b98e-df5686b8ed48
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dbb8a752-df9d-4e29-9491-dc0e6a9c3fcc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 31f12c4b-3a0a-485a-89bf-9e9a95adeae8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 208dadaf-0f5d-4179-b98e-df5686b8ed48
+- praise_material_id: 021fa974-9c17-4e46-9539-6e08fdd940bc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: dbb8a752-df9d-4e29-9491-dc0e6a9c3fcc
+- praise_material_id: 181cd43b-e72e-40fb-a6cf-5f927e9029c5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4f3c593b-61d7-43f1-a44b-3c569cefeadd
+  song_title: 175 - UM CERTO PASTORZINHO
+- praise_material_id: 7d72a82b-991a-4310-a2e8-c7b232ae65fe
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 4f3c593b-61d7-43f1-a44b-3c569cefeadd
+  song_title: 176 - CRIA EM MIM Ó DEUS

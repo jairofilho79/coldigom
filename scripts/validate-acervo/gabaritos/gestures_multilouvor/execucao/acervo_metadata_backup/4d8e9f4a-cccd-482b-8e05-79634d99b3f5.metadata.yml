@@ -1,0 +1,83 @@
+praise_id: 4d8e9f4a-cccd-482b-8e05-79634d99b3f5
+praise_name: Eu vou cantar
+praise_number: '238'
+praise_author: C.M.V.C.S
+praise_rhythm: Balada
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'EU VOU CANTAR, CANTAR, CANTAR.
+
+  EU VOU LOUVAR, LOUVAR, LOUVAR.
+
+  JESUS COM SEU SANGUE ME COMPROU,
+
+  POR SUA GRAÇA SALVO ESTOU.
+
+
+  EU VOU CANTAR, CANTAR, CANTAR.
+
+  EU VOU LOUVAR, LOUVAR, LOUVAR.
+
+  PERTO ESTÁ O SENHOR DE VOLTAR
+
+  E ASSIM VOU PARA O MEU LAR.
+
+  /INSTRUMENTOS
+
+
+  EU VOU CANTAR, CANTAR, CANTAR.
+
+  EU VOU LOUVAR, LOUVAR, LOUVAR.
+
+  JESUS COM SEU SANGUE ME COMPROU,
+
+  POR SUA GRAÇA SALVO ESTOU.
+
+
+  EU VOU CANTAR, CANTAR, CANTAR.
+
+  EU VOU LOUVAR, LOUVAR, LOUVAR.
+
+  PERTO ESTÁ O SENHOR DE VOLTAR
+
+  E ASSIM VOU PARA O MEU LAR
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: bf0254de-8131-4375-8474-25edc8e53209
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 221b55ba-1eb3-4727-a422-015e98d4d842
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7d18fd18-a51f-458c-aefa-bfa4d2d1fdd6
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6f83e852-b0b2-4bf1-8057-448776facaad
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ea1b556f-d77a-4134-8cbd-9ebb7db3a0f9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7d18fd18-a51f-458c-aefa-bfa4d2d1fdd6
+- praise_material_id: 6a274ff0-5ce6-4294-b70f-dabed4cd70a3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6f83e852-b0b2-4bf1-8057-448776facaad
+- praise_material_id: f70b9302-785d-4c8f-9b40-5eeded64b5e5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bf0254de-8131-4375-8474-25edc8e53209
+  song_title: 238 - EU VOU CANTAR
+- praise_material_id: f224e523-4861-40de-9b58-ad720bd059c5
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: bf0254de-8131-4375-8474-25edc8e53209
+  song_title: 239 - JESUS É A NOSSA VITÓRIA

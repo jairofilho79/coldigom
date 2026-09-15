@@ -1,0 +1,77 @@
+praise_id: b08bc611-c0c0-4eca-bee9-0fef51cdd355
+praise_name: Cantai alegremente a Deus
+praise_number: '229'
+praise_author: R.T.F.
+praise_rhythm: Fox Abafado
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAI ALEGREMENTE A DEUS,
+
+  CANTAI ALEGREMENTE A DEUS,
+
+  CANTAI ALEGREMENTE A DEUS,
+
+  CANTAI, CANTAI ALEGREMENTE A DEUS.
+
+
+  TOMAI O SALTÉRIO, O ADUFE,
+
+  A HARPA E O ALAÚDE,
+
+  TOCAI A TROMBETA,
+
+  É HORA DE SOLENIDADE.
+
+
+  CANTAI ALEGREMENTE A DEUS,
+
+  CANTAI ALEGREMENTE A DEUS,
+
+  CANTAI ALEGREMENTE A DEUS,
+
+  CANTAI, CANTAI ALEGREMENTE A DEUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 43574d0f-7667-4df8-9648-fdabb979c626
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 48d8f533-ad92-405a-b6db-b5d41e8aea9e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 141b2a22-474d-42ed-a1a3-912de5728baa
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dda83370-8a17-4a02-b8f9-6b792c5a02ae
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8e546f5d-73df-480b-9154-ad7580930430
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 141b2a22-474d-42ed-a1a3-912de5728baa
+- praise_material_id: 42079ef2-2c68-40d0-a7e5-d59a345f0183
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: dda83370-8a17-4a02-b8f9-6b792c5a02ae
+- praise_material_id: 2baba44b-d1f0-4291-93bb-930165321775
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 43574d0f-7667-4df8-9648-fdabb979c626
+  song_title: 229 - CANTAI ALEGREMENTE A DEUS
+- praise_material_id: 57c69e40-2012-40de-b8ae-3eb9718cad47
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 43574d0f-7667-4df8-9648-fdabb979c626
+  song_title: 230 - ESTA CANÇÃO
+- praise_material_id: ee0ebbd4-41c1-4850-b7ad-82df2f610749
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 43574d0f-7667-4df8-9648-fdabb979c626
+  song_title: 231 - TODO SER QUE TEM FÔLEGO

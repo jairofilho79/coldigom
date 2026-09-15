@@ -1,0 +1,65 @@
+praise_id: dfbbd172-ed42-4dac-b479-99d80529f4ae
+praise_name: Viver é tão lindo
+praise_number: 058
+praise_author: Jackson de Halley Fernandes Fontes
+praise_rhythm: Básico
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'VIVER É TÃO LINDO QUANDO SE TEM JESUS,
+
+  O MUNDO É TÃO PEQUENO
+
+  PARA O QUE EU TENHO EM MIM;
+
+  E O QUE EU TENHO
+
+  É BEM MAIOR QUE TUDO NA VIDA,
+
+  EU TENHO É JESUS.
+
+
+  VIVO A CANTAR, VIVO A SORRIR,
+
+  TUDO O QUE EU TENHO
+
+  JAMAIS SE ACABARÁ.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: fc8af267-d896-41d9-94be-0fc65af92d25
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7f807ce4-fb74-44c6-a639-0692a4765a2e
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a28196b7-fe61-4ae0-8df4-f0c0adca75af
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 909beafe-1715-4fcb-97b8-e2a2ec4a5f2a
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e9556916-ff02-47a6-ad2f-d6511992fed4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a28196b7-fe61-4ae0-8df4-f0c0adca75af
+- praise_material_id: 7fdf6703-26ec-42ca-b76d-44df488f6e54
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 909beafe-1715-4fcb-97b8-e2a2ec4a5f2a
+- praise_material_id: 72cdd110-1a1e-4ffd-9705-62698b17a246
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fc8af267-d896-41d9-94be-0fc65af92d25
+  song_title: 58 - VIVER É TÃO LINDO
+- praise_material_id: 2b559a48-a2cd-4190-b282-e6897fc2867d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: fc8af267-d896-41d9-94be-0fc65af92d25
+  song_title: 59 - O NOME DO MEU SENHOR!

@@ -1,0 +1,65 @@
+praise_id: 359d7041-2b1a-41c8-9ed9-7daa05d3d99e
+praise_name: No meu coração há um tesouro (Príncipe da Vida)
+praise_number: '037'
+praise_author: E.H.M.R.
+praise_rhythm: Marcha
+praise_tonality: Em
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'NO MEU CORAÇÃO HÁ UM TESOURO,
+
+  O MAIOR QUE POSSA EXISTIR;
+
+  A MELHOR COISA QUE FIZ FOI ENCONTRÁ-LO
+
+  POIS VIDA ETERNA ADQUIRI.
+
+
+  CANTAR 2X
+
+  PRINCIPE DA VIDA, PAI DA ETERNIDADE,
+
+  É O MEU TESOURO.
+
+  /FINAL
+
+  É O MEU JESUS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c3a7a99e-36d0-44d2-8ab5-a6c4a1bce638
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 45ad9149-e742-42e6-91f5-f9672fb895f9
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e2acba23-bc8a-420b-9eb4-68932618a891
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b2a58f20-26b8-407e-a841-decc7d2d0bfc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d1da106c-3fa0-4463-9956-35466f198cd9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: e2acba23-bc8a-420b-9eb4-68932618a891
+- praise_material_id: db49dd0d-a391-445c-9092-fc6e8a4dfb46
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: b2a58f20-26b8-407e-a841-decc7d2d0bfc
+- praise_material_id: 4d10bd04-0868-429c-9c16-a77d23f3c98a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c3a7a99e-36d0-44d2-8ab5-a6c4a1bce638
+  song_title: 37 - NO MEU CORAÇÃO HÁ UM TESOURO (PRÍNCIPE DA VIDA)
+- praise_material_id: c9779245-ba6e-419d-8e88-9c32c1be461f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c3a7a99e-36d0-44d2-8ab5-a6c4a1bce638
+  song_title: 38 - TENHO UM CORAÇÃO ALEGRE

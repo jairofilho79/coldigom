@@ -1,0 +1,53 @@
+praise_id: 7f8fd0d5-6896-44ca-a8b8-fd6247af4ef0
+praise_name: Um dia morreu o meu Jesus
+praise_number: 086
+praise_author: A.V.
+praise_rhythm: Toada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: "UM DIA MORREU O MEU JESUS\nNAQUELA CRUZ POR MIM,\nO SANGUE DERRAMADO\
+  \ \nLIMPOU OS MEUS PECADOS.\nEU VOU CANTAR, \nPORQUE JESUS ESTÁ AQUI.\n\n*CORO\n\
+  AGORA MEU JESUS VOU ADORAR,\nEU VOU CANTAR (EU VOU CANTAR)\nEU VOU LOUVAR COMO DAVI\n\
+  AO DERROTAR OS QUE QUERIAM O ATINGIR.\n/INSTRUMENTOS\n\nJESUS, EU QUERO A MINHA\
+  \ VIDA TE ENTREGAR\nE QUERO MAIS A TUA OBRA REALIZAR,\nSERVI-LO SEMPRE DE TODO O\
+  \ CORAÇÃO\nE SEMPRE EU CANTAREI ESTA CANÇÃO.\n\n*CORO 2X\nAGORA MEU JESUS VOU ADORAR,\n\
+  EU VOU CANTAR (EU VOU CANTAR)\nEU VOU LOUVAR COMO DAVI\nAO DERROTAR OS QUE QUERIAM\
+  \ O ATINGIR.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: a2cdbb19-db0d-4bd4-bb15-1dcf8b369a03
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 560e4d71-fa01-47de-a6f7-d094d73f34ce
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 07cb7a3b-e858-46ce-9f46-10d8b8efb54c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5eef9ef9-0eea-4bb6-ae99-6b36ed6e7888
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6b118165-f2f2-44f1-a7e4-3b6be48cab9d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 07cb7a3b-e858-46ce-9f46-10d8b8efb54c
+- praise_material_id: f8f58271-ec44-4bf1-860e-31a84cb14f58
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 5eef9ef9-0eea-4bb6-ae99-6b36ed6e7888
+- praise_material_id: c7a4d47f-e8ef-432c-8756-4016bdd832b0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a2cdbb19-db0d-4bd4-bb15-1dcf8b369a03
+  song_title: 85 - NESTE DIA ESPECIAL
+- praise_material_id: 6460600f-dbc9-4075-b2a6-47343e81ab57
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: a2cdbb19-db0d-4bd4-bb15-1dcf8b369a03
+  song_title: 86 - UM DIA MORREU O MEU JESUS

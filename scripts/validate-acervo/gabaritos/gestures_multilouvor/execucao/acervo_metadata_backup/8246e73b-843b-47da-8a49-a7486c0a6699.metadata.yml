@@ -1,0 +1,52 @@
+praise_id: 8246e73b-843b-47da-8a49-a7486c0a6699
+praise_name: Sei que sou amado do meu Salvador
+praise_number: '234'
+praise_author: C.M.V.C.S.
+praise_rhythm: Fox Abafado
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: "SEI QUE SOU AMADO \nDO MEU SALVADOR,\nSEI QUE ESTOU GUARDADO\nPELO\
+  \ SEU AMOR.\n\nDIA A DIA CAMINHANDO\nESTOU INDO A JERUSALÉM.\nSEGUINDO O MEU JESUS\
+  \ EU SEI\nQUE EM BREVE CHEGAREI.\n\nCORO\nSOU FELIZ COM MEU SENHOR,(2X)\nDIA A DIA\
+  \ CAMINHANDO\nESTOU, INDO A JERUSALÉM,\nSEGUINDO MEU JESUS,\nEU SEI QUE EM BREVE\
+  \ CHEGAREI.\n\nNAS MANSÕES CELESTIAIS IREI MORAR,\nCOM OS ANJOS DO SENHOR IREI CANTAR;\n\
+  SEU AMOR JESUS MOSTROU POR MIM,\nUM POBRE PECADOR, EM MEU LUGAR\nMORREU NA CRUZ,\
+  \ AGORA SALVO ESTOU.\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 61c9307b-cccf-44c7-aedc-92ecaea47c91
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 55582679-d778-483a-8318-837a429bc20c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6f21fd69-22e5-455e-9b59-f1294f735706
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a856b69c-4b7d-4063-bc79-fa0cec09cf4b
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6c8ee8b3-4bed-48a3-960d-3c29de1e99f7
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6f21fd69-22e5-455e-9b59-f1294f735706
+- praise_material_id: 69c97ca7-e1f1-4e43-aec5-69934eaf47a8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a856b69c-4b7d-4063-bc79-fa0cec09cf4b
+- praise_material_id: 0d832002-49ec-482b-a417-b753971c674c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 61c9307b-cccf-44c7-aedc-92ecaea47c91
+  song_title: 234 - SEI QUE SOU AMADO DO MEU SALVADOR
+- praise_material_id: 9801f115-18f5-49bb-afb7-a79309e24643
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 61c9307b-cccf-44c7-aedc-92ecaea47c91
+  song_title: 235 - SENHOR, EU TE LOUVAREI

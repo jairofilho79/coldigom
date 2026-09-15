@@ -1,0 +1,51 @@
+praise_id: d4a87c56-6f72-4bfe-a89c-a4fcd8a522b7
+praise_name: Quando falo com Deus
+praise_number: '017'
+praise_author: M.C.H.O.
+praise_rhythm: Novo
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: "QUANDO FALO COM DEUS, AS LÁGRIMAS CORREM,\nA SUA PRESENÇA ME ENVOLVE\
+  \ TÃO FORTE, \nEM PAZ ME DEITO, PEGO NO SONO,\nPOIS EM SEUS BRAÇOS EU DESCANSO;\n\
+  BEM CEDO ACORDO E ME LEVANTO,\nPOIS SEI QUE JESUS ME SUSTENTOU.\n/INSTRUMENTOS\n\
+  \nQUANDO FALO COM DEUS, A LUZ ME ENVOLVE,\nTRANSPORTO PARA ETERNIDADE,\nESTOU NO\
+  \ PLANO DE DEUS;\nPEÇO TODO DIA, AO MEU SENHOR\nQUE SALVE A MINHA FAMÍLIA\nPRA JUNTOS\
+  \ LOUVARMOS AO BOM PASTOR\nQUE CUIDA DE NÓS COM AMOR. (2X)\n"
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: ae82c907-85d8-4498-a721-98aa451083ca
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: edda2c77-bec0-42b6-81ea-8c7b37ce5c27
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c48d3c0c-0c75-4387-bd25-384110d6e052
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8bfda222-d92f-43ba-aabf-958710e15843
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0ef0571a-bcd7-414c-91a5-dd1324a1307b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c48d3c0c-0c75-4387-bd25-384110d6e052
+- praise_material_id: f18e7030-06e8-4164-9923-0028d339368e
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 8bfda222-d92f-43ba-aabf-958710e15843
+- praise_material_id: 1f7ae282-79ca-44b9-a6f0-3336afd79646
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ae82c907-85d8-4498-a721-98aa451083ca
+  song_title: 16- PAI CELESTE
+- praise_material_id: 9a296d84-2ff5-49a7-a09d-16f3f72fd6e8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: ae82c907-85d8-4498-a721-98aa451083ca
+  song_title: 17 - QUANDO FALO COM DEUS

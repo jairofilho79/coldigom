@@ -1,0 +1,66 @@
+praise_id: 599bf45a-050d-49f1-9fc0-5f539331e672
+praise_name: Com Cristo no barco
+praise_number: '131'
+praise_author: Mr. & Mrs. Seth Sykes
+praise_rhythm: Fox Abafado
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'COM CRISTO NO BARCO TUDO VAI MUITO BEM,
+
+  VAI MUITO BEM, VAI MUITO BEM,
+
+  COM CRISTO NO BARCO TUDO VAI MUITO BEM
+
+  E PASSA O TEMPORAL.
+
+
+  PASSA O TEMPORAL, PASSA O TEMPORAL;
+
+  COM CRISTO NO BARCO TUDO VAI MUITO BEM
+
+  E PASSA O TEMPORAL.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 228c5fa7-7a3d-4edb-aea9-4408513da201
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e52a1e69-c8a8-49fc-82a3-abf4ffc235bc
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d557bd06-00ff-4f46-bf25-422fff64630c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 17ea2584-905d-4215-8479-bf233aad725e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1ac262e2-e376-47c6-abb2-77da0d71dd0a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: d557bd06-00ff-4f46-bf25-422fff64630c
+- praise_material_id: d25f1de3-f1ce-4879-9cb6-48dd1f2de4d1
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 17ea2584-905d-4215-8479-bf233aad725e
+- praise_material_id: a55c72d1-fb99-4b41-94be-b59112b23d44
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 228c5fa7-7a3d-4edb-aea9-4408513da201
+  song_title: 130 - MEU BOM PASTOR É CRISTO
+- praise_material_id: 6f14bbf3-fb9d-433a-9035-5ec37b767a9b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 228c5fa7-7a3d-4edb-aea9-4408513da201
+  song_title: 131 - COM CRISTO NO BARCO
+- praise_material_id: bed7e8ad-25f5-4f98-b24a-80d46712b0fb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 228c5fa7-7a3d-4edb-aea9-4408513da201
+  song_title: 132 - MEU BARCO É PEQUENO

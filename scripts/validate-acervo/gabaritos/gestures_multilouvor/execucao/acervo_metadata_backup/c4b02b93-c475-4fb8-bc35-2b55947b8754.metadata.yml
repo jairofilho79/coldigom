@@ -1,0 +1,57 @@
+praise_id: c4b02b93-c475-4fb8-bc35-2b55947b8754
+praise_name: Entrega o teu caminho
+praise_number: '111'
+praise_author: C.M.V.
+praise_rhythm: Básico
+praise_tonality: Em
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'ENTREGA O TEU CAMINHO AO SENHOR,
+
+  CONFIA E O MAIS ELE FARÁ.
+
+  ALELUIA, ALELUIA, ALELUIA, AMÉM. (2X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 33a7e7cb-9cc0-4bcd-a5d0-d690f9812121
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6483761b-95ac-4327-98a6-fb2f0e21206c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: dd1353da-e196-4725-a6d2-6e7315effabe
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: aa73f698-3842-4593-8912-e2ab40230b9e
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3f481bad-3fba-4426-81c9-0abc1eb52d8a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: dd1353da-e196-4725-a6d2-6e7315effabe
+- praise_material_id: 4f844079-5e69-402c-b867-29aa83bf6ec5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: aa73f698-3842-4593-8912-e2ab40230b9e
+- praise_material_id: 8c27f472-0dea-4303-bda3-1506a8e6f890
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 33a7e7cb-9cc0-4bcd-a5d0-d690f9812121
+  song_title: 110 - EU TUDO POSSO NAQUELE QUE ME FORTALECE
+- praise_material_id: 2e57a0ae-ea0d-47ff-9518-775ffa6988f3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 33a7e7cb-9cc0-4bcd-a5d0-d690f9812121
+  song_title: 111 - ENTREGA O TEU CAMINHO
+- praise_material_id: 9817a164-e396-4e68-8111-0061ba36e353
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 33a7e7cb-9cc0-4bcd-a5d0-d690f9812121
+  song_title: 112 - CONSOLA-ME, ESPÍRITO SANTO

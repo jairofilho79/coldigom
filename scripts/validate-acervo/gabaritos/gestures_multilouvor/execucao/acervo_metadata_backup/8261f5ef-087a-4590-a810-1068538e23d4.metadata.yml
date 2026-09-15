@@ -1,0 +1,59 @@
+praise_id: 8261f5ef-087a-4590-a810-1068538e23d4
+praise_name: Sou feliz!
+praise_number: '043'
+praise_author: C.M.V.C.S.
+praise_rhythm: Fox
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  SOU FELIZ! TENHO JESUS EM MEU CORAÇÃO.
+
+  SOU FELIZ! ANDO EM SUA LUZ,
+
+  NÃO ESTAREI NA ESCURIDÃO.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: d9981eed-99a3-49ec-80ec-30c5e134219c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 070eb2a4-cf14-4b82-a2f4-5e4cb49e48b0
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 776588e2-5706-495c-8a52-e1166425456c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ea9ba6c6-bff4-4aff-841e-f4cff9b9ad07
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ecf3a813-493c-4109-ac3e-6e39529b77f5
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 776588e2-5706-495c-8a52-e1166425456c
+- praise_material_id: 0f01b7f7-6a83-4a5b-9821-299f01ae936d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: ea9ba6c6-bff4-4aff-841e-f4cff9b9ad07
+- praise_material_id: aedf3c2c-ce61-4466-9cbe-ace590bd80b0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d9981eed-99a3-49ec-80ec-30c5e134219c
+  song_title: 42 - MINHA VIDA E MEU CORAÇÃO
+- praise_material_id: f332c9d3-617b-4e21-a9aa-cc0c05d0ba34
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d9981eed-99a3-49ec-80ec-30c5e134219c
+  song_title: 43 - SOU FELIZ!
+- praise_material_id: fa27101f-ebe8-4749-aec5-7994cc9eae21
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: d9981eed-99a3-49ec-80ec-30c5e134219c
+  song_title: 44 - SOU SERVO DO SENHOR

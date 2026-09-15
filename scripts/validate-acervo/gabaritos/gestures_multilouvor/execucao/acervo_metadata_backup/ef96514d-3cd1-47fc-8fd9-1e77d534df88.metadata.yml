@@ -1,0 +1,60 @@
+praise_id: ef96514d-3cd1-47fc-8fd9-1e77d534df88
+praise_name: Há uma linda canção de amor
+praise_number: '057'
+praise_author: 'Let.: James P. Sullivan, Mus: Mildred Ellen Sullivan'
+praise_rhythm: Valsa
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HÁ UMA LINDA CANÇÃO DE AMOR
+
+  DENTRO DO MEU CORAÇÃO,
+
+  CRISTO ME DEU PLENA PAZ E PERDÃO,
+
+  OH!, EU SOU FELIZ!
+
+  OH!, EU SOU FELIZ, FELIZ! (2X)
+
+  CRISTO ME DEU PLENA PAZ E PERDÃO,
+
+  OH!, EU SOU FELIZ!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 9e0d2d51-a453-4b20-a489-efaf507b8fc8
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f09974b4-f1e4-4768-ae5f-2b0196ffa12b
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 4f6814bc-b260-49dd-8be3-dfb3358d0354
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9ec9061d-3926-422d-9935-3a06c75a46b0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 76c44769-7017-465c-bb7c-436172b71c3c
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 4f6814bc-b260-49dd-8be3-dfb3358d0354
+- praise_material_id: 1318130b-c9b4-4b47-9d10-5bfd4c591704
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 9ec9061d-3926-422d-9935-3a06c75a46b0
+- praise_material_id: 641c5328-330c-4acc-87db-bddb4a85ce3d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9e0d2d51-a453-4b20-a489-efaf507b8fc8
+  song_title: 56 - CRISTO É O SENHOR
+- praise_material_id: d4411380-d6cb-44a0-b0cc-22c05a798d1a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 9e0d2d51-a453-4b20-a489-efaf507b8fc8
+  song_title: 57 - HÁ UMA LINDA CANÇÃO DE AMOR

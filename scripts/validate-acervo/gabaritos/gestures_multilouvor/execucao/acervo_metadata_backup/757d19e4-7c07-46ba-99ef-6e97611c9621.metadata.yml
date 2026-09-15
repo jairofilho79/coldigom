@@ -1,0 +1,65 @@
+praise_id: 757d19e4-7c07-46ba-99ef-6e97611c9621
+praise_name: Perdoa-me, Senhor
+praise_number: '006'
+praise_author: J.J.G.
+praise_rhythm: Básico
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'PERDOA-ME, SENHOR,
+
+  CLAMO PELO SANGUE DE JESUS;
+
+  QUERO RENOVAR A MINHA COMUNHÃO.
+
+  PERDOA-ME, SENHOR,
+
+  QUERO DEPOSITAR O MEU CORAÇÃO
+
+  SEMPRE EM TEU ALTAR.
+
+
+  VISITA-ME COM O TEU ESPÍRITO
+
+  E FAZE-ME HABITAR
+
+  AO TEU LADO ETERNAMENTE!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 0e5db633-f983-48ff-a2db-e219e73c6b67
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 3bc21086-b210-4fc8-90af-d78163d64e9d
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ff917c69-1e7f-48e0-bc82-8befb1cdcde0
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: b3da331b-4e20-4f77-ada1-ff05e067a866
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6587f213-e77c-4c41-a1fc-7b2805142f52
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: ff917c69-1e7f-48e0-bc82-8befb1cdcde0
+- praise_material_id: 72899597-8e25-4272-aedb-8cf5ab3ae25a
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: b3da331b-4e20-4f77-ada1-ff05e067a866
+- praise_material_id: 397413ce-24f6-4739-a36f-b2a1974a7bd3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0e5db633-f983-48ff-a2db-e219e73c6b67
+  song_title: 06 - PERDOA-ME SENHOR
+- praise_material_id: f2cf6a4c-12a4-4718-92a2-10148c987993
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 0e5db633-f983-48ff-a2db-e219e73c6b67
+  song_title: 07 - É TEU SANGUE, MEU SENHOR JESUS

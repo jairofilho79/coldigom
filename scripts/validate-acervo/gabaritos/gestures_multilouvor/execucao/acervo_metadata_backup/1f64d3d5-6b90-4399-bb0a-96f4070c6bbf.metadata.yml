@@ -1,0 +1,74 @@
+praise_id: 1f64d3d5-6b90-4399-bb0a-96f4070c6bbf
+praise_name: Príncipe da paz
+praise_number: '032'
+praise_author: C.M.V.
+praise_rhythm: Balada
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'PRÍNCIPE DA PAZ, QUERO TE AMAR,
+
+  TEUS MANDAMENTOS, SIM, TODOS GUARDAR;
+
+  Ó DEUS, VEM AJUDAR-ME
+
+  A FAZER TUA VONTADE
+
+  E EM TUDO TEU NOME LOUVAR.
+
+
+  JESUS REDENTOR, QUERO TE ADORAR
+
+  EM ESPÍRITO E EM VERDADE;
+
+  Ó DEUS, VEM ENSINAR-ME
+
+  A LOUVAR TUA GRANDEZA
+
+  E BENDIZER TEU NOME,
+
+  Ó SENHOR!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 968027de-9c79-4f31-9207-d1e12c00a2bf
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a53b9172-a95d-4918-aa47-f666df02da39
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f7641154-6ff8-45e3-bfaa-b4cdc5ccc174
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a7cd79c7-ae6b-4f73-8949-39ef4753422b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 507dd141-1bab-46bc-b954-2bb892c2e40c
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: f7641154-6ff8-45e3-bfaa-b4cdc5ccc174
+- praise_material_id: fe55f6a4-0bb0-45d7-8991-8813f8015743
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: a7cd79c7-ae6b-4f73-8949-39ef4753422b
+- praise_material_id: 5304fb92-829f-44c8-be79-4fc50e9fb5bb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 968027de-9c79-4f31-9207-d1e12c00a2bf
+  song_title: 31 - EU QUERO SER O SAL DA TERRA
+- praise_material_id: 3e272afe-1c2a-47d3-bb12-552d40db0773
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 968027de-9c79-4f31-9207-d1e12c00a2bf
+  song_title: 32 - PRÍNCIPE DA PAZ
+- praise_material_id: 629bcc8f-1a94-4f1c-9905-ad68260a16fd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 968027de-9c79-4f31-9207-d1e12c00a2bf
+  song_title: 33 - CRISTO, MEU BOM MESTRE

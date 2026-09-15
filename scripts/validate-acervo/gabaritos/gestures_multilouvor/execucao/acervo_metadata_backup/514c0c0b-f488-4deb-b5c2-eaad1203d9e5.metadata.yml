@@ -1,0 +1,78 @@
+praise_id: 514c0c0b-f488-4deb-b5c2-eaad1203d9e5
+praise_name: Tu és pra mim um vaso escolhido
+praise_number: '161'
+praise_author: E.H.M.R.
+praise_rhythm: Valseado
+praise_tonality: A
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'TU ÉS PRA MIM UM VASO ESCOLHIDO,
+
+  TU ÉS PRA MIM UM VASO DE VALOR.
+
+  EU TE CHAMEI PARA SALVAR TUA VIDA,
+
+  EU SOU JESUS, O TEU SENHOR.
+
+
+  TU ÉS PRA MIM UM VASO ESCOLHIDO,
+
+  TU ÉS PRA MIM UM VASO DE VALOR.
+
+  PARA LEVAR MEU NOME A TANTAS GENTES
+
+  E TESTEMUNHAR DO MEU AMOR.
+
+
+  *CORO 2X
+
+  VAI, FALA E ANUNCIA
+
+  JESUS QUER O HOMEM TRANSFORMAR.
+
+  OS DIAS PASSAM, O TEMPO FINDA,
+
+  JESUS TEM PRESSA E VAI VOLTAR!
+
+  /FINAL
+
+  JESUS TEM PRESSA E VAI VOLTAR!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 75102754-4410-412e-875d-311fc7a2f7dd
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1c9c3039-054c-4664-9c2d-72f6a04dcfd3
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 21d12fff-62cd-430b-aa65-3391141b6c2d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 983eb92c-e134-4af3-84e0-10f88f3ac349
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8735e0fa-99ad-4c50-b95f-714a70c58add
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 21d12fff-62cd-430b-aa65-3391141b6c2d
+- praise_material_id: c8962213-a304-456d-8837-6a3d06148269
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 983eb92c-e134-4af3-84e0-10f88f3ac349
+- praise_material_id: a660e0e9-0167-4dad-8256-c56f87b96a6d
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 75102754-4410-412e-875d-311fc7a2f7dd
+  song_title: 160 - EXISTEM SEGREDOS NA TUA PALAVRA
+- praise_material_id: a0daf140-c997-47e2-9ece-324f7e52d7f0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 75102754-4410-412e-875d-311fc7a2f7dd
+  song_title: 161 - TU ÉS PRA MIM UM VASO ESCOLHIDO

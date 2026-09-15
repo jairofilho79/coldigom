@@ -1,0 +1,81 @@
+praise_id: 06ed4828-4630-4d48-8e45-d900158d7a36
+praise_name: Senhor, Deus tu és varão de guerra
+praise_number: '236'
+praise_author: E.A.JR.
+praise_rhythm: Repique
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'SENHOR DEUS,
+
+  TU ÉS VARÃO DE GUERRA
+
+  E VENCE AS BATALHAS POR NÓS,
+
+  O SOL DETÉNS SE NECESSIDADE IMPERA
+
+  E TUDO OUVE A TUA VOZ.
+
+
+  NÃO HÁ INIMIGO PODEROSO.
+
+  MAJESTOSO TU ÉS, DEUS FORTE, VITORIOSO,
+
+  E TUDO ESTÁ AOS TEUS PÉS.
+
+
+  SENHOR DEUS,
+
+  TU ÉS VARÃO DE GUERRA
+
+  E VENCE AS BATALHAS POR NÓS,
+
+  O SOL DETÉNS SE NECESSIDADE IMPERA
+
+  E TUDO OUVE A TUA VOZ.
+
+
+  NÃO HÁ INIMIGO PODEROSO.
+
+  MAJESTOSO TU ÉS, DEUS FORTE, VITORIOSO,
+
+  E TUDO ESTÁ AOS TEUS PÉS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 13733c76-9b47-481d-8f0d-75bd3907ca98
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 51ae2d18-3445-4bc2-9056-5150160d140d
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6e25fdcb-05b9-48cc-93e6-e3c2de01e0b8
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1b0a363d-ed0e-4fce-8860-4de6e724b6a9
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 53fa03f6-a104-42ed-b8ad-399a2bd85385
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 6e25fdcb-05b9-48cc-93e6-e3c2de01e0b8
+- praise_material_id: 19292005-a00c-4630-97d8-8733492dadb5
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 1b0a363d-ed0e-4fce-8860-4de6e724b6a9
+- praise_material_id: 03484e37-810e-410d-af7a-f267c242bc8b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 13733c76-9b47-481d-8f0d-75bd3907ca98
+  song_title: 236 - SENHOR DEUS, TU ÉS VARÃO DE GUERRA
+- praise_material_id: 58cea2f0-b424-4f99-92eb-ae3890d4fba3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 13733c76-9b47-481d-8f0d-75bd3907ca98
+  song_title: 237 - MUITOS MOTIVOS TENHO

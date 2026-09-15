@@ -1,0 +1,68 @@
+praise_id: 89d51e1d-d80f-4177-8765-001c56405a86
+praise_name: Minha vida e meu coração
+praise_number: '042'
+praise_author: C.M.V.C.S.
+praise_rhythm: Fox
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'MINHA VIDA E MEU CORAÇÃO PERTENCEM A JESUS,
+
+  DIA A DIA EM MEU VIVER VOU ANDAR EM SUA LUZ.
+
+  À PALAVRA VOU OBEDECER,
+
+  COM AMOR TESTEMUNHAR.
+
+
+  E PRA SEMPRE, SEMPRE O LOUVAREI,
+
+  NA ETERNIDADE EU VOU MORAR.
+
+  E PRA SEMPRE, SEMPRE O LOUVAREI,
+
+  NA ETERNIDADE EU VOU MORAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 67b3a4de-6982-47df-a883-41da2e26b01c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2f239d49-fc56-4e54-b51a-f569610ce717
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9994b983-1616-446e-812a-458b17deafed
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7209c1ea-c459-4cb7-b0d7-877350f8557d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 0d15b628-4e8b-4ca2-a08d-3ca506189230
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 9994b983-1616-446e-812a-458b17deafed
+- praise_material_id: 1b4913a4-fd97-4a48-9071-2560786d7c50
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 7209c1ea-c459-4cb7-b0d7-877350f8557d
+- praise_material_id: dd9f691b-30d3-4d04-aeb7-a7e8d210d547
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 67b3a4de-6982-47df-a883-41da2e26b01c
+  song_title: 42 - MINHA VIDA E MEU CORAÇÃO
+- praise_material_id: 07b8ccea-30f2-4aac-9e02-cec1db558f3e
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 67b3a4de-6982-47df-a883-41da2e26b01c
+  song_title: 43 - SOU FELIZ!
+- praise_material_id: 757aee3f-d429-472c-8292-8915b7333b3c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 67b3a4de-6982-47df-a883-41da2e26b01c
+  song_title: 44 - SOU SERVO DO SENHOR

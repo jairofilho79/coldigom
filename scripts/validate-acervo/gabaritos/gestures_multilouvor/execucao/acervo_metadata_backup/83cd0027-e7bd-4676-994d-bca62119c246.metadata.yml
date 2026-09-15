@@ -1,0 +1,72 @@
+praise_id: 83cd0027-e7bd-4676-994d-bca62119c246
+praise_name: Há uma igreja que aguarda o Senhor
+praise_number: '193'
+praise_author: M.M.F.
+praise_rhythm: Fox Abafado
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'HÁ UMA IGREJA QUE AGUARDA O SENHOR,
+
+  POIS CONFIA NO SEU GRANDE AMOR
+
+  QUE JESUS POR NÓS DEMONSTROU:
+
+  POR NOSSA VIDA UM PREÇO PAGOU!
+
+
+  CORO
+
+  VEM, SENHOR, TUA IGREJA TE ESPERA, (2X)
+
+  AGUARDAMOS A TUA PROMESSA.
+
+  VEM, SENHOR, TUA IGREJA TE ESPERA.
+
+
+  QUANDO CRISTO NAS NUVENS VOLTAR
+
+  E AOS CÉUS SUA IGREJA LEVAR,
+
+  QUE ALEGRIA ENTÃO SENTIREMOS
+
+  POIS COM ELE PRA SEMPRE ESTAREMOS.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 2e63510b-7230-463f-8495-8ebb2d581330
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 37939df5-53b8-4775-b5b9-981467c3c6ea
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 7dec22e2-9916-4e31-8ce1-416ceeb024ed
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 5da45211-de62-459a-b84e-c8891792ebf0
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 25e01000-3b3a-40a1-90f6-737d2c012195
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 7dec22e2-9916-4e31-8ce1-416ceeb024ed
+- praise_material_id: f8e3570e-005c-409e-a349-f2a2a11027be
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 5da45211-de62-459a-b84e-c8891792ebf0
+- praise_material_id: 6137e73f-ea1e-4689-bca1-a5531cc1837a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2e63510b-7230-463f-8495-8ebb2d581330
+  song_title: 193 - HÁ UMA IGREJA
+- praise_material_id: 31ad81aa-6ccd-4528-b525-c1cc70194d51
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 2e63510b-7230-463f-8495-8ebb2d581330
+  song_title: 194 - NA NOVA JERUSALÉM

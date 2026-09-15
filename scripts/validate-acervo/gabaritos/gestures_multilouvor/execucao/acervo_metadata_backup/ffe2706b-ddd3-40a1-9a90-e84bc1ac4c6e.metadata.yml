@@ -1,0 +1,61 @@
+praise_id: ffe2706b-ddd3-40a1-9a90-e84bc1ac4c6e
+praise_name: Meu bom pastor é Cristo
+praise_number: '130'
+praise_author: Autor Desconhecido
+praise_rhythm: Valseado
+praise_tonality: G
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'MEU BOM PASTOR É CRISTO,
+
+  COM ELE ANDAREI;
+
+  CONDUZ-ME ÀS CALMAS ÁGUAS,
+
+  COM ELE ANDAREI,
+
+  SEMPRE, SEMPRE COM ELE ANDAREI. (2X)
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: c5359693-da30-4689-90c2-9f973bbe51fb
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: ad7732c3-b392-4216-9727-1d0685184f17
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 32e592b0-5ef4-474d-a673-a10850cb8b92
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1c2903ab-5ace-4b8b-8bc7-555d8edf4703
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 1f4d192b-25c2-4368-971a-cd807c275163
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: 32e592b0-5ef4-474d-a673-a10850cb8b92
+- praise_material_id: d4cabb8e-aae9-46ca-b1c1-04f51b67c5be
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 1c2903ab-5ace-4b8b-8bc7-555d8edf4703
+- praise_material_id: ca18219f-d3d2-46af-a37d-870bd37e5c0c
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5359693-da30-4689-90c2-9f973bbe51fb
+  song_title: 130 - MEU BOM PASTOR É CRISTO
+- praise_material_id: d9dc7f82-ceae-4a74-b2df-bd2f2bc00e89
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5359693-da30-4689-90c2-9f973bbe51fb
+  song_title: 131 - COM CRISTO NO BARCO
+- praise_material_id: 92f75673-149d-40b5-a0ca-8784ba2eeb08
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: c5359693-da30-4689-90c2-9f973bbe51fb
+  song_title: 132 - MEU BARCO É PEQUENO

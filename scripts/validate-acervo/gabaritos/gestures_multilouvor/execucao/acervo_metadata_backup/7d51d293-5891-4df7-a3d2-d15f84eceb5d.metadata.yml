@@ -1,0 +1,83 @@
+praise_id: 7d51d293-5891-4df7-a3d2-d15f84eceb5d
+praise_name: Brilhando, brilhando
+praise_number: '166'
+praise_author: C.M.V.C.S.
+praise_rhythm: Marcha
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'BRILHANDO, BRILHANDO,
+
+  MINHA CANDEIA SEMPRE ESTÁ BRILHANDO.
+
+  BRILHANDO, BRILHANDO,
+
+  BRILHANDO ATÉ JESUS VOLTAR.
+
+
+  NÃO FALTARÁ O ÓLEO DO ESPÍRITO,
+
+  MINHA CANDEIA SEMPRE CHEIA FICARÁ,
+
+  PORQUE JESUS NOS DEU SUA PROMESSA
+
+  QUE SEU ESPÍRITO CONOSCO ESTARÁ.
+
+
+  E SE VOCÊ QUISER TAMBÉM BRILHAR,
+
+  É SÓ ABRIR SEU CORAÇÃO
+
+  E DEIXAR CRISTO NELE ENTRAR
+
+  E ASSIM VOCÊ SEMPRE ESTARÁ.
+
+
+  FINAL
+
+  BRILHANDO, BRILHANDO,
+
+  MINHA CANDEIA SEMPRE ESTÁ BRILHANDO.
+
+  BRILHANDO, BRILHANDO,
+
+  BRILHANDO ATÉ JESUS VOLTAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 79b39f30-282f-4122-ab7b-25dea337b956
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bc098ef3-52fd-45cb-bd71-ee60d937faff
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: f1636dac-aa8c-4565-bf48-ca6408c960dd
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 6a792376-6b38-48b4-8a00-ca2ab2623ca4
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 60117bcd-7d4e-4769-8a73-d8e30729e49b
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: f1636dac-aa8c-4565-bf48-ca6408c960dd
+- praise_material_id: 2e051acc-a51b-435b-808c-51f1a691c352
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 6a792376-6b38-48b4-8a00-ca2ab2623ca4
+- praise_material_id: a0884d08-e1a3-4081-a4eb-0016134aa2ca
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 79b39f30-282f-4122-ab7b-25dea337b956
+  song_title: 165 - QUERO SER SANTO PARA O SENHOR
+- praise_material_id: 3345032f-8c1e-4d04-9bcc-94f51d60aff7
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 79b39f30-282f-4122-ab7b-25dea337b956
+  song_title: 166 - BRILHANDO, BRILHANDO

@@ -1,0 +1,69 @@
+praise_id: 01cd300a-558c-4498-b301-d0139bc15467
+praise_name: Como uma folha ao vento
+praise_number: '142'
+praise_author: M.L.M.B.O.
+praise_rhythm: Balada
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'COMO UMA FOLHA AO VENTO
+
+  VOA PRA LÁ E PRA CÁ,
+
+  EU TAMBÉM QUERO ESTAR
+
+  AONDE O ESPÍRITO SANTO MANDAR.
+
+
+  NÃO FAÇO MAIS O QUE EU QUERO,
+
+  MAS O QUE DEUS REVELAR;
+
+  COMO UMA FOLHA AO VENTO,
+
+  VOANDO VAI SEMPRE ONDE O VENTO SOPRAR,
+
+  /FINAL 2X
+
+  EU TAMBÉM QUERO ESTAR
+
+  AONDE O ESPÍRITO SANTO MANDAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: f6fd3783-db89-4109-a723-89d4ecea47db
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 8dcbad6d-4455-488f-a17f-3c99be8cc57c
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 2da1541c-3c54-4db5-b10d-b7252bcbe478
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: e0a672a0-be7c-4d61-aa22-15400af28274
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: da713d5f-ae8a-4006-996e-7149641c4c31
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 2da1541c-3c54-4db5-b10d-b7252bcbe478
+- praise_material_id: d99d396f-3159-4e04-ae86-b39e994823c3
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: e0a672a0-be7c-4d61-aa22-15400af28274
+- praise_material_id: b286ef48-57f9-4328-a65a-2ad7c615d549
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f6fd3783-db89-4109-a723-89d4ecea47db
+  song_title: 141 - QUEM IRÁ? (PRECIOSA SEMENTE)
+- praise_material_id: f93ebaa4-f4ef-426d-ad5e-18f3bc9e2666
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: f6fd3783-db89-4109-a723-89d4ecea47db
+  song_title: 142 - COMO UMA FOLHA AO VENTO

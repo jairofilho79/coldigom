@@ -1,0 +1,93 @@
+praise_id: e64c9ae6-9ac0-4377-b331-bbab82e9dfa3
+praise_name: Eis-me aqui, Senhor, em teu altar
+praise_number: '051'
+praise_author: Adriana Gomes Pereira Muniz
+praise_rhythm: Básico
+praise_tonality: E
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CANTAR 2X
+
+  EIS-ME AQUI, SENHOR, EM TEU ALTAR,
+
+  EIS-ME AQUI, SENHOR, PRONTO A TE ADORAR.
+
+
+  CANTAR 2X
+
+  SEI QUE A PRESENÇA DO SENHOR JESUS
+
+  NÃO FALHARÁ,
+
+  SEI QUE TU ESTÁS AQUI,
+
+  PRONTO A ABENÇOAR.
+
+  /INSTRUMENTOS
+
+
+  SANTO E GLORIOSO ÉS, CONOSCO ESTÁS,
+
+  SANTO E GLORIOSO, VIMOS TE ADORAR,
+
+  SANTO E GLORIOSO ÉS, Ó NOSSO AMADO,
+
+  DO TEU ESPÍRITO TENS DERRAMADO,
+
+  DANDO RENOVO E TRANSFORMANDO;
+
+  SANTO E GLORIOSO ÉS,
+
+  VEM EM NÓS TRANSBORDAR,
+
+  Ó SANTO ESPÍRITO, TOMA O TEU LUGAR.
+
+
+  FINAL 2X
+
+  SEI QUE A PRESENÇA DO SENHOR JESUS
+
+  NÃO FALHARÁ,
+
+  SEI QUE TU ESTÁS AQUI,
+
+  PRONTO A ABENÇOAR.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b08cb50b-7066-47a4-91b0-8de766544d84
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: bde13dfc-32cd-4615-b244-3561e0d5aa06
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: eccdb0ca-0b9e-4a42-9f7c-d815984d391d
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: c0e52822-f816-48a2-bd7c-c04f6c0c352d
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 71eb959c-d694-444b-acd5-efcfffd51a12
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: eccdb0ca-0b9e-4a42-9f7c-d815984d391d
+- praise_material_id: 9dd6ba78-0acd-45e5-a3a7-aad438eb2f27
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: c0e52822-f816-48a2-bd7c-c04f6c0c352d
+- praise_material_id: 9aab419e-f0bd-499f-98b2-cce8b55d4998
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b08cb50b-7066-47a4-91b0-8de766544d84
+  song_title: 50 - DO ALTO CÉU
+- praise_material_id: b0f2a410-9a99-4317-8b1a-17b95eae8a2b
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b08cb50b-7066-47a4-91b0-8de766544d84
+  song_title: 51 - EIS-ME AQUI, SENHOR, EM TEU ALTAR

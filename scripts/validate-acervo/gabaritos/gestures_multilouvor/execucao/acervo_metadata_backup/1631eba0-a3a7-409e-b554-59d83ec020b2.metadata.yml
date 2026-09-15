@@ -1,0 +1,68 @@
+praise_id: 1631eba0-a3a7-409e-b554-59d83ec020b2
+praise_name: Jesus cura e salva
+praise_number: 092
+praise_author: K.V.L.
+praise_rhythm: Básico
+praise_tonality: D
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'JESUS CURA E SALVA,
+
+  JESUS É O MEU SALVADOR;
+
+  JESUS É O MEU AMIGO,
+
+  E ELE É O MEU REDENTOR.
+
+
+  CANTAR 2X
+
+  QUANDO ESTOU DOENTE, CURA ELE DÁ.
+
+  QUANDO ESTOU TRISTE, A PAZ VEM REINAR.
+
+
+  FINAL 2X
+
+  JESUS É FORÇA E ESPERANÇA!
+
+  JESUS É O PRÍNCIPE DA PAZ!
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: b69b7a85-e2e2-413c-9aaf-686025eb4ace
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d1496772-4aa5-4ff3-83a0-d75675c9d14f
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9b046d0d-0e7d-4336-a8e5-576fea415fb8
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: cc310513-0b95-490f-8ef8-c9457ffe87ab
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a7480fbd-39d9-4238-a187-0f98c3c4cb48
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: 9b046d0d-0e7d-4336-a8e5-576fea415fb8
+- praise_material_id: 30829ff6-c34d-4fda-8d76-badbd1d459dc
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: cc310513-0b95-490f-8ef8-c9457ffe87ab
+- praise_material_id: 94299d13-68e3-4006-8deb-244453925387
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b69b7a85-e2e2-413c-9aaf-686025eb4ace
+  song_title: 91 - TENHO ALGO PRA VOCÊ
+- praise_material_id: 9eb365b4-e42d-418d-9579-f59fee00153f
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: b69b7a85-e2e2-413c-9aaf-686025eb4ace
+  song_title: 92 - JESUS CURA E SALVA

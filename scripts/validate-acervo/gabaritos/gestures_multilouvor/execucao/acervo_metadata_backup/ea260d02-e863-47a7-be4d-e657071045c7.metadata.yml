@@ -1,0 +1,78 @@
+praise_id: ea260d02-e863-47a7-be4d-e657071045c7
+praise_name: E tudo posso naquele que me fortalece
+praise_number: '110'
+praise_author: C.M.V.
+praise_rhythm: Marcha
+praise_tonality: C
+praise_category: Crianças e Adolescentes
+praise_lyrics: 'CORO 2X
+
+  EU TUDO POSSO
+
+  NAQUELE QUE ME FORTALECE.
+
+
+  CANTAR 2X
+
+  EU VÔO COMO UMA ÁGUIA,
+
+  EU CRUZO MONTANHAS E VALES.
+
+
+  CANTAR 2X
+
+  EU VENÇO GIGANTES, EU VENÇO LEÕES,
+
+  EU VENÇO OS LOBOS DO MUNDO.
+
+
+  CANTAR 2X
+
+  EU CREIO NUM DEUS QUE VIVE E REINA,
+
+  EU CREIO NUM DEUS QUE VENCE POR MIM.
+
+  '
+praise_tags:
+- f38126d1-bebc-4906-99b4-edd2cba2f3ca
+- c113296e-a8f6-4f07-83ba-f055c125542f
+praise_materiais:
+- praise_material_id: 974aa73c-3596-46cc-bc33-a3fe248e03c0
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 9801f36a-b507-4323-88e1-422d33bbabbd
+  material_kind: 36fa6e60-37d6-40a4-87e4-aa099839ad25
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: a382a31a-1343-460f-bbd5-5a90e001d404
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: d5f15fcd-98e7-4a7e-acc8-60797299fa50
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: pdf
+  file_path_legacy: ''
+- praise_material_id: 98c91c93-9fa4-4eb5-974b-b8caf3548ec1
+  material_kind: 27e39659-b4a0-4ef2-87f4-546fe292298d
+  type: chord
+  source_material_id: a382a31a-1343-460f-bbd5-5a90e001d404
+- praise_material_id: 0440bf1f-1608-467c-a860-59f82270d377
+  material_kind: 5a9d9ced-a5e3-4848-adac-f02a14b56038
+  type: chord
+  source_material_id: d5f15fcd-98e7-4a7e-acc8-60797299fa50
+- praise_material_id: 890c092a-0d9d-4fc3-b58c-5cd30e0f52a3
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 974aa73c-3596-46cc-bc33-a3fe248e03c0
+  song_title: 110 - EU TUDO POSSO NAQUELE QUE ME FORTALECE
+- praise_material_id: 579d2866-ef0f-4cb4-9c07-7f4211463460
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 974aa73c-3596-46cc-bc33-a3fe248e03c0
+  song_title: 111 - ENTREGA O TEU CAMINHO
+- praise_material_id: bbac0fe0-bb07-4f9b-9c60-90558ccb535a
+  material_kind: 4a21d073-1726-41a3-bca7-77550f91e02a
+  type: gestures
+  source_material_id: 974aa73c-3596-46cc-bc33-a3fe248e03c0
+  song_title: 112 - CONSOLA-ME, ESPÍRITO SANTO

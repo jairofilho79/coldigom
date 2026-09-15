@@ -45,6 +45,9 @@ FASE_DA_ACAO = {
     "set_material_kind": "Fase 2",
     "move_material": "Fase 3B",
     "set_group_id": "Fase 7",
+    "link_plpcg": "Fase C da migração PLPCG",
+    "import_plpcg_material": "Fase C da migração PLPCG",
+    "create_praise_plpcg": "Fase C da migração PLPCG",
 }
 
 

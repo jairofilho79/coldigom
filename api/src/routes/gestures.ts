@@ -254,6 +254,44 @@ export function registerGesturesRoutes(app: App): void {
     }
   });
 
+  // PUT …/:id/videos/:materialId — liga o gesto a um vídeo youtube de um louvor e
+  // substitui as ocorrências do par pelo que veio. `seconds: []` só liga (uma
+  // linha com seconds NULL); tempos apagam a nula. Tudo num batch com o bump.
+  app.put('/api/gestures/dictionary/:id/videos/:materialId', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const materialId = c.req.param('materialId') as string;
+    const body = (await c.req.json().catch(() => null)) as { seconds?: unknown } | null;
+    if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+    const seconds = body.seconds;
+    if (!Array.isArray(seconds) || !seconds.every((s) => Number.isInteger(s) && (s as number) >= 0)) {
+      return c.json({ error: "Field 'seconds' must be an array of non-negative integers" }, 400);
+    }
+    const tempos = [...new Set(seconds as number[])].sort((a, b) => a - b);
+
+    try {
+      const linha = await lerLinha(c.env.DB, id);
+      if (!linha) return c.json({ error: 'Gesture not found' }, 404);
+      const material = await c.env.DB
+        .prepare(`SELECT id, type FROM praise_materials WHERE id = ?`)
+        .bind(materialId)
+        .first<{ id: string; type: string }>();
+      if (!material) return c.json({ error: 'Material not found' }, 404);
+      if (material.type !== 'youtube') return c.json({ error: 'Material is not a youtube video' }, 400);
+
+      const valores: (number | null)[] = tempos.length ? tempos : [null];
+      await escreverNoDicionario(c.env.DB, [
+        c.env.DB.prepare(`DELETE FROM gesture_video_occurrences WHERE gesture_id = ? AND material_id = ?`).bind(id, materialId),
+        ...valores.map((s) =>
+          c.env.DB.prepare(`INSERT INTO gesture_video_occurrences (gesture_id, material_id, seconds) VALUES (?, ?, ?)`).bind(id, materialId, s)
+        ),
+      ]);
+      return c.json({ data: linhaParaEntrada(linha, await videosDoGesto(c.env.DB, id)) });
+    } catch (error) {
+      console.error('Error linking gesture video:', error);
+      return c.json({ error: 'Failed to link gesture video' }, 500);
+    }
+  });
+
   // POST …/:id/replace-with — funde dois gestos: o de origem vira 'deprecated' com
   // replaced_by, SEMPRE e no batch. Reescrever os documentos é faxina opcional: a
   // resolução de alias já é do cliente, e reescrever N objetos no R2 numa

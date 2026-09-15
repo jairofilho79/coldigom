@@ -149,3 +149,60 @@ describe('PATCH e image devolvem videos', () => {
     expect(data.videos).toEqual(VIDEOS_ESPERADOS);
   });
 });
+
+describe('PUT /api/gestures/dictionary/:id/videos/:materialId', () => {
+  async function ligar(corpo: unknown, opts: Parameters<typeof banco>[0] = {}, materialId = 'y1') {
+    const { db, lotes } = banco(opts);
+    const res = await app.request(
+      `/api/gestures/dictionary/c687580e7682/videos/${materialId}`,
+      { method: 'PUT', headers: await sessao(), body: JSON.stringify(corpo) },
+      env(db)
+    );
+    return { res, lotes };
+  }
+
+  it('exige sessão', async () => {
+    const res = await app.request('/api/gestures/dictionary/c687580e7682/videos/y1', { method: 'PUT', headers: { origin: ORIGEM, 'content-type': 'application/json' }, body: '{"seconds":[]}' }, env(banco().db));
+    expect(res.status).toBe(401);
+  });
+
+  it('seconds vazio liga o par com uma linha nula, num batch com o bump', async () => {
+    const { res, lotes } = await ligar({ seconds: [] });
+    expect(res.status).toBe(200);
+    expect(lotes).toHaveLength(1);
+    const [apaga, insere] = lotes[0];
+    expect(apaga.sql).toMatch(/DELETE FROM gesture_video_occurrences WHERE gesture_id = \? AND material_id = \?/);
+    expect(apaga.args).toEqual(['c687580e7682', 'y1']);
+    expect(insere.sql).toMatch(/INSERT INTO gesture_video_occurrences \(gesture_id, material_id, seconds\) VALUES \(\?, \?, \?\)/);
+    expect(insere.args).toEqual(['c687580e7682', 'y1', null]);
+    bumpNoFim(lotes[0]);
+  });
+
+  it('tempos são deduplicados, ordenados e gravados um por linha; a resposta traz a entrada com videos', async () => {
+    const { res, lotes } = await ligar({ seconds: [141, 83, 83] }, { ocorrencias: OCORRENCIAS });
+    expect(res.status).toBe(200);
+    const inserts = lotes[0].filter((s) => s.sql.startsWith('INSERT'));
+    expect(inserts.map((s) => s.args[2])).toEqual([83, 141]);
+    const { data } = (await res.json()) as { data: { id: string; videos: unknown } };
+    expect(data.id).toBe('c687580e7682');
+    expect(data.videos).toEqual(VIDEOS_ESPERADOS);
+  });
+
+  it('404 para gesto e material inexistentes; 400 para material que não é youtube', async () => {
+    expect((await ligar({ seconds: [] }, { linhas: [] })).res.status).toBe(404);
+    expect((await ligar({ seconds: [] }, {}, 'nao-existe')).res.status).toBe(404);
+    const pdf = await ligar({ seconds: [] }, { materiais: [{ id: 'y1', type: 'pdf', url: null }] });
+    expect(pdf.res.status).toBe(400);
+    expect(((await pdf.res.json()) as { error: string }).error).toBe('Material is not a youtube video');
+    expect(pdf.lotes).toHaveLength(0);
+  });
+
+  it('400 para seconds ausente, não lista, negativo ou não inteiro', async () => {
+    for (const corpo of [{}, { seconds: 'x' }, { seconds: [-1] }, { seconds: [1.5] }, { seconds: ['1'] }]) {
+      const { res, lotes } = await ligar(corpo);
+      expect(res.status).toBe(400);
+      expect(lotes).toHaveLength(0);
+    }
+    expect((await ligar('nao é json')).res.status).toBe(400);
+  });
+});

@@ -26,7 +26,7 @@ type Linha = Record<string, unknown>;
 /** D1 falso que guarda cada SQL com os bindings e responde por trecho do SQL. */
 function dbFila(opts: { linhas?: Linha[]; total?: number; changes?: number; depois?: Linha | null } = {}) {
   const chamadas: { sql: string; bindings: unknown[] }[] = [];
-  const stmt = (sql: string, bindings: unknown[]) => ({
+  const stmt = (sql: string, _bindings: unknown[]) => ({
     all: vi.fn(async () => ({ results: opts.linhas ?? [] })),
     first: vi.fn(async () => {
       if (sql.includes('COUNT(*)')) return { total: opts.total ?? (opts.linhas?.length ?? 0) };

@@ -3,7 +3,8 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
-import { ValidationQueuePage, agruparPorAlvo } from '../pages/ValidationQueuePage';
+import { ValidationQueuePage } from '../pages/ValidationQueuePage';
+import { agruparPorAlvo } from '../lib/validacao/agruparPorAlvo';
 import type { ValidationFinding } from '../types';
 
 vi.mock('../services/api', async (importOriginal) => {

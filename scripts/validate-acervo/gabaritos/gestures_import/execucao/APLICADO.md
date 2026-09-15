@@ -17,3 +17,6 @@ As 254 linhas `gestures` antigas não tinham objeto no R2 (conferido com HEAD em
 
 ## Pendente
 - `is_reviewed`: o importador não usa `meta.validated` (o spec do coldigom não trouxe essa regra do prompt do pdf_extractor). 254 documentos vieram com `validated: true` e estão com `is_reviewed = 0`. Decisão do dono.
+
+## Passo 3 — is_reviewed dos 254 validados (`revisados.sql`, undo em `revisados_undo.sql`)
+Dono confirmou em 2026-09-15 que os 254 `validated: true` do pdf_extractor estão devidamente validados. Marca `is_reviewed = 1`, `reviewed_by` = o dono (mesma convenção das cifras), `reviewed_at = 2026-09-15T04:10:07Z` (data da marcação; a validação original não tem data registrada). Guarda antes: 0 materiais `gestures` revisados. Execução: pelo dono, à mão.

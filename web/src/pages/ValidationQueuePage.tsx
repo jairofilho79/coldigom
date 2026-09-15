@@ -9,6 +9,7 @@ import {
   decideValidationFinding,
   listValidationFindings,
 } from '../services/api';
+import { agruparPorAlvo } from '../lib/validacao/agruparPorAlvo';
 import type { FindingConfidence, FindingDecision, FindingStatus, PaginationInfo, ValidationFinding } from '../types';
 
 const FAIXAS: FindingConfidence[] = ['alta', 'media', 'baixa', 'discussao'];
@@ -17,29 +18,6 @@ const ROTULO_FAIXA: Record<FindingConfidence, string> = { alta: 'alta', media: '
 const ROTULO_STATUS: Record<FindingStatus, string> = {
   pendente: 'pendente', discussao: 'em discussão', aprovado: 'aprovado', rejeitado: 'rejeitado', aplicado: 'aplicado',
 };
-
-export type Grupo = { chave: string; titulo: string; itens: ValidationFinding[] };
-
-/**
- * Os candidatos concorrentes do mesmo louvor ficam juntos. É a resposta ao
- * teto estrutural da faixa média (RESIDUOS-P2.md): uma fonte com 7 candidatos
- * gera 7 achados, e só um pode estar certo — decidir um de cada vez, sem ver
- * os outros, é o que a tela não pode permitir.
- */
-export function agruparPorAlvo(findings: ValidationFinding[]): Grupo[] {
-  const grupos = new Map<string, ValidationFinding[]>();
-  for (const f of findings) {
-    const chave = f.praise_id ?? f.target_id;
-    const lista = grupos.get(chave);
-    if (lista) lista.push(f);
-    else grupos.set(chave, [f]);
-  }
-  return [...grupos.entries()].map(([chave, itens]) => ({
-    chave,
-    titulo: itens[0].target_name ?? itens[0].target_id,
-    itens,
-  }));
-}
 
 type Filtros = { detector: string; confidence: '' | FindingConfidence; status: '' | FindingStatus; page: number };
 

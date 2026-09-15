@@ -16,8 +16,8 @@ const indice = indexar({
   version: 1,
   generatedAt: 't',
   gestures: [
-    { id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: [], image: 'assets/cia/gestures/c687580e7682.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't' },
-    { id: 'deadbeef0005', name: 'Amém velho', description: '', exampleTriggers: [], image: 'assets/cia/gestures/deadbeef0005.png', gif: null, status: 'deprecated', replacedBy: 'c687580e7682', updatedAt: 't' },
+    { id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: [], image: 'assets/cia/gestures/c687580e7682.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't' },
+    { id: 'deadbeef0005', name: 'Amém velho', description: '', exampleTriggers: [], image: 'assets/cia/gestures/deadbeef0005.png', gif: null, videos: [], status: 'deprecated', replacedBy: 'c687580e7682', updatedAt: 't' },
   ],
 });
 

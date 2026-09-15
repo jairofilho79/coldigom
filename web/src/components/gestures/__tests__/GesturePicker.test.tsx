@@ -9,8 +9,8 @@ import { GesturePicker } from '../GesturePicker';
 const indice = indexar({
   schema: 'coldigom.gesture-dictionary/1', version: 1, generatedAt: 't',
   gestures: [
-    { id: 'aaaaaaaaaaaa', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'a.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't' },
-    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: ['viver'], image: 'b.png', gif: null, status: 'active', replacedBy: null, updatedAt: 't' },
+    { id: 'aaaaaaaaaaaa', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'a.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't' },
+    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: ['viver'], image: 'b.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't' },
   ],
 });
 
@@ -46,7 +46,7 @@ describe('GesturePicker', () => {
 
   describe('Novo gesto', () => {
     const criado = {
-      id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'd.png', gif: null,
+      id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'd.png', gif: null, videos: [],
       status: 'active' as const, replacedBy: null, updatedAt: 't',
     };
     afterEach(() => vi.restoreAllMocks());

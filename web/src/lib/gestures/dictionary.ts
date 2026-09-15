@@ -1,3 +1,13 @@
+/** Vídeo youtube de um louvor em que o gesto aparece; seconds vazio = só ligado. */
+export type GestureVideo = {
+  materialId: string;
+  praiseId: string;
+  praiseNumber: string | null;
+  praiseName: string;
+  url: string;
+  seconds: number[];
+};
+
 /** Contrato do dicionário — coldigom.gesture-dictionary/1. */
 export type GestureEntry = {
   id: string;
@@ -9,6 +19,7 @@ export type GestureEntry = {
   status: 'active' | 'deprecated';
   replacedBy: string | null;
   updatedAt: string;
+  videos: GestureVideo[];
 };
 
 export type GestureDictionary = {

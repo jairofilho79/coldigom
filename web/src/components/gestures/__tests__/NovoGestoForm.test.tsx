@@ -7,7 +7,7 @@ import { NovoGestoForm } from '../NovoGestoForm';
 
 const criado = {
   id: 'dddddddddddd', name: 'Amor', description: 'd', exampleTriggers: ['amor', 'amar'],
-  image: 'assets/cia/gestures/dddddddddddd.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't',
+  image: 'assets/cia/gestures/dddddddddddd.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't',
 };
 const png = new File(['png'], 'amor.png', { type: 'image/png' });
 

@@ -8,7 +8,7 @@ import * as api from '../../services/api';
 import { GestureDetailPage } from '../GestureDetailPage';
 
 const base = {
-  id: 'aaaaaaaaaaaa', name: 'Quero', description: 'Mãos ao peito', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null,
+  id: 'aaaaaaaaaaaa', name: 'Quero', description: 'Mãos ao peito', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null, videos: [],
   status: 'active' as const, replacedBy: null, updatedAt: 't',
 };
 const entrada = {
@@ -19,7 +19,7 @@ const dic = {
   schema: 'coldigom.gesture-dictionary/1' as const, version: 2, generatedAt: 't',
   gestures: [
     base,
-    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: [], image: 'b.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' },
+    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: [], image: 'b.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't' },
   ],
 };
 

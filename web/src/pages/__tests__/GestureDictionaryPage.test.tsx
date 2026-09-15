@@ -10,9 +10,9 @@ import { GestureDictionaryPage } from '../GestureDictionaryPage';
 const dic = {
   schema: 'coldigom.gesture-dictionary/1' as const, version: 2, generatedAt: 't',
   gestures: [
-    { id: 'aaaaaaaaaaaa', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' },
-    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: ['viver'], image: 'assets/cia/gestures/bbbbbbbbbbbb.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' },
-    { id: '111111111111', name: 'Velho', description: '', exampleTriggers: [], image: 'assets/cia/gestures/111111111111.png', gif: null, status: 'deprecated' as const, replacedBy: 'aaaaaaaaaaaa', updatedAt: 't' },
+    { id: 'aaaaaaaaaaaa', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't' },
+    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: ['viver'], image: 'assets/cia/gestures/bbbbbbbbbbbb.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't' },
+    { id: '111111111111', name: 'Velho', description: '', exampleTriggers: [], image: 'assets/cia/gestures/111111111111.png', gif: null, videos: [], status: 'deprecated' as const, replacedBy: 'aaaaaaaaaaaa', updatedAt: 't' },
   ],
 };
 

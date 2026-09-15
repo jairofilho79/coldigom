@@ -427,3 +427,44 @@ def test_candidatos_no_maximo_cinco_ordenados_por_score(tmp_path):
     assert len(r.candidatos) == 5
     assert r.candidatos[0]["material_id"] == "m3"
     assert r.candidatos[0]["score"] > r.candidatos[1]["score"]
+
+
+def test_dois_materiais_corroborados_no_mesmo_louvor_e_ambiguo(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "mA", "p31", "Sheet Music")
+    _material(conn, "mB", "p31", "Sheet Music")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "Meu Deus, meu Pai", "031", "Coletânea Adultos",
+                 "Partitura", "031:meu-deus-meu-pai")
+    r = _cruza(conn, e, "sha-pag", {"sha-pag": {"mA", "mB"}})
+    assert r.faixa == "ambiguo" and r.praise_id == "p31" and r.material_id is None
+    assert r.nota == "2 materiais corroborados em 1 louvor(es)"
+    assert {c["material_id"] for c in r.candidatos} == {"mA", "mB"}
+    assert all("hash" in c["por_que"] for c in r.candidatos)
+
+
+def test_materiais_corroborados_em_dois_louvores_e_ambiguo_sem_praise(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "pA", "Clamo a ti", "003", ("Coletânea",))
+    _praise(conn, "pB", "Clamo a ti", "003", ("Coletânea",))
+    _material(conn, "mA", "pA", "Sheet Music")
+    _material(conn, "mB", "pB", "Sheet Music")
+    conn.commit()
+    e = _entrada("ColAdultos/003.pdf", "Clamo a ti", "003", "Coletânea Adultos", "Partitura", "003:clamo-a-ti")
+    r = _cruza(conn, e, "sha-pag", {"sha-pag": {"mA", "mB"}})
+    assert r.faixa == "ambiguo" and r.praise_id is None
+    assert r.nota == "2 materiais corroborados em 2 louvor(es)"
+
+
+def test_nome_aproximado_sem_material_do_kind_fica_em_media_nao_faltante(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "A ti que habitas entre os querubins", "", ("Avulsos",))
+    _material(conn, "a1", "p1", "Audio", tipo="mp3")
+    conn.commit()
+    e = _entrada("Adicionados/A ti que habitas/Cifra.pdf", "A ti que habitas", "",
+                 "Avulsos Diversos", "Cifra", "avulso:a-ti-que-habitas")
+    r = _cruza(conn, e)
+    assert r.faixa == "media" and "nome~" in r.evidencias
+    assert r.praise_id == "p1" and r.material_id is None
+    assert r.nota == "louvor casado, sem material desse kind"

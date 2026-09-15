@@ -42,7 +42,19 @@ python3 -m core.queue --marcar-aplicados out/apply_log.jsonl
 python3 -m core.plpcg                       # exporta o D1 plpcg-catalog, baixa o que falta, hasheia os dois lados
 python3 -m core.snapshot                    # o acervo do coldigom, fresco
 python3 -m detectors.plpcg_crosswalk        # Fase A — um finding por entrada do PLPCG + um por louvor só de lá
+python3 -m revisao.serve --abrir            # o site local (spec §6): lista por louvor do PLPCG, PDF dos dois lados
 ```
+
+`revisao.serve` sobe `http://localhost:8765` só com a stdlib e lê
+`out/plpcg_crosswalk/findings.jsonl` (ou, sem ele, o gabarito da rodada 1),
+`out/snapshot.sqlite` e os PDFs de `dev/plpcjf/assets`, `out/plpcg/baixados`
+e `storage/assets/praises` — todos sobrescrevíveis por flag (`--findings`,
+`--snapshot`, `--plpcjf`, `--baixados`, `--storage`). O PDF do coldigom é
+achado pelo `material_id`, não por `<praise_id>/<material_id>`: um material
+movido por merge continua na pasta do praise antigo no espelho. Esta versão
+só lê; as marcas ✓/✗/? e as notas ficam no `localStorage` do navegador e saem
+por "Exportar anotações" como texto para colar no chat. `POST /decide`, o
+modo gabarito e o `core.gold` desta migração chegam na Fase B.
 
 `core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
 (cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de
@@ -100,6 +112,7 @@ Testes: `python3 -m pytest tests/ -v`
 | `core/plpcg.py` | o PLPCG como fonte: exportação do D1 `plpcg-catalog`, `pdf_id` ↔ caminho, download, cache de sha256 dos dois lados |
 | `detectors/youtube_merge.py` | Fase 1 — louvores cujo único material é do YouTube |
 | `detectors/plpcg_crosswalk.py` | Fase A da migração — louvor por número/slug/classe, hash e caminho só dentro do louvor, faixas e candidatos |
+| `revisao/serve.py` + `revisao/index.html` | o site local de revisão da migração PLPCG — leitura dos findings, PDFs lado a lado, anotações locais |
 
 ## As regras que não são óbvias no código
 

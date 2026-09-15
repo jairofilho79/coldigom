@@ -1,0 +1,205 @@
+from __future__ import annotations
+
+from core.plpcg import codificar
+from core.snapshot import conectar
+from detectors.plpcg_crosswalk import (
+    Acervo,
+    candidatos_louvor,
+    chaves_csv,
+    chaves_plpcg,
+    classe_ok,
+    numero_int,
+    slug,
+    tags_propostas,
+)
+
+
+# --- fixture: um acervo do coldigom em miniatura ---------------------------
+
+def _mundo(tmp_path):
+    conn = conectar(str(tmp_path / "snap.sqlite"))
+    conn.executescript(
+        """
+        CREATE TABLE praises (id TEXT PRIMARY KEY, name TEXT, number TEXT, author TEXT,
+                              rhythm TEXT, tonality TEXT, category TEXT, lyrics TEXT,
+                              group_id TEXT, created_at TEXT, updated_at TEXT);
+        CREATE TABLE material_kinds (id TEXT PRIMARY KEY, name TEXT);
+        CREATE TABLE tags (id TEXT PRIMARY KEY, name TEXT, parent_id TEXT);
+        CREATE TABLE praise_tags (praise_id TEXT, tag_id TEXT);
+        CREATE TABLE praise_materials (id TEXT PRIMARY KEY, praise_id TEXT, material_kind TEXT,
+                              type TEXT, r2_key TEXT, file_path_legacy TEXT,
+                              source_material_id TEXT, merged_from_praise_id TEXT, url TEXT,
+                              created_at TEXT, is_reviewed INTEGER, reviewed_at TEXT,
+                              reviewed_by TEXT);
+        CREATE TABLE csvmap (file_path TEXT, material_kind_csv TEXT, praise_tags TEXT,
+                             praise_number TEXT, praise_name TEXT, praise_id TEXT,
+                             to_convert TEXT, praise_material_id TEXT);
+        """
+    )
+    for nome in ("Sheet Music", "Choir", "Score", "Chord Chart", "Chord Chart I",
+                 "Chord Chart II", "CIAs Gestures"):
+        conn.execute("INSERT INTO material_kinds VALUES (?,?)", ("k-" + slug(nome), nome))
+    for nome in ("Coletânea", "CIAs", "PES", "Avulsos", "GLTM"):
+        conn.execute("INSERT INTO tags VALUES (?,?,NULL)", ("t-" + slug(nome), nome))
+    return conn
+
+
+def _praise(conn, pid, nome, numero="", tags=()):
+    conn.execute("INSERT INTO praises (id, name, number) VALUES (?,?,?)", (pid, nome, numero))
+    for t in tags:
+        conn.execute("INSERT INTO praise_tags VALUES (?,?)", (pid, "t-" + slug(t)))
+
+
+def _material(conn, mid, pid, kind, tipo="pdf"):
+    conn.execute(
+        "INSERT INTO praise_materials (id, praise_id, material_kind, type) VALUES (?,?,?,?)",
+        (mid, pid, "k-" + slug(kind), tipo),
+    )
+
+
+def _csv(conn, file_path, mid):
+    conn.execute("INSERT INTO csvmap (file_path, praise_material_id) VALUES (?,?)", (file_path, mid))
+
+
+def _entrada(caminho, nome, numero, classificacao, categoria, group_id, short_id="0001"):
+    """Uma linha de louvores do PLPCG, como core.plpcg.entradas() devolve."""
+    return {
+        "pdf_id": codificar(caminho), "caminho": caminho, "nome": nome, "numero": numero,
+        "classificacao": classificacao, "categoria": categoria,
+        "pdf": caminho.split("/")[-1], "group_id": group_id, "short_id": short_id,
+    }
+
+
+# --- normalização -------------------------------------------------------------
+
+def test_slug_tira_acento_pontuacao_e_colapsa():
+    assert slug("Clamo a ti [003]") == "clamo-a-ti-003"
+    assert slug("Ó profundidade das riquezas!") == "o-profundidade-das-riquezas"
+    assert slug("  Regozijai - vos ") == "regozijai-vos"
+    assert slug(None) == ""
+
+
+def test_numero_int_le_o_prefixo_numerico():
+    assert numero_int("003") == 3
+    assert numero_int("12 A") == 12
+    assert numero_int("") is None
+    assert numero_int(None) is None
+    assert numero_int("Avulso") is None
+
+
+def test_classe_ok_segue_o_mapa_de_tags():
+    assert classe_ok("Coletânea Adultos", {"Coletânea"})
+    assert not classe_ok("Coletânea Adultos", {"Coletânea", "CIAs"})
+    assert not classe_ok("Coletânea Adultos", {"Coletânea", "PES"})
+    assert classe_ok("Coletânea CIAs", {"Coletânea", "CIAs"})
+    assert not classe_ok("Coletânea CIAs", {"Coletânea"})
+    assert classe_ok("PES (Trombetas e Festas 2025)", {"PES"})
+    assert not classe_ok("PES", {"PES", "CIAs"})
+    assert classe_ok("PES CIAs", {"PES", "CIAs"})
+    assert classe_ok("Avulsos Diversos", {"Avulsos"})
+    assert classe_ok("Avulsos Diversos", set())
+    assert not classe_ok("Avulsos Diversos", {"Coletânea"})
+    assert classe_ok("Avulsos Diversos", {"Coletânea", "Avulsos"})
+    assert classe_ok("Avulsos (cifrado)", {"Coletânea"})  # classe fora do mapa: não filtra
+
+
+def test_tags_propostas_por_classificacao():
+    assert tags_propostas("Coletânea Adultos") == ["Coletânea"]
+    assert tags_propostas("Coletânea CIAs (Evangelização CIAs Out 2025)") == ["CIAs", "Coletânea"]
+    assert tags_propostas("PES CIAs") == ["CIAs", "PES"]
+    assert tags_propostas("Avulsos Diversos") == ["Avulsos"]
+    assert tags_propostas("Avulsos Diversos (GLTM)") == ["Avulsos", "GLTM"]
+
+
+# --- Camada P: chaves de caminho ---------------------------------------------
+
+def test_chaves_csv_indexa_por_numero_e_por_nome_da_pasta():
+    assert chaves_csv("Coletânea /031 - Meu Deus, meu Pai/Cifra I.pdf") == [
+        ("Coletânea", 31, "cifra-i-pdf"),
+        ("Coletânea", "meu-deus-meu-pai", "cifra-i-pdf"),
+    ]
+    assert chaves_csv("Avulsos Diversos/Alto preço/Coro.pdf") == [
+        ("Avulsos Diversos", "alto-preco", "coro-pdf"),
+    ]
+    assert chaves_csv("solto.pdf") == []
+
+
+def test_chaves_plpcg_traduz_o_caminho_para_a_forma_do_csvmap():
+    assert chaves_plpcg("ColAdultos/031.pdf", 31) == [("Coletânea", 31, "partitura-pdf")]
+    assert chaves_plpcg("ColCIAs/031.pdf", 31) == [("Coletânea CIAs", 31, "partitura-pdf")]
+    assert chaves_plpcg("ColAdultos/000.pdf", None) == []
+    assert chaves_plpcg("Louvores Coletânea de Partituras/031 - Meu Deus/Cifra I.pdf", 31) == [
+        ("Coletânea", 31, "cifra-i-pdf"),
+        ("Coletânea", "meu-deus", "cifra-i-pdf"),
+    ]
+    avulso = chaves_plpcg("Adicionados/Alto preço/Cifra.pdf", None)
+    assert ("Avulsos Diversos", "alto-preco", "cifra-pdf") in avulso
+    assert ("GLTM", "alto-preco", "cifra-pdf") in avulso
+    assert all(k[1] == "alto-preco" for k in avulso)
+    assert chaves_plpcg("assets/PES/Alto preço - CIFRA.pdf", None) == []
+    assert chaves_plpcg("04112025/A luz/Cifra.pdf", None) == []
+
+
+# --- Camada L: o louvor -------------------------------------------------------
+
+def test_acervo_carrega_indices_e_tolera_snapshot_sem_csvmap(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "Meu Deus, meu Pai", "031", ("Coletânea",))
+    _material(conn, "m31", "p31", "Sheet Music")
+    _csv(conn, "Coletânea /031 - Meu Deus, meu Pai/Partitura.pdf", "m31")
+    conn.commit()
+    a = Acervo.carregar(conn)
+    assert a.por_numero == {31: ["p31"]}
+    assert a.por_slug == {"meu-deus-meu-pai": ["p31"]}
+    assert a.tags == {"p31": {"Coletânea"}}
+    assert a.materiais == {"p31": [("m31", "Sheet Music", "pdf")]}
+    assert a.praise_do_material == {"m31": "p31"}
+    assert a.chave_csv[("Coletânea", 31, "partitura-pdf")] == {"m31"}
+
+    conn.execute("DROP TABLE csvmap")
+    conn.commit()
+    assert Acervo.carregar(conn).chave_csv == {}
+
+
+def test_louvor_por_numero_desempata_por_slug_e_depois_por_classe(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "pA", "Clamo a ti", "003", ("Coletânea",))
+    _praise(conn, "pB", "Clamo a ti", "003", ("Coletânea", "PES"))
+    _praise(conn, "pC", "Outro hino", "003", ("Coletânea", "CIAs"))
+    conn.commit()
+    a = Acervo.carregar(conn)
+
+    P, evid, aprox = candidatos_louvor("003:clamo-a-ti", "PES", "003", a)
+    assert P == ["pB"] and evid == ["num", "slug", "classe"] and aprox is False
+
+    P, evid, _ = candidatos_louvor("003:outro-hino", "Coletânea CIAs", "003", a)
+    assert P == ["pC"] and evid == ["num", "slug"]
+
+    # o slug deixa pA e pB; a classe (Coletânea sem PES) resolve
+    P, evid, _ = candidatos_louvor("003:clamo-a-ti", "Coletânea Adultos", "003", a)
+    assert P == ["pA"] and evid == ["num", "slug", "classe"]
+
+
+def test_avulso_por_nome_exato_continencia_e_similaridade(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "A ti que habitas entre os querubins", "", ("Avulsos",))
+    _praise(conn, "p2", "Regozijai-vos", "", ("Avulsos",))
+    _praise(conn, "p3", "Fé", "", ("Avulsos",))
+    conn.commit()
+    a = Acervo.carregar(conn)
+
+    assert candidatos_louvor("avulso:regozijai-vos", "Avulsos Diversos", "", a) == (["p2"], ["nome"], False)
+    # continência: 'a-ti-que-habitas' é prefixo (>= 10 chars) do slug do acervo
+    assert candidatos_louvor("avulso:a-ti-que-habitas", "Avulsos Diversos", "", a) == (["p1"], ["nome~"], True)
+    # similaridade >= 0.8 (sem continência: o hífen sumiu)
+    assert candidatos_louvor("avulso:regozijaivos", "Avulsos Diversos", "", a) == (["p2"], ["nome~"], True)
+    # nome curto não casa por continência nem por similaridade
+    assert candidatos_louvor("avulso:fe-do-coracao-meu", "Avulsos Diversos", "", a) == ([], [], False)
+
+
+def test_numero_sem_candidato_cai_para_o_nome(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Alto preço", "", ("Avulsos",))
+    conn.commit()
+    a = Acervo.carregar(conn)
+    assert candidatos_louvor("999:alto-preco", "Coletânea Adultos", "999", a) == (["p1"], ["nome"], False)

@@ -263,7 +263,10 @@ export function registerGesturesRoutes(app: App): void {
     const body = (await c.req.json().catch(() => null)) as { seconds?: unknown } | null;
     if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
     const seconds = body.seconds;
-    if (!Array.isArray(seconds) || !seconds.every((s) => Number.isInteger(s) && (s as number) >= 0)) {
+    // Number.isInteger deixava passar 1e21: é matematicamente um inteiro, mas
+    // maior que 2^53 não tem representação exata em float64, e o SQLite grava
+    // como REAL. isSafeInteger é o teto real de "cabe certinho num INTEGER".
+    if (!Array.isArray(seconds) || !seconds.every((s) => Number.isSafeInteger(s) && (s as number) >= 0)) {
       return c.json({ error: "Field 'seconds' must be an array of non-negative integers" }, 400);
     }
     const tempos = [...new Set(seconds as number[])].sort((a, b) => a - b);

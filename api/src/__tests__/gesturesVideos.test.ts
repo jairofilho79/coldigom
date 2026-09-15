@@ -197,8 +197,8 @@ describe('PUT /api/gestures/dictionary/:id/videos/:materialId', () => {
     expect(pdf.lotes).toHaveLength(0);
   });
 
-  it('400 para seconds ausente, não lista, negativo ou não inteiro', async () => {
-    for (const corpo of [{}, { seconds: 'x' }, { seconds: [-1] }, { seconds: [1.5] }, { seconds: ['1'] }]) {
+  it('400 para seconds ausente, não lista, negativo, não inteiro ou grande demais para ser inteiro exato', async () => {
+    for (const corpo of [{}, { seconds: 'x' }, { seconds: [-1] }, { seconds: [1.5] }, { seconds: ['1'] }, { seconds: [1e21] }]) {
       const { res, lotes } = await ligar(corpo);
       expect(res.status).toBe(400);
       expect(lotes).toHaveLength(0);

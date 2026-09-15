@@ -374,14 +374,24 @@ export function registerMaterialsRoutes(app: App): void {
         .first<Pick<MaterialRow, 'praise_id' | 'r2_key'>>();
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
 
-      // gesture_usage tem ON DELETE CASCADE, mas a migração 018 cai sobre um
-      // banco já existente: apagamos explicitamente, e as duas exclusões vão
-      // no MESMO batch — como statements separadas, uma janela entre elas
-      // deixava a contagem de uso do dicionário mentir sobre um material que
-      // já não existe mais.
+      // gesture_usage e gesture_video_occurrences têm ON DELETE CASCADE, mas a
+      // migração 018 caiu sobre um banco já existente: apagamos explicitamente, e
+      // tudo vai no MESMO batch — como statements separadas, uma janela entre
+      // elas deixava a contagem de uso do dicionário mentir sobre um material
+      // que já não existe mais. Um vídeo com ocorrências muda o dicionário que
+      // os clientes têm em cache: o bump de versão vai junto, senão o ETag não
+      // mudaria e o coldigui ficaria com um vídeo morto até o cache vencer.
+      const ocorrencias = await c.env.DB
+        .prepare(`SELECT COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id = ?`)
+        .bind(materialId)
+        .first<{ n: number }>();
       await c.env.DB.batch([
         c.env.DB.prepare(`DELETE FROM gesture_usage WHERE material_id = ?`).bind(materialId),
+        c.env.DB.prepare(`DELETE FROM gesture_video_occurrences WHERE material_id = ?`).bind(materialId),
         c.env.DB.prepare(`DELETE FROM praise_materials WHERE id = ?`).bind(materialId),
+        ...((ocorrencias?.n ?? 0) > 0
+          ? [c.env.DB.prepare(`UPDATE gesture_dictionary_meta SET version = version + 1 WHERE id = 1`).bind()]
+          : []),
       ]);
 
       if (row.r2_key) {

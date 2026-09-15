@@ -1,7 +1,7 @@
 # Vídeos por gesto — design
 
 Data: 2026-09-15
-Status: aprovado em conversa; aguardando revisão do texto
+Status: implementado (PR feat/gestos-videos → develop)
 Depende de: `docs/superpowers/specs/2026-09-05-editor-de-gestos-design.md` (dicionário, versão, ETag)
 Base de código: PR #25 (`feat/gestos-novo-no-seletor`) — o GIF já saiu de uso lá.
 

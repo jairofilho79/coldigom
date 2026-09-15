@@ -1,14 +1,30 @@
 from __future__ import annotations
 
+import argparse
 import base64
 import hashlib
 import os
 import sqlite3
+import subprocess
+import sys
 import urllib.parse
 import urllib.request
 from collections import defaultdict
 
-from core.paths import HASHES_DB, PLPCG_BAIXADOS, PLPCG_URL, PLPCJF_ASSETS
+from core.paths import (
+    HASHES_DB,
+    PLPCG_ADMIN_WORKER,
+    PLPCG_BAIXADOS,
+    PLPCG_DB,
+    PLPCG_OUT,
+    PLPCG_URL,
+    PLPCJF_ASSETS,
+    STORAGE_PRAISES,
+    ensure_out,
+)
+
+DB_NAME = "plpcg-catalog"
+TABELAS = ("louvores", "catalog_meta")
 
 LADO_PLPCG = "plpcg"
 LADO_COLDIGOM = "coldigom"
@@ -150,3 +166,115 @@ def hashes_coldigom(conn: sqlite3.Connection) -> dict[str, set[str]]:
     ):
         out[sha].add(os.path.splitext(os.path.basename(rel))[0])
     return dict(out)
+
+
+# --- o D1 do PLPCG -----------------------------------------------------------
+
+def _wrangler(args: list[str], cwd: str) -> subprocess.CompletedProcess:
+    # cwd no worker do plpcg-admin: é lá que está o wrangler.jsonc com o
+    # binding do D1 plpcg-catalog. O wrangler do api/ não conhece esse banco.
+    return subprocess.run(
+        ["wrangler", "d1", *args], cwd=cwd, capture_output=True, text=True, check=True
+    )
+
+
+def exportar_d1(dumps_dir: str, remote: bool = True, cwd: str = PLPCG_ADMIN_WORKER) -> None:
+    """Baixa louvores e catalog_meta como .sql de INSERTs. Só leitura."""
+    os.makedirs(dumps_dir, exist_ok=True)
+    for t in TABELAS:
+        args = ["export", DB_NAME, "--table", t, "--output", os.path.join(dumps_dir, f"{t}.sql")]
+        if remote:
+            args.append("--remote")
+        print(f"  exportando {t}...")
+        _wrangler(args, cwd)
+
+
+def conectar(db: str = PLPCG_DB) -> sqlite3.Connection:
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def montar_db(dumps_dir: str, db: str = PLPCG_DB) -> sqlite3.Connection:
+    if os.path.exists(db):
+        os.remove(db)
+    os.makedirs(os.path.dirname(db) or ".", exist_ok=True)
+    conn = conectar(db)
+    for t in TABELAS:
+        with open(os.path.join(dumps_dir, f"{t}.sql"), encoding="utf-8") as f:
+            conn.executescript(f.read())
+    conn.commit()
+    return conn
+
+
+def meta(conn: sqlite3.Connection) -> dict[str, str]:
+    """catalog_meta: short_id_next, checksum, row_count. O checksum vai na
+    evidência de cada finding — é como se sabe contra qual catálogo a rodada
+    foi feita."""
+    return {r["key"]: r["value"] for r in conn.execute("SELECT key, value FROM catalog_meta")}
+
+
+def entradas(conn: sqlite3.Connection) -> list[dict]:
+    """Toda linha de louvores, com o caminho já decodificado em 'caminho'."""
+    out = []
+    for r in conn.execute("SELECT * FROM louvores ORDER BY pdf_id"):
+        d = dict(r)
+        d["caminho"] = decodificar(d["pdf_id"])
+        out.append(d)
+    return out
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--local", action="store_true",
+                    help="usa o D1 local do plpcg-admin em vez do remoto")
+    ap.add_argument("--pular-download", action="store_true",
+                    help="reusa os dumps já baixados em out/plpcg/dumps")
+    ap.add_argument("--sem-rede", action="store_true",
+                    help="não baixa de plpcg.com o que falta em plpcjf/assets")
+    args = ap.parse_args(argv)
+
+    ensure_out()
+    dumps = os.path.join(PLPCG_OUT, "dumps")
+    if not args.pular_download:
+        print("baixando o D1 plpcg-catalog:")
+        exportar_d1(dumps, remote=not args.local)
+
+    print("montando plpcg.sqlite...")
+    conn = montar_db(dumps)
+    m = meta(conn)
+    todas = entradas(conn)
+    print(f"  {len(todas)} entradas, checksum {m.get('checksum', '?')}, "
+          f"row_count {m.get('row_count', '?')}")
+
+    arquivos: dict[str, str] = {}
+    faltam: list[str] = []
+    for e in todas:
+        p = arquivo_local(e["caminho"])
+        if p is None and not args.sem_rede:
+            try:
+                p = baixar(e["caminho"])
+                print(f"  baixado: {e['caminho']}")
+            except Exception as exc:  # rede, 404 — o detector segue sem hash
+                print(f"  não baixou {e['caminho']}: {exc}")
+        if p is None:
+            faltam.append(e["caminho"])
+        else:
+            arquivos[e["caminho"]] = p
+
+    h = abrir_hashes()
+    novos = hashear(h, LADO_PLPCG, arquivos)
+    print(f"  plpcg: {len(arquivos)} PDFs ({novos} hasheados agora), {len(faltam)} sem arquivo")
+    for c in faltam:
+        print(f"    sem arquivo: {c}")
+
+    cold = pdfs_em(STORAGE_PRAISES)
+    novos = hashear(h, LADO_COLDIGOM, cold)
+    print(f"  coldigom: {len(cold)} PDFs em storage/assets/praises ({novos} hasheados agora)")
+
+    print(f"\nplpcg: {PLPCG_DB}\nhashes: {HASHES_DB}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

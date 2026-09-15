@@ -130,3 +130,49 @@ def test_hashes_coldigom_agrupa_materiais_pelo_hash(tmp_path):
     hc = hashes_coldigom(conn)
     assert hc[hashlib.sha256(b"pagina").hexdigest()] == {"m1", "m2"}
     assert hc[hashlib.sha256(b"outra").hexdigest()] == {"m3"}
+
+
+from core.plpcg import TABELAS, entradas, meta, montar_db
+
+DUMP_LOUVORES = """PRAGMA defer_foreign_keys=TRUE;
+CREATE TABLE louvores (
+  pdf_id        TEXT PRIMARY KEY NOT NULL,
+  nome          TEXT NOT NULL,
+  numero        TEXT NOT NULL DEFAULT '',
+  classificacao TEXT NOT NULL,
+  categoria     TEXT NOT NULL,
+  pdf           TEXT NOT NULL,
+  group_id      TEXT NOT NULL DEFAULT ''
+, short_id TEXT);
+INSERT INTO "louvores" ("pdf_id","nome","numero","classificacao","categoria","pdf","group_id","short_id") VALUES('Q29sQWR1bHRvcy8wMDEucGRm','O Sangue de Jesus tem poder','001','Coletânea Adultos','Partitura','001.pdf','001:o-sangue-de-jesus-tem-poder','0457');
+"""
+
+DUMP_META = """PRAGMA defer_foreign_keys=TRUE;
+CREATE TABLE catalog_meta (
+  key   TEXT PRIMARY KEY NOT NULL,
+  value TEXT NOT NULL
+);
+INSERT INTO "catalog_meta" ("key","value") VALUES('checksum','0d42d382');
+INSERT INTO "catalog_meta" ("key","value") VALUES('row_count','1');
+"""
+
+
+def test_montar_db_le_os_dumps_e_decodifica_o_caminho(tmp_path):
+    dumps = tmp_path / "dumps"
+    dumps.mkdir()
+    (dumps / "louvores.sql").write_text(DUMP_LOUVORES, encoding="utf-8")
+    (dumps / "catalog_meta.sql").write_text(DUMP_META, encoding="utf-8")
+    assert TABELAS == ("louvores", "catalog_meta")
+
+    conn = montar_db(str(dumps), str(tmp_path / "plpcg.sqlite"))
+    assert meta(conn) == {"checksum": "0d42d382", "row_count": "1"}
+    es = entradas(conn)
+    assert len(es) == 1
+    assert es[0]["pdf_id"] == "Q29sQWR1bHRvcy8wMDEucGRm"
+    assert es[0]["caminho"] == "ColAdultos/001.pdf"
+    assert es[0]["group_id"] == "001:o-sangue-de-jesus-tem-poder"
+    assert es[0]["short_id"] == "0457"
+
+    # montar de novo substitui, não acumula
+    conn2 = montar_db(str(dumps), str(tmp_path / "plpcg.sqlite"))
+    assert len(entradas(conn2)) == 1

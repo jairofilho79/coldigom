@@ -33,9 +33,11 @@ material é o mesmo arquivo dos dois lados.
 - `group_id` é a identidade **de louvor**: `NNN:slug` (3.753 entradas) ou
   `avulso:slug` (880). **1.897 grupos.** Foi unificado à mão pelo dono em
   `plpcg-admin/scripts/merge-group-ids.py` — é testemunha forte.
-- PDFs: 4.601 dos 4.633 `pdf_id` resolvem para arquivo local em
-  `dev/plpcjf/assets/`; 27 (prefixo `assets/`, entradas recentes) só existem
-  no R2 `pls-louvores` e se baixam de `https://plpcg.com/assets/<caminho>`.
+- PDFs: 4.620 dos 4.633 `pdf_id` resolvem para arquivo local em
+  `dev/plpcjf/assets/`; 13 (prefixo `assets/`, entradas recentes) só existem
+  no R2 `pls-louvores` e se baixam de `https://plpcg.com/assets/<caminho>`
+  (medido em 15/09; a rodada real bateu 403 no download por padrão de
+  User-Agent do Cloudflare — os 13 PDFs existem e voltam 200 pra `curl`).
 - **2.709 das 4.633 entradas compartilham o PDF com outra entrada.** A página
   da coletânea que contém os louvores 31–34 é o mesmo arquivo nas quatro
   entradas de "Cifra I"; partituras que atravessam página (737/738) idem. O
@@ -127,7 +129,7 @@ Tudo vive em `scripts/validate-acervo/`, reaproveitando o arnês que já existe
 ```
 D1 plpcg-catalog ──wrangler export──┐
 dev/plpcjf/assets (PDFs) ──sha256───┤
-plpcg.com/assets (27 só no R2) ─────┤
+plpcg.com/assets (13 só no R2) ─────┤
                                     ▼
                      detectors/plpcg_crosswalk.py
                      (camadas §5; lê out/snapshot.sqlite + csvmap + hashes)
@@ -181,7 +183,7 @@ evidência.
    a alta sozinho**.
 
 **Camada H — hash.** sha256 do PDF do PLPCG ∈ sha256 dos PDFs do coldigom
-(`storage/` local; os 27 sem arquivo local baixam de plpcg.com). Devolve um
+(`storage/` local; os 13 sem arquivo local baixam de plpcg.com). Devolve um
 *conjunto* de materiais (páginas compartilhadas).
 
 **Camada P — caminho.** `pdf_id` decodificado transformado para a forma do

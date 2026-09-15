@@ -84,7 +84,12 @@ export function buildLyricsExcerpt(lyrics: string, rawQuery: string): string | n
   const { normalized, indexMap } = normalizeKeepingIndex(trimmedLyrics);
   const normTokens = tokens.map((t) => stripDiacritics(t).toLowerCase());
 
-  const match = new RegExp(normTokens.join('\\s+')).exec(normalized);
+  // Separador tolerante a pontuação (vírgula, hífen etc.), não só espaço em
+  // branco puro — mesma regra do tokenizer do FTS5 no backend
+  // (`buildFtsMatchQuery`): qualquer caractere não-alfanumérico entre as
+  // palavras conta como fronteira de token, então "A Ti, pertence" bate
+  // igual a "A Ti pertence".
+  const match = new RegExp(normTokens.join('[^\\p{L}\\p{N}]+'), 'u').exec(normalized);
   if (!match) return null;
 
   const matchStart = indexMap[match.index];

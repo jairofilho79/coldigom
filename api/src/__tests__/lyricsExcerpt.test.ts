@@ -57,6 +57,23 @@ describe('buildLyricsExcerpt', () => {
     expect(buildLyricsExcerpt(lyrics, 'não temerei')).toBeNull();
   });
 
+  it('vírgula entre as palavras da letra não quebra a frase', () => {
+    // "\s+" puro exigia espaço em branco puro entre os tokens; "A Ti,
+    // pertence" (vírgula colada em "Ti") não batia mesmo com a frase
+    // presente, e o card ficava sem trecho igual um match sem explicação.
+    const lyrics = 'Graças te damos, pois a Ti, pertence todo o louvor';
+    const excerpt = buildLyricsExcerpt(lyrics, 'a ti pertence')!;
+    expect(excerpt).not.toBeNull();
+    expect(excerpt).toContain('Ti, pertence');
+  });
+
+  it('hífen entre as palavras da letra não quebra a frase', () => {
+    const lyrics = 'Tudo o que eu sou, busco-a-Ti de coração';
+    const excerpt = buildLyricsExcerpt(lyrics, 'busco a ti')!;
+    expect(excerpt).not.toBeNull();
+    expect(excerpt).toContain('busco-a-Ti');
+  });
+
   it('quebras de linha da letra viram espaço — uma linha só', () => {
     const lyrics = 'Refrão:\nEu não\ntemerei\no mal';
     const excerpt = buildLyricsExcerpt(lyrics, 'não temerei')!;

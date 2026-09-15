@@ -228,15 +228,28 @@ export function buildOrderClause(
   };
 }
 
-/** Build FTS5 MATCH string (prefix terms, ANDed). */
+/**
+ * Build FTS5 MATCH string: a phrase query (terms adjacent, in order, same
+ * column) with a prefix match on the last term.
+ *
+ * Era um AND de termos soltos — cada palavra bastava aparecer em qualquer
+ * canto (nome OU letra, qualquer ordem) pra casar a linha inteira. Pra "a ti
+ * pertence", 17 de 22 resultados reais não tinham a frase em lugar nenhum: a
+ * palavra "a" e "ti" são curtas e comuns, então o AND virava quase só "tem
+ * uma palavra começando com 'pertence' em algum lugar". A frase exige que as
+ * palavras estejam juntas, na ordem digitada — a mesma regra que
+ * `buildLyricsExcerpt` e o destaque do título já usam pra decidir o que
+ * mostrar, então todo resultado passa a ter uma frase real pra exibir.
+ */
 export function buildFtsMatchQuery(search: string): string {
   const terms = search
     .trim()
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
-    .filter(Boolean)
-    .map(t => `"${t.replace(/"/g, '""')}"*`);
-  return terms.length > 0 ? terms.join(' AND ') : '';
+    .filter(Boolean);
+  if (terms.length === 0) return '';
+  // terms já vem sem aspas (o replace acima remove tudo que não é letra/número).
+  return `"${terms.join(' ')}"*`;
 }
 
 /** Campos varridos pela busca textual sem FTS. */

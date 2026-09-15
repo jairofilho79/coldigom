@@ -32,6 +32,7 @@ const ROTAS_ESPERADAS = [
   'GET /auth/me',
   'GET /api/praises',
   'GET /api/plpcg/praises',
+  'GET /api/plpcg/catalog',
   'GET /api/praises/filters',
   'GET /api/praises/:id/download.zip',
   'GET /api/praises/:id',

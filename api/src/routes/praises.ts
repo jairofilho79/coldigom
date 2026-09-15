@@ -6,7 +6,7 @@ import {
   loadMaterialKindLabels,
   materialKindsForaDoCatalogo,
 } from '../materialKindLabels';
-import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
+import { buildPlpcgCatalog, listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
 import { requireAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
@@ -154,6 +154,27 @@ export function registerPraisesRoutes(app: App): void {
     } catch (error) {
       console.error('Error fetching PLPCG praises:', error);
       return c.json({ error: 'Failed to fetch praises' }, 500);
+    }
+  });
+
+  // GET /api/plpcg/catalog - Compact full-catalog dump for the PLPCG app (ETag/304)
+  app.get('/api/plpcg/catalog', async (c) => {
+    try {
+      const result = await buildPlpcgCatalog(
+        c.env.DB,
+        { tagLabelSql: TAG_LABEL_SQL },
+        c.req.header('If-None-Match')
+      );
+      if (result.status === 304) {
+        return new Response(null, { status: 304, headers: result.headers });
+      }
+      return new Response(result.body, {
+        status: 200,
+        headers: { ...result.headers, 'Content-Type': 'application/json; charset=utf-8' },
+      });
+    } catch (error) {
+      console.error('Error building PLPCG catalog:', error);
+      return c.json({ error: 'Failed to build catalog' }, 500);
     }
   });
 

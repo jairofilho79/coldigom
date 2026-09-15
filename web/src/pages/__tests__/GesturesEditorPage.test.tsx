@@ -24,7 +24,7 @@ const praise = {
 
 const dicionario = {
   schema: 'coldigom.gesture-dictionary/1' as const, version: 3, generatedAt: 't',
-  gestures: [{ id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/c687580e7682.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' }],
+  gestures: [{ id: 'c687580e7682', name: 'Quero', description: '', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/c687580e7682.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't' }],
 };
 
 function montar({ asset = EXEMPLO, status = 200, etag = '"v1"', autenticado = true, praiseObj = praise }: { asset?: string; status?: number; etag?: string; autenticado?: boolean; praiseObj?: PraiseDetail } = {}) {
@@ -91,6 +91,31 @@ describe('GesturesEditorPage', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
     await waitFor(() => expect(put).toHaveBeenCalledTimes(2));
     expect(put.mock.calls[1][2]).toBe('"v8"');
+  });
+
+  it('gesto criado no seletor entra no índice: o cartão novo mostra a figura e o salvar carimba a versão seguinte', async () => {
+    const user = userEvent.setup();
+    const { put } = montar();
+    put.mockResolvedValue({ etag: '"v2"' });
+    vi.spyOn(api, 'createGesture').mockResolvedValue({
+      id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'assets/cia/gestures/dddddddddddd.png', gif: null, videos: [], status: 'active', replacedBy: null, updatedAt: 't',
+    });
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+    await user.click(screen.getByRole('button', { name: 'Adicionar gesto' }));
+    await user.click(screen.getByRole('button', { name: 'Novo gesto' }));
+    await user.type(screen.getByRole('textbox', { name: 'Nome' }), 'Amor');
+    await user.upload(screen.getByLabelText('Figura PNG'), new File(['x'], 'a.png', { type: 'image/png' }));
+    await user.click(screen.getByRole('button', { name: 'Criar gesto' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    // editor e pré-visualização: o novo resolve pelo índice atualizado, sem baixar o dicionário de novo
+    expect(document.querySelectorAll('img[alt="Amor"]').length).toBeGreaterThan(0);
+    expect(api.getGestureDictionary).toHaveBeenCalledTimes(1);
+    // o cartão novo nasce sem gatilho (inválido); preenche para poder salvar
+    const cartaoNovo = (document.querySelector('.ge-lista img[alt="Amor"]') as HTMLElement).closest('[data-cartao]') as HTMLElement;
+    await user.type(within(cartaoNovo).getAllByRole('textbox', { name: 'Gatilho' })[0], 'Amor');
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
+    expect(put.mock.calls[0][1].dictionaryVersion).toBe(4);
   });
 
   it('Ctrl+S salva; Ctrl+Z desfaz e Ctrl+Shift+Z refaz', async () => {

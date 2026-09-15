@@ -18,12 +18,14 @@ export default defineConfig({
       // P2 (2026-09-03): fila de revisão — 79.39 / 72.41 / 76.63 / 81.79
       // Gestos (2026-09-11): editor de gestos — 77.59 / 72.79 / 77.59 / 79.53 (statements e lines abaixo da catraca por dívida de develop: áudio/Drive de 2026-09-08..11)
       // Dívida paga (2026-09-14): testes de áudio/Drive — 80.51 / 75.74 / 81.44 / 82.42
+      // AuthContext + PraiseDetailPage (2026-09-15): os dois abaixo de 50% de
+      // linhas foram para 100% / 94.04% — 91.85 / 83.86 / 90.1 / 94.45
       thresholds: {
-        // Dívida paga: medido 80.51 / 75.74 / 81.44 / 82.42
-        statements: 80,
-        branches: 75,
-        functions: 81,
-        lines: 82,
+        // Medido: 91.85 / 83.86 / 90.1 / 94.45
+        statements: 91,
+        branches: 83,
+        functions: 90,
+        lines: 94,
       },
     },
   },

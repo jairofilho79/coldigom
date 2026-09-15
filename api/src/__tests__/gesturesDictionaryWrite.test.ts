@@ -179,7 +179,7 @@ describe('PATCH /api/gestures/dictionary/:id', () => {
   });
 });
 
-describe('POST /api/gestures/dictionary/:id/image e /gif', () => {
+describe('POST /api/gestures/dictionary/:id/image', () => {
   async function subir(caminho: string, file: File) {
     const { db, lotes } = banco();
     const { r2: assets, escritos } = r2();
@@ -197,16 +197,16 @@ describe('POST /api/gestures/dictionary/:id/image e /gif', () => {
     bumpNoFim(lotes[0]);
   });
 
-  it('sobe o GIF na chave .gif', async () => {
+  it('GIF saiu de uso: a rota …/gif não existe mais e nada é escrito', async () => {
     const { res, escritos, lotes } = await subir('/api/gestures/dictionary/c687580e7682/gif', new File(['x'], 'a.gif', { type: 'image/gif' }));
-    expect(res.status).toBe(200);
-    expect(escritos[0]).toEqual({ key: 'storage/assets/cia/gestures/c687580e7682.gif', tipo: 'image/gif' });
-    expect(lotes[0][0].sql).toMatch(/SET gif_key = \?/);
+    expect(res.status).toBe(404);
+    expect(escritos).toEqual([]);
+    expect(lotes).toEqual([]);
   });
 
   it('recusa tipo errado e acima de 5 MB', async () => {
     expect((await subir('/api/gestures/dictionary/c687580e7682/image', new File(['x'], 'a.gif', { type: 'image/gif' }))).res.status).toBe(400);
-    const grande = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'a.gif', { type: 'image/gif' });
-    expect((await subir('/api/gestures/dictionary/c687580e7682/gif', grande)).res.status).toBe(413);
+    const grande = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'a.png', { type: 'image/png' });
+    expect((await subir('/api/gestures/dictionary/c687580e7682/image', grande)).res.status).toBe(413);
   });
 });

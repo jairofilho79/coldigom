@@ -3743,6 +3743,7 @@ button.linkish {
 .ge-picker-nome { font-weight: 600; }
 .ge-picker-exemplos { color: var(--text-secondary); font-size: 0.8rem; }
 .ge-picker-aviso { padding: 16px; color: var(--text-secondary); }
+.ge-picker-form { padding: 12px; overflow: auto; }
 
 .ge-page { max-width: 1400px; }
 .ge-abas { display: none; gap: 6px; margin: 8px 0; }
@@ -3768,3 +3769,12 @@ button.linkish {
 .gd-figuras { display: flex; gap: 16px; align-items: center; margin: 12px 0; }
 .gd-figuras-acoes { display: flex; gap: 8px; }
 .gd-usos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.gd-videos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.gd-video { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid var(--border-default); }
+.gd-video:first-child { border-top: 0; padding-top: 0; }
+.gd-video-cabeca { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.gd-video-tempos { display: flex; gap: 6px; flex-wrap: wrap; }
+.gd-chip { font-size: 0.85rem; padding: 2px 8px; border: 1px solid var(--border-default); border-radius: 999px; text-decoration: none; color: var(--text-primary); background: var(--bg-surface); }
+.gd-adicionar-video { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.gd-lista-louvores { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }

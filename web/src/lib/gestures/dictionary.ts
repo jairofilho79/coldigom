@@ -1,3 +1,13 @@
+/** Vídeo youtube de um louvor em que o gesto aparece; seconds vazio = só ligado. */
+export type GestureVideo = {
+  materialId: string;
+  praiseId: string;
+  praiseNumber: string | null;
+  praiseName: string;
+  url: string;
+  seconds: number[];
+};
+
 /** Contrato do dicionário — coldigom.gesture-dictionary/1. */
 export type GestureEntry = {
   id: string;
@@ -9,6 +19,7 @@ export type GestureEntry = {
   status: 'active' | 'deprecated';
   replacedBy: string | null;
   updatedAt: string;
+  videos: GestureVideo[];
 };
 
 export type GestureDictionary = {
@@ -34,6 +45,17 @@ export function indexar(dic: GestureDictionary): Indice {
     .filter((g) => g.status === 'active')
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
   return { version: dic.version, porId, ativos };
+}
+
+/**
+ * Índice com um gesto recém-criado (ou reescrito), sem baixar o dicionário de
+ * novo. A versão avança em um porque o servidor incrementa a cada escrita — é
+ * o carimbo que o documento leva em `dictionaryVersion` ao salvar.
+ */
+export function adicionarAoIndice(indice: Indice, entrada: GestureEntry): Indice {
+  const porId = new Map(indice.porId);
+  porId.set(entrada.id, entrada);
+  return indexar({ schema: 'coldigom.gesture-dictionary/1', version: indice.version + 1, generatedAt: '', gestures: [...porId.values()] });
 }
 
 export type Resolucao =

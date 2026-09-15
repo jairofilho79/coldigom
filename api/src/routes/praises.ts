@@ -133,7 +133,8 @@ export function registerPraisesRoutes(app: App): void {
     return c.json({ error: 'Failed to fetch praises' }, 500);
   });
 
-  // GET /api/plpcg/praises - Lightweight list for PLPCG (no lyrics text; slim materials)
+  // GET /api/plpcg/praises - Lightweight list for PLPCG (slim materials; lyrics_excerpt
+  // when the search matches the lyrics — no full lyrics text)
   app.get('/api/plpcg/praises', async (c) => {
     try {
       const parsed = parsePlpcgListQuery(c);

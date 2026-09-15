@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { indexar } from '../../../lib/gestures/dictionary';
+import * as api from '../../../services/api';
 import { GesturePicker } from '../GesturePicker';
 
 const indice = indexar({
@@ -41,5 +42,51 @@ describe('GesturePicker', () => {
     expect(container).toBeEmptyDOMElement();
     rerender(<GesturePicker indice={null} aberto onEscolher={() => {}} onFechar={() => {}} />);
     expect(screen.getByText(/dicionário não carregou/i)).toBeInTheDocument();
+  });
+
+  describe('Novo gesto', () => {
+    const criado = {
+      id: 'dddddddddddd', name: 'Amor', description: '', exampleTriggers: [], image: 'd.png', gif: null,
+      status: 'active' as const, replacedBy: null, updatedAt: 't',
+    };
+    afterEach(() => vi.restoreAllMocks());
+
+    it('troca a lista pelo formulário com a busca como nome; criar avisa e escolhe o novo', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(api, 'createGesture').mockResolvedValue(criado);
+      const onEscolher = vi.fn();
+      const onCriado = vi.fn();
+      render(<GesturePicker indice={indice} aberto onEscolher={onEscolher} onFechar={() => {}} onCriado={onCriado} />);
+      await user.type(screen.getByRole('searchbox'), 'amo');
+      expect(screen.getByText('Nenhum gesto encontrado.')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Novo gesto' }));
+      expect(screen.queryByRole('searchbox')).toBeNull();
+      expect(screen.getByRole('textbox', { name: 'Nome' })).toHaveValue('amo');
+      await user.upload(screen.getByLabelText('Figura PNG'), new File(['x'], 'a.png', { type: 'image/png' }));
+      await user.click(screen.getByRole('button', { name: 'Criar gesto' }));
+      await waitFor(() => expect(onCriado).toHaveBeenCalledWith(criado));
+      expect(onEscolher).toHaveBeenCalledWith('dddddddddddd');
+    });
+
+    it('"Cancelar" volta para a busca; o botão aparece mesmo com resultados', async () => {
+      const user = userEvent.setup();
+      render(<GesturePicker indice={indice} aberto onEscolher={() => {}} onFechar={() => {}} onCriado={() => {}} />);
+      expect(screen.getByRole('button', { name: /Viver/ })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Novo gesto' }));
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Viver/ })).toBeInTheDocument();
+    });
+
+    it('sem onCriado não oferece criar; reabrir volta para a busca', async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<GesturePicker indice={indice} aberto onEscolher={() => {}} onFechar={() => {}} />);
+      expect(screen.queryByRole('button', { name: 'Novo gesto' })).toBeNull();
+      rerender(<GesturePicker indice={indice} aberto onEscolher={() => {}} onFechar={() => {}} onCriado={() => {}} />);
+      await user.click(screen.getByRole('button', { name: 'Novo gesto' }));
+      rerender(<GesturePicker indice={indice} aberto={false} onEscolher={() => {}} onFechar={() => {}} onCriado={() => {}} />);
+      rerender(<GesturePicker indice={indice} aberto onEscolher={() => {}} onFechar={() => {}} onCriado={() => {}} />);
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    });
   });
 });

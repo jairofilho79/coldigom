@@ -6,7 +6,7 @@ import { GesturesEditor } from '../components/gestures/GesturesEditor';
 import { ReviewSwitch } from '../components/ReviewSwitch';
 import { useAuth } from '../context/useAuth';
 import { useMaterialContent } from '../hooks/useMaterialContent';
-import { indexar, type Indice } from '../lib/gestures/dictionary';
+import { adicionarAoIndice, indexar, type Indice } from '../lib/gestures/dictionary';
 import type { Resultado } from '../lib/gestures/edit';
 import { caminhoDaChave, chaveDoCaminho, type Caminho } from '../lib/gestures/flatten';
 import { GESTURE_SCHEMA, MENSAGENS, validarDocumento, type GestureDocument } from '../lib/gestures/schema';
@@ -389,6 +389,7 @@ export function GesturesEditorPage() {
                   onMudar={aplicar}
                   erroNoCaminho={erroNoCaminho}
                   abrirSeletor={abrirSeletor}
+                  onGestoCriado={(entrada) => setIndice((atual) => (atual ? adicionarAoIndice(atual, entrada) : atual))}
                 />
               ) : (
                 <p className="ge-vazio">Entre com o Google para editar.</p>

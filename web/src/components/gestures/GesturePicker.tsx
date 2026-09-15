@@ -1,27 +1,49 @@
 import { useMemo, useState } from 'react';
-import { buscar, type Indice } from '../../lib/gestures/dictionary';
+import { buscar, type GestureEntry, type Indice } from '../../lib/gestures/dictionary';
 import { GestureThumb } from './GestureThumb';
+import { NovoGestoForm } from './NovoGestoForm';
 
 type Props = {
   indice: Indice | null;
   aberto: boolean;
   onEscolher: (id: string) => void;
   onFechar: () => void;
+  /** Com ouvinte, o seletor oferece "Novo gesto"; o criado é escolhido na hora. */
+  onCriado?: (entrada: GestureEntry) => void;
 };
 
 /** Busca no dicionário. Enter escolhe o primeiro; Escape fecha. */
-export function GesturePicker({ indice, aberto, onEscolher, onFechar }: Props) {
+export function GesturePicker({ indice, aberto, onEscolher, onFechar, onCriado }: Props) {
   const [termo, setTermo] = useState('');
+  const [criando, setCriando] = useState(false);
   // Zera a busca ao (re)abrir sem efeito colateral: ajusta o estado durante a
   // renderização, como o React recomenda em vez de um useEffect com setState.
   const [abertoAnterior, setAbertoAnterior] = useState(aberto);
   if (aberto !== abertoAnterior) {
     setAbertoAnterior(aberto);
-    if (aberto) setTermo('');
+    if (aberto) {
+      setTermo('');
+      setCriando(false);
+    }
   }
   const resultados = useMemo(() => (indice ? buscar(indice, termo, 30) : []), [indice, termo]);
 
   if (!aberto) return null;
+
+  if (criando && onCriado) {
+    return (
+      <div className="ge-picker" role="dialog" aria-label="Novo gesto" onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); setCriando(false); } }}>
+        <div className="ge-picker-topo"><strong>Novo gesto</strong></div>
+        <div className="ge-picker-form">
+          <NovoGestoForm
+            nomeInicial={termo.trim()}
+            onCancelar={() => setCriando(false)}
+            onCriado={(entrada) => { onCriado(entrada); onEscolher(entrada.id); }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -50,6 +72,11 @@ export function GesturePicker({ indice, aberto, onEscolher, onFechar }: Props) {
             }
           }}
         />
+        {onCriado && indice ? (
+          <button type="button" className="ge-btn" onClick={() => setCriando(true)}>
+            Novo gesto
+          </button>
+        ) : null}
         <button type="button" className="ge-btn" onClick={onFechar}>
           Fechar
         </button>

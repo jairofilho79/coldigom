@@ -40,10 +40,10 @@ function lerExemplos(valor: unknown): string[] | null {
 }
 
 /** Confere tipo e tamanho de um arquivo de figura; devolve a resposta de erro ou null. */
-function problemaNaFigura(file: unknown, tipo: 'image/png' | 'image/gif', teto: number): { status: 400 | 413; error: string } | null {
-  if (!(file instanceof File)) return { status: 400, error: `Field 'file' must be a ${tipo}` };
-  if (file.type !== tipo && !file.name.toLowerCase().endsWith(tipo === 'image/png' ? '.png' : '.gif')) {
-    return { status: 400, error: `File must be ${tipo}` };
+function problemaNaFigura(file: unknown, teto: number): { status: 400 | 413; error: string } | null {
+  if (!(file instanceof File)) return { status: 400, error: "Field 'file' must be a image/png" };
+  if (file.type !== 'image/png' && !file.name.toLowerCase().endsWith('.png')) {
+    return { status: 400, error: 'File must be image/png' };
   }
   if (file.size > teto) return { status: 413, error: `File above ${Math.round(teto / (1024 * 1024))} MB` };
   return null;
@@ -129,13 +129,13 @@ export function registerGesturesRoutes(app: App): void {
     // c.req.param() em validation.ts.
     const figura = form.get('image') as unknown;
     if (!(figura instanceof File)) return c.json({ error: "Field 'image' (PNG) is required" }, 400);
-    const problema = problemaNaFigura(figura, 'image/png', MAX_FIGURA_NA_CRIACAO);
+    const problema = problemaNaFigura(figura, MAX_FIGURA_NA_CRIACAO);
     if (problema) return c.json({ error: problema.error }, problema.status);
 
     const id = typeof idInformado === 'string' ? idInformado : gerarIdDeGesto();
     try {
       if (await lerLinha(c.env.DB, id)) return c.json({ error: 'Gesture id already exists' }, 409);
-      const imageKey = chaveDaFigura(id, 'png');
+      const imageKey = chaveDaFigura(id);
       await c.env.ASSETS.put(storageKeyFor(imageKey), figura.stream(), { httpMetadata: { contentType: 'image/png' } });
       try {
         await escreverNoDicionario(c.env.DB, [
@@ -215,41 +215,38 @@ export function registerGesturesRoutes(app: App): void {
     }
   });
 
-  // POST …/:id/image e …/:id/gif — trocar a figura; mesma rotina, chave e coluna diferentes.
-  for (const [sufixo, tipo, coluna] of [
-    ['image', 'image/png', 'image_key'],
-    ['gif', 'image/gif', 'gif_key'],
-  ] as const) {
-    app.post(`/api/gestures/dictionary/:id/${sufixo}`, requireAuth, async (c) => {
-      const id = c.req.param('id') as string;
-      let form: FormData;
-      try {
-        form = await c.req.formData();
-      } catch {
-        return c.json({ error: 'Expected multipart form' }, 400);
-      }
-      const file = form.get('file') as unknown;
-      const problema = problemaNaFigura(file, tipo, MAX_FIGURA_NA_TROCA);
-      if (problema) return c.json({ error: problema.error }, problema.status);
+  // POST …/:id/image — trocar a figura PNG. (Não há mais GIF: a referência em
+  // movimento de um gesto vai ser o vídeo do louvor no YouTube; `gif` fica
+  // sempre null no contrato para o coldigui não precisar mudar.)
+  app.post('/api/gestures/dictionary/:id/image', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    let form: FormData;
+    try {
+      form = await c.req.formData();
+    } catch {
+      return c.json({ error: 'Expected multipart form' }, 400);
+    }
+    const file = form.get('file') as unknown;
+    const problema = problemaNaFigura(file, MAX_FIGURA_NA_TROCA);
+    if (problema) return c.json({ error: problema.error }, problema.status);
 
-      try {
-        const linha = await lerLinha(c.env.DB, id);
-        if (!linha) return c.json({ error: 'Gesture not found' }, 404);
-        const chave = chaveDaFigura(id, sufixo === 'image' ? 'png' : 'gif');
-        await c.env.ASSETS.put(storageKeyFor(chave), (file as File).stream(), { httpMetadata: { contentType: tipo } });
-        await escreverNoDicionario(c.env.DB, [
-          c.env.DB
-            .prepare(`UPDATE gesture_dictionary SET ${coluna} = ?, updated_at = datetime('now') WHERE id = ?`)
-            .bind(chave, id),
-        ]);
-        const depois = (await lerLinha(c.env.DB, id)) ?? linha;
-        return c.json({ data: linhaParaEntrada({ ...depois, [coluna]: chave }) });
-      } catch (error) {
-        console.error(`Error uploading gesture ${sufixo}:`, error);
-        return c.json({ error: `Failed to upload gesture ${sufixo}` }, 500);
-      }
-    });
-  }
+    try {
+      const linha = await lerLinha(c.env.DB, id);
+      if (!linha) return c.json({ error: 'Gesture not found' }, 404);
+      const chave = chaveDaFigura(id);
+      await c.env.ASSETS.put(storageKeyFor(chave), (file as File).stream(), { httpMetadata: { contentType: 'image/png' } });
+      await escreverNoDicionario(c.env.DB, [
+        c.env.DB
+          .prepare(`UPDATE gesture_dictionary SET image_key = ?, updated_at = datetime('now') WHERE id = ?`)
+          .bind(chave, id),
+      ]);
+      const depois = (await lerLinha(c.env.DB, id)) ?? linha;
+      return c.json({ data: linhaParaEntrada({ ...depois, image_key: chave }) });
+    } catch (error) {
+      console.error('Error uploading gesture image:', error);
+      return c.json({ error: 'Failed to upload gesture image' }, 500);
+    }
+  });
 
   // POST …/:id/replace-with — funde dois gestos: o de origem vira 'deprecated' com
   // replaced_by, SEMPRE e no batch. Reescrever os documentos é faxina opcional: a

@@ -180,6 +180,27 @@ def test_louvor_por_numero_desempata_por_slug_e_depois_por_classe(tmp_path):
     assert P == ["pA"] and evid == ["num", "slug", "classe"]
 
 
+def test_desempate_que_nao_narra_nada_mantem_os_candidatos(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "pA", "Hino um", "003", ("Coletânea",))
+    _praise(conn, "pB", "Hino dois", "003", ("Coletânea",))
+    conn.commit()
+    a = Acervo.carregar(conn)
+
+    # nenhum dos dois casa o slug do grupo: o filtro de slug fica vazio e
+    # não estreita nada — sem evidência 'slug'. A classe (Coletânea
+    # Adultos) é compatível com os dois: o filtro não estreita a lista,
+    # mas como o resultado não é vazio, a evidência 'classe' ainda entra.
+    P, evid, aprox = candidatos_louvor("003:clamo-a-ti", "Coletânea Adultos", "003", a)
+    assert P == ["pA", "pB"] and evid == ["num", "classe"] and aprox is False
+
+    # PES não é compatível com nenhum dos dois: o filtro de classe fica
+    # vazio, então ele é descartado — os candidatos do número sobrevivem
+    # como ambiguidade, sem evidência extra.
+    P, evid, aprox = candidatos_louvor("003:clamo-a-ti", "PES", "003", a)
+    assert P == ["pA", "pB"] and evid == ["num"] and aprox is False
+
+
 def test_avulso_por_nome_exato_continencia_e_similaridade(tmp_path):
     conn = _mundo(tmp_path)
     _praise(conn, "p1", "A ti que habitas entre os querubins", "", ("Avulsos",))
@@ -195,6 +216,20 @@ def test_avulso_por_nome_exato_continencia_e_similaridade(tmp_path):
     assert candidatos_louvor("avulso:regozijaivos", "Avulsos Diversos", "", a) == (["p2"], ["nome~"], True)
     # nome curto não casa por continência nem por similaridade
     assert candidatos_louvor("avulso:fe-do-coracao-meu", "Avulsos Diversos", "", a) == ([], [], False)
+
+
+def test_nome_aproximado_com_varios_slugs_ainda_desempata(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p1", "Regozijai-vos", "", ("Avulsos",))
+    _praise(conn, "p2", "Regozijai-vos b", "", ("Coletânea",))
+    _praise(conn, "p3", "Regozijai-vos c", "", ("Coletânea",))
+    conn.commit()
+    a = Acervo.carregar(conn)
+
+    # os três slugs entram por similaridade (nenhum bate exato); a classe
+    # (Avulsos Diversos) só é compatível com p1 — o desempate sobra nele.
+    P, evid, aprox = candidatos_louvor("avulso:regozijaivos", "Avulsos Diversos", "", a)
+    assert P == ["p1"] and evid == ["nome~", "classe"] and aprox is True
 
 
 def test_numero_sem_candidato_cai_para_o_nome(tmp_path):

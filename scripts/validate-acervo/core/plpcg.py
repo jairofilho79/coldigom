@@ -177,9 +177,15 @@ def hashes_coldigom(conn: sqlite3.Connection) -> dict[str, set[str]]:
 def _wrangler(args: list[str], cwd: str) -> subprocess.CompletedProcess:
     # cwd no worker do plpcg-admin: é lá que está o wrangler.jsonc com o
     # binding do D1 plpcg-catalog. O wrangler do api/ não conhece esse banco.
-    return subprocess.run(
-        ["wrangler", "d1", *args], cwd=cwd, capture_output=True, text=True, check=True
-    )
+    try:
+        return subprocess.run(
+            ["wrangler", "d1", *args], cwd=cwd, capture_output=True, text=True, check=True
+        )
+    except subprocess.CalledProcessError as e:
+        # capture_output esconde o stderr do wrangler no traceback padrão —
+        # sem isto, um erro de auth/binding vira só "exit status 1".
+        print(e.stderr, file=sys.stderr)
+        raise
 
 
 def exportar_d1(dumps_dir: str, remote: bool = True, cwd: str = PLPCG_ADMIN_WORKER) -> None:

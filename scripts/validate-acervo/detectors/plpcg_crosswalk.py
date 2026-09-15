@@ -247,7 +247,7 @@ def candidatos_louvor(
     que o nome aproximado entra, e ele é marcado: nunca vira alta sozinho.
     """
     gnum, gslug = group_id.split(":", 1)
-    n = int(gnum) if gnum.isdigit() else numero_int(numero)
+    n = int(gnum) if gnum.isdigit() else None
     evid: list[str] = []
 
     def afunilar(c: list[str]) -> list[str]:
@@ -343,7 +343,7 @@ def cruzar(entrada: dict, acervo: Acervo, sha: str | None, hc: dict[str, set[str
     """
     fam = FAMILIA[entrada["categoria"]]
     gnum = entrada["group_id"].split(":", 1)[0]
-    n = int(gnum) if gnum.isdigit() else numero_int(entrada["numero"])
+    n = int(gnum) if gnum.isdigit() else None
 
     P, evid, aproximado = candidatos_louvor(
         entrada["group_id"], entrada["classificacao"], entrada["numero"], acervo
@@ -378,8 +378,14 @@ def cruzar(entrada: dict, acervo: Acervo, sha: str | None, hc: dict[str, set[str
         if len(do_kind) == 1:
             r = Resultado("media", evid + ["kind-unico"], p, do_kind[0][0], do_kind[0][1])
         elif not do_kind:
-            r = Resultado("media" if aproximado else "faltante", evid, p,
-                          nota="louvor casado, sem material desse kind")
+            fora = {acervo.praise_do_material[m] for m in H if m in acervo.praise_do_material} - {p}
+            if fora and not aproximado:
+                r = Resultado("media", evid + ["hash-fora"], p,
+                              nota="arquivo idêntico em outro louvor: "
+                              + ", ".join(sorted(acervo.praises[x]["name"] for x in fora)))
+            else:
+                r = Resultado("media" if aproximado else "faltante", evid, p,
+                              nota="louvor casado, sem material desse kind")
         else:
             r = Resultado("ambiguo", evid, p, nota=f"{len(do_kind)} materiais do kind, nenhum corroborado")
     elif len(P) > 1:
@@ -395,7 +401,7 @@ def cruzar(entrada: dict, acervo: Acervo, sha: str | None, hc: dict[str, set[str
             if r.material_id:
                 r.kind_coldigom = next(k for (m, k, _t) in acervo.materiais[p] if m == r.material_id)
         elif so_hash:
-            r = Resultado("sem_louvor", evid, nota=f"hash bate em {len(so_hash)} louvores")
+            r = Resultado("ambiguo", evid + ["hash-so"], nota=f"hash bate em {len(so_hash)} louvores")
         else:
             r = Resultado("sem_louvor", evid, nota="nenhum louvor candidato")
 
@@ -452,11 +458,11 @@ def _mais_parecido(gslug: str, acervo: Acervo) -> dict | None:
     return {"praise_id": pid, "nome": acervo.praises[pid]["name"], "score": round(score, 2)}
 
 
-def _finding_grupo(run_id: str, gid: str, itens: list[tuple[dict, Resultado]],
+def _finding_grupo(run_id: str, gid: str, itens: list[tuple[dict, Resultado, str | None]],
                    acervo: Acervo, checksum: str) -> Finding:
     """Um louvor que só existe no PLPCG (D4): praise + tags + um import por entrada."""
     gnum, gslug = gid.split(":", 1)
-    nome = Counter(e["nome"] for e, _ in itens).most_common(1)[0][0]
+    nome = Counter(e["nome"] for e, _, _ in itens).most_common(1)[0][0]
     classificacao = itens[0][0]["classificacao"]
     # number só quando o grupo é numerado E é coletânea: um avulso com
     # número no PLPCG é número de pasta, não da coletânea (spec §7).
@@ -477,9 +483,9 @@ def _finding_grupo(run_id: str, gid: str, itens: list[tuple[dict, Resultado]],
             "classificacao": classificacao,
             "tags": tags_propostas(classificacao),
             "entradas": [
-                {"pdf_id": e["pdf_id"], "categoria": e["categoria"], "path": e["caminho"],
-                 "kind": KIND_ESPERADO[e["categoria"]]}
-                for e, _ in itens
+                {"pdf_id": e["pdf_id"], "short_id": e["short_id"], "categoria": e["categoria"],
+                 "path": e["caminho"], "sha256": sha, "kind": KIND_ESPERADO[e["categoria"]]}
+                for e, _, sha in itens
             ],
             "parecido": _mais_parecido(gslug, acervo),
             "checksum": checksum,
@@ -498,7 +504,7 @@ def detectar(
     acervo = Acervo.carregar(snap)
     findings: list[Finding] = []
     motivos = Motivos()
-    por_grupo: dict[str, list[tuple[dict, Resultado]]] = defaultdict(list)
+    por_grupo: dict[str, list[tuple[dict, Resultado, str | None]]] = defaultdict(list)
 
     for e in todas:
         if e["categoria"] not in KIND_ESPERADO:
@@ -507,14 +513,15 @@ def detectar(
         if ":" not in (e.get("group_id") or ""):
             motivos.excluir("sem group_id — o PLPCG não diz qual louvor é")
             continue
-        r = cruzar(e, acervo, hp.get(e["caminho"]), hc)
-        findings.append(_finding(run_id, e, hp.get(e["caminho"]), r, checksum))
-        por_grupo[e["group_id"]].append((e, r))
+        sha = hp.get(e["caminho"])
+        r = cruzar(e, acervo, sha, hc)
+        findings.append(_finding(run_id, e, sha, r, checksum))
+        por_grupo[e["group_id"]].append((e, r, sha))
 
     # Um grupo inteiro sem louvor é um louvor novo. Grupo misto (uma entrada
     # achou o louvor pelo hash, outra não) NÃO é: vai para o site.
     for gid, itens in sorted(por_grupo.items()):
-        if all(r.faixa == "sem_louvor" for _, r in itens):
+        if all(r.faixa == "sem_louvor" for _, r, _ in itens):
             findings.append(_finding_grupo(run_id, gid, itens, acervo, checksum))
 
     return findings, motivos

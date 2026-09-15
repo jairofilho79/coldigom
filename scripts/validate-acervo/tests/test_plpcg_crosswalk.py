@@ -243,6 +243,16 @@ def test_numero_sem_candidato_cai_para_o_nome(tmp_path):
     assert candidatos_louvor("999:alto-preco", "Coletânea Adultos", "999", a) == (["p1"], ["nome"], False)
 
 
+def test_avulso_ignora_numero_de_pasta(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p3", "Outro", "003", ("Coletânea",))
+    conn.commit()
+    a = Acervo.carregar(conn)
+    # 'avulso:alto-preco' não tem praise com esse nome; o '003' é número de
+    # pasta (do caminho), não da coletânea — não pode puxar "Outro".
+    assert candidatos_louvor("avulso:alto-preco", "Avulsos Diversos", "003", a) == ([], [], False)
+
+
 # --- o cruzamento -------------------------------------------------------------
 
 def _cruza(conn, entrada, sha=None, hc=None):
@@ -343,6 +353,23 @@ def test_louvor_certo_sem_material_do_kind_e_faltante(tmp_path):
     assert r.nota == "louvor casado, sem material desse kind"
 
 
+def test_faltante_com_arquivo_identico_em_outro_louvor_vira_media(tmp_path):
+    conn = _mundo(tmp_path)
+    _praise(conn, "p31", "No exílio", "031", ("Coletânea",))
+    _material(conn, "a31", "p31", "Audio", tipo="mp3")
+    _praise(conn, "p9", "Bela Sião", "", ("Avulsos",))
+    _material(conn, "m9", "p9", "Choir")
+    conn.commit()
+    e = _entrada("ColAdultos/031.pdf", "No exílio", "031", "Coletânea Adultos",
+                 "Partitura", "031:no-exilio")
+    hc = {"sha-x": {"m9"}}
+    r = _cruza(conn, e, "sha-x", hc)
+    assert r.faixa == "media" and r.praise_id == "p31" and r.material_id is None
+    assert "hash-fora" in r.evidencias
+    assert r.nota == "arquivo idêntico em outro louvor: Bela Sião"
+    assert "p9" in {c["praise_id"] for c in r.candidatos}
+
+
 def test_dois_materiais_do_kind_sem_corroboracao_e_ambiguo_com_candidatos(tmp_path):
     conn = _mundo(tmp_path)
     _praise(conn, "p1", "Alto preço", "", ("Avulsos",))
@@ -402,7 +429,7 @@ def test_nada_em_l_nem_em_h_e_sem_louvor(tmp_path):
     assert r.nota == "nenhum louvor candidato"
 
 
-def test_hash_em_varios_louvores_sem_l_e_sem_louvor(tmp_path):
+def test_hash_em_varios_louvores_sem_l_e_ambiguo(tmp_path):
     conn = _mundo(tmp_path)
     _praise(conn, "p1", "Um", "", ("Avulsos",))
     _praise(conn, "p2", "Dois", "", ("Avulsos",))
@@ -412,7 +439,8 @@ def test_hash_em_varios_louvores_sem_l_e_sem_louvor(tmp_path):
     e = _entrada("Adicionados/Zzz qqq/Partitura.pdf", "Zzz qqq", "", "Avulsos Diversos",
                  "Partitura", "avulso:zzz-qqq")
     r = _cruza(conn, e, "sha-pag", {"sha-pag": {"m1", "m2"}})
-    assert r.faixa == "sem_louvor" and r.nota == "hash bate em 2 louvores"
+    assert r.faixa == "ambiguo" and "hash-so" in r.evidencias
+    assert r.nota == "hash bate em 2 louvores"
     assert {c["praise_id"] for c in r.candidatos} == {"p1", "p2"}
 
 
@@ -523,7 +551,8 @@ def test_grupo_todo_sem_louvor_ganha_finding_de_criacao(tmp_path):
                      "Cifra", "avulso:ainda-ha-tempo")
     gestos = _entrada("Adicionados/Ainda há tempo/Gestos CIAs.pdf", "Ainda há tempo", "", "Avulsos Diversos",
                       "Gestos em Gravura", "avulso:ainda-ha-tempo")
-    findings, _ = detectar(conn, [cifra, gestos], "chk", {}, {}, "r1")
+    hp = {cifra["caminho"]: "sha-c"}
+    findings, _ = detectar(conn, [cifra, gestos], "chk", hp, {}, "r1")
     assert len(findings) == 3
     entradas_ = [f for f in findings if f.target_type == "plpcg"]
     assert all((f.action, f.confidence, f.praise_id) == ("import_plpcg_material", "media", None) for f in entradas_)
@@ -535,6 +564,9 @@ def test_grupo_todo_sem_louvor_ganha_finding_de_criacao(tmp_path):
     assert g.evidence["numero"] == "" and g.evidence["tags"] == ["Avulsos"]
     assert [x["pdf_id"] for x in g.evidence["entradas"]] == [cifra["pdf_id"], gestos["pdf_id"]]
     assert g.evidence["entradas"][1]["kind"] == "CIAs Gestures"
+    assert g.evidence["entradas"][0]["sha256"] == "sha-c"
+    assert g.evidence["entradas"][1]["sha256"] is None
+    assert g.evidence["entradas"][0]["short_id"] == "0001"
     assert g.evidence["parecido"]["praise_id"] == "p1" and 0 < g.evidence["parecido"]["score"] < 1
 
 

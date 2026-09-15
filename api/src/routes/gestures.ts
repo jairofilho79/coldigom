@@ -212,7 +212,8 @@ export function registerGesturesRoutes(app: App): void {
           .bind(name, description, JSON.stringify(exemplos ?? JSON.parse(linha.example_triggers || '[]')), status, replacedBy, id),
       ]);
       const depois = (await lerLinha(c.env.DB, id)) ?? linha;
-      return c.json({ data: linhaParaEntrada(depois) });
+      const videos = await videosDoGesto(c.env.DB, id);
+      return c.json({ data: linhaParaEntrada(depois, videos) });
     } catch (error) {
       console.error('Error updating gesture:', error);
       return c.json({ error: 'Failed to update gesture' }, 500);
@@ -245,7 +246,8 @@ export function registerGesturesRoutes(app: App): void {
           .bind(chave, id),
       ]);
       const depois = (await lerLinha(c.env.DB, id)) ?? linha;
-      return c.json({ data: linhaParaEntrada({ ...depois, image_key: chave }) });
+      const videos = await videosDoGesto(c.env.DB, id);
+      return c.json({ data: linhaParaEntrada({ ...depois, image_key: chave }, videos) });
     } catch (error) {
       console.error('Error uploading gesture image:', error);
       return c.json({ error: 'Failed to upload gesture image' }, 500);

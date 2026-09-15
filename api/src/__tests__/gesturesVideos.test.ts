@@ -120,3 +120,32 @@ describe('GET com videos', () => {
     expect(data.usages).toEqual([]);
   });
 });
+
+describe('PATCH e image devolvem videos', () => {
+  it('PATCH devolve a entrada com os videos do gesto', async () => {
+    const { db } = banco({ ocorrencias: OCORRENCIAS });
+    const res = await app.request(
+      '/api/gestures/dictionary/c687580e7682',
+      { method: 'PATCH', headers: await sessao(), body: JSON.stringify({ name: 'Quero!' }) },
+      env(db)
+    );
+    const { data } = (await res.json()) as { data: { videos: unknown } };
+    expect(data.videos).toEqual(VIDEOS_ESPERADOS);
+  });
+
+  it('POST …/image devolve a entrada com os videos do gesto', async () => {
+    const { db } = banco({ ocorrencias: OCORRENCIAS });
+    // headers de sessao() trazem content-type: application/json, que atrapalha
+    // o boundary do multipart — aqui o corpo é FormData, então ele é descartado.
+    const { 'content-type': _ct, ...h } = await sessao();
+    const form = new FormData();
+    form.set('file', new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'g.png', { type: 'image/png' }));
+    const res = await app.request(
+      '/api/gestures/dictionary/c687580e7682/image',
+      { method: 'POST', headers: h, body: form },
+      env(db)
+    );
+    const { data } = (await res.json()) as { data: { videos: unknown } };
+    expect(data.videos).toEqual(VIDEOS_ESPERADOS);
+  });
+});

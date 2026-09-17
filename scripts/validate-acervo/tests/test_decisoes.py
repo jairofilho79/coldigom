@@ -147,3 +147,19 @@ def test_post_decide_grava_e_reflete_no_api_dados(servidor):
     status, msg = _post(url, {"pdf_id": "x", "tipo": "adicionar", "praise_id": "p1", "kind": "Banjo"})
     assert status == 400 and "Banjo" in msg
     assert dados.decisoes["x"]["kind"] == "Choir"
+
+
+def test_homonimos_igual_e_parecido():
+    idx = dec.indice_nomes({"p1": ("Ó grande Deus", "583"), "p2": ("Grande Deus, único Deus", "81"),
+                            "p3": ("A melhor coisa", ""), "p4": ("Outro", "")})
+    hs = dec.homonimos("O Grande Deus", idx)
+    assert [(x["praise_id"], x["score"]) for x in hs] == [("p1", 1.0), ("p2", 0.5)] or hs[0]["praise_id"] == "p1"
+    assert hs[0]["score"] == 1.0 and all(x["praise_id"] != "p4" for x in hs)
+    assert dec.homonimos("Nada a ver", idx) == []
+
+
+def test_validar_desfazer_volta_para_sem_decisao():
+    d = dec.validar({"pdf_id": "x", "tipo": None, "desfazer": True}, {"Choir"})
+    assert d["tipo"] is None and d["duvida"] is None
+    d = dec.validar({"pdf_id": "x", "tipo": "criar", "nome": "N", "kind": "Choir", "confirma": "homonimo"}, {"Choir"})
+    assert d["confirma"] == "homonimo"

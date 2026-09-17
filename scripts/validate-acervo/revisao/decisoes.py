@@ -44,7 +44,9 @@ _KIND_TEXTO = [
 
 SHORT_ID = re.compile(r"^[0-9a-f]{4}$")
 CAMPOS = ("pdf_id", "group_id", "short_id", "tipo", "praise_id", "material_id", "kind",
-          "junto_com", "nome", "tags", "motivo", "duvida", "proposta", "origem", "marca_rodada1", "quando")
+          "junto_com", "nome", "tags", "motivo", "duvida", "proposta", "confirma", "origem", "marca_rodada1", "quando")
+# `confirma: "homonimo"` = o dono viu, no modo Revisão 3, que existe praise com
+# nome igual/parecido no coldigom e manteve "criar" mesmo assim.
 
 
 def agora() -> str:
@@ -75,10 +77,10 @@ def validar(d: dict, kinds: set[str] | None = None) -> dict:
     tipo = d.get("tipo")
     if tipo is not None and tipo not in TIPOS:
         raise ValueError(f"tipo desconhecido: {tipo!r}")
-    if tipo is None and not (d.get("duvida") or "").strip():
-        raise ValueError("sem tipo só com duvida")
+    if tipo is None and not (d.get("duvida") or "").strip() and not d.get("desfazer"):
+        raise ValueError("sem tipo só com duvida ou desfazer")
     saida = {k: d.get(k) for k in CAMPOS}
-    for k in ("praise_id", "material_id", "kind", "junto_com", "nome", "motivo", "duvida", "proposta"):
+    for k in ("praise_id", "material_id", "kind", "junto_com", "nome", "motivo", "duvida", "proposta", "confirma"):
         saida[k] = (saida[k] or "").strip() or None
     saida["tags"] = [t for t in (saida["tags"] or []) if t] or None
     if tipo in ("nao_levar", "descartar"):  # nada sobe: alvo e kind são ruído para o apply
@@ -270,3 +272,45 @@ def migrar(anotacoes: dict[str, dict], findings: list[dict], praises: dict[str, 
         d["quando"] = agora()
         saida.append(d)
     return saida
+
+
+# --- homônimos e parecidos no coldigom (modo Revisão 3) ---
+
+def indice_nomes(praises: dict[str, tuple[str, str]]) -> dict:
+    """praises = {id: (nome, número)} → índices por nome normalizado e por palavra."""
+    exato: dict[str, list[str]] = {}
+    por_palavra: dict[str, set[str]] = {}
+    palavras: dict[str, set[str]] = {}
+    for pid, (nome, _) in praises.items():
+        n = norm_nome(nome)
+        exato.setdefault(n, []).append(pid)
+        ps = set(n.split())
+        palavras[pid] = ps
+        for w in ps:
+            por_palavra.setdefault(w, set()).add(pid)
+    return {"praises": praises, "exato": exato, "por_palavra": por_palavra, "palavras": palavras}
+
+
+_VAZIAS = {"a", "o", "e", "de", "da", "do", "em", "que", "ao", "os", "as", "um", "uma", "no", "na", "meu", "minha", "teu", "tua", "es"}
+
+
+def homonimos(nome: str, indice: dict, minimo: float = 0.6, maximo: int = 6) -> list[dict]:
+    """Praises do coldigom com o mesmo nome (score 1) ou parecido (Jaccard das
+    palavras, ignorando as vazias), do mais parecido ao menos. É o "vasculhar
+    outros no coldigom" que o dono pediu para decidir criar × adicionar."""
+    n = norm_nome(nome)
+    ps = set(n.split()) - _VAZIAS or set(n.split())
+    scores: dict[str, float] = {pid: 1.0 for pid in indice["exato"].get(n, [])}
+    candidatos: set[str] = set()
+    for w in ps:
+        candidatos |= indice["por_palavra"].get(w, set())
+    for pid in candidatos:
+        if pid in scores:
+            continue
+        outras = indice["palavras"][pid] - _VAZIAS or indice["palavras"][pid]
+        j = len(ps & outras) / len(ps | outras)
+        if j >= minimo:
+            scores[pid] = round(j, 2)
+    out = [{"praise_id": pid, "name": indice["praises"][pid][0], "number": indice["praises"][pid][1] or "", "score": sc}
+           for pid, sc in sorted(scores.items(), key=lambda x: (-x[1], indice["praises"][x[0]][0]))]
+    return out[:maximo]

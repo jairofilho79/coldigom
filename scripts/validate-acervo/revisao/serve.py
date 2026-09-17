@@ -49,6 +49,7 @@ class Dados:
     origem: str = ""
     avisos: list[str] = field(default_factory=list)
     decisoes: dict[str, dict] = field(default_factory=dict)
+    homonimos: dict[str, list[dict]] = field(default_factory=dict)  # pdf_id/group_id → praises com nome igual/parecido
     kinds: list[str] = field(default_factory=list)
     tipos: tuple[str, ...] = dec.TIPOS
     kind_padrao: dict[str, str] = field(default_factory=lambda: dict(dec.KIND_PADRAO))
@@ -72,6 +73,14 @@ def indice_storage(storage: str) -> dict[str, str]:
     if not os.path.isdir(storage):
         return {}
     return {os.path.basename(rel)[:-4]: abs_ for rel, abs_ in pdfs_em(storage).items()}
+
+
+def _nomes(snapshot: str) -> dict[str, tuple[str, str]]:
+    conn = sqlite3.connect(snapshot)
+    try:
+        return {r[0]: (r[1] or "", r[2] or "") for r in conn.execute("SELECT id, name, number FROM praises")}
+    finally:
+        conn.close()
 
 
 def _kinds(snapshot: str) -> list[str]:
@@ -162,9 +171,23 @@ def carregar(findings: str, snapshot: str = SNAPSHOT_DB, storage: str = STORAGE_
     decididas = dec.ler(decisoes)
     # praises que só as decisões citam (o dono escolheu um candidato que o finding não propunha)
     ids |= {d["praise_id"] for d in decididas.values() if d.get("praise_id")}
+    # homônimos/parecidos para tudo que pode virar "criar": entradas sem alvo e louvores novos
+    indice = dec.indice_nomes(_nomes(snapshot))
+    hom: dict[str, list[dict]] = {}
+    for g in lista:
+        for e in g["entradas"]:
+            d = decididas.get(e["pdf_id"], {})
+            if not e["praise_id"] or d.get("tipo") == "criar":
+                # pelo nome do PLPCG e, se o dono renomeou ao criar, pelo nome novo também
+                hs = {h["praise_id"]: h for n in {e["nome"], d.get("nome") or e["nome"]} for h in dec.homonimos(n, indice)}
+                hom[e["pdf_id"]] = sorted(hs.values(), key=lambda h: (-h["score"], h["name"]))
+    for g in criar:
+        hom[g["group_id"]] = dec.homonimos(g["nome"], indice)
+    hom = {k: v for k, v in hom.items() if v}
+    ids |= {h["praise_id"] for hs in hom.values() for h in hs}
     return Dados(run_id=run_id, checksum=checksum, resumo=resumo, grupos=lista, criar=criar,
                  praises=_louvores(snapshot, ids, indice_storage(storage)), origem=findings,
-                 decisoes=decididas, kinds=_kinds(snapshot))
+                 decisoes=decididas, kinds=_kinds(snapshot), homonimos=hom)
 
 
 def _dentro(raiz: str, caminho: str) -> bool:

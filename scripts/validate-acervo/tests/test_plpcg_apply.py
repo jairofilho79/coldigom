@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -129,6 +131,51 @@ def test_plano_recusa_junto_com_para_entrada_sem_finding(mundo):
     assert "sem finding" in motivos["0004"]
 
 
+def test_plano_recusa_adicionar_sem_praise_nem_junto_com(mundo):
+    # A3: a mensagem antiga ("praise None não existe no snapshot") escondia
+    # que faltava o alvo — não era um praise inexistente, era nenhum praise.
+    d = dict(mundo["decisoes"])
+    d["pdf-0002"] = {"pdf_id": "pdf-0002", "tipo": "adicionar", "kind": "Choir"}
+    plano = pa.montar_plano(d, mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    motivos = {r["short_id"]: r["motivo"] for r in plano.recusas}
+    assert motivos["0002"] == "adicionar sem praise alvo nem junto_com"
+
+
+def test_praise_do_finding_usa_topo_ou_candidato_unico(mundo):
+    (a,) = [f for f in mundo["findings"] if f["target_id"] == "pdf-0002"]
+    assert pa._praise_do_finding(a) == "p1"   # finding tem praise_id de topo
+    sem_praise = dict(a, praise_id=None, evidence=dict(a["evidence"], candidatos=[{"praise_id": "p9"}, {"praise_id": "p9"}]))
+    assert pa._praise_do_finding(sem_praise) == "p9"   # candidatos concordam num praise só
+    ambiguo = dict(a, praise_id=None, evidence=dict(a["evidence"], candidatos=[{"praise_id": "p9"}, {"praise_id": "p8"}]))
+    assert pa._praise_do_finding(ambiguo) is None   # candidatos discordam
+
+
+def test_junto_com_cai_no_praise_do_finding_do_alvo_quando_falta_decisao_de_praise(mundo):
+    # A4: alta sem decisão / nao_levar / pendente não são "sem destino" para
+    # junto_com quando o FINDING do alvo já sabe o praise (6 casos reais).
+    plpcjf = Path(mundo["plpcjf"])
+    for nome in ("e.pdf", "f.pdf", "g.pdf"):
+        (plpcjf / "Avulsos" / nome).write_bytes(b"%PDF " + nome.encode())
+    alvo_nao_levar = _finding("0008", "media", "Extra nao levar", "Avulsos/e.pdf", praise_id="p1")
+    alvo_pendente = _finding("0009", "media", "Extra pendente", "Avulsos/f.pdf", praise_id="p1")
+    alvo_sem_praise = _finding("0010", "sem_louvor", "Extra sem praise", "Avulsos/g.pdf")
+    entra_a = _finding("0011", "sem_louvor", "Entra a", "Avulsos/e.pdf")
+    entra_b = _finding("0012", "sem_louvor", "Entra b", "Avulsos/f.pdf")
+    entra_c = _finding("0013", "sem_louvor", "Entra c", "Avulsos/g.pdf")
+    findings = mundo["findings"] + [alvo_nao_levar, alvo_pendente, alvo_sem_praise, entra_a, entra_b, entra_c]
+    d = dict(mundo["decisoes"])
+    d["pdf-0008"] = {"pdf_id": "pdf-0008", "tipo": "nao_levar"}
+    d["pdf-0011"] = {"pdf_id": "pdf-0011", "tipo": "adicionar", "kind": "Choir", "junto_com": "pdf-0008"}
+    d["pdf-0012"] = {"pdf_id": "pdf-0012", "tipo": "adicionar", "kind": "Choir", "junto_com": "pdf-0009"}
+    d["pdf-0013"] = {"pdf_id": "pdf-0013", "tipo": "adicionar", "kind": "Choir", "junto_com": "pdf-0010"}
+    plano = pa.montar_plano(d, findings, mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    importar = {o.entradas[0].short_id: o.praise_id for o in plano.por_tipo("importar")}
+    assert importar["0011"] == "p1"   # (a) alvo decidido nao_levar, finding tem praise
+    assert importar["0012"] == "p1"   # (b) alvo sem decisão nenhuma, finding tem praise
+    motivos = {r["short_id"]: r["motivo"] for r in plano.recusas}
+    assert motivos["0013"] == "junto_com sem destino (a entrada apontada não tem praise nem cria)"  # (c) nem decisão nem finding com praise
+
+
 def test_sql_link_e_importar(mundo):
     plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
     kinds = {"Choir": "k-choir", "Chord Chart": "k-cc", "Chord Chart I": "k-cc1"}
@@ -207,8 +254,8 @@ def stubs(monkeypatch):
 
     monkeypatch.setattr(pa, "query", query)
     monkeypatch.setattr(pa, "run_sql_files", run_sql_files)
-    monkeypatch.setattr(pa, "r2_put", lambda key, arquivo, content_type="application/pdf": chamadas["put"].append(key))
-    monkeypatch.setattr(pa, "r2_delete", lambda key: chamadas["delete"].append(key))
+    monkeypatch.setattr(pa, "r2_put", lambda key, arquivo, content_type="application/pdf", remote=True: chamadas["put"].append(key))
+    monkeypatch.setattr(pa, "r2_delete", lambda key, remote=True: chamadas["delete"].append(key))
     return {"prod": prod, "chamadas": chamadas, "falhar": falhar}
 
 
@@ -264,6 +311,20 @@ def test_execute_link_em_lote_e_pos_condicao(mundo, stubs):
     assert r2["ja_aplicadas"] == 3 and r2["aplicadas"] == 0
 
 
+def test_execute_log_base_tem_decidido_por_e_confianca(mundo, stubs):
+    # B2: spec §7 diz que o apply_log registra decidido_por — precisa estar em toda linha.
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    pa.executar(plano, "link", execute=True, run_id="run-l", log_path=log, conn=mundo["conn"],
+               sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    linhas = _log(log)
+    detector = next(l for l in linhas if l["pdf_ids"] == ["pdf-0001"])
+    nada = next(l for l in linhas if l["estado"] == "sem_escrita")
+    assert (detector["decidido_por"], detector["confianca"]) == ("detector", "alta")
+    assert (nada["decidido_por"], nada["confianca"]) == ("jairo", "humano")
+
+
 def test_execute_criar_e_substituir_sobem_r2_antes_do_sql(mundo, stubs):
     _com_sha_real(mundo)
     plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
@@ -283,7 +344,51 @@ def test_execute_criar_e_substituir_sobem_r2_antes_do_sql(mundo, stubs):
     assert fim["antes"]["id"] == "m2" and fim["antes"]["r2_key"] == "assets/praises/p1/m2.pdf"
 
 
-def test_execute_pre_condicao_e_falha_do_wrangler(mundo, stubs):
+def test_execute_importar_sobe_r2_e_grava_material_e_crosswalk(mundo, stubs):
+    # B4: tipo importar (decisão 'adicionar' com praise_id), num finding com arquivo real.
+    _com_sha_real(mundo)
+    d = dict(mundo["decisoes"])
+    d["pdf-0003"] = {"pdf_id": "pdf-0003", "tipo": "adicionar", "praise_id": "p1", "kind": "Chord Chart"}
+    del d["pdf-0004"]   # não depende mais do pdf-0003 'criar'
+    plano = pa.montar_plano(d, mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    (imp,) = plano.por_tipo("importar")
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "importar", execute=True, run_id="run-i", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert r["aplicadas"] == 1
+    fim = [l for l in _log(log) if l["op_id"] == imp.op_id][-1]
+    mid = fim["ids"]["material_ids"]["pdf-0003"]
+    assert stubs["chamadas"]["put"] == [f"storage/assets/praises/p1/{mid}.pdf"]
+    sql = "".join(open(a).read() for a in stubs["chamadas"]["sql"])
+    assert "INSERT INTO praise_materials" in sql and "INSERT INTO plpcg_crosswalk" in sql
+    assert fim["ok"] is True
+
+
+def test_execute_r2_loga_a_chave_antes_do_put_mostra_ambas_num_put_que_falha(mundo, stubs, monkeypatch):
+    # B3: a chave vai para o log ANTES do r2_put — um kill/erro no meio do
+    # upload não perde a chave (o undo pode tentar apagá-la de qualquer jeito).
+    # Op 'criar' tem 2 entradas → 2 puts; o segundo levanta.
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    chaves: list[str] = []
+
+    def r2_put_falha_na_segunda(key, arquivo, content_type="application/pdf", remote=True):
+        chaves.append(key)
+        if len(chaves) == 2:
+            raise RuntimeError("r2 caiu no segundo put")
+
+    monkeypatch.setattr(pa, "r2_put", r2_put_falha_na_segunda)
+    r = pa.executar(plano, "criar", execute=True, run_id="run-c", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert r["falharam"] == 1
+    (c,) = plano.por_tipo("criar")
+    fim = [l for l in _log(log) if l["op_id"] == c.op_id][-1]
+    assert fim["estado"] == "falhou" and fim["ok"] is False
+    assert len(chaves) == 2 and fim["r2"] == chaves   # as DUAS chaves, não só a primeira que teve sucesso
+
+
+def test_execute_pre_condicao_e_falha_do_wrangler(mundo, stubs, monkeypatch):
     _com_sha_real(mundo)
     stubs["prod"]["crosswalk"].add("pdf-0001")            # já vinculado em produção
     stubs["prod"]["nomes"].append(("p-alheio", "A palavra de poder", None))  # homônimo Avulsos criado DEPOIS do snapshot
@@ -299,11 +404,15 @@ def test_execute_pre_condicao_e_falha_do_wrangler(mundo, stubs):
     assert r["falharam"] == 1 and "mesmo nome" in _log(log)[-1]["motivo"] and stubs["chamadas"]["put"] == []
     # Gadareno já estava no snapshot: um 'criar' homônimo dele NÃO é recusado (Revisão 3 já cobriu)
     assert "gadareno" not in pa.estado_producao(praises_snapshot={"p1", "p2"})["nomes"]
-    stubs["falhar"]["sql"] = True
+    # A2: o stderr real do wrangler (onde mora o D1_ERROR) não pode se perder atrás
+    # de "returned non-zero exit status 1" — só o CalledProcessError.stderr tem isso.
+    monkeypatch.setattr(pa, "run_sql_files",
+                        lambda arquivos, remote=True: (_ for _ in ()).throw(
+                            subprocess.CalledProcessError(1, ["wrangler"], stderr="D1_ERROR: boom")))
     r = pa.executar(plano, "substituir", execute=True, run_id="run-3", log_path=log, conn=mundo["conn"],
                     sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
     fim = _log(log)[-1]
-    assert r["falharam"] == 1 and fim["escreveu"] and not fim["ok"] and "wrangler caiu" in fim["erro"] and len(fim["r2"]) == 1
+    assert r["falharam"] == 1 and fim["escreveu"] and not fim["ok"] and "D1_ERROR: boom" in fim["erro"] and len(fim["r2"]) == 1
 
 
 def test_execute_link_em_lotes_falha_do_wrangler_marca_todas(mundo, stubs, monkeypatch):
@@ -450,7 +559,7 @@ def test_undo_erro_no_r2_delete_nao_invalida_o_sql(mundo, stubs, monkeypatch):
     fim = [l for l in _log(log) if l["op_id"] == c.op_id][-1]
     primeira, segunda = fim["r2"]
 
-    def r2_delete_falha_na_primeira(chave):
+    def r2_delete_falha_na_primeira(chave, remote=True):
         if chave == primeira:
             raise RuntimeError("r2 caiu")
         stubs["chamadas"]["delete"].append(chave)
@@ -484,3 +593,64 @@ def test_main_simula_e_imprime_plano(mundo, stubs, capsys, monkeypatch):
     assert stubs["chamadas"]["sql"] == []
     with pytest.raises(SystemExit):
         pa.main(["--execute", "--decisoes", str(dpath), "--findings", str(fpath), "--snapshot", str(mundo["tmp"] / "snapshot.sqlite")])
+
+
+def _gravar_decisoes_e_findings(mundo):
+    dpath = mundo["tmp"] / "decisoes.jsonl"
+    with open(dpath, "w", encoding="utf-8") as f:
+        for d in mundo["decisoes"].values():
+            f.write(json.dumps(d) + "\n")
+    fpath = mundo["tmp"] / "findings.jsonl"
+    with open(fpath, "w", encoding="utf-8") as f:
+        for x in mundo["findings"]:
+            f.write(json.dumps(x) + "\n")
+    return str(dpath), str(fpath)
+
+
+def test_main_limite_so_corta_o_tipo_pedido_outros_e_nada_ficam_no_total(mundo, stubs, capsys):
+    # B1: --limite 1 --tipo link corta só os links (2 → 1); criar e nada, que não
+    # são o --tipo pedido, continuam no total da linha "plano:".
+    _com_sha_real(mundo)
+    dpath, fpath = _gravar_decisoes_e_findings(mundo)
+    rc = pa.main(["--decisoes", dpath, "--findings", fpath, "--snapshot", str(mundo["tmp"] / "snapshot.sqlite"),
+                  "--plpcjf", mundo["plpcjf"], "--baixados", mundo["baixados"], "--log", str(mundo["tmp"] / "log.jsonl"),
+                  "--sql-dir", str(mundo["tmp"] / "sql"), "--tipo", "link", "--limite", "1"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "link 1" in out and "criar 1" in out and "nada 1" in out
+
+
+def test_main_limite_nao_positivo_e_erro_do_parser(mundo):
+    dpath, fpath = _gravar_decisoes_e_findings(mundo)
+    with pytest.raises(SystemExit):
+        pa.main(["--decisoes", dpath, "--findings", fpath, "--snapshot", str(mundo["tmp"] / "snapshot.sqlite"), "--limite", "0"])
+
+
+def test_main_decisoes_inexistente_falha_com_rc1_e_stderr(mundo, capsys):
+    dpath, fpath = _gravar_decisoes_e_findings(mundo)
+    rc = pa.main(["--decisoes", str(mundo["tmp"] / "nao-existe.jsonl"), "--findings", fpath,
+                  "--snapshot", str(mundo["tmp"] / "snapshot.sqlite")])
+    assert rc == 1 and "sem decisoes" in capsys.readouterr().err
+
+
+def test_main_undo_rc0_quando_tudo_desfeito(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    pa.executar(plano, "substituir", execute=True, run_id="run-1", log_path=log, conn=mundo["conn"],
+               sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    rc = pa.main(["--undo", "run-1", "--log", log, "--sql-dir", str(mundo["tmp"] / "sql"),
+                  "--execucao-dir", str(mundo["tmp"] / "exec")])
+    assert rc == 0
+
+
+def test_main_undo_rc1_quando_desfazer_falha(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    pa.executar(plano, "substituir", execute=True, run_id="run-1", log_path=log, conn=mundo["conn"],
+               sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    stubs["falhar"]["sql"] = True
+    rc = pa.main(["--undo", "run-1", "--log", log, "--sql-dir", str(mundo["tmp"] / "sql"),
+                  "--execucao-dir", str(mundo["tmp"] / "exec")])
+    assert rc == 1

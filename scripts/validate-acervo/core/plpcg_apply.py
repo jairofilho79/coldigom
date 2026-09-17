@@ -87,6 +87,15 @@ def op_id(tipo: str, pdf_ids: list[str]) -> str:
     return hashlib.sha256((tipo + "|" + "|".join(sorted(pdf_ids))).encode("utf-8")).hexdigest()[:16]
 
 
+def _erro_texto(erro: Exception) -> str:
+    """`f"{type(erro).__name__}: {erro}"` sozinho é "returned non-zero exit
+    status 1" para um CalledProcessError do wrangler — o stderr real (onde
+    mora o D1_ERROR) fica só em `erro.stderr`. Anexa até 2000 chars quando existe."""
+    texto = f"{type(erro).__name__}: {erro}"
+    stderr = (getattr(erro, "stderr", "") or "")[-2000:]
+    return f"{texto} {stderr}" if stderr else texto
+
+
 def _acervo(conn: sqlite3.Connection) -> dict:
     kinds = {r[1]: r[0] for r in conn.execute("SELECT id, name FROM material_kinds")}
     praises = {r[0] for r in conn.execute("SELECT id FROM praises")}
@@ -94,12 +103,31 @@ def _acervo(conn: sqlite3.Connection) -> dict:
     return {"kinds": kinds, "praises": praises, "materiais": materiais}
 
 
-def _resolver_junto(pdf_id: str, decisoes: dict[str, dict]) -> tuple[str, str] | tuple[None, str]:
+def _praise_do_finding(f: dict) -> str | None:
+    """O praise que o FINDING de `f` já aponta, quando a decisão não aponta
+    nenhum: o `praise_id` de topo, ou o único candidato quando todos os
+    candidatos do finding concordam num praise só."""
+    praise = f.get("praise_id")
+    if praise:
+        return praise
+    candidatos = f["evidence"].get("candidatos") or []
+    praises = {c["praise_id"] for c in candidatos}
+    return next(iter(praises)) if len(praises) == 1 else None
+
+
+def _resolver_junto(pdf_id: str, decisoes: dict[str, dict],
+                    praise_do_finding: dict[str, str | None]) -> tuple[str, str] | tuple[None, str]:
     """Segue junto_com até uma decisão que cria ('criar', pdf_id de quem cria)
-    ou que tem praise ('praise', praise_id). Ciclo/ponta solta → (None, motivo).
-    Só é chamada quando a decisão de `pdf_id` tem junto_com."""
+    ou que tem praise ('praise', praise_id). Quando a cadeia termina numa
+    entrada sem 'criar' e sem `praise_id` na decisão (alta sem decisão,
+    `nao_levar`, ainda pendente…), cai para o praise do FINDING daquela
+    entrada (`praise_do_finding`) antes de recusar — 6 casos reais em que o
+    detector já sabia o praise e só faltava a decisão apontar para lá.
+    Ciclo/ponta solta → (None, motivo). Só é chamada quando a decisão de
+    `pdf_id` tem junto_com."""
     vistos = [pdf_id]
     atual = decisoes.get(pdf_id, {})
+    alvo = pdf_id
     while atual.get("junto_com"):
         alvo = atual["junto_com"]
         if alvo in vistos:
@@ -112,6 +140,9 @@ def _resolver_junto(pdf_id: str, decisoes: dict[str, dict]) -> tuple[str, str] |
             return "criar", alvo
         if atual.get("tipo") in ("adicionar", "substituir", "link") and atual.get("praise_id") and not atual.get("junto_com"):
             return "praise", atual["praise_id"]
+    praise = praise_do_finding.get(alvo)
+    if praise:
+        return "praise", praise
     return None, "junto_com sem destino (a entrada apontada não tem praise nem cria)"
 
 
@@ -134,6 +165,7 @@ def montar_plano(decisoes: dict[str, dict], findings: list[dict], conn: sqlite3.
                        evidencia=evidencia)
 
     plpcg = sorted((f for f in findings if f["target_type"] == "plpcg"), key=lambda f: f["evidence"]["short_id"])
+    praise_do_finding = {f["target_id"]: _praise_do_finding(f) for f in plpcg}
     # 1ª passada: quem cria o quê (para o junto_com achar o grupo certo)
     for f in plpcg:
         d = decisoes.get(f["target_id"])
@@ -185,8 +217,11 @@ def montar_plano(decisoes: dict[str, dict], findings: list[dict], conn: sqlite3.
 
         if tipo == "adicionar":
             praise = d.get("praise_id")
+            if not praise and not d.get("junto_com"):
+                recusar(f, "adicionar sem praise alvo nem junto_com")
+                continue
             if d.get("junto_com"):
-                onde, alvo = _resolver_junto(f["target_id"], decisoes)
+                onde, alvo = _resolver_junto(f["target_id"], decisoes, praise_do_finding)
                 if onde is None:
                     recusar(f, alvo)
                     continue
@@ -454,13 +489,14 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
             pendencias.extend(abertas)
         except Exception as erro:  # write_sql_chunks ou o wrangler levantaram: todo o lote falha
             for op, linha in abertas:
-                gravar(dict(linha, ts=time.time(), ok=False, estado="falhou", erro=f"{type(erro).__name__}: {erro}"))
+                gravar(dict(linha, ts=time.time(), ok=False, estado="falhou", erro=_erro_texto(erro)))
                 resumo["falharam"] += 1
         chunk, abertas = [], []
 
     try:
         for op in fila:
-            base = {"op_id": op.op_id, "run_id": run_id, "tipo": op.tipo, "pdf_ids": op.pdf_ids}
+            base = {"op_id": op.op_id, "run_id": run_id, "tipo": op.tipo, "pdf_ids": op.pdf_ids,
+                    "decidido_por": op.decidido_por, "confianca": op.confianca}
             if op.tipo == "nada":
                 gravar(dict(base, ts=time.time(), ok=True, escreveu=False, estado="sem_escrita", motivo=op.motivo))
                 resumo["sem_escrita"] += 1
@@ -493,10 +529,13 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
             try:
                 for e in op.entradas:
                     chave = chave_bucket(r2_key(ids["praise_id"], ids["material_ids"][e.pdf_id]))
-                    r2_put(chave, e.arquivo)
+                    # A chave vai para o disco ANTES do put: um kill no meio do upload
+                    # não deixa a chave órfã sem registro — o undo tenta apagá-la, e
+                    # `r2 object delete` de uma chave que nunca chegou a existir é inofensivo.
                     linha["r2"].append(chave)
                     linha["escreveu"] = True
                     gravar(dict(linha, ts=time.time(), estado="subindo_r2"))
+                    r2_put(chave, e.arquivo, remote=remote)
                 arquivos = write_sql_chunks(stmts, base_sql, prefix=op.op_id, per_file=LOTE_SQL)
                 linha["escreveu"] = True
                 gravar(dict(linha, ts=time.time(), estado="escrevendo"))
@@ -505,7 +544,7 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
                     removidos.append(op.material_id)
                 pendencias.append((op, linha))
             except Exception as erro:
-                gravar(dict(linha, ts=time.time(), ok=False, estado="falhou", erro=f"{type(erro).__name__}: {erro}"))
+                gravar(dict(linha, ts=time.time(), ok=False, estado="falhou", erro=_erro_texto(erro)))
                 resumo["falharam"] += 1
         fechar_chunk()
 
@@ -527,7 +566,7 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
                     resumo["falharam"] += 1
     finally:
         log.close()
-    copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+        copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
     return resumo
 
 
@@ -602,7 +641,7 @@ def desfazer(run_id: str, log_path: str, remote: bool = True, sql_dir: str | Non
                 saida["statements"] = len(stmts)
                 for chave in r.get("r2") or []:
                     try:
-                        r2_delete(chave)
+                        r2_delete(chave, remote=remote)
                         saida["r2_apagados"].append(chave)
                     except Exception as erro:
                         saida["erros_r2"].append(f"{chave}: {type(erro).__name__}: {erro}")
@@ -610,7 +649,7 @@ def desfazer(run_id: str, log_path: str, remote: bool = True, sql_dir: str | Non
                 resumo["desfeitas"] += 1
             except Exception as erro:
                 saida["ok"] = False
-                saida["erro"] = f"{type(erro).__name__}: {erro}"
+                saida["erro"] = _erro_texto(erro)
                 resumo["falharam"] += 1
             log.write(json.dumps(saida, ensure_ascii=False) + "\n")
             log.flush()
@@ -642,6 +681,8 @@ def main(argv=None) -> int:
     ap.add_argument("--local", action="store_true", help="wrangler --local (D1/R2 locais)")
     a = ap.parse_args(argv)
     remote = not a.local
+    if a.limite is not None and a.limite <= 0:
+        ap.error("--limite tem que ser positivo")
 
     if a.undo:
         r = desfazer(a.undo, a.log, remote=remote, sql_dir=a.sql_dir, execucao_dir=a.execucao_dir)
@@ -658,6 +699,11 @@ def main(argv=None) -> int:
     conn = conectar(a.snapshot)
     plano = montar_plano(dec.ler(a.decisoes), _ler_jsonl(a.findings), conn, a.plpcjf, a.baixados)
     if a.limite is not None:
+        # Assimetria proposital: com --tipo explícito, só as ops daquele tipo são
+        # cortadas em --limite (as de outros tipos, e 'nada', continuam no total —
+        # é isso que --execute usa, um tipo por vez). Com --tipo todos (o padrão),
+        # o corte é global sobre todo o plano; só é alcançável em simulação, porque
+        # --execute recusa --tipo todos (checado acima).
         vistos = 0
         ops = []
         for op in plano.ops:

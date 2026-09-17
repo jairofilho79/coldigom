@@ -76,6 +76,33 @@ Onde o texto não decide sozinho, a linha sai com `tipo: null` e `duvida`; o
 modo **Revisão 2** do site lista essas e mostra a dúvida em cima dos botões.
 O modo gabarito (`?cego=1`) e o `core.gold` desta migração ainda não existem.
 
+**Fase C — escrever no coldigom** (`core/plpcg_apply.py`, spec §7):
+
+```bash
+python3 -m core.plpcg_apply                          # simula tudo: plano por tipo, recusas, 3 exemplos de SQL/R2
+python3 -m core.plpcg_apply --tipo link --execute    # 1º: só o crosswalk (alta do detector + "já existe" do site)
+python3 -m core.snapshot
+python3 -m core.plpcg_apply --tipo importar --execute   # "adicionar": upload no R2 + praise_materials + crosswalk
+python3 -m core.plpcg_apply --tipo substituir --execute # idem + DELETE do material trocado (objeto R2 antigo fica)
+python3 -m core.snapshot
+python3 -m core.plpcg_apply --tipo criar --execute      # praises novos (um por nome) + materiais + crosswalk
+python3 -m core.plpcg_apply --undo <run_id>             # desfaz um run inteiro, na ordem inversa
+```
+
+Lê `gabaritos/plpcg_crosswalk/decisoes.jsonl` (última linha por `pdf_id`) e o
+`findings.jsonl` da rodada 1 (hash, path). Alta sem decisão vira `link` do
+detector; `nao_levar`/`descartar` não escrevem mas entram no log como
+decididas-sem-escrita; `junto_com` é resolvido em cadeia; `criar` repetido
+para o mesmo nome vira um praise só. Simulação não toca rede nem lê
+credencial. `--execute` exige `--tipo`; cada run grava em
+`out/plpcg_apply_log.jsonl` e copia as suas linhas para
+`gabaritos/plpcg_crosswalk/execucao/<run_id>.jsonl` (git). Pré-condições
+lidas de produção uma vez por run (praise/material existem, `pdf_id` ainda
+não está no crosswalk, sha256 do PDF confere, nenhum homônimo com a mesma
+tag-base para criar); pós-condição por run (`plpcg_crosswalk WHERE run_id`).
+R2 via `wrangler r2 object put|delete coldigom-assets/storage/…` — mesma
+autenticação do D1. `--limite N` para o primeiro `--execute` ser pequeno.
+
 `core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
 (cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de
 `dev/plpcjf/assets` e, o que não está lá, de `plpcg.com`. Ambos sobrescrevíveis
@@ -134,6 +161,7 @@ Testes: `python3 -m pytest tests/ -v`
 | `detectors/plpcg_crosswalk.py` | Fase A da migração — louvor por número/slug/classe, hash e caminho só dentro do louvor, faixas e candidatos |
 | `revisao/serve.py` + `revisao/index.html` | o site local de revisão da migração PLPCG — findings por louvor, PDFs lado a lado, `POST /decide` |
 | `revisao/decisoes.py` · `revisao/migrar_anotacoes.py` | tipos de decisão, validação, `decisoes.jsonl`; migração única das anotações da rodada 1 |
+| `core/plpcg_apply.py` | Fase C: decisões → link/importar/substituir/criar no D1 + R2, simulação, log, undo |
 | `gabaritos/plpcg_crosswalk/decisoes.jsonl` | as decisões do dono, append-only, última por `pdf_id` vence — é o que o `apply` da Fase C vai ler |
 
 ## As regras que não são óbvias no código

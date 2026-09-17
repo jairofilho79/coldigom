@@ -616,3 +616,74 @@ def desfazer(run_id: str, log_path: str, remote: bool = True, sql_dir: str | Non
             log.flush()
     copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
     return resumo
+
+
+# --- CLI -------------------------------------------------------------------------
+
+def _ler_jsonl(caminho: str) -> list[dict]:
+    with open(caminho, encoding="utf-8") as f:
+        return [json.loads(l) for l in f if l.strip()]
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--decisoes", default=DECISOES_PADRAO)
+    ap.add_argument("--findings", default=FINDINGS_PADRAO, help="findings.jsonl da rodada decidida (padrão: gabarito da rodada 1)")
+    ap.add_argument("--snapshot", default=SNAPSHOT_DB)
+    ap.add_argument("--plpcjf", default=PLPCJF_ASSETS)
+    ap.add_argument("--baixados", default=PLPCG_BAIXADOS)
+    ap.add_argument("--tipo", default="todos", choices=("todos", *TIPOS))
+    ap.add_argument("--execute", action="store_true", help="escreve em produção (exige --tipo)")
+    ap.add_argument("--undo", metavar="RUN_ID")
+    ap.add_argument("--log", default=LOG_PADRAO)
+    ap.add_argument("--sql-dir", default=None)
+    ap.add_argument("--execucao-dir", default=EXECUCAO_PADRAO)
+    ap.add_argument("--limite", type=int, default=None, help="só as N primeiras ops do tipo")
+    ap.add_argument("--local", action="store_true", help="wrangler --local (D1/R2 locais)")
+    a = ap.parse_args(argv)
+    remote = not a.local
+
+    if a.undo:
+        r = desfazer(a.undo, a.log, remote=remote, sql_dir=a.sql_dir, execucao_dir=a.execucao_dir)
+        print(f"undo {a.undo}: " + " · ".join(f"{k} {v}" for k, v in r.items()))
+        return 0 if not r["falharam"] else 1
+
+    if a.execute and a.tipo == "todos":
+        ap.error("--execute exige --tipo link|importar|substituir|criar (ordem do spec §9; core.snapshot entre eles)")
+    for caminho, nome in ((a.decisoes, "decisoes"), (a.findings, "findings"), (a.snapshot, "snapshot")):
+        if not os.path.exists(caminho):
+            print(f"sem {nome}: {caminho}", file=sys.stderr)
+            return 1
+
+    conn = conectar(a.snapshot)
+    plano = montar_plano(dec.ler(a.decisoes), _ler_jsonl(a.findings), conn, a.plpcjf, a.baixados)
+    if a.limite is not None:
+        vistos = 0
+        ops = []
+        for op in plano.ops:
+            if op.tipo == a.tipo or a.tipo == "todos":
+                if vistos >= a.limite:
+                    continue
+                vistos += 1
+            ops.append(op)
+        plano = Plano(ops, plano.recusas)
+    contagem = {}
+    for op in plano.ops:
+        contagem[op.tipo] = contagem.get(op.tipo, 0) + 1
+    print("plano: " + " · ".join(f"{k} {contagem.get(k, 0)}" for k in (*TIPOS, "nada")) + f" · recusas: {len(plano.recusas)}")
+    for r in plano.recusas[:30]:
+        print(f"  recusa {r['short_id']}: {r['motivo']}")
+    if len(plano.recusas) > 30:
+        print(f"  … e mais {len(plano.recusas) - 30}")
+
+    run_id = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%MZ") + f"-plpcg_apply-{a.tipo}"
+    r = executar(plano, a.tipo, a.execute, run_id, a.log, conn, remote=remote, sql_dir=a.sql_dir,
+                 execucao_dir=a.execucao_dir)
+    print(f"\n{'EXECUTADO' if a.execute else 'simulado'} {run_id}: " + " · ".join(f"{k} {v}" for k, v in r.items()))
+    if a.execute:
+        print(f"log: {a.log}\ncópia: {os.path.join(a.execucao_dir, run_id + '.jsonl')}\nundo: python3 -m core.plpcg_apply --undo {run_id}")
+    return 0 if not r["falharam"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -463,3 +463,24 @@ def test_undo_erro_no_r2_delete_nao_invalida_o_sql(mundo, stubs, monkeypatch):
     assert len(ultima["erros_r2"]) == 1 and primeira in ultima["erros_r2"][0]
     assert ultima["r2_apagados"] == [segunda]
     assert stubs["chamadas"]["delete"] == [segunda]
+
+
+def test_main_simula_e_imprime_plano(mundo, stubs, capsys, monkeypatch):
+    import json as _json
+    _com_sha_real(mundo)
+    dpath = mundo["tmp"] / "decisoes.jsonl"
+    with open(dpath, "w", encoding="utf-8") as f:
+        for d in mundo["decisoes"].values():
+            f.write(_json.dumps(d) + "\n")
+    fpath = mundo["tmp"] / "findings.jsonl"
+    with open(fpath, "w", encoding="utf-8") as f:
+        for x in mundo["findings"]:
+            f.write(_json.dumps(x) + "\n")
+    rc = pa.main(["--decisoes", str(dpath), "--findings", str(fpath), "--snapshot", str(mundo["tmp"] / "snapshot.sqlite"),
+                  "--plpcjf", mundo["plpcjf"], "--baixados", mundo["baixados"], "--log", str(mundo["tmp"] / "log.jsonl"),
+                  "--sql-dir", str(mundo["tmp"] / "sql")])
+    out = capsys.readouterr().out
+    assert rc == 0 and "link 2" in out and "criar 1" in out and "recusas: 1" in out and "0006" in out
+    assert stubs["chamadas"]["sql"] == []
+    with pytest.raises(SystemExit):
+        pa.main(["--execute", "--decisoes", str(dpath), "--findings", str(fpath), "--snapshot", str(mundo["tmp"] / "snapshot.sqlite")])

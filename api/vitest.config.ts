@@ -19,12 +19,13 @@ export default defineConfig({
       // P2 (2026-09-03): fila de revisão — 70.48 / 66.16 / 72.79 / 72.88
       // Gestos (2026-09-11): editor de gestos — 74.64 / 70.97 / 76.65 / 77.09
       // Contribuições, rotas admin (2026-09-17): 77.51 / 73.16 / 79.8 / 79.97
+      // Contribuições admin, fix de revisão (2026-09-17): 77.64 / 73.19 / 80.04 / 80.12
       thresholds: {
-        // Contribuições admin: medido 77.51 / 73.16 / 79.8 / 79.97
+        // Fix de revisão: medido 77.64 / 73.19 / 80.04 / 80.12
         statements: 77,
         branches: 73,
-        functions: 79,
-        lines: 79,
+        functions: 80,
+        lines: 80,
       },
     },
   },

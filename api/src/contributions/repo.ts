@@ -105,6 +105,31 @@ export async function listFiles(db: D1Database, contributionId: string): Promise
   return results ?? [];
 }
 
+/**
+ * Arquivos de várias contribuições numa passada só — a lista do admin não pode
+ * fazer um `listFiles` por linha (N+1: 50 linhas de página = 50 SELECTs). Faixas
+ * de 100 ids por `IN (...)` porque é o teto de parâmetros vinculados do D1.
+ */
+export async function listFilesForContributions(db: D1Database, ids: string[]): Promise<Map<string, ContributionFileRow[]>> {
+  const byContribution = new Map<string, ContributionFileRow[]>();
+  if (ids.length === 0) return byContribution;
+  const CHUNK = 100;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const chunk = ids.slice(i, i + CHUNK);
+    const placeholders = chunk.map(() => '?').join(', ');
+    const { results } = await db
+      .prepare(`SELECT * FROM contribution_files WHERE contribution_id IN (${placeholders}) ORDER BY contribution_id, created_at, id`)
+      .bind(...chunk)
+      .all<ContributionFileRow>();
+    for (const file of results ?? []) {
+      const arr = byContribution.get(file.contribution_id);
+      if (arr) arr.push(file);
+      else byContribution.set(file.contribution_id, [file]);
+    }
+  }
+  return byContribution;
+}
+
 export function encodeCursor(createdAt: string, id: string): string {
   return btoa(`${createdAt}|${id}`).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }

@@ -42,16 +42,21 @@ describe('GET /api/admin/contributions', () => {
     expect((await pedir('/api/admin/contributions', {}, db().db, r2(), false)).status).toBe(401);
   });
   it('filtra por status/kind/praise e devolve fields como objeto', async () => {
-    const { db: d, chamadas } = db({ linhas: [ROW] });
+    const { db: d, chamadas } = db({ linhas: [ROW], arquivos: [FILE] });
     const res = await pedir('/api/admin/contributions?status=pendente&kind=wrong_info&praise=p1', {}, d);
     expect(res.status).toBe(200);
     const corpo = (await res.json()) as { data: Linha[] };
     expect(corpo.data[0].fields).toEqual({ field: 'tonality', current: 'Dm', proposed: 'Em' });
-    const lista = chamadas.find((c) => c.sql.includes('ORDER BY'))!;
+    expect(corpo.data[0].files).toHaveLength(1);
+    const lista = chamadas.find((c) => c.sql.includes('ORDER BY') && !c.sql.includes('contribution_files'))!;
     expect(lista.sql).toContain('status = ?');
     expect(lista.sql).toContain('kind = ?');
     expect(lista.sql).toContain('target_praise_id = ?');
     expect(lista.bindings.slice(0, 3)).toEqual(['pendente', 'wrong_info', 'p1']);
+    // N+1: os arquivos das linhas da página saem de UM SELECT com `IN (...)`,
+    // nunca de um `listFiles` por linha.
+    const arquivosQuery = chamadas.find((c) => c.sql.includes('contribution_files') && c.sql.includes('IN ('))!;
+    expect(arquivosQuery.bindings).toEqual(['c1']);
   });
   it('status desconhecido → 400', async () => {
     expect((await pedir('/api/admin/contributions?status=feito', {}, db().db)).status).toBe(400);
@@ -66,13 +71,22 @@ describe('GET /api/admin/contributions/:id/files/:fileId', () => {
     expect(res.headers.get('content-type')).toBe('application/pdf');
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
     expect(res.headers.get('content-security-policy')).toBe('sandbox');
-    expect(res.headers.get('content-disposition')).toBe('inline; filename="grade.pdf"');
+    expect(res.headers.get('content-disposition')).toBe(`inline; filename="grade.pdf"; filename*=UTF-8''grade.pdf`);
     expect(res.headers.get('cache-control')).toBe('private, no-store');
   });
   it('arquivo não limpo → 409 file_not_clean', async () => {
     const { db: d } = db({ primeira: ROW, arquivos: [{ ...FILE, scan_status: 'suspeita', r2_key: 'quarantine/c1/f1.pdf' }] });
     const res = await pedir('/api/admin/contributions/c1/files/f1', {}, d);
     expect(res.status).toBe(409);
+  });
+  it('nome com acento: fallback ASCII em filename= e UTF-8 percent-encoded em filename*', async () => {
+    const arquivo = { ...FILE, original_name: 'Louvação nº 12.pdf' };
+    const { db: d } = db({ primeira: ROW, arquivos: [arquivo] });
+    const res = await pedir('/api/admin/contributions/c1/files/f1', {}, d, r2({ 'contributions/c1/f1.pdf': new TextEncoder().encode('%PDF-1.4 x') }));
+    expect(res.status).toBe(200);
+    const disposition = res.headers.get('content-disposition');
+    expect(disposition).toContain(`filename="Louva__o n_ 12.pdf"`);
+    expect(disposition).toContain(`filename*=UTF-8''Louva%C3%A7%C3%A3o%20n%C2%BA%2012.pdf`);
   });
 });
 
@@ -85,6 +99,22 @@ describe('PATCH /api/admin/contributions/:id', () => {
     expect(up.sql).toContain("decided_at = datetime('now')");
     expect(up.sql).toContain("status IN ('pendente', 'em_analise', 'aceita', 'recusada', 'aplicada')");
     expect(up.bindings).toEqual(['aceita', 'ok', 'admin@test.com', 'c1']);
+  });
+  it('decision_note omitido não mexe na nota existente', async () => {
+    const { db: d, chamadas } = db({ primeira: { ...ROW, status: 'aceita' } });
+    const res = await pedir('/api/admin/contributions/c1', { method: 'PATCH', body: JSON.stringify({ status: 'aceita' }) }, d);
+    expect(res.status).toBe(200);
+    const up = chamadas.find((c) => c.sql.startsWith('UPDATE contributions'))!;
+    expect(up.sql).not.toContain('decision_note = ?');
+    expect(up.bindings).toEqual(['aceita', 'admin@test.com', 'c1']);
+  });
+  it('decision_note vazia explícita zera a nota', async () => {
+    const { db: d, chamadas } = db({ primeira: { ...ROW, status: 'aceita', decision_note: null } });
+    const res = await pedir('/api/admin/contributions/c1', { method: 'PATCH', body: JSON.stringify({ status: 'aceita', decision_note: '' }) }, d);
+    expect(res.status).toBe(200);
+    const up = chamadas.find((c) => c.sql.startsWith('UPDATE contributions'))!;
+    expect(up.sql).toContain('decision_note = ?');
+    expect(up.bindings).toEqual(['aceita', null, 'admin@test.com', 'c1']);
   });
   it('status fora da lista ou recebida/bloqueada → 400', async () => {
     expect((await pedir('/api/admin/contributions/c1', { method: 'PATCH', body: JSON.stringify({ status: 'bloqueada' }) }, db().db)).status).toBe(400);

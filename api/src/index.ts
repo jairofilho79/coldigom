@@ -11,6 +11,7 @@ import type { Env } from './env';
 import { corsAllowOrigin } from './origins';
 import { registerAssetsRoutes } from './routes/assets';
 import { registerAuthRoutes } from './routes/auth';
+import { registerContributionsRoutes } from './routes/contributions';
 import { registerDriveRoutes } from './routes/drive';
 import { registerGesturesRoutes } from './routes/gestures';
 import { registerHealthRoutes } from './routes/health';
@@ -77,6 +78,7 @@ registerGesturesRoutes(app);
 registerTagsRoutes(app);
 registerValidationRoutes(app);
 registerDriveRoutes(app);
+registerContributionsRoutes(app);
 registerAssetsRoutes(app);
 registerHealthRoutes(app);
 

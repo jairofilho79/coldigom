@@ -118,3 +118,12 @@ def test_plano_recusa_kind_desconhecido_e_material_de_outro_praise(mundo):
     plano = pa.montar_plano(d, mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
     motivos = {r["short_id"]: r["motivo"] for r in plano.recusas}
     assert "Banjo" in motivos["0002"] and "m1" in motivos["0001"]
+
+
+def test_plano_recusa_junto_com_para_entrada_sem_finding(mundo):
+    # pdf-0004 (adicionar, junto_com pdf-0003) aponta para uma decisão "criar"
+    # (pdf-0003) que não tem finding nesta rodada de findings.jsonl.
+    findings = [f for f in mundo["findings"] if f["target_id"] != "pdf-0003"]
+    plano = pa.montar_plano(mundo["decisoes"], findings, mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    motivos = {r["short_id"]: r["motivo"] for r in plano.recusas}
+    assert "sem finding" in motivos["0004"]

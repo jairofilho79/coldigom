@@ -191,6 +191,9 @@ def montar_plano(decisoes: dict[str, dict], findings: list[dict], conn: sqlite3.
                     recusar(f, alvo)
                     continue
                 if onde == "criar":
+                    if alvo not in criar_por_pdf:
+                        recusar(f, "junto_com aponta para uma entrada sem finding nesta rodada")
+                        continue
                     nome_n = criar_por_pdf[alvo]
                     grupo = criar_por_nome.get(nome_n)
                     if grupo is None:

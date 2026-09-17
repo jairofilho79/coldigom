@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { getMe, logout as apiLogout, refreshSession, exchangeAuthCode, type AuthUser } from '../services/api';
+import {
+  getMe,
+  logout as apiLogout,
+  refreshSession,
+  exchangeAuthCode,
+  isAuthStorageKey,
+  type AuthUser,
+} from '../services/api';
 import { AuthContext, type AuthContextValue } from './authContextValue';
 
 
@@ -117,11 +124,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (document.visibilityState === 'visible') revalidateIfReady();
     };
     const onFocus = () => revalidateIfReady();
+    // Os tokens vivem no localStorage, compartilhado entre abas: logar ou sair
+    // numa aba chega aqui como evento `storage`, e esta aba acompanha na hora,
+    // em vez de só no próximo foco.
+    const onStorage = (e: StorageEvent) => {
+      if (isAuthStorageKey(e.key)) revalidateIfReady();
+    };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('storage', onStorage);
     return () => {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('storage', onStorage);
     };
   }, [revalidateIfReady]);
 

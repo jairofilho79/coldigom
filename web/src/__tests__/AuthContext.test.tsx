@@ -9,6 +9,8 @@ vi.mock('../services/api', () => ({
   refreshSession: vi.fn(),
   exchangeAuthCode: vi.fn(),
   logout: vi.fn(),
+  isAuthStorageKey: (key: string | null) =>
+    key === null || key === 'coldigom_access' || key === 'coldigom_refresh',
 }));
 
 import { getMe, refreshSession, exchangeAuthCode, logout } from '../services/api';
@@ -293,6 +295,40 @@ describe('AuthContext', () => {
       },
       { timeout: 3000 }
     );
+  });
+
+  it('outra aba logou: o evento storage dos tokens faz esta aba revalidar', async () => {
+    // A sessão agora vive no localStorage, compartilhado entre abas. Sem escutar
+    // o `storage`, quem logou na aba B só via a mudança na aba A no próximo foco.
+    renderProvider();
+    await waitFor(() => {
+      expect(screen.getByTestId('ready')).toHaveTextContent('true');
+    });
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
+
+    (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+    window.dispatchEvent(new StorageEvent('storage', { key: 'coldigom_refresh', newValue: 'r2' }));
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('evento storage de outra chave não revalida', async () => {
+    (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+    renderProvider();
+    await waitFor(() => {
+      expect(screen.getByTestId('ready')).toHaveTextContent('true');
+    });
+    const chamadasAntes = (getMe as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    window.dispatchEvent(new StorageEvent('storage', { key: 'coldigom_rascunho_louvor', newValue: '{}' }));
+
+    await new Promise((r) => setTimeout(r, 50));
+    expect((getMe as ReturnType<typeof vi.fn>).mock.calls.length).toBe(chamadasAntes);
   });
 
   it('não revalida quando a aba fica oculta', async () => {

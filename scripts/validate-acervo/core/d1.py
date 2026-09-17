@@ -96,14 +96,15 @@ def _wrangler_r2(args: list[str]) -> subprocess.CompletedProcess:
     )
 
 
-def r2_put(key: str, arquivo: str, content_type: str = "application/pdf") -> None:
+def r2_put(key: str, arquivo: str, content_type: str = "application/pdf", remote: bool = True) -> None:
     """Sobe um arquivo para o bucket do coldigom. `key` já traz o prefixo
     `storage/` (é como o app grava: storage/assets/praises/<praise>/<material>.pdf).
     Mesma autenticação do D1 — o wrangler logado — nada de chave S3 em env."""
     if not os.path.isfile(arquivo):
         raise FileNotFoundError(arquivo)
-    _wrangler_r2(["put", f"{BUCKET}/{key}", "--file", arquivo, "--content-type", content_type, "--remote"])
+    _wrangler_r2(["put", f"{BUCKET}/{key}", "--file", arquivo, "--content-type", content_type,
+                  "--remote" if remote else "--local"])
 
 
-def r2_delete(key: str) -> None:
-    _wrangler_r2(["delete", f"{BUCKET}/{key}", "--remote"])
+def r2_delete(key: str, remote: bool = True) -> None:
+    _wrangler_r2(["delete", f"{BUCKET}/{key}", "--remote" if remote else "--local"])

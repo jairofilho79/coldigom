@@ -550,7 +550,12 @@ def _sql_undo(linha: dict) -> list[str]:
         stmts += [f"DELETE FROM praise_materials WHERE id = {sql_str(m)};" for m in ids.get("material_ids", {}).values()]
     if linha["tipo"] == "substituir" and linha.get("antes"):
         antes = linha["antes"]
-        stmts.append(f"INSERT INTO praise_materials ({', '.join(antes)}) VALUES ({', '.join(_lit(v) for v in antes.values())});")
+        # OR IGNORE: se a linha antiga nunca chegou a ser apagada (morreu em
+        # subindo_r2/escrevendo, falhou, ou guarda_barrou), o simples INSERT
+        # bateria em UNIQUE(id) e o run_sql_files levantaria antes do laço de
+        # r2_delete — deixando o objeto novo do R2 órfão. IGNORE restaura
+        # quando falta e não toca na linha que já está viva.
+        stmts.append(f"INSERT OR IGNORE INTO praise_materials ({', '.join(antes)}) VALUES ({', '.join(_lit(v) for v in antes.values())});")
     if linha["tipo"] == "criar":
         pid = sql_str(ids["praise_id"])
         stmts += [f"DELETE FROM praise_materials WHERE praise_id = {pid};",
@@ -572,7 +577,8 @@ def desfazer(run_id: str, log_path: str, remote: bool = True, sql_dir: str | Non
             if r.get("run_id") != run_id:
                 continue
             if r.get("estado") == "desfeito":
-                desfeitas.add(r["op_id"])
+                if r.get("ok"):   # undo que falhou não fecha a porta — o op continua desfazível
+                    desfeitas.add(r["op_id"])
                 continue
             if r["op_id"] not in ultimas:
                 ordem.append(r["op_id"])

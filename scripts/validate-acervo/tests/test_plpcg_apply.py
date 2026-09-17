@@ -385,7 +385,81 @@ def test_undo_reverte_criar_e_substituir_e_apaga_so_o_r2_do_run(mundo, stubs):
     r = pa.desfazer("run-2", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
     sql = "".join(open(a).read() for a in stubs["chamadas"]["sql"])
     assert r["desfeitas"] == 1
-    assert "INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key" in sql and "'m2', 'p1', 'k-choir', 'pdf', 'assets/praises/p1/m2.pdf'" in sql
+    assert "INSERT OR IGNORE INTO praise_materials (id, praise_id, material_kind, type, r2_key" in sql and "'m2', 'p1', 'k-choir', 'pdf', 'assets/praises/p1/m2.pdf'" in sql
     assert stubs["chamadas"]["delete"] == ["storage/assets/praises/p1/id-01.pdf"]
     # segundo undo do mesmo run: nada a fazer
     assert pa.desfazer("run-2", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))["desfeitas"] == 0
+
+
+def test_undo_substituir_que_morreu_antes_do_sql_nao_colide(mundo, stubs):
+    """Uma linha 'subindo_r2'/'escrevendo'/'falhou'/'guarda_barrou' de substituir
+    deixa a linha antiga (m2) viva. O re-INSERT do undo precisa de OR IGNORE:
+    sem ele, colide em UNIQUE(id), run_sql_files levanta ANTES do laço de
+    r2_delete, e o objeto novo do R2 fica órfão."""
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    kw = dict(log_path=log, conn=mundo["conn"], sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    pa.executar(plano, "substituir", execute=True, run_id="run-real", novo_id=_ids(), **kw)
+    real = [l for l in _log(log) if l["tipo"] == "substituir"][-1]
+    linha_morta = dict(real, run_id="run-x", estado="subindo_r2", escreveu=True,
+                       ids={"praise_id": real["ids"]["praise_id"], "material_ids": {"pdf-0002": "id-99"}},
+                       r2=["storage/assets/praises/p1/id-99.pdf"], antes=real["antes"])
+    with open(log, "a", encoding="utf-8") as f:
+        f.write(json.dumps(linha_morta, ensure_ascii=False) + "\n")
+    stubs["chamadas"]["sql"].clear(); stubs["chamadas"]["delete"].clear()
+    r = pa.desfazer("run-x", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    assert r["desfeitas"] == 1
+    # mundo["conn"] (o snapshot local) não tem plpcg_crosswalk — só a tabela
+    # que este teste quer provar: sem OR IGNORE, a linha abaixo levantaria
+    # IntegrityError (UNIQUE(id)) porque m2 nunca foi apagada.
+    for arquivo in stubs["chamadas"]["sql"]:
+        for linha_sql in open(arquivo, encoding="utf-8"):
+            if "praise_materials" in linha_sql:
+                mundo["conn"].executescript(linha_sql)
+    linhas = mundo["conn"].execute("SELECT id FROM praise_materials WHERE id = 'm2'").fetchall()
+    assert len(linhas) == 1
+    assert stubs["chamadas"]["delete"] == ["storage/assets/praises/p1/id-99.pdf"]
+
+
+def test_undo_que_falhou_pode_ser_repetido(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    kw = dict(log_path=log, conn=mundo["conn"], sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    pa.executar(plano, "substituir", execute=True, run_id="run-1", novo_id=_ids(), **kw)
+    op_id = plano.por_tipo("substituir")[0].op_id
+    stubs["falhar"]["sql"] = True
+    r = pa.desfazer("run-1", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    assert r["falharam"] == 1
+    ultima = [l for l in _log(log) if l["op_id"] == op_id][-1]
+    assert ultima["estado"] == "desfeito" and ultima["ok"] is False
+    assert op_id in pa.ja_aplicadas(log)
+    stubs["falhar"]["sql"] = False
+    r2 = pa.desfazer("run-1", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    assert r2["desfeitas"] == 1
+
+
+def test_undo_erro_no_r2_delete_nao_invalida_o_sql(mundo, stubs, monkeypatch):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    kw = dict(log_path=log, conn=mundo["conn"], sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    pa.executar(plano, "criar", execute=True, run_id="run-1", novo_id=_ids(), **kw)
+    (c,) = plano.por_tipo("criar")
+    fim = [l for l in _log(log) if l["op_id"] == c.op_id][-1]
+    primeira, segunda = fim["r2"]
+
+    def r2_delete_falha_na_primeira(chave):
+        if chave == primeira:
+            raise RuntimeError("r2 caiu")
+        stubs["chamadas"]["delete"].append(chave)
+
+    monkeypatch.setattr(pa, "r2_delete", r2_delete_falha_na_primeira)
+    r = pa.desfazer("run-1", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    assert r["desfeitas"] == 1
+    ultima = [l for l in _log(log) if l["op_id"] == c.op_id][-1]
+    assert ultima["estado"] == "desfeito" and ultima["ok"] is True
+    assert len(ultima["erros_r2"]) == 1 and primeira in ultima["erros_r2"][0]
+    assert ultima["r2_apagados"] == [segunda]
+    assert stubs["chamadas"]["delete"] == [segunda]

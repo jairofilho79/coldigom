@@ -235,3 +235,57 @@ def montar_plano(decisoes: dict[str, dict], findings: list[dict], conn: sqlite3.
     ops.sort(key=lambda o: (ORDEM[o.tipo], o.entradas[0].short_id))
     recusas.sort(key=lambda r: r["short_id"])
     return Plano(ops, recusas)
+
+
+# --- SQL ---------------------------------------------------------------------
+
+def r2_key(praise_id: str, material_id: str) -> str:
+    """Valor da coluna praise_materials.r2_key (api/src/driveImport.ts:104)."""
+    return f"assets/praises/{praise_id}/{material_id}.pdf"
+
+
+def chave_bucket(r2_key_: str) -> str:
+    """A chave do objeto no bucket: o app prefixa 'storage/' (driveImport.ts:105)."""
+    return f"storage/{r2_key_}"
+
+
+def _sql_crosswalk(e: Entrada, praise_id: str, material_id: str, op: Op, run_id: str) -> str:
+    return ("INSERT INTO plpcg_crosswalk (pdf_id, short_id, group_id, praise_id, praise_material_id, "
+            "evidencia, confianca, decidido_por, run_id) VALUES ("
+            + ", ".join(sql_str(v) for v in (e.pdf_id, e.short_id, e.group_id, praise_id, material_id,
+                                             e.evidencia, op.confianca, op.decidido_por, run_id)) + ");")
+
+
+def _sql_material(e: Entrada, praise_id: str, material_id: str, kinds: dict[str, str]) -> str:
+    return ("INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, "
+            "source_material_id, merged_from_praise_id, url, is_reviewed) VALUES ("
+            f"{sql_str(material_id)}, {sql_str(praise_id)}, {sql_str(kinds[e.kind])}, 'pdf', "
+            f"{sql_str(r2_key(praise_id, material_id))}, {sql_str('plpcg:' + e.path)}, NULL, NULL, NULL, 0);")
+
+
+def sql_op(op: Op, ids: dict, kinds: dict[str, str], tags: dict[str, str], run_id: str) -> list[str]:
+    if op.tipo == "nada":
+        return []
+    if op.tipo == "link":
+        e = op.entradas[0]
+        return [_sql_crosswalk(e, op.praise_id, op.material_id, op, run_id)]
+    if op.tipo in ("importar", "substituir"):
+        e = op.entradas[0]
+        mid = ids["material_ids"][e.pdf_id]
+        stmts = [_sql_material(e, op.praise_id, mid, kinds), _sql_crosswalk(e, op.praise_id, mid, op, run_id)]
+        if op.tipo == "substituir":
+            stmts.append(f"DELETE FROM praise_materials WHERE id = {sql_str(op.material_id)} "
+                         f"AND praise_id = {sql_str(op.praise_id)};")
+        return stmts
+    if op.tipo == "criar":
+        pid = ids["praise_id"]
+        faltam = [t for t in op.tags if t not in tags]
+        if faltam:
+            raise ValueError(f"tag não existe no coldigom: {', '.join(faltam)}")
+        stmts = [f"INSERT INTO praises (id, name, number) VALUES ({sql_str(pid)}, {sql_str(op.nome)}, {sql_str(op.numero or '')});"]
+        stmts += [f"INSERT INTO praise_tags (praise_id, tag_id) VALUES ({sql_str(pid)}, {sql_str(tags[t])});" for t in op.tags]
+        for e in op.entradas:
+            mid = ids["material_ids"][e.pdf_id]
+            stmts += [_sql_material(e, pid, mid, kinds), _sql_crosswalk(e, pid, mid, op, run_id)]
+        return stmts
+    raise ValueError(f"tipo desconhecido: {op.tipo}")

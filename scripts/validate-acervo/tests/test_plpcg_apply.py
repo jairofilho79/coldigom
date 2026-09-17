@@ -127,3 +127,35 @@ def test_plano_recusa_junto_com_para_entrada_sem_finding(mundo):
     plano = pa.montar_plano(mundo["decisoes"], findings, mundo["conn"], mundo["plpcjf"], mundo["baixados"])
     motivos = {r["short_id"]: r["motivo"] for r in plano.recusas}
     assert "sem finding" in motivos["0004"]
+
+
+def test_sql_link_e_importar(mundo):
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    kinds = {"Choir": "k-choir", "Chord Chart": "k-cc", "Chord Chart I": "k-cc1"}
+    tags = {"Avulsos": "t-avu", "Coletânea": "t-col"}
+    link = plano.por_tipo("link")[0]
+    (s,) = pa.sql_op(link, {"praise_id": None, "material_ids": {}}, kinds, tags, "run-x")
+    assert s.startswith("INSERT INTO plpcg_crosswalk (pdf_id, short_id, group_id, praise_id, praise_material_id, evidencia, confianca, decidido_por, run_id) VALUES ('pdf-0001', '0001', 'avulso:0001', 'p1', 'm1', 'num+slug+hash', 'alta', 'detector', 'run-x')")
+    sub = plano.por_tipo("substituir")[0]
+    stmts = pa.sql_op(sub, {"praise_id": None, "material_ids": {"pdf-0002": "m-novo"}}, kinds, tags, "run-x")
+    assert stmts[0] == ("INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, "
+                        "source_material_id, merged_from_praise_id, url, is_reviewed) VALUES ('m-novo', 'p1', 'k-choir', 'pdf', "
+                        "'assets/praises/p1/m-novo.pdf', 'plpcg:Avulsos/a.pdf', NULL, NULL, NULL, 0);")
+    assert "'pdf-0002', '0002', 'avulso:0002', 'p1', 'm-novo', 'site:substituir', 'humano', 'jairo', 'run-x'" in stmts[1]
+    assert stmts[2] == "DELETE FROM praise_materials WHERE id = 'm2' AND praise_id = 'p1';"
+
+
+def test_sql_criar_praise_tags_e_materiais(mundo):
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    kinds = {"Choir": "k-choir", "Chord Chart": "k-cc"}
+    (c,) = plano.por_tipo("criar")
+    ids = {"praise_id": "p-novo", "material_ids": {"pdf-0003": "m3", "pdf-0004": "m4"}}
+    stmts = pa.sql_op(c, ids, kinds, {"Avulsos": "t-avu"}, "run-x")
+    assert stmts[0] == "INSERT INTO praises (id, name, number) VALUES ('p-novo', 'A palavra de poder', '');"
+    assert stmts[1] == "INSERT INTO praise_tags (praise_id, tag_id) VALUES ('p-novo', 't-avu');"
+    assert "('m3', 'p-novo', 'k-cc', 'pdf', 'assets/praises/p-novo/m3.pdf'" in stmts[2]
+    assert "'pdf-0003', '0003'" in stmts[3] and "('m4', 'p-novo', 'k-choir'" in stmts[4] and "'pdf-0004'" in stmts[5]
+    assert len(stmts) == 6
+    with pytest.raises(ValueError, match="tag"):
+        pa.sql_op(c, ids, kinds, {}, "run-x")
+    assert pa.sql_op(plano.por_tipo("nada")[0], ids, kinds, {}, "run-x") == []

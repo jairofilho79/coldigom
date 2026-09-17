@@ -12,6 +12,7 @@ import type { ContribScanMessage, Env } from './env';
 import { corsAllowOrigin } from './origins';
 import { registerAssetsRoutes } from './routes/assets';
 import { registerAuthRoutes } from './routes/auth';
+import { registerContributionsAdminRoutes } from './routes/contributionsAdmin';
 import { registerContributionsRoutes } from './routes/contributions';
 import { registerDriveRoutes } from './routes/drive';
 import { registerGesturesRoutes } from './routes/gestures';
@@ -80,6 +81,7 @@ registerTagsRoutes(app);
 registerValidationRoutes(app);
 registerDriveRoutes(app);
 registerContributionsRoutes(app);
+registerContributionsAdminRoutes(app);
 registerAssetsRoutes(app);
 registerHealthRoutes(app);
 

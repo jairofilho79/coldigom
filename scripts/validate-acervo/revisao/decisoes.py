@@ -86,6 +86,8 @@ def validar(d: dict, kinds: set[str] | None = None) -> dict:
             saida[k] = None
     if tipo == "link":
         saida["kind"] = None
+    if tipo == "criar":  # praise novo: o candidato que estava na tela não é alvo de nada
+        saida["praise_id"] = saida["material_id"] = None
     if tipo in COM_KIND:
         if not saida["kind"]:
             raise ValueError(f"{tipo} precisa de kind")

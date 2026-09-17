@@ -103,6 +103,8 @@ def test_validar_exige_os_campos_de_cada_tipo():
 def test_validar_limpa_alvo_quando_nada_sobe():
     d = dec.validar({"pdf_id": "x", "tipo": "descartar", "praise_id": "p", "material_id": "m", "kind": "Choir"}, {"Choir"})
     assert (d["praise_id"], d["material_id"], d["kind"]) == (None, None, None)
+    d = dec.validar({"pdf_id": "x", "tipo": "criar", "nome": "N", "praise_id": "p", "kind": "Choir"}, {"Choir"})
+    assert d["praise_id"] is None and d["kind"] == "Choir"
 
 
 def test_ler_ultima_linha_vence(tmp_path):

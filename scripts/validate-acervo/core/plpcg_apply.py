@@ -441,16 +441,20 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
         nonlocal chunk, abertas, n_chunk
         if not chunk:
             return
-        arquivos = write_sql_chunks(chunk, base_sql, prefix=f"lote_{n_chunk:03d}", per_file=LOTE_SQL)
-        n_chunk += 1
-        for _, linha in abertas:
-            linha["escreveu"] = True
         try:
+            arquivos = write_sql_chunks(chunk, base_sql, prefix=f"lote_{n_chunk:03d}", per_file=LOTE_SQL)
+            n_chunk += 1
+            # A escrita local terminou: cada op do lote é reversível a partir de agora,
+            # e isso vai para o disco ANTES do wrangler — quem morre no meio do
+            # run_sql_files não deixa a produção escrita com o log dizendo "pendente".
+            for _, linha in abertas:
+                linha["escreveu"] = True
+                gravar(dict(linha, ts=time.time(), estado="escrevendo"))
             run_sql_files(arquivos, remote=remote)
             pendencias.extend(abertas)
-        except Exception as erro:  # o wrangler levantou: todas do chunk falharam, todas reversíveis
+        except Exception as erro:  # write_sql_chunks ou o wrangler levantaram: todo o lote falha
             for op, linha in abertas:
-                gravar(dict(linha, ts=time.time(), ok=False, erro=f"{type(erro).__name__}: {erro}"))
+                gravar(dict(linha, ts=time.time(), ok=False, estado="falhou", erro=f"{type(erro).__name__}: {erro}"))
                 resumo["falharam"] += 1
         chunk, abertas = [], []
 
@@ -483,20 +487,25 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
                     fechar_chunk()
                 continue
             fechar_chunk()
-            # A partir daqui o R2 pode ter objeto novo: cada chave entra na linha antes do SQL.
+            # A partir daqui o R2 pode ter objeto novo: cada chave sobe e vai para o disco
+            # antes da próxima chamada — um objeto no bucket já é escrita que precisa ser
+            # reversível, mesmo que o processo morra antes do SQL.
             try:
                 for e in op.entradas:
                     chave = chave_bucket(r2_key(ids["praise_id"], ids["material_ids"][e.pdf_id]))
                     r2_put(chave, e.arquivo)
                     linha["r2"].append(chave)
+                    linha["escreveu"] = True
+                    gravar(dict(linha, ts=time.time(), estado="subindo_r2"))
                 arquivos = write_sql_chunks(stmts, base_sql, prefix=op.op_id, per_file=LOTE_SQL)
                 linha["escreveu"] = True
+                gravar(dict(linha, ts=time.time(), estado="escrevendo"))
                 run_sql_files(arquivos, remote=remote)
                 if op.tipo == "substituir":
                     removidos.append(op.material_id)
                 pendencias.append((op, linha))
             except Exception as erro:
-                gravar(dict(linha, ts=time.time(), ok=False, erro=f"{type(erro).__name__}: {erro}"))
+                gravar(dict(linha, ts=time.time(), ok=False, estado="falhou", erro=f"{type(erro).__name__}: {erro}"))
                 resumo["falharam"] += 1
         fechar_chunk()
 

@@ -169,7 +169,7 @@ def stubs(monkeypatch):
     prod = {"praises": {"p1", "p2"}, "materiais": {"m1": "p1", "m2": "p1"}, "crosswalk": set(),
             "nomes": [("p1", "Aleluia", "Coletânea"), ("p2", "Gadareno", None)]}
     chamadas = {"query": [], "sql": [], "put": [], "delete": []}
-    falhar = {"sql": False}
+    falhar = {"sql": False, "silencioso": False}
 
     def query(sql, remote=True):
         chamadas["query"].append(sql)
@@ -191,6 +191,8 @@ def stubs(monkeypatch):
         chamadas["sql"].extend(arquivos)
         if falhar["sql"]:
             raise RuntimeError("wrangler caiu")
+        if falhar["silencioso"]:
+            return  # o wrangler "roda" mas nada pega em produção (guarda_barrou na pós-condição)
         for a in arquivos:
             for linha in open(a, encoding="utf-8"):
                 if linha.startswith("INSERT INTO plpcg_crosswalk"):
@@ -302,3 +304,56 @@ def test_execute_pre_condicao_e_falha_do_wrangler(mundo, stubs):
                     sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
     fim = _log(log)[-1]
     assert r["falharam"] == 1 and fim["escreveu"] and not fim["ok"] and "wrangler caiu" in fim["erro"] and len(fim["r2"]) == 1
+
+
+def test_execute_link_em_lotes_falha_do_wrangler_marca_todas(mundo, stubs, monkeypatch):
+    # LOTE_SQL=1: cada link fecha o próprio lote (2 links, 2 chamadas a run_sql_files).
+    # É exatamente o caminho que roda 3588x em produção — precisa de cobertura própria
+    # do fracasso e do limite de lote, não só do caminho feliz.
+    monkeypatch.setattr(pa, "LOTE_SQL", 1)
+    stubs["falhar"]["sql"] = True
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "link", execute=True, run_id="run-f", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert len(stubs["chamadas"]["sql"]) == 2   # um fechamento de lote por link, cada um seu próprio run_sql_files
+    assert r["falharam"] == 2 and r["sem_escrita"] == 1
+    linhas = _log(log)
+    links = [l for l in linhas if l["tipo"] == "link"]
+    finais = {l["op_id"]: l for l in links}
+    assert len(finais) == 2
+    assert all(l["escreveu"] and not l["ok"] and "wrangler caiu" in l["erro"] for l in finais.values())
+    assert all(l["estado"] != "pendente" for l in finais.values())   # nunca fica preso em "pendente"
+    for op_id in finais:
+        de_um_op = [l for l in links if l["op_id"] == op_id]
+        assert any(l["estado"] == "escrevendo" for l in de_um_op[:-1])   # a linha intermediária chegou ao disco
+    assert len(stubs["chamadas"]["query"]) == 4   # só o estado_producao inicial; sem pós-condição (nada pendente)
+
+
+def test_execute_guarda_barrou(mundo, stubs):
+    _com_sha_real(mundo)
+    stubs["falhar"]["silencioso"] = True   # o wrangler "roda" mas o INSERT não pega em produção
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "link", execute=True, run_id="run-g", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert (r["aplicadas"], r["falharam"], r["sem_escrita"]) == (0, 2, 1)
+    links = [l for l in _log(log) if l["tipo"] == "link"]
+    finais = {l["op_id"]: l for l in links}
+    assert all(l["ok"] is False and l["estado"] == "guarda_barrou" for l in finais.values())
+
+
+def test_execute_sql_op_value_error_depois_do_pendente(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    mundo["conn"].execute("DELETE FROM tags WHERE name = 'Avulsos'")
+    mundo["conn"].commit()
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "criar", execute=True, run_id="run-t", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    (c,) = plano.por_tipo("criar")
+    fim = [l for l in _log(log) if l["op_id"] == c.op_id][-1]
+    assert fim["ok"] is False and fim["estado"] == "pre_condicao" and "tag" in fim["motivo"]
+    assert stubs["chamadas"]["put"] == []
+    assert r["falharam"] == 1

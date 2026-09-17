@@ -529,3 +529,84 @@ def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
         log.close()
     copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
     return resumo
+
+
+# --- undo ----------------------------------------------------------------------
+
+def _lit(v) -> str:
+    if v is None:
+        return "NULL"
+    if isinstance(v, bool):
+        return "1" if v else "0"
+    if isinstance(v, (int, float)):
+        return str(v)
+    return sql_str(str(v))
+
+
+def _sql_undo(linha: dict) -> list[str]:
+    run_id, ids = linha["run_id"], linha.get("ids") or {}
+    stmts = [f"DELETE FROM plpcg_crosswalk WHERE pdf_id = {sql_str(p)} AND run_id = {sql_str(run_id)};" for p in linha["pdf_ids"]]
+    if linha["tipo"] in ("importar", "substituir"):
+        stmts += [f"DELETE FROM praise_materials WHERE id = {sql_str(m)};" for m in ids.get("material_ids", {}).values()]
+    if linha["tipo"] == "substituir" and linha.get("antes"):
+        antes = linha["antes"]
+        stmts.append(f"INSERT INTO praise_materials ({', '.join(antes)}) VALUES ({', '.join(_lit(v) for v in antes.values())});")
+    if linha["tipo"] == "criar":
+        pid = sql_str(ids["praise_id"])
+        stmts += [f"DELETE FROM praise_materials WHERE praise_id = {pid};",
+                  f"DELETE FROM praise_tags WHERE praise_id = {pid};",
+                  f"DELETE FROM praises WHERE id = {pid};"]
+    return stmts
+
+
+def desfazer(run_id: str, log_path: str, remote: bool = True, sql_dir: str | None = None,
+             execucao_dir: str | None = None) -> dict:
+    ultimas: dict[str, dict] = {}
+    desfeitas: set[str] = set()
+    ordem: list[str] = []
+    with open(log_path, encoding="utf-8") as f:
+        for linha in f:
+            if not linha.strip():
+                continue
+            r = json.loads(linha)
+            if r.get("run_id") != run_id:
+                continue
+            if r.get("estado") == "desfeito":
+                desfeitas.add(r["op_id"])
+                continue
+            if r["op_id"] not in ultimas:
+                ordem.append(r["op_id"])
+            ultimas[r["op_id"]] = r
+            desfeitas.discard(r["op_id"])
+    resumo = {"desfeitas": 0, "puladas": 0, "falharam": 0}
+    undo_run = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%MZ") + "-undo"
+    base_sql = os.path.join(sql_dir or os.path.join(OUT, "sql"), undo_run)
+    with open(log_path, "a", encoding="utf-8") as log:
+        for op_id_ in reversed(ordem):
+            r = ultimas[op_id_]
+            if not r.get("escreveu") or op_id_ in desfeitas:
+                resumo["puladas"] += 1
+                continue
+            saida = {"op_id": op_id_, "run_id": run_id, "tipo": r["tipo"], "pdf_ids": r["pdf_ids"],
+                     "ts": time.time(), "estado": "desfeito", "undo_run": undo_run, "r2_apagados": [], "erros_r2": []}
+            try:
+                stmts = _sql_undo(r)
+                arquivos = write_sql_chunks(stmts, base_sql, prefix=op_id_, per_file=LOTE_SQL)
+                run_sql_files(arquivos, remote=remote)
+                saida["statements"] = len(stmts)
+                for chave in r.get("r2") or []:
+                    try:
+                        r2_delete(chave)
+                        saida["r2_apagados"].append(chave)
+                    except Exception as erro:
+                        saida["erros_r2"].append(f"{chave}: {type(erro).__name__}: {erro}")
+                saida["ok"] = True
+                resumo["desfeitas"] += 1
+            except Exception as erro:
+                saida["ok"] = False
+                saida["erro"] = f"{type(erro).__name__}: {erro}"
+                resumo["falharam"] += 1
+            log.write(json.dumps(saida, ensure_ascii=False) + "\n")
+            log.flush()
+    copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+    return resumo

@@ -357,3 +357,35 @@ def test_execute_sql_op_value_error_depois_do_pendente(mundo, stubs):
     assert fim["ok"] is False and fim["estado"] == "pre_condicao" and "tag" in fim["motivo"]
     assert stubs["chamadas"]["put"] == []
     assert r["falharam"] == 1
+
+
+# --- undo ----------------------------------------------------------------------
+
+def test_undo_reverte_criar_e_substituir_e_apaga_so_o_r2_do_run(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    kw = dict(log_path=log, conn=mundo["conn"], sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    pa.executar(plano, "link", execute=True, run_id="run-1", novo_id=_ids(), **kw)
+    pa.executar(plano, "substituir", execute=True, run_id="run-2", novo_id=_ids(), **kw)
+    pa.executar(plano, "criar", execute=True, run_id="run-3", novo_id=_ids(), **kw)
+    stubs["chamadas"]["sql"].clear()
+    r = pa.desfazer("run-3", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    assert r == {"desfeitas": 1, "puladas": 0, "falharam": 0}   # a op 'nada' já tinha sido registrada no run-1, não está no run-3
+    sql = "".join(open(a).read() for a in stubs["chamadas"]["sql"])
+    assert "DELETE FROM plpcg_crosswalk WHERE pdf_id = 'pdf-0003' AND run_id = 'run-3';" in sql
+    assert "DELETE FROM praise_materials WHERE praise_id = 'id-01';" in sql
+    assert "DELETE FROM praise_tags WHERE praise_id = 'id-01';" in sql and "DELETE FROM praises WHERE id = 'id-01';" in sql
+    assert stubs["chamadas"]["delete"] == ["storage/assets/praises/id-01/id-02.pdf", "storage/assets/praises/id-01/id-03.pdf"]
+    ultima = _log(log)[-1]
+    assert ultima["estado"] == "desfeito" and ultima["ok"] and ultima["run_id"] == "run-3"
+    assert pa.ja_aplicadas(log) == {o.op_id for o in plano.por_tipo("link")} | {plano.por_tipo("substituir")[0].op_id} | {plano.por_tipo("nada")[0].op_id}
+    # undo do substituir devolve a linha antiga do material e apaga só o objeto novo
+    stubs["chamadas"]["sql"].clear(); stubs["chamadas"]["delete"].clear()
+    r = pa.desfazer("run-2", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    sql = "".join(open(a).read() for a in stubs["chamadas"]["sql"])
+    assert r["desfeitas"] == 1
+    assert "INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key" in sql and "'m2', 'p1', 'k-choir', 'pdf', 'assets/praises/p1/m2.pdf'" in sql
+    assert stubs["chamadas"]["delete"] == ["storage/assets/praises/p1/id-01.pdf"]
+    # segundo undo do mesmo run: nada a fazer
+    assert pa.desfazer("run-2", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))["desfeitas"] == 0

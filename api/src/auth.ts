@@ -692,6 +692,32 @@ export async function resolveUserFromCookies(params: {
   }
 }
 
+/**
+ * Cookies de sessão para um par já emitido — usado quando os tokens saem no
+ * corpo (troca de código) e a sessão precisa também ficar no navegador como
+ * cookie HttpOnly, fora do alcance do ITP do Safari, que apaga storage de script.
+ */
+export function buildSessionCookies(params: {
+  requestUrl: URL;
+  accessToken: string;
+  refreshToken: string;
+  cookieSameSite?: 'Lax' | 'Strict' | 'None';
+}): string[] {
+  const sameSite = params.cookieSameSite ?? 'Lax';
+  const secure = sameSite === 'None' ? true : isHttpsRequest(params.requestUrl);
+  const opts = { sameSite, secure };
+  return [
+    buildSetCookie(params.requestUrl, ACCESS_COOKIE, params.accessToken, {
+      maxAgeSeconds: ACCESS_TTL_SEC,
+      ...opts,
+    }),
+    buildSetCookie(params.requestUrl, REFRESH_COOKIE, params.refreshToken, {
+      maxAgeSeconds: REFRESH_TTL_SEC,
+      ...opts,
+    }),
+  ];
+}
+
 /** Clear auth cookies without DB (e.g. invalid refresh) */
 export function clearAllAuthCookieHeaders(requestUrl: URL): string[] {
   return [

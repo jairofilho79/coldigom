@@ -3,11 +3,12 @@ import { cors } from 'hono/cors';
 
 import { resolveUserFromRequest, type AuthUser } from './auth';
 import type { AppUser } from './appUser';
+import { handleContribScanBatch, requeueStaleContributions } from './contributions/scan';
 import {
   handleDriveImportQueueBatch,
   type DriveImportQueueMessage,
 } from './driveImport';
-import type { Env } from './env';
+import type { ContribScanMessage, Env } from './env';
 import { corsAllowOrigin } from './origins';
 import { registerAssetsRoutes } from './routes/assets';
 import { registerAuthRoutes } from './routes/auth';
@@ -86,8 +87,17 @@ export { app };
 
 const worker = {
   fetch: app.fetch.bind(app),
-  async queue(batch: MessageBatch<DriveImportQueueMessage>, env: Env) {
-    await handleDriveImportQueueBatch(batch, env);
+  // Duas filas passam pelo mesmo binding de nome de método (`queue`) — o
+  // Worker despacha por `batch.queue`, o nome cadastrado no wrangler.toml.
+  async queue(batch: MessageBatch<DriveImportQueueMessage | ContribScanMessage>, env: Env) {
+    if (batch.queue === 'contrib-scan') return handleContribScanBatch(batch as MessageBatch<ContribScanMessage>, env);
+    await handleDriveImportQueueBatch(batch as MessageBatch<DriveImportQueueMessage>, env);
+  },
+  // Cron de resgate (spec §5): contribuições `recebida` presas por mensagem
+  // perdida na fila voltam a ser enfileiradas; depois de 24h, bloqueadas.
+  async scheduled(_event: ScheduledEvent, env: Env) {
+    const r = await requeueStaleContributions(env);
+    console.log(JSON.stringify({ msg: 'contributions.cron', ...r }));
   },
 };
 

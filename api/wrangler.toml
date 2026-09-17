@@ -26,6 +26,24 @@ max_batch_size = 5
 max_retries = 5
 max_concurrency = 3
 
+# Scan de contribuições (spec §5, create once: wrangler queues create contrib-scan).
+# max_batch_size = 1: cada mensagem decide o status de UMA contribuição — juntar
+# lotes só complicaria o retry por mensagem (phase/attempt) sem ganho nenhum.
+[[queues.producers]]
+binding = "CONTRIB_SCAN"
+queue = "contrib-scan"
+
+[[queues.consumers]]
+queue = "contrib-scan"
+max_batch_size = 1
+max_retries = 10
+max_concurrency = 2
+
+# Cron de resgate do scan (spec §5): reenfileira `recebida` presa há > 6h,
+# bloqueia por timeout a que já passou de 24h. Roda de madrugada (03:00 UTC).
+[triggers]
+crons = ["0 3 * * *"]
+
 # OAuth / sessão (não-secret). Secrets via `wrangler secret put` (usar wrangler global 4.x, não npx)
 [vars]
 AUTH_BASE_URL = "https://coldigom-web.pages.dev"

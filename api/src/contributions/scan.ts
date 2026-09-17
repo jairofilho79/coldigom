@@ -56,7 +56,12 @@ async function updateContribution(db: D1Database, id: string, patch: { status?: 
     vals.push(k === 'scan_report' || k === 'links' ? JSON.stringify(v) : v);
   }
   cols.push(`updated_at = datetime('now')`);
-  await db.prepare(`UPDATE contributions SET ${cols.join(', ')} WHERE id = ?`).bind(...vals, id).run();
+  // Toda escrita que decide o status final (bloqueada/pendente) só vale se a
+  // linha ainda estiver 'recebida': a fila pode entregar a mesma mensagem
+  // duas vezes (at-least-once) e um segundo `handleContribScanBatch` rodando
+  // em paralelo não pode sobrescrever o veredito que o primeiro já gravou.
+  const guard = patch.status !== undefined ? ` AND status = 'recebida'` : '';
+  await db.prepare(`UPDATE contributions SET ${cols.join(', ')} WHERE id = ?${guard}`).bind(...vals, id).run();
 }
 
 function createdAtMs(row: ContributionRow): number {
@@ -71,37 +76,49 @@ async function spendVt(db: D1Database, now: Date) {
   await bumpQuotaStmt(db, VT_USER, dayUtc(now), 1, 0).run();
 }
 
+/**
+ * Estrutural + dedupe de um arquivo. Roda numa função própria para os bytes
+ * do arquivo (até ~32 MiB) saírem de escopo — e virarem elegíveis para GC —
+ * assim que ela retorna, em vez de ficarem vivos no frame de `scanFile`
+ * enquanto o VT ainda vai rodar depois.
+ */
+async function structuralAndDedupe(deps: ScanDeps, f: ContributionFileRow, detail: FileScan): Promise<'limpa' | 'suspeita' | null> {
+  const obj = await deps.r2.get(f.r2_key);
+  if (!obj) {
+    await updateFile(deps.db, f.id, { scan_status: 'suspeita', scan_detail: { ...detail, structural: { ok: false, tokens: [], reason: 'missing_object' } } });
+    return 'suspeita';
+  }
+  const bytes = new Uint8Array(await obj.arrayBuffer());
+  const v = checkStructural(bytes, f.declared_type as DeclaredType);
+  detail.structural = { ok: v.status === 'limpa', tokens: v.tokens, reason: v.reason };
+  if (v.status !== 'limpa') {
+    await updateFile(deps.db, f.id, { scan_status: 'suspeita', detected_type: v.detectedType, scan_detail: detail });
+    return 'suspeita';
+  }
+  await updateFile(deps.db, f.id, { detected_type: v.detectedType, scan_detail: detail });
+
+  // Dedupe: mesmo hash já limpo em outra linha (spec §5 passo 0) — evita
+  // gastar orçamento de VT com um arquivo que já foi visto e aprovado.
+  const twin = await deps.db
+    .prepare(`SELECT id, scan_detail FROM contribution_files WHERE sha256 = ? AND scan_status = 'limpa' AND id <> ? LIMIT 1`)
+    .bind(f.sha256, f.id)
+    .first<{ id: string; scan_detail: string | null }>();
+  if (twin) {
+    detail.virustotal = { sha256: f.sha256, dedupedFrom: twin.id };
+    await updateFile(deps.db, f.id, { scan_status: 'limpa', scan_detail: detail });
+    return 'limpa';
+  }
+  return null;
+}
+
 /** Um arquivo: estrutural → dedupe → VT. Devolve o novo scan_status do arquivo. */
 async function scanFile(deps: ScanDeps, f: ContributionFileRow, phase: 'submit' | 'poll', now: Date): Promise<'limpa' | 'suspeita' | 'infectada' | 'adiado' | 'queued'> {
   const detail = parseDetail(f);
   if (f.scan_status === 'limpa' || f.scan_status === 'suspeita' || f.scan_status === 'infectada') return f.scan_status;
 
   if (!detail.structural) {
-    const obj = await deps.r2.get(f.r2_key);
-    if (!obj) {
-      await updateFile(deps.db, f.id, { scan_status: 'suspeita', scan_detail: { ...detail, structural: { ok: false, tokens: [], reason: 'missing_object' } } });
-      return 'suspeita';
-    }
-    const bytes = new Uint8Array(await obj.arrayBuffer());
-    const v = checkStructural(bytes, f.declared_type as DeclaredType);
-    detail.structural = { ok: v.status === 'limpa', tokens: v.tokens, reason: v.reason };
-    if (v.status !== 'limpa') {
-      await updateFile(deps.db, f.id, { scan_status: 'suspeita', detected_type: v.detectedType, scan_detail: detail });
-      return 'suspeita';
-    }
-    await updateFile(deps.db, f.id, { detected_type: v.detectedType, scan_detail: detail });
-
-    // Dedupe: mesmo hash já limpo em outra linha (spec §5 passo 0) — evita
-    // gastar orçamento de VT com um arquivo que já foi visto e aprovado.
-    const twin = await deps.db
-      .prepare(`SELECT id, scan_detail FROM contribution_files WHERE sha256 = ? AND scan_status = 'limpa' AND id <> ? LIMIT 1`)
-      .bind(f.sha256, f.id)
-      .first<{ id: string; scan_detail: string | null }>();
-    if (twin) {
-      detail.virustotal = { sha256: f.sha256, dedupedFrom: twin.id };
-      await updateFile(deps.db, f.id, { scan_status: 'limpa', scan_detail: detail });
-      return 'limpa';
-    }
+    const outcome = await structuralAndDedupe(deps, f, detail);
+    if (outcome) return outcome;
   }
 
   // VirusTotal
@@ -136,7 +153,10 @@ async function scanFile(deps: ScanDeps, f: ContributionFileRow, phase: 'submit' 
   const obj = await deps.r2.get(f.r2_key);
   if (!obj) return 'suspeita';
   await spendVt(deps.db, now);
-  const s = await deps.vt.submitFile(new Uint8Array(await obj.arrayBuffer()), f.original_name);
+  // `.blob()` em vez de `new Uint8Array(await obj.arrayBuffer())`: o R2
+  // já devolve um Blob pronto pro multipart do VT, sem duplicar o arquivo
+  // (que já foi lido uma vez para o estrutural) numa segunda cópia em memória.
+  const s = await deps.vt.submitFile(await obj.blob(), f.original_name);
   if (s.kind === 'adiado') return 'adiado';
   detail.virustotal = { sha256: f.sha256, analysisId: s.analysisId, polls: 0 };
   await updateFile(deps.db, f.id, { scan_detail: detail });
@@ -197,7 +217,11 @@ export async function scanContribution(deps: ScanDeps, msg: ContribScanMessage):
     if (dest === f.r2_key) continue;
     const obj = await deps.r2.get(f.r2_key);
     if (obj) {
-      await deps.r2.put(dest, await obj.arrayBuffer());
+      // Streaming (`obj.body`) em vez de `await obj.arrayBuffer()`: um PDF de
+      // ~32 MiB não precisa entrar inteiro em memória só para ser recopiado
+      // de `quarantine/` para `contributions/` — o R2 já sabe encanar um
+      // ReadableStream de um bucket pro outro.
+      await deps.r2.put(dest, obj.body, { httpMetadata: obj.httpMetadata });
       await deps.r2.delete(f.r2_key);
     }
     await updateFile(deps.db, f.id, { r2_key: dest });

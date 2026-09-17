@@ -61,6 +61,11 @@ describe('GET /api/admin/contributions', () => {
   it('status desconhecido → 400', async () => {
     expect((await pedir('/api/admin/contributions?status=feito', {}, db().db)).status).toBe(400);
   });
+  it('page não-finito ou não-inteiro → 400 invalid_page', async () => {
+    expect((await pedir('/api/admin/contributions?page=1e400', {}, db().db)).status).toBe(400);
+    expect(await (await pedir('/api/admin/contributions?page=1e400', {}, db().db)).json()).toMatchObject({ error: 'invalid_page' });
+    expect((await pedir('/api/admin/contributions?page=1.5', {}, db().db)).status).toBe(400);
+  });
 });
 
 describe('GET /api/admin/contributions/:id/files/:fileId', () => {

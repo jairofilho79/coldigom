@@ -11,9 +11,13 @@ import { requireAppUser } from '../appUser';
 import { declaredTypeFromName, headMatchesDeclared, IMAGE_TYPES, safeOriginalName, type DeclaredType } from '../contributions/sniff';
 import { parsePayload } from '../contributions/schema';
 import { bumpQuotaStmt, dayUtc, MAX_DAILY_BYTES, MAX_DAILY_COUNT, readQuota, resetAtUtc } from '../contributions/quota';
-import { getContributionForUser, insertContributionStmt, insertFileStmt, listFiles, listMine, toUserJson } from '../contributions/repo';
+import { getContributionForUser, insertContributionStmt, insertFileStmt, listFiles, listFilesForContributions, listMine, toUserJson } from '../contributions/repo';
 
 export const MAX_FILES = 5;
+// A parte `payload` do multipart é um JSON pequeno por natureza (título,
+// corpo, campos); 64 KiB é folgado para o maior formulário real e barato de
+// rejeitar antes do `JSON.parse` de um valor artificialmente enorme.
+export const MAX_PAYLOAD_BYTES = 64 * 1024;
 export const MAX_FILE_BYTES = 32 * 1024 * 1024;
 // O edge da Cloudflare já limita o corpo da requisição a 100 MB nos planos
 // Free/Pro — 5 arquivos de 32 MiB nunca chegam até aqui de qualquer forma.
@@ -74,6 +78,7 @@ export function registerContributionsRoutes(app: App) {
 
     const rawPayload = form.get('payload');
     if (typeof rawPayload !== 'string') return c.json({ error: 'payload_required' }, 400);
+    if (rawPayload.length > MAX_PAYLOAD_BYTES) return c.json({ error: 'payload_too_large' }, 413);
     let parsedJson: unknown;
     try {
       parsedJson = JSON.parse(rawPayload);
@@ -183,8 +188,11 @@ export function registerContributionsRoutes(app: App) {
   app.get('/api/contributions/mine', requireAppUser, async (c) => {
     const user = c.get('appUser');
     const { rows, nextCursor } = await listMine(c.env.DB, user.userId, c.req.query('cursor') ?? null, PAGE);
-    const data = [];
-    for (const row of rows) data.push(toUserJson(row, await listFiles(c.env.DB, row.id)));
+    // Uma consulta só para os arquivos da página inteira — nada de `listFiles`
+    // em loop (N+1: 20 linhas de página viravam 20 SELECTs), mesmo ajuste já
+    // feito na lista do admin (repo.ts).
+    const filesByContribution = await listFilesForContributions(c.env.DB, rows.map((row) => row.id));
+    const data = rows.map((row) => toUserJson(row, filesByContribution.get(row.id) ?? []));
     return c.json({ data, nextCursor });
   });
 

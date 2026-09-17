@@ -27,6 +27,22 @@ describe('parsePayload', () => {
     expect(parsePayload({ ...bug, device: { platform: 'web', same_device: false, other_device_note: 'iPad da igreja' } }).ok).toBe(true);
   });
 
+  it('device é exclusivo de bug: nos demais kinds, mesmo enviado, vira null', () => {
+    const r = parsePayload({ ...base, device: { platform: 'web', same_device: true } });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.payload.device).toBeNull();
+  });
+
+  it('device maior que 16 KiB → device_too_large', () => {
+    const bug = { ...base, kind: 'bug', subkind: 'reader', device: { same_device: true, note: 'x'.repeat(17 * 1024) } };
+    expect(parsePayload(bug)).toMatchObject({ ok: false, error: 'device_too_large' });
+  });
+
+  it('fields maior que 16 KiB → fields_too_large', () => {
+    const r = parsePayload({ ...base, fields: { blob: 'x'.repeat(17 * 1024) } });
+    expect(r).toMatchObject({ ok: false, error: 'fields_too_large' });
+  });
+
   it('wrong_info/metadata exige field da lista e proposed', () => {
     const wi = { ...base, kind: 'wrong_info', subkind: 'metadata', target: { source: 'coldigom', praiseId: 'p1' } };
     expect(parsePayload({ ...wi, fields: { field: 'cor', current: 'a', proposed: 'b' } })).toMatchObject({ ok: false, error: 'invalid_fields' });

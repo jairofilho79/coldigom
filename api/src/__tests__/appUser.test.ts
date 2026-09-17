@@ -71,4 +71,13 @@ describe('requireAppUser', () => {
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ error: 'auth_unavailable' });
   });
+
+  it('introspect trava e o fetch aborta (timeout) → 503 auth_unavailable', async () => {
+    const abortError = Object.assign(new Error('The operation was aborted'), { name: 'AbortError' });
+    vi.stubGlobal('fetch', vi.fn(async () => { throw abortError; }));
+    const pedir = appWith({ PLPCG_AUTH_URL: 'https://auth.test' });
+    const res = await pedir('sess_abc');
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: 'auth_unavailable' });
+  });
 });

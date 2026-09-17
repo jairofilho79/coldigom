@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { scanContribution, type ScanDeps } from '../contributions/scan';
+import { handleContribScanBatch, requeueStaleContributions, scanContribution, type ScanDeps } from '../contributions/scan';
 import type { LinkChecker } from '../contributions/links';
 import type { VirusTotalClient } from '../contributions/virustotal';
+import type { ContribScanMessage, Env } from '../env';
 
 type Row = Record<string, unknown>;
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -22,7 +23,17 @@ function statefulDb(contrib: Row, files: Row[]) {
     if (/FROM contribution_quota/.test(s)) return [quota.get(`${b[0]}|${b[1]}`) ?? null];
     if (/^INSERT INTO contribution_quota/.test(s)) { const k = `${b[0]}|${b[1]}`; const q = quota.get(k) ?? { count: 0, bytes: 0 }; quota.set(k, { count: q.count + (b[2] as number), bytes: q.bytes + (b[3] as number) }); return []; }
     if (/^UPDATE contribution_files SET/.test(s)) { const id = b[b.length - 1] as string; const cols = [...s.matchAll(/(\w+) = \?/g)].map((m) => m[1]); const row = fileRows.get(id)!; cols.forEach((c, i) => { row[c] = b[i]; }); return []; }
-    if (/^UPDATE contributions SET/.test(s)) { const id = b[b.length - 1] as string; const cols = [...s.matchAll(/(\w+) = \?/g)].map((m) => m[1]); const row = contribs.get(id)!; cols.forEach((c, i) => { row[c] = b[i]; }); return []; }
+    if (/^UPDATE contributions SET/.test(s)) {
+      const id = b[b.length - 1] as string;
+      const row = contribs.get(id)!;
+      // Mesmo guard `AND status = 'recebida'` da query real: se a linha já
+      // saiu de 'recebida' (outra entrega da mesma mensagem terminou primeiro),
+      // esta escrita é pulada — replica a idempotência do WHERE de verdade.
+      if (/AND status = 'recebida'/.test(s) && row.status !== 'recebida') return [];
+      const cols = [...s.matchAll(/(\w+) = \?/g)].map((m) => m[1]);
+      cols.forEach((c, i) => { row[c] = b[i]; });
+      return [];
+    }
     throw new Error(`SQL não suportado no fake: ${s}`);
   };
   const db = {
@@ -42,8 +53,20 @@ function r2With(objs: Record<string, Uint8Array>) {
   const store = new Map(Object.entries(objs));
   return {
     store,
-    get: vi.fn(async (k: string) => (store.has(k) ? { arrayBuffer: async () => store.get(k)!.buffer.slice(0) } : null)),
-    put: vi.fn(async (k: string, body: ArrayBuffer | Uint8Array) => { store.set(k, body instanceof Uint8Array ? body : new Uint8Array(body)); }),
+    get: vi.fn(async (k: string) => {
+      if (!store.has(k)) return null;
+      const bytes = store.get(k)!;
+      return {
+        arrayBuffer: async () => bytes.buffer.slice(0),
+        // `.blob()` (submitFile do VT) e `.body` + `httpMetadata` (cópia de
+        // quarantine/ → contributions/ streaming) — os dois caminhos que
+        // deixaram de materializar um segundo/terceiro `Uint8Array` do arquivo.
+        blob: async () => new Blob([bytes]),
+        body: new Blob([bytes]).stream(),
+        httpMetadata: {},
+      };
+    }),
+    put: vi.fn(async (k: string, body: BodyInit) => { store.set(k, new Uint8Array(await new Response(body).arrayBuffer())); }),
     delete: vi.fn(async (k: string) => { store.delete(k); }),
   } as unknown as R2Bucket & { store: Map<string, Uint8Array> };
 }
@@ -150,5 +173,134 @@ describe('scanContribution', () => {
     const { db } = statefulDb({ ...CONTRIB, status: 'pendente', scan_status: 'limpa' }, []);
     const out = await scanContribution(deps(db, r2With({})), { contributionId: 'c1', phase: 'submit', attempt: 0 });
     expect(out).toEqual({ kind: 'done', status: 'pendente' });
+  });
+
+  it('entrega duplicada da mesma mensagem: a segunda não sobrescreve o veredito que a primeira já gravou', async () => {
+    // Simula duas entregas concorrentes da mesma mensagem da fila (at-least-once):
+    // as duas leem a linha como 'recebida', mas uma delas termina primeiro e
+    // marca 'pendente'. Aqui isso acontece bem no meio da execução da segunda
+    // (dentro do `r2.get` do arquivo), como uma corrida real faria.
+    const { db, contribs } = statefulDb(CONTRIB, [FILE]);
+    const bytes = PDF_JS; // token perigoso → esta chamada tentaria gravar 'bloqueada'
+    const r2 = {
+      get: vi.fn(async () => {
+        contribs.set('c1', { ...contribs.get('c1')!, status: 'pendente', scan_status: 'limpa' });
+        return { arrayBuffer: async () => bytes.buffer.slice(0), blob: async () => new Blob([bytes]), body: new Blob([bytes]).stream(), httpMetadata: {} };
+      }),
+      put: vi.fn(async () => undefined),
+      delete: vi.fn(async () => undefined),
+    } as unknown as R2Bucket;
+    const out = await scanContribution(deps(db, r2), { contributionId: 'c1', phase: 'submit', attempt: 0 });
+    expect(out).toEqual({ kind: 'done', status: 'bloqueada' });
+    // O guard `AND status = 'recebida'` não bateu (já virou 'pendente' na
+    // "outra" entrega) — o status gravado continua o da primeira, não é
+    // rebaixado para 'bloqueada' pela segunda.
+    expect(contribs.get('c1')!.status).toBe('pendente');
+    expect(r2.put).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleContribScanBatch', () => {
+  function batchOf(id: string) {
+    const msg: ContribScanMessage = { contributionId: id, phase: 'submit', attempt: 0 };
+    const ack = vi.fn();
+    const retry = vi.fn();
+    const batch = { messages: [{ body: msg, ack, retry }] } as unknown as MessageBatch<ContribScanMessage>;
+    return { batch, ack, retry };
+  }
+
+  it('done → ack, sem retry', async () => {
+    const { db } = statefulDb({ ...CONTRIB, status: 'pendente', scan_status: 'limpa' }, []);
+    const { batch, ack, retry } = batchOf('c1');
+    const env = { DB: db, ASSETS: r2With({}) } as unknown as Env;
+    await handleContribScanBatch(batch, env);
+    expect(ack).toHaveBeenCalledTimes(1);
+    expect(retry).not.toHaveBeenCalled();
+  });
+
+  it('retry: manda CONTRIB_SCAN.send com delaySeconds e dá ack (não usa message.retry)', async () => {
+    // created_at = agora: como `handleContribScanBatch` não recebe um `now`
+    // de teste (usa `new Date()` de verdade dentro de `scanContribution`), a
+    // linha não pode ser fixa no passado sob risco de cair no ramo de timeout.
+    const nowIso = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    const { db } = statefulDb({ ...CONTRIB, created_at: nowIso }, [FILE]);
+    const send = vi.fn(async () => undefined);
+    const { batch, ack, retry } = batchOf('c1');
+    // Sem VIRUSTOTAL_API_KEY/SAFE_BROWSING_API_KEY: lookupHash/links adiam sem
+    // rede nenhuma (determinístico), levando a scanContribution a pedir retry.
+    const env = { DB: db, ASSETS: r2With({ 'quarantine/c1/f1.pdf': PDF }), CONTRIB_SCAN: { send } } as unknown as Env;
+    await handleContribScanBatch(batch, env);
+    expect(send).toHaveBeenCalledWith({ contributionId: 'c1', phase: 'poll', attempt: 1 }, { delaySeconds: 900 });
+    expect(ack).toHaveBeenCalledTimes(1);
+    expect(retry).not.toHaveBeenCalled();
+  });
+
+  it('scanContribution lança → message.retry({ delaySeconds: 900 }), sem ack', async () => {
+    const boomDb = {
+      prepare: () => ({ bind: () => ({ first: () => { throw new Error('boom'); } }) }),
+    } as unknown as D1Database;
+    const { batch, ack, retry } = batchOf('c1');
+    const env = { DB: boomDb, ASSETS: r2With({}) } as unknown as Env;
+    await handleContribScanBatch(batch, env);
+    expect(retry).toHaveBeenCalledWith({ delaySeconds: 900 });
+    expect(ack).not.toHaveBeenCalled();
+  });
+});
+
+describe('requeueStaleContributions', () => {
+  /** D1 falso mínimo só para as duas queries do cron de resgate. */
+  function requeueFakeDb(rows: Row[]) {
+    const contribs = new Map(rows.map((r) => [r.id as string, { ...r }]));
+    const db = {
+      prepare: (sql: string) => ({
+        bind: (...b: unknown[]) => ({
+          run: async () => {
+            if (/^UPDATE contributions SET status = 'bloqueada'/.test(sql)) {
+              const cutoff = b[0] as string;
+              let changes = 0;
+              for (const row of contribs.values()) {
+                if (row.status === 'recebida' && (row.created_at as string) < cutoff) {
+                  row.status = 'bloqueada';
+                  row.scan_report = JSON.stringify({ reason: 'timeout' });
+                  changes++;
+                }
+              }
+              return { meta: { changes } };
+            }
+            throw new Error(`run não suportado no fake: ${sql}`);
+          },
+          all: async () => {
+            if (/^SELECT id FROM contributions WHERE status = 'recebida' AND updated_at < \?/.test(sql)) {
+              const cutoff = b[0] as string;
+              const results = Array.from(contribs.values())
+                .filter((row) => row.status === 'recebida' && (row.updated_at as string) < cutoff)
+                .map((row) => ({ id: row.id }));
+              return { results };
+            }
+            throw new Error(`all não suportado no fake: ${sql}`);
+          },
+          first: async () => null,
+        }),
+      }),
+    } as unknown as D1Database;
+    return { db, contribs };
+  }
+
+  it('recebida parada > 6h reenfileira como submit; > 24h bloqueia por timeout', async () => {
+    const now = new Date('2026-09-17T12:00:00Z');
+    const rows: Row[] = [
+      { id: 'c-6h', status: 'recebida', created_at: '2026-09-17 04:00:00', updated_at: '2026-09-17 04:00:00' }, // 8h parada
+      { id: 'c-24h', status: 'recebida', created_at: '2026-09-16 10:00:00', updated_at: '2026-09-16 10:00:00' }, // 26h parada
+      { id: 'c-fresh', status: 'recebida', created_at: '2026-09-17 11:50:00', updated_at: '2026-09-17 11:50:00' }, // 10 min, não mexe
+    ];
+    const { db, contribs } = requeueFakeDb(rows);
+    const send = vi.fn(async () => undefined);
+    const env = { DB: db, CONTRIB_SCAN: { send } } as unknown as Env;
+    const out = await requeueStaleContributions(env, now);
+    expect(out).toEqual({ requeued: 1, timedOut: 1 });
+    expect(send).toHaveBeenCalledWith({ contributionId: 'c-6h', phase: 'submit', attempt: 0 });
+    expect(contribs.get('c-24h')).toMatchObject({ status: 'bloqueada' });
+    expect(JSON.parse(contribs.get('c-24h')!.scan_report as string)).toEqual({ reason: 'timeout' });
+    expect(contribs.get('c-fresh')).toMatchObject({ status: 'recebida' });
   });
 });

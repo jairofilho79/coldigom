@@ -39,7 +39,16 @@ export function registerContributionsAdminRoutes(app: App) {
     const praise = c.req.query('praise');
     if (status && !(STATUSES as readonly string[]).includes(status)) return c.json({ error: 'invalid_status' }, 400);
     if (kind && !(KINDS as readonly string[]).includes(kind)) return c.json({ error: 'invalid_kind' }, 400);
-    const page = Math.max(1, Number(c.req.query('page') ?? '1') || 1);
+    const pageRaw = c.req.query('page');
+    let page = 1;
+    if (pageRaw !== undefined) {
+      const n = Number(pageRaw);
+      // `Number('1e400')` é `Infinity` (finito falha) e `1.5` passa em
+      // `Number.isFinite` mas não é uma página de verdade — as duas formas
+      // viravam `LIMIT`/`OFFSET` sem sentido antes desta checagem.
+      if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return c.json({ error: 'invalid_page' }, 400);
+      page = n;
+    }
     const where: string[] = [];
     const bindings: unknown[] = [];
     if (status) {

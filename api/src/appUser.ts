@@ -47,6 +47,9 @@ export async function requireAppUser(c: Ctx, next: Next) {
   try {
     res = await fetch(`${base.replace(/\/$/, '')}/api/auth/introspect`, {
       headers: { authorization: `Bearer ${token}` },
+      // Um plpcg-catalog pendurado não pode travar a rota da app esperando
+      // para sempre — 5 s estoura para o mesmo catch/503 de uma rede fora do ar.
+      signal: AbortSignal.timeout(5000),
     });
     // 401 não precisa de corpo válido para ser 401 — checa o status antes de
     // tentar o parse, senão um 401 com corpo vazio/errado viraria 503.

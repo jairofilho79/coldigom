@@ -21,7 +21,8 @@ describe('safeBrowsingChecker', () => {
     const out = await safeBrowsingChecker('k', f)(URLS);
     expect(out).toEqual({ 'https://youtu.be/a': 'clean', 'https://drive.google.com/file/d/1/view': 'clean' });
     const [url, init] = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0];
-    expect(url).toBe('https://safebrowsing.googleapis.com/v4/threatMatches:find?key=k');
+    expect(url).toBe('https://safebrowsing.googleapis.com/v4/threatMatches:find');
+    expect((init.headers as Record<string, string>)['X-Goog-Api-Key']).toBe('k');
     const body = JSON.parse(init.body as string);
     expect(body.threatInfo.threatTypes).toEqual(['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE']);
     expect(body.threatInfo.threatEntries).toEqual(URLS.map((u) => ({ url: u })));

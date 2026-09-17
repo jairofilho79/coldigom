@@ -20,12 +20,13 @@ export default defineConfig({
       // Gestos (2026-09-11): editor de gestos — 74.64 / 70.97 / 76.65 / 77.09
       // Contribuições, rotas admin (2026-09-17): 77.51 / 73.16 / 79.8 / 79.97
       // Contribuições admin, fix de revisão (2026-09-17): 77.64 / 73.19 / 80.04 / 80.12
+      // Contribuições, onda final de revisão (2026-09-17): 78.58 / 73.87 / 80.93 / 81.04
       thresholds: {
-        // Fix de revisão: medido 77.64 / 73.19 / 80.04 / 80.12
-        statements: 77,
+        // Onda final: medido 78.58 / 73.87 / 80.93 / 81.04
+        statements: 78,
         branches: 73,
         functions: 80,
-        lines: 80,
+        lines: 81,
       },
     },
   },

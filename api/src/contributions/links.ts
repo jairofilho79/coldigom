@@ -19,9 +19,11 @@ export function safeBrowsingChecker(apiKey: string | undefined, fetchFn: typeof 
     if (!apiKey) return all(urls, 'adiado');
     let res: Response;
     try {
-      res = await fetchFn(`${ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
+      // Chave no header em vez de `?key=` na URL: query string vaza para logs
+      // de acesso e proxies com muito mais facilidade que um header.
+      res = await fetchFn(ENDPOINT, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': apiKey },
         body: JSON.stringify({
           client: { clientId: 'coldigom', clientVersion: '1.0' },
           threatInfo: {

@@ -15,13 +15,23 @@ export type VtPoll = { kind: 'completed'; stats: VtStats } | { kind: 'queued' } 
 
 export type VirusTotalClient = {
   lookupHash(sha256: string): Promise<VtLookup>;
-  submitFile(bytes: Uint8Array, name: string): Promise<VtSubmit>;
+  submitFile(bytes: Uint8Array | Blob, name: string): Promise<VtSubmit>;
   pollAnalysis(analysisId: string): Promise<VtPoll>;
 };
 
 function stats(raw: unknown): VtStats {
   const s = (raw ?? {}) as Partial<VtStats>;
   return { malicious: s.malicious ?? 0, suspicious: s.suspicious ?? 0, harmless: s.harmless ?? 0, undetected: s.undetected ?? 0 };
+}
+
+/**
+ * `false` quando as quatro contagens são zero — o VT ainda não terminou de
+ * analisar (upload recente, engines não voltaram) ou nunca viu o arquivo.
+ * Sem isto, `verdictFromStats` devolveria `limpa` para um arquivo que na
+ * verdade não foi analisado nenhuma vez.
+ */
+export function hasVerdict(s: VtStats): boolean {
+  return s.malicious + s.suspicious + s.harmless + s.undetected > 0;
 }
 
 export function verdictFromStats(s: VtStats): 'limpa' | 'suspeita' | 'infectada' {
@@ -49,12 +59,19 @@ export function virusTotalClient(apiKey: string | undefined, fetchFn: typeof fet
       } catch {
         return { kind: 'adiado', reason: 'error' };
       }
-      return { kind: 'known', stats: stats(body.data?.attributes?.last_analysis_stats) };
+      const st = stats(body.data?.attributes?.last_analysis_stats);
+      // Estatísticas todas zeradas = VT ainda não tem veredito de verdade
+      // (arquivo visto mas não analisado) — trata como desconhecido para o
+      // consumer seguir o caminho de upload em vez de aceitar como "limpa".
+      return hasVerdict(st) ? { kind: 'known', stats: st } : { kind: 'unknown' };
     },
     async submitFile(bytes, name) {
       if (!apiKey) return { kind: 'adiado', reason: 'error' };
       const form = new FormData();
-      form.append('file', new Blob([bytes]), name);
+      // `bytes` já pode ser o Blob do objeto do R2 (scan.ts) — reembrulhar em
+      // `new Blob([bytes])` faria uma cópia extra do arquivo (até ~32 MiB) só
+      // para isso; um Uint8Array (ex.: nos testes) ainda precisa do wrap.
+      form.append('file', bytes instanceof Blob ? bytes : new Blob([bytes]), name);
       let res: Response;
       try { res = await fetchFn(`${BASE}/files`, { method: 'POST', headers, body: form }); } catch { return { kind: 'adiado', reason: 'error' }; }
       if (!res.ok) return adiadoDe(res);
@@ -78,7 +95,13 @@ export function virusTotalClient(apiKey: string | undefined, fetchFn: typeof fet
         return { kind: 'adiado', reason: 'error' };
       }
       const attrs = body.data?.attributes;
-      if (attrs?.status === 'completed') return { kind: 'completed', stats: stats(attrs.stats) };
+      if (attrs?.status === 'completed') {
+        const st = stats(attrs.stats);
+        // `completed` com as quatro contagens zeradas é tão suspeito quanto um
+        // erro de rede — a API não devolveu veredito nenhum; adia em vez de
+        // gravar `limpa` por omissão.
+        return hasVerdict(st) ? { kind: 'completed', stats: st } : { kind: 'adiado', reason: 'error' };
+      }
       return { kind: 'queued' };
     },
   };

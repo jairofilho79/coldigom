@@ -5,10 +5,10 @@ import { app } from '../index';
 
 type Linha = Record<string, unknown>;
 
-function fakeDb(opts: { quota?: { count: number; bytes: number }; linhas?: Linha[]; primeira?: Linha | null } = {}) {
+function fakeDb(opts: { quota?: { count: number; bytes: number }; linhas?: Linha[]; primeira?: Linha | null; arquivos?: Linha[] } = {}) {
   const chamadas: { sql: string; bindings: unknown[] }[] = [];
   const stmt = (sql: string) => ({
-    all: vi.fn(async () => ({ results: opts.linhas ?? [] })),
+    all: vi.fn(async () => ({ results: /contribution_files/.test(sql) ? (opts.arquivos ?? []) : (opts.linhas ?? []) })),
     first: vi.fn(async () => {
       if (/contribution_quota/i.test(sql)) return opts.quota ?? null;
       return opts.primeira === undefined ? (opts.linhas?.[0] ?? null) : opts.primeira;
@@ -191,6 +191,14 @@ describe('POST /api/contributions', () => {
     expect(res.status).toBe(413);
     expect(await res.json()).toMatchObject({ error: 'request_too_large' });
   });
+
+  it('parte payload maior que 64 KiB → 413 payload_too_large, sem tentar JSON.parse', async () => {
+    const { db } = fakeDb();
+    const enorme = { ...BASE, body: 'x'.repeat(70 * 1024) };
+    const res = await app.request('/api/contributions', { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(enorme) }, env(db, fakeR2()));
+    expect(res.status).toBe(413);
+    expect(await res.json()).toMatchObject({ error: 'payload_too_large' });
+  });
 });
 
 const ROW = { id: 'c1', user_id: 'u1', user_email: 'a@b.c', user_name: 'Ana', kind: 'improvement', subkind: 'feature', target_source: null, target_praise_id: null, target_material_id: null, title: 'T', body: 'B', fields: '{}', links: '[{"url":"https://youtu.be/a","host":"youtu.be","safe_browsing":"clean"}]', device: '{"platform":"web"}', app_route: '/', app_version: '1.0', status: 'pendente', scan_status: 'limpa', scan_report: null, decided_at: null, decided_by: null, decision_note: null, created_at: '2026-09-17 10:00:00', updated_at: '2026-09-17 10:00:00' };
@@ -207,6 +215,16 @@ describe('GET /api/contributions/mine e /:id', () => {
     const lista = chamadas.find((c) => c.sql.includes('FROM contributions') && c.sql.includes('ORDER BY'))!;
     expect(lista.sql).toContain('user_id = ?');
     expect(lista.bindings[0]).toBe('u1');
+  });
+
+  it('mine busca os arquivos de todas as linhas da página numa consulta só (sem N+1)', async () => {
+    const ROW2 = { ...ROW, id: 'c2' };
+    const { db, chamadas } = fakeDb({ linhas: [ROW, ROW2], arquivos: [{ id: 'f1', contribution_id: 'c1', original_name: 'a.pdf', size: 1, scan_status: 'limpa' }] });
+    const res = await app.request('/api/contributions/mine', { headers: { authorization: 'Bearer sess_a' } }, env(db, fakeR2()));
+    expect(res.status).toBe(200);
+    const arquivosQueries = chamadas.filter((c) => c.sql.includes('contribution_files') && c.sql.includes('IN ('));
+    expect(arquivosQueries).toHaveLength(1);
+    expect(arquivosQueries[0].bindings).toEqual(['c1', 'c2']);
   });
 
   it(':id de outro usuário → 404', async () => {

@@ -21,6 +21,8 @@ export const SOURCES = ['coldigom', 'plpcg'] as const;
 export const MAX_TITLE = 120;
 export const MAX_BODY = 4000;
 export const MAX_LINKS = 5;
+export const MAX_FIELDS_BYTES = 16 * 1024;
+export const MAX_DEVICE_BYTES = 16 * 1024;
 
 const TRACKING_PARAMS = new Set(['si', 'feature']);
 
@@ -121,6 +123,10 @@ export function parsePayload(raw: unknown): SchemaResult {
   }
 
   const fields = isRecord(raw.fields) ? raw.fields : {};
+  // Teto de tamanho antes de qualquer outra checagem: `fields` é livre (cada
+  // kind tem seu próprio formato) e um objeto absurdo não pode custar memória
+  // nem virar uma linha gigante em D1 só porque passou pelo `isRecord`.
+  if (JSON.stringify(fields).length > MAX_FIELDS_BYTES) return { ok: false, error: 'fields_too_large' };
   if (!validFields(k, subkind, fields)) return { ok: false, error: 'invalid_fields' };
 
   const links: string[] = [];
@@ -135,12 +141,13 @@ export function parsePayload(raw: unknown): SchemaResult {
     }
   }
 
+  // device é exclusivo de `bug` (spec §3) — nos demais kinds, mesmo que o
+  // cliente mande algo em `device`, o servidor descarta em vez de gravar.
   let device: Record<string, unknown> | null = null;
   if (k === 'bug') {
     if (!isRecord(raw.device) || typeof raw.device.same_device !== 'boolean') return { ok: false, error: 'device_required' };
     if (raw.device.same_device === false && !optString(raw.device.other_device_note)) return { ok: false, error: 'device_required' };
-    device = raw.device;
-  } else if (isRecord(raw.device)) {
+    if (JSON.stringify(raw.device).length > MAX_DEVICE_BYTES) return { ok: false, error: 'device_too_large' };
     device = raw.device;
   }
 

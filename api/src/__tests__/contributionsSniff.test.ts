@@ -44,4 +44,8 @@ describe('safeOriginalName', () => {
     expect(safeOriginalName('a'.repeat(300) + '.pdf').length).toBe(200);
     expect(safeOriginalName('   ')).toBe('arquivo');
   });
+  it('tira aspas e DEL (0x7f)', () => {
+    expect(safeOriginalName('a"bc.pdf')).toBe('abc.pdf');
+    expect(safeOriginalName('a\x7fbc.pdf')).toBe('abc.pdf');
+  });
 });

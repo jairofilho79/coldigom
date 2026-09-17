@@ -55,9 +55,9 @@ export function headMatchesDeclared(head: Uint8Array, declared: DeclaredType): b
   return sniffed === declared;
 }
 
-/** Vai para Content-Disposition e para a tela do admin: nada de caminho nem controle. */
+/** Vai para Content-Disposition e para a tela do admin: nada de caminho, aspas nem controle. */
 export function safeOriginalName(name: string): string {
   // eslint-disable-next-line no-control-regex
-  const cleaned = name.replace(/[\\/\x00-\x1f]/g, '').trim();
+  const cleaned = name.replace(/[\\/\x00-\x1f\x7f"]/g, '').trim();
   return (cleaned || 'arquivo').slice(0, 200);
 }

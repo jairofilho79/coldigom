@@ -49,6 +49,14 @@ describe('checkStructural — mp3', () => {
     );
     expect(checkStructural(cat(header, apic), 'mp3')).toMatchObject({ status: 'suspeita', reason: 'apic_too_large' });
   });
+  it('v2.4 usa tamanho syncsafe: 1 MiB syncsafe não é 4 MiB em leitura de 32 bits simples', () => {
+    // Frame ID3v2.4: mesmo layout, mas o tamanho é 7 bits úteis por byte (syncsafe).
+    // Estes 4 bytes decodificados como syncsafe dão 1 MiB; lidos como inteiro de 32
+    // bits simples dariam 4 MiB (> 2 MB) — só a leitura por versão acerta.
+    const header = enc('ID3\x04\x00\x00\x00\x00\x00\x0a');
+    const apic = cat(enc('APIC'), new Uint8Array([0x00, 0x40, 0x00, 0x00]), new Uint8Array(2));
+    expect(checkStructural(cat(header, apic), 'mp3').status).toBe('limpa');
+  });
 });
 
 describe('checkStructural — imagens', () => {
@@ -67,7 +75,7 @@ describe('checkStructural — texto', () => {
   it('utf-8 válido é limpo; byte nulo e > 256 KB são suspeita', () => {
     expect(checkStructural(enc('{t: Louvor}\n[C]Ainda'), 'chordpro').status).toBe('limpa');
     // byte nulo no meio do conteúdo: nunca é texto válido
-    expect(checkStructural(enc('a\x00b'), 'txt').status).toBe('suspeita');
+    expect(checkStructural(enc('a\x00b'), 'txt')).toMatchObject({ status: 'suspeita', reason: 'binary_in_text' });
     expect(checkStructural(new Uint8Array(256 * 1024 + 1).fill(0x61), 'txt')).toMatchObject({ status: 'suspeita', reason: 'text_too_large' });
   });
 });

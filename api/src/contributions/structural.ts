@@ -13,22 +13,55 @@ export type StructuralVerdict = {
  * comprimido não aparecem aqui — o VirusTotal cobre.
  */
 const PDF_TOKENS = ['/JavaScript', '/JS', '/Launch', '/OpenAction', '/AA', '/EmbeddedFile', '/RichMedia', '/XFA', '/Encrypt'];
+const PDF_TOKEN_BYTES = PDF_TOKENS.map((t) => new TextEncoder().encode(t));
 const MAX_TEXT = 256 * 1024;
 const MAX_APIC = 2 * 1024 * 1024;
 
 function latin1(bytes: Uint8Array): string {
-  // PDF é ASCII/latin-1 na estrutura; decodificar como latin1 nunca lança.
+  // Só para janelas pequenas (cabeçalho ID3 ≤ 64 KiB, cauda de PNG): nunca sobre
+  // o arquivo inteiro, que pode ter até ~32 MiB e estouraria memória do Worker.
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) {
-    s += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
+    s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000) as unknown as number[]);
   }
   return s;
 }
 
+function isAsciiLetter(b: number | undefined): boolean {
+  return b !== undefined && ((b >= 0x41 && b <= 0x5a) || (b >= 0x61 && b <= 0x7a));
+}
+
+/** Busca ingênua de bytes (os tokens têm no máximo ~14 bytes; o arquivo, poucas dezenas de MB). */
+function bytesIndexOf(hay: Uint8Array, needle: Uint8Array, from: number): number {
+  const limit = hay.length - needle.length;
+  outer: for (let i = Math.max(from, 0); i <= limit; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (hay[i + j] !== needle[j]) continue outer;
+    }
+    return i;
+  }
+  return -1;
+}
+
+/**
+ * Varre o `Uint8Array` inteiro sem nunca materializar uma string do arquivo
+ * inteiro (um PDF de ~32 MiB viraria ~64 MB de UTF-16 — caro demais para o
+ * isolate de 128 MB do Worker).
+ */
 function pdfTokens(bytes: Uint8Array): string[] {
-  const text = latin1(bytes);
-  // `/JS` sozinho não pode casar `/JSx`: exige fronteira (não-letra) depois.
-  return PDF_TOKENS.filter((t) => new RegExp(t.replace('/', '\\/') + '(?![A-Za-z])').test(text));
+  const hits: string[] = [];
+  for (let i = 0; i < PDF_TOKENS.length; i++) {
+    const needle = PDF_TOKEN_BYTES[i];
+    let at = bytesIndexOf(bytes, needle, 0);
+    let hit = false;
+    while (at >= 0 && !hit) {
+      // `/JS` sozinho não pode casar `/JSx`: exige fronteira (não-letra) depois.
+      if (!isAsciiLetter(bytes[at + needle.length])) hit = true;
+      else at = bytesIndexOf(bytes, needle, at + 1);
+    }
+    if (hit) hits.push(PDF_TOKENS[i]);
+  }
+  return hits;
 }
 
 function endsWith(bytes: Uint8Array, tail: number[]): boolean {
@@ -36,12 +69,21 @@ function endsWith(bytes: Uint8Array, tail: number[]): boolean {
   return tail.every((b, i) => bytes[bytes.length - tail.length + i] === b);
 }
 
+/** ID3v2.4 usa tamanho "syncsafe" (7 bits úteis por byte); v2.3 e anteriores usam 32 bits normais. */
+function id3FrameSize(b0: number, b1: number, b2: number, b3: number, majorVersion: number): number {
+  if (majorVersion >= 4) {
+    return (((b0 & 0x7f) << 21) | ((b1 & 0x7f) << 14) | ((b2 & 0x7f) << 7) | (b3 & 0x7f)) >>> 0;
+  }
+  return ((b0 << 24) | (b1 << 16) | (b2 << 8) | b3) >>> 0;
+}
+
 function id3ApicTooLarge(bytes: Uint8Array): boolean {
   if (!(bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33)) return false;
+  const majorVersion = bytes[3];
   const text = latin1(bytes.subarray(0, Math.min(bytes.length, 64 * 1024)));
   let at = text.indexOf('APIC');
   while (at >= 0 && at + 8 <= bytes.length) {
-    const size = ((bytes[at + 4] << 24) | (bytes[at + 5] << 16) | (bytes[at + 6] << 8) | bytes[at + 7]) >>> 0;
+    const size = id3FrameSize(bytes[at + 4], bytes[at + 5], bytes[at + 6], bytes[at + 7], majorVersion);
     if (size > MAX_APIC) return true;
     at = text.indexOf('APIC', at + 4);
   }
@@ -49,12 +91,18 @@ function id3ApicTooLarge(bytes: Uint8Array): boolean {
 }
 
 export function checkStructural(bytes: Uint8Array, declared: DeclaredType): StructuralVerdict {
+  if (declared === 'txt' || declared === 'chordpro') {
+    // Texto não tem assinatura binária de cabeçalho para conferir contra os 16
+    // primeiros bytes — a checagem real é sobre o buffer inteiro (tamanho e UTF-8).
+    if (bytes.length > MAX_TEXT) return { status: 'suspeita', detectedType: declared, tokens: [], reason: 'text_too_large' };
+    if (!looksLikeText(bytes)) return { status: 'suspeita', detectedType: null, tokens: [], reason: 'binary_in_text' };
+    return { status: 'limpa', detectedType: declared, tokens: [] };
+  }
+
   const head = bytes.subarray(0, 16);
   const sniffed = sniffType(head);
-  const detectedType: DeclaredType | null = sniffed === 'text' ? (declared === 'txt' || declared === 'chordpro' ? declared : null) : sniffed;
-
-  const expectText = declared === 'txt' || declared === 'chordpro';
-  if ((expectText && sniffed !== 'text') || (!expectText && sniffed !== declared)) {
+  const detectedType: DeclaredType | null = sniffed === 'text' ? null : sniffed;
+  if (sniffed !== declared) {
     return { status: 'suspeita', detectedType, tokens: [], reason: 'signature_mismatch' };
   }
 
@@ -72,10 +120,5 @@ export function checkStructural(bytes: Uint8Array, declared: DeclaredType): Stru
     }
     case 'jpg':
       return endsWith(bytes, [0xff, 0xd9]) ? { status: 'limpa', detectedType, tokens: [] } : { status: 'suspeita', detectedType, tokens: [], reason: 'truncated' };
-    case 'txt':
-    case 'chordpro':
-      if (bytes.length > MAX_TEXT) return { status: 'suspeita', detectedType, tokens: [], reason: 'text_too_large' };
-      if (!looksLikeText(bytes)) return { status: 'suspeita', detectedType, tokens: [], reason: 'binary_in_text' };
-      return { status: 'limpa', detectedType, tokens: [] };
   }
 }

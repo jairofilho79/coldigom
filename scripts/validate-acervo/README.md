@@ -60,8 +60,8 @@ novos); o arquivo entra no git. Os tipos são o vocabulário que o dono usou
 na rodada 1 (`revisao/decisoes.py`): `link` (hash idêntico, só vincula),
 `adicionar` (material novo no praise — o padrão, porque é mais fácil remover
 no coldigom do que voltar no PLPCG desligado), `substituir` (importa e marca
-o material do coldigom para remoção — ação que o `apply` da Fase C ganha
-além das três do spec §7), `criar` (praise novo), `nao_levar` (zero upload:
+o material do coldigom para remoção — quarta ação do spec §7
+(`replace_plpcg_material`)), `criar` (praise novo), `nao_levar` (zero upload:
 "não precisa levar", "manter o do coldigom"), `descartar`. `junto_com`
 aponta outra entrada (por `short_id` na tela, `pdf_id` no arquivo): o
 material vai para o praise que aquela entrada usa ou cria. O kind padrão de
@@ -102,6 +102,14 @@ não está no crosswalk, sha256 do PDF confere, nenhum homônimo com a mesma
 tag-base para criar); pós-condição por run (`plpcg_crosswalk WHERE run_id`).
 R2 via `wrangler r2 object put|delete coldigom-assets/storage/…` — mesma
 autenticação do D1. `--limite N` para o primeiro `--execute` ser pequeno.
+
+Se um run morrer no meio (última linha `subindo_r2`/`escrevendo`), rode
+`--undo <run_id>` e depois o mesmo `--tipo` de novo — a retomada por
+pré-condição não distingue "aplicado por um run que caiu" de conflito. Um
+undo com `erros_r2` fica `ok:true`: apague as chaves listadas à mão com
+`wrangler r2 object delete coldigom-assets/<chave> --remote`. O wrangler
+executa cada arquivo .sql como um batch atômico do D1 — é o que a retomada
+assume (chunk que falhou não escreveu nada).
 
 `core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
 (cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de

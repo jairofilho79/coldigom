@@ -278,8 +278,8 @@ livre, **Desfazer** (volta para "sem decisão"), teclas `a`/`c`/`n`.
 `tags`, `motivo`, `duvida`, `proposta`, `confirma`, `origem`, `quando`).
 Append-only, a última linha por chave vale. É gabarito humano: entra no git,
 nunca fica só em `out/`. Validação por tipo em `revisao/decisoes.py`
-(`adicionar`/`substituir` exigem praise ou `junto_com`; `substituir`/`link`
-exigem material; `criar` exige nome; kind tem que existir no snapshot).
+(`adicionar` exige praise ou `junto_com`; `substituir`/`link` exigem praise e
+material; `criar` exige nome; kind tem que existir no snapshot).
 
 **Rodada 1 (15–17/09, o que aconteceu):** o dono anotou 1040 entradas com
 marca + texto livre no `localStorage`; `revisao.migrar_anotacoes` converteu
@@ -332,9 +332,8 @@ importar, o hash do PDF local confere com o registrado no finding; para criar,
 nenhum praise com o mesmo slug e mesma tag-base apareceu desde o snapshot
 (refazer `core.snapshot` antes de aplicar, como manda o README).
 
-Credenciais: as mesmas de `api/scripts/import_gestures.ts` (S3 derivado de
-`CLOUDFLARE_R2_API_TOKEN`; tudo sob `storage/` no bucket). Nenhuma é lida na
-simulação.
+Credenciais: R2 via `wrangler r2 object put|delete coldigom-assets/storage/…
+--remote`, mesma autenticação do D1; nenhuma credencial é lida na simulação.
 
 Pendência anotada para a Fase C: o material `Chord Chart I/II` de "Tu que
 estás assentado" (PLPCG 506) está arquivado dentro de "O Sol Escurecerá 507"

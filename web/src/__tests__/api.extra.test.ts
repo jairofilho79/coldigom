@@ -143,6 +143,13 @@ describe('API Service — escritas de louvor e material', () => {
     );
 
     mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
+    await updateMaterial('mat1', { praise_id: 'p2' });
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/materials/mat1'),
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ praise_id: 'p2' }) })
+    );
+
+    mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
     await deleteMaterial('mat1');
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/materials/mat1'),

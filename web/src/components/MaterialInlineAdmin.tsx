@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { SearchableSelect } from './SearchableSelect';
-import type { Material } from '../types';
+import { MoverMaterialForm } from './MoverMaterialForm';
+import type { Material, PraiseDetail } from '../types';
 import type { SelectOption } from './selectTypes';
 
 type Props = {
@@ -8,6 +10,9 @@ type Props = {
   saving: boolean;
   onUpdateKind: (materialId: string, kind: string) => Promise<void>;
   onDelete: (materialId: string) => Promise<void>;
+  /** Sem isto o botão "Mover" não aparece. */
+  onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
+  buscarLouvor?: (id: string) => Promise<PraiseDetail>;
 };
 
 export function MaterialInlineAdmin({
@@ -16,7 +21,11 @@ export function MaterialInlineAdmin({
   saving,
   onUpdateKind,
   onDelete,
+  onMove,
+  buscarLouvor,
 }: Props) {
+  const [movendo, setMovendo] = useState(false);
+
   return (
     <div className="material-inline-admin">
       <SearchableSelect
@@ -32,6 +41,16 @@ export function MaterialInlineAdmin({
           Mesclado{material.merged_from_praise_name ? `: ${material.merged_from_praise_name}` : ''}
         </span>
       ) : null}
+      {onMove && !movendo ? (
+        <button
+          type="button"
+          className="auth-btn material-inline-admin-remove"
+          disabled={saving}
+          onClick={() => setMovendo(true)}
+        >
+          Mover
+        </button>
+      ) : null}
       <button
         type="button"
         className="auth-btn material-inline-admin-remove"
@@ -40,6 +59,18 @@ export function MaterialInlineAdmin({
       >
         Remover
       </button>
+      {onMove && movendo ? (
+        <MoverMaterialForm
+          praiseAtualId={material.praise_id}
+          busy={saving}
+          buscarLouvor={buscarLouvor}
+          onCancel={() => setMovendo(false)}
+          onConfirm={async (destino) => {
+            await onMove(material.id, destino);
+            setMovendo(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

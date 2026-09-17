@@ -824,6 +824,47 @@ describe('PraiseDetailPage Component', () => {
       }
     });
 
+    it('mover material mostra o destino, grava praise_id e avisa com link', async () => {
+      const destinoId = '9f1e2d3c-0000-4000-8000-000000000002';
+      (getPraise as ReturnType<typeof vi.fn>).mockImplementation(async (id: string) => {
+        if (id === destinoId) {
+          return {
+            ...mockPraiseDetail,
+            id: destinoId,
+            name: 'Outro Louvor',
+            number: '045',
+            tags: [{ id: 'tag3', name: 'GLTM', parent_id: null }],
+            materials: [],
+          };
+        }
+        return mockPraiseDetail;
+      });
+      (updateMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: mockPraiseDetail.materials.filter((m) => m.id !== 'mat1'),
+      });
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+      await waitFor(() => {
+        expect(screen.getByText('Partituras')).toBeTruthy();
+      });
+
+      // O primeiro "Mover" da página é o do player de áudio (mat2); a partitura
+      // (mat1) vem depois.
+      const botoesMover = screen.getAllByRole('button', { name: 'Mover' });
+      await user.click(botoesMover[botoesMover.length - 1]);
+      await user.type(screen.getByLabelText('ID do louvor de destino'), destinoId);
+      expect(await screen.findByText('045 — Outro Louvor')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Confirmar mover' }));
+
+      await waitFor(() => {
+        expect(updateMaterial).toHaveBeenCalledWith('mat1', { praise_id: destinoId });
+      });
+      const aviso = (await screen.findByText(/Movido para/)).closest('[role="status"]') as HTMLElement;
+      expect(aviso).toHaveTextContent('Movido para «045 — Outro Louvor»');
+      expect(within(aviso).getByRole('link')).toHaveAttribute('href', `/praise/${destinoId}`);
+    });
+
     it('salvar manda o token de versão que a tela carregou', async () => {
       // Sem token, duas pessoas editando o mesmo louvor: a última a salvar vence
       // em silêncio, e o trabalho da primeira some sem aviso. O editor de cifras

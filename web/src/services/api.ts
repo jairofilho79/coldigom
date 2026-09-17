@@ -342,6 +342,8 @@ export async function updateMaterial(materialId: string, updates: {
   type?: string;
   url?: string | null;
   is_reviewed?: boolean;
+  /** Move o material para outro louvor; a resposta continua sendo o louvor de origem. */
+  praise_id?: string;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,

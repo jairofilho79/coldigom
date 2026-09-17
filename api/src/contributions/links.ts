@@ -36,7 +36,13 @@ export function safeBrowsingChecker(apiKey: string | undefined, fetchFn: typeof 
       return all(urls, 'adiado');
     }
     if (!res.ok) return all(urls, 'adiado');
-    const body = (await res.json()) as { matches?: { threat?: { url?: string } }[] };
+    let body: { matches?: { threat?: { url?: string } }[] };
+    try {
+      // Corpo 200 mas não-JSON (ex.: página de erro do proxy) também é adiado — nunca lança.
+      body = (await res.json()) as { matches?: { threat?: { url?: string } }[] };
+    } catch {
+      return all(urls, 'adiado');
+    }
     const unsafe = new Set((body.matches ?? []).map((m) => m.threat?.url).filter((u): u is string => !!u));
     return Object.fromEntries(urls.map((u) => [u, unsafe.has(u) ? 'unsafe' : 'clean']));
   };

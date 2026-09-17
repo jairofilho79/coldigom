@@ -45,4 +45,10 @@ describe('safeBrowsingChecker', () => {
     expect(await safeBrowsingChecker('k', f)([])).toEqual({});
     expect(f).not.toHaveBeenCalled();
   });
+
+  it('200 com corpo não-JSON → adiado, não lança', async () => {
+    const f = vi.fn(async () => new Response('not json', { status: 200 })) as unknown as typeof fetch;
+    const out = await safeBrowsingChecker('k', f)(URLS);
+    expect(out).toEqual({ 'https://youtu.be/a': 'adiado', 'https://drive.google.com/file/d/1/view': 'adiado' });
+  });
 });

@@ -42,7 +42,13 @@ export function virusTotalClient(apiKey: string | undefined, fetchFn: typeof fet
       try { res = await fetchFn(`${BASE}/files/${sha256}`, { headers }); } catch { return { kind: 'adiado', reason: 'error' }; }
       if (res.status === 404) return { kind: 'unknown' };
       if (!res.ok) return adiadoDe(res);
-      const body = (await res.json()) as { data?: { attributes?: { last_analysis_stats?: unknown } } };
+      let body: { data?: { attributes?: { last_analysis_stats?: unknown } } };
+      try {
+        // 200 com corpo não-JSON também adia — nunca lança para fora do cliente.
+        body = (await res.json()) as { data?: { attributes?: { last_analysis_stats?: unknown } } };
+      } catch {
+        return { kind: 'adiado', reason: 'error' };
+      }
       return { kind: 'known', stats: stats(body.data?.attributes?.last_analysis_stats) };
     },
     async submitFile(bytes, name) {
@@ -52,7 +58,12 @@ export function virusTotalClient(apiKey: string | undefined, fetchFn: typeof fet
       let res: Response;
       try { res = await fetchFn(`${BASE}/files`, { method: 'POST', headers, body: form }); } catch { return { kind: 'adiado', reason: 'error' }; }
       if (!res.ok) return adiadoDe(res);
-      const body = (await res.json()) as { data?: { id?: string } };
+      let body: { data?: { id?: string } };
+      try {
+        body = (await res.json()) as { data?: { id?: string } };
+      } catch {
+        return { kind: 'adiado', reason: 'error' };
+      }
       return body.data?.id ? { kind: 'submitted', analysisId: body.data.id } : { kind: 'adiado', reason: 'error' };
     },
     async pollAnalysis(analysisId) {
@@ -60,7 +71,12 @@ export function virusTotalClient(apiKey: string | undefined, fetchFn: typeof fet
       let res: Response;
       try { res = await fetchFn(`${BASE}/analyses/${encodeURIComponent(analysisId)}`, { headers }); } catch { return { kind: 'adiado', reason: 'error' }; }
       if (!res.ok) return adiadoDe(res);
-      const body = (await res.json()) as { data?: { attributes?: { status?: string; stats?: unknown } } };
+      let body: { data?: { attributes?: { status?: string; stats?: unknown } } };
+      try {
+        body = (await res.json()) as { data?: { attributes?: { status?: string; stats?: unknown } } };
+      } catch {
+        return { kind: 'adiado', reason: 'error' };
+      }
       const attrs = body.data?.attributes;
       if (attrs?.status === 'completed') return { kind: 'completed', stats: stats(attrs.stats) };
       return { kind: 'queued' };

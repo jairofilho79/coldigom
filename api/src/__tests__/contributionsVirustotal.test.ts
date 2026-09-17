@@ -16,6 +16,11 @@ function fetchSeq(responses: { status: number; body?: unknown }[]) {
 
 const STATS = { malicious: 0, suspicious: 0, harmless: 60, undetected: 10 };
 
+// 200 com corpo que não é JSON válido — simula proxy/erro que engana o status.
+function fetchNotJson() {
+  return vi.fn(async () => new Response('not json', { status: 200 })) as unknown as typeof fetch;
+}
+
 describe('virusTotalClient', () => {
   it('sem chave → adiado no_api_key sem rede', async () => {
     const { f, calls } = fetchSeq([{ status: 200 }]);
@@ -32,6 +37,10 @@ describe('virusTotalClient', () => {
     expect(await virusTotalClient('k', fetchSeq([{ status: 429 }]).f).lookupHash('abc')).toEqual({ kind: 'adiado', reason: 'rate_limited' });
   });
 
+  it('lookupHash: 200 com corpo não-JSON → adiado error, não lança', async () => {
+    expect(await virusTotalClient('k', fetchNotJson()).lookupHash('abc')).toEqual({ kind: 'adiado', reason: 'error' });
+  });
+
   it('submitFile manda multipart e devolve o analysisId', async () => {
     const { f, calls } = fetchSeq([{ status: 200, body: { data: { type: 'analysis', id: 'an-1' } } }]);
     const out = await virusTotalClient('k', f).submitFile(new Uint8Array([1, 2, 3]), 'x.pdf');
@@ -41,6 +50,10 @@ describe('virusTotalClient', () => {
     expect(calls[0][1]!.body).toBeInstanceOf(FormData);
   });
 
+  it('submitFile: 200 com corpo não-JSON → adiado error, não lança', async () => {
+    expect(await virusTotalClient('k', fetchNotJson()).submitFile(new Uint8Array([1]), 'x.pdf')).toEqual({ kind: 'adiado', reason: 'error' });
+  });
+
   it('pollAnalysis: queued, completed, erro', async () => {
     const c = virusTotalClient('k', fetchSeq([{ status: 200, body: { data: { attributes: { status: 'queued' } } } }]).f);
     expect(await c.pollAnalysis('an-1')).toEqual({ kind: 'queued' });
@@ -48,6 +61,10 @@ describe('virusTotalClient', () => {
     expect(await done.pollAnalysis('an-1')).toEqual({ kind: 'completed', stats: STATS });
     const boom = vi.fn(async () => { throw new TypeError('x'); }) as unknown as typeof fetch;
     expect(await virusTotalClient('k', boom).pollAnalysis('an-1')).toEqual({ kind: 'adiado', reason: 'error' });
+  });
+
+  it('pollAnalysis: 200 com corpo não-JSON → adiado error, não lança', async () => {
+    expect(await virusTotalClient('k', fetchNotJson()).pollAnalysis('an-1')).toEqual({ kind: 'adiado', reason: 'error' });
   });
 });
 

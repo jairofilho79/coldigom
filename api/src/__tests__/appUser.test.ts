@@ -63,4 +63,12 @@ describe('requireAppUser', () => {
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ error: 'auth_unavailable' });
   });
+
+  it('introspect 200 com corpo não-JSON → 503 auth_unavailable', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('not json', { status: 200 })));
+    const pedir = appWith({ PLPCG_AUTH_URL: 'https://auth.test' });
+    const res = await pedir('sess_abc');
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: 'auth_unavailable' });
+  });
 });

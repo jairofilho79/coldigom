@@ -43,17 +43,22 @@ export async function requireAppUser(c: Ctx, next: Next) {
   }
 
   let res: Response;
+  let body: { userId?: string; email?: string | null; name?: string | null };
   try {
     res = await fetch(`${base.replace(/\/$/, '')}/api/auth/introspect`, {
       headers: { authorization: `Bearer ${token}` },
     });
+    // 401 não precisa de corpo válido para ser 401 — checa o status antes de
+    // tentar o parse, senão um 401 com corpo vazio/errado viraria 503.
+    if (res.status === 401) return c.json({ error: 'unauthorized' }, 401);
+    if (!res.ok) return c.json({ error: 'auth_unavailable' }, 503);
+    // res.json() lança se o corpo não for JSON válido; um introspect que
+    // responde 200 com lixo é tão "fora do ar" quanto uma rede que falhou —
+    // por isso o parse mora dentro do try, e cai no mesmo 503.
+    body = (await res.json()) as typeof body;
   } catch {
     return c.json({ error: 'auth_unavailable' }, 503);
   }
-  if (res.status === 401) return c.json({ error: 'unauthorized' }, 401);
-  if (!res.ok) return c.json({ error: 'auth_unavailable' }, 503);
-
-  const body = (await res.json()) as { userId?: string; email?: string | null; name?: string | null };
   if (typeof body.userId !== 'string' || !body.userId) return c.json({ error: 'auth_unavailable' }, 503);
   const user: AppUser = { userId: body.userId, email: body.email ?? null, name: body.name ?? null };
   cache.set(key, { user, exp: Date.now() + CACHE_TTL_MS });

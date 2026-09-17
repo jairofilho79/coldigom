@@ -44,9 +44,10 @@ AUTH_COOKIE_SAMESITE = "Lax"
 AUTH_ALLOWED_EMAILS = "*"
 
 # Base do Worker plpcg-catalog, para requireAppUser introspectar tokens sess_
-# emitidos pelo app PLPCG (Flutter). Ajustar se o deployment for renomeado
-# ou mudar de conta Cloudflare.
-PLPCG_AUTH_URL = "https://plpcg-catalog.jairofilho79.workers.dev"
+# emitidos pelo app PLPCG (Flutter). plpcg-catalog é roteado em plpcg.com
+# (rotas /api/auth/* no wrangler.jsonc dele), não no domínio workers.dev —
+# ajustar aqui só se essa rota mudar.
+PLPCG_AUTH_URL = "https://plpcg.com"
 
 # Workers AI (fallback ChordPro — binding usado por rotas internas futuras)
 [ai]

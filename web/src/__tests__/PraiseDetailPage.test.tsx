@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PraiseDetailPage } from '../pages/PraiseDetailPage';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import type { PraiseDetail } from '../types';
 
@@ -37,6 +37,7 @@ vi.mock('../services/api', async (importOriginal) => {
     deleteMaterial: vi.fn(),
     bulkUploadMaterials: vi.fn(),
     logout: vi.fn().mockResolvedValue(undefined),
+    exchangeAuthCode: vi.fn().mockResolvedValue(true),
     getDriveStatus: vi.fn().mockResolvedValue({ connected: false }),
     getDriveConnectUrl: vi.fn((returnTo: string) => `http://localhost:8787/api/drive/connect?return_to=${encodeURIComponent(returnTo)}`),
     startDriveScan: vi.fn(),
@@ -72,6 +73,7 @@ import {
   updateMaterial,
   getMaterialKinds,
   getDriveStatus,
+  exchangeAuthCode,
   startDriveScan,
   startDriveImport,
   downloadDriveFileBlob,
@@ -1288,6 +1290,41 @@ describe('Status e conexão do Google Drive', () => {
       expect(screen.queryByRole('button', { name: 'Conectar Google Drive' })).toBeNull();
     });
     expect(window.location.search).toBe('');
+  });
+
+  it('volta do login do Google (auth=exchange&code=...) troca o código e limpa a URL', async () => {
+    // "Entrar com o Google" na tela de detalhe voltava para /praise/:id?auth=exchange&code=…
+    // e nada acontecia: o efeito desta página apagava `auth` da URL antes de o
+    // AuthProvider lê-la (efeitos rodam de filho para pai), então o código de
+    // troca nunca era consumido — só a HomePage, que não mexe na query, logava.
+    // BrowserRouter de propósito: o bug é a página reescrever o window.location
+    // que o AuthProvider lê, e o MemoryRouter não toca no window.
+    window.history.replaceState(
+      {},
+      '',
+      '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8?auth=exchange&code=cod-123'
+    );
+    try {
+      render(
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/praise/:id" element={<PraiseDetailPage />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      );
+
+      await screen.findByText('Grande Deus');
+      await waitFor(() => {
+        expect(exchangeAuthCode).toHaveBeenCalledWith('cod-123');
+      });
+      await waitFor(() => {
+        expect(window.location.search).toBe('');
+      });
+    } finally {
+      window.history.replaceState({}, '', '/');
+    }
   });
 
   it('auth=drive_error na URL mostra erro de conexão com o Drive', async () => {

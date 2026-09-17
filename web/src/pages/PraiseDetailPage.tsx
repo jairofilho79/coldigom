@@ -428,7 +428,11 @@ export function PraiseDetailPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const auth = params.get('auth');
-    if (!auth) return;
+    // Só os valores do Drive são desta página. Os do login (`exchange`, `success`,
+    // `error`) são do AuthProvider, que lê o window.location no próprio efeito —
+    // e efeitos rodam de filho para pai, então apagar `auth` aqui deixava o
+    // código de troca sem dono: "Entrar com o Google" só funcionava na HomePage.
+    if (auth !== 'drive_connected' && auth !== 'drive_error') return;
 
     if (auth === 'drive_connected') {
       setDriveConnected(true);

@@ -29,7 +29,11 @@ function startsWith(head: Uint8Array, bytes: number[]): boolean {
 export function looksLikeText(head: Uint8Array): boolean {
   for (const b of head) if (b === 0) return false;
   try {
-    new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(head);
+    // `stream: true` tolera uma sequência UTF-8 multibyte cortada bem na borda
+    // da janela de sniff — a spec pede "UTF-8 válido nos primeiros 4 KB", e um
+    // caractere acentuado que caiu na metade certa não pode reprovar um
+    // arquivo que é, de fato, texto válido.
+    new TextDecoder('utf-8', { fatal: true, ignoreBOM: false }).decode(head, { stream: true });
     return true;
   } catch {
     return false;

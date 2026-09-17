@@ -26,6 +26,13 @@ export async function readQuota(db: D1Database, userId: string, day: string): Pr
   return row ?? { count: 0, bytes: 0 };
 }
 
+// TOCTOU aceito por ora: a rota lê a cota, sobe os arquivos e só then bate
+// este INSERT — duas requisições concorrentes do mesmo usuário podem passar
+// juntas na checagem e a cota real overshoot pelo fator de concorrência (na
+// prática, poucas abas/dispositivos ao mesmo tempo). Não vale a pena um
+// upsert condicional com compensação: a cota aqui não é billing, é o
+// orçamento de chamadas ao VirusTotal e o espaço no R2 — o consumer da fila
+// tem seu próprio contador diário (`VT_USER`) que é a defesa de verdade.
 export function bumpQuotaStmt(db: D1Database, userId: string, day: string, count: number, bytes: number): D1PreparedStatement {
   return db
     .prepare(

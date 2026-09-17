@@ -26,8 +26,11 @@ function fakeR2() {
   const objetos = new Map<string, Uint8Array>();
   return {
     objetos,
-    put: vi.fn(async (key: string, body: ArrayBuffer | Uint8Array | ReadableStream) => {
-      const bytes = body instanceof Uint8Array ? body : body instanceof ArrayBuffer ? new Uint8Array(body) : new Uint8Array(await new Response(body).arrayBuffer());
+    // A rota agora sobe o File/Blob direto (sem reconstruir Uint8Array antes) —
+    // Response aceita qualquer BodyInit (ArrayBuffer, Uint8Array, ReadableStream,
+    // Blob, File), então ler daqui cobre todo mundo sem o fake precisar saber qual é.
+    put: vi.fn(async (key: string, body: unknown) => {
+      const bytes = new Uint8Array(await new Response(body as BodyInit).arrayBuffer());
       objetos.set(key, bytes);
     }),
     delete: vi.fn(async (key: string) => { objetos.delete(key); }),
@@ -142,11 +145,51 @@ describe('POST /api/contributions', () => {
   it('falha no R2 apaga o que já subiu e responde 500', async () => {
     const { db } = fakeDb();
     const r2 = fakeR2();
-    r2.put.mockImplementationOnce(async (key: string, body: Uint8Array) => { r2.objetos.set(key, body); }).mockImplementationOnce(async () => { throw new Error('r2 down'); });
+    r2.put
+      .mockImplementationOnce(async (key: string, body: unknown) => { r2.objetos.set(key, new Uint8Array(await new Response(body as BodyInit).arrayBuffer())); })
+      .mockImplementationOnce(async () => { throw new Error('r2 down'); });
     const res = await app.request('/api/contributions', { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(BASE, [{ name: 'a.pdf', bytes: PDF }, { name: 'b.pdf', bytes: PDF }]) }, env(db, r2));
     expect(res.status).toBe(500);
     expect(r2.objetos.size).toBe(0);
     expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it('falha no D1 batch apaga o que já subiu e responde 500', async () => {
+    const { db } = fakeDb();
+    const r2 = fakeR2();
+    db.batch.mockImplementationOnce(async () => { throw new Error('d1 down'); });
+    const res = await app.request('/api/contributions', { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(BASE, [{ name: 'a.pdf', bytes: PDF }]) }, env(db, r2));
+    expect(res.status).toBe(500);
+    expect(r2.objetos.size).toBe(0);
+  });
+
+  it('chordpro com acento perto da borda de 16 bytes é aceito (janela de sniff maior p/ texto)', async () => {
+    const { db } = fakeDb();
+    const r2 = fakeR2();
+    const conteudo = new TextEncoder().encode('{title: Louvação}\n[C]Deus é fiel');
+    const res = await app.request('/api/contributions', { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(BASE, [{ name: 'cifra.chordpro', bytes: conteudo }]) }, env(db, r2));
+    expect(res.status).toBe(201);
+  });
+
+  it('content-length acima do teto → 413 request_too_large, sem nem tentar parsear', async () => {
+    const { db } = fakeDb();
+    const res = await app.request(
+      '/api/contributions',
+      { method: 'POST', headers: { authorization: 'Bearer sess_a', 'content-length': String(97 * 1024 * 1024) }, body: multipart(BASE) },
+      env(db, fakeR2())
+    );
+    expect(res.status).toBe(413);
+    expect(await res.json()).toMatchObject({ error: 'request_too_large' });
+  });
+
+  it('soma real dos arquivos acima do teto → 413 request_too_large (sem Content-Length mentiroso)', async () => {
+    const { db } = fakeDb();
+    const tamanho = 25 * 1024 * 1024;
+    const arquivoGrande = () => { const b = new Uint8Array(tamanho); b.set(PDF, 0); return b; };
+    const arquivos = Array.from({ length: 4 }, (_, i) => ({ name: `f${i}.pdf`, bytes: arquivoGrande() }));
+    const res = await app.request('/api/contributions', { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(BASE, arquivos) }, env(db, fakeR2()));
+    expect(res.status).toBe(413);
+    expect(await res.json()).toMatchObject({ error: 'request_too_large' });
   });
 });
 

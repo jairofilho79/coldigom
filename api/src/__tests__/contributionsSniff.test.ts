@@ -25,6 +25,15 @@ describe('sniffType', () => {
     expect(sniffType(new Uint8Array([0x4d, 0x5a, 0x90, 0x00]))).toBeNull(); // MZ (exe)
     expect(sniffType(enc('<html>'))).toBe('text');
   });
+
+  it('tolera janela cortada bem no meio de um caractere UTF-8 multibyte', () => {
+    // 'ã' é 2 bytes (0xC3 0xA3); cortar logo após o primeiro byte deixa uma
+    // sequência incompleta na borda — decode(..., {stream:true}) não deve lançar.
+    const completo = enc('Louvação');
+    const idx = completo.indexOf(0xc3);
+    const cortado = completo.subarray(0, idx + 1);
+    expect(sniffType(cortado)).toBe('text');
+  });
 });
 
 describe('headMatchesDeclared', () => {

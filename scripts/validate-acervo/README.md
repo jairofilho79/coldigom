@@ -42,7 +42,7 @@ python3 -m core.queue --marcar-aplicados out/apply_log.jsonl
 python3 -m core.plpcg                       # exporta o D1 plpcg-catalog, baixa o que falta, hasheia os dois lados
 python3 -m core.snapshot                    # o acervo do coldigom, fresco
 python3 -m detectors.plpcg_crosswalk        # Fase A — um finding por entrada do PLPCG + um por louvor só de lá
-python3 -m revisao.serve --abrir            # o site local (spec §6): lista por louvor do PLPCG, PDF dos dois lados
+python3 -m revisao.serve --abrir            # o site local (spec §6): lista por louvor do PLPCG, PDF dos dois lados, botões de decisão
 ```
 
 `revisao.serve` sobe `http://localhost:8765` só com a stdlib e lê
@@ -51,10 +51,30 @@ python3 -m revisao.serve --abrir            # o site local (spec §6): lista por
 e `storage/assets/praises` — todos sobrescrevíveis por flag (`--findings`,
 `--snapshot`, `--plpcjf`, `--baixados`, `--storage`). O PDF do coldigom é
 achado pelo `material_id`, não por `<praise_id>/<material_id>`: um material
-movido por merge continua na pasta do praise antigo no espelho. Esta versão
-só lê; as marcas ✓/✗/? e as notas ficam no `localStorage` do navegador e saem
-por "Exportar anotações" como texto para colar no chat. `POST /decide`, o
-modo gabarito e o `core.gold` desta migração chegam na Fase B.
+movido por merge continua na pasta do praise antigo no espelho.
+
+**Decisões** (Fase B): cada botão do painel faz `POST /decide`, que faz
+append em `gabaritos/plpcg_crosswalk/decisoes.jsonl` (`--decisoes` muda o
+caminho). Vale a última linha por `pdf_id` (ou `group_id`, nos louvores
+novos); o arquivo entra no git. Os tipos são o vocabulário que o dono usou
+na rodada 1 (`revisao/decisoes.py`): `link` (hash idêntico, só vincula),
+`adicionar` (material novo no praise — o padrão, porque é mais fácil remover
+no coldigom do que voltar no PLPCG desligado), `substituir` (importa e marca
+o material do coldigom para remoção — ação que o `apply` da Fase C ganha
+além das três do spec §7), `criar` (praise novo), `nao_levar` (zero upload:
+"não precisa levar", "manter o do coldigom"), `descartar`. `junto_com`
+aponta outra entrada (por `short_id` na tela, `pdf_id` no arquivo): o
+material vai para o praise que aquela entrada usa ou cria. O kind padrão de
+`Partitura` é `Choir`, não `Sheet Music` — foi o que o dono pediu em 77 das
+84 vezes que nomeou o kind de uma partitura.
+
+`python3 -m revisao.migrar_anotacoes` converteu, uma vez, as 1040 anotações
+da rodada 1 (`rodada1/anotacoes.json`, o `localStorage` da versão anterior
+do site: marca ✓/✗/? + texto livre) em decisões `origem: rodada1-texto`. O
+texto manda, a marca não (o dono disse que a usou como "onde eu estava").
+Onde o texto não decide sozinho, a linha sai com `tipo: null` e `duvida`; o
+modo **Revisão 2** do site lista essas e mostra a dúvida em cima dos botões.
+O modo gabarito (`?cego=1`) e o `core.gold` desta migração ainda não existem.
 
 `core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
 (cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de
@@ -112,7 +132,9 @@ Testes: `python3 -m pytest tests/ -v`
 | `core/plpcg.py` | o PLPCG como fonte: exportação do D1 `plpcg-catalog`, `pdf_id` ↔ caminho, download, cache de sha256 dos dois lados |
 | `detectors/youtube_merge.py` | Fase 1 — louvores cujo único material é do YouTube |
 | `detectors/plpcg_crosswalk.py` | Fase A da migração — louvor por número/slug/classe, hash e caminho só dentro do louvor, faixas e candidatos |
-| `revisao/serve.py` + `revisao/index.html` | o site local de revisão da migração PLPCG — leitura dos findings, PDFs lado a lado, anotações locais |
+| `revisao/serve.py` + `revisao/index.html` | o site local de revisão da migração PLPCG — findings por louvor, PDFs lado a lado, `POST /decide` |
+| `revisao/decisoes.py` · `revisao/migrar_anotacoes.py` | tipos de decisão, validação, `decisoes.jsonl`; migração única das anotações da rodada 1 |
+| `gabaritos/plpcg_crosswalk/decisoes.jsonl` | as decisões do dono, append-only, última por `pdf_id` vence — é o que o `apply` da Fase C vai ler |
 
 ## As regras que não são óbvias no código
 

@@ -3,8 +3,9 @@
 `python3 -m revisao.serve` sobe http://localhost:8765 com uma página estática
 (HTML + JS sem build) que lista os findings do `plpcg_crosswalk` agrupados por
 louvor do PLPCG e mostra, lado a lado, o PDF do PLPCG e o PDF do candidato no
-coldigom. Esta versão só lê: `POST /decide`, o modo gabarito e o `core.gold`
-chegam na Fase B. Nada aqui entra no coldigom web.
+coldigom. `POST /decide` grava a decisão do dono em
+`gabaritos/plpcg_crosswalk/decisoes.jsonl` (ver `revisao.decisoes`); o modo
+gabarito e o `core.gold` ficam para depois. Nada aqui entra no coldigom web.
 """
 from __future__ import annotations
 
@@ -22,9 +23,11 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 from core.paths import OUT, PKG, PLPCG_BAIXADOS, PLPCJF_ASSETS, SNAPSHOT_DB, STORAGE_PRAISES
 from core.plpcg import arquivo_local, pdfs_em, url_publica
 from detectors.plpcg_crosswalk import FAIXAS_CROSSWALK
+from revisao import decisoes as dec
 
 FINDINGS_PADRAO = os.path.join(OUT, "plpcg_crosswalk", "findings.jsonl")
 GABARITO_RODADA1 = os.path.join(PKG, "gabaritos", "plpcg_crosswalk", "rodada1", "findings.jsonl")
+DECISOES_PADRAO = os.path.join(PKG, "gabaritos", "plpcg_crosswalk", "decisoes.jsonl")
 PAGINA = os.path.join(os.path.dirname(__file__), "index.html")
 COLDIGOM_WEB = "https://coldigom-web.pages.dev/praise/"
 
@@ -45,6 +48,10 @@ class Dados:
     praises: dict[str, dict]
     origem: str = ""
     avisos: list[str] = field(default_factory=list)
+    decisoes: dict[str, dict] = field(default_factory=dict)
+    kinds: list[str] = field(default_factory=list)
+    tipos: tuple[str, ...] = dec.TIPOS
+    kind_padrao: dict[str, str] = field(default_factory=lambda: dict(dec.KIND_PADRAO))
 
     def json(self) -> bytes:
         return json.dumps(self.__dict__, ensure_ascii=False).encode("utf-8")
@@ -65,6 +72,14 @@ def indice_storage(storage: str) -> dict[str, str]:
     if not os.path.isdir(storage):
         return {}
     return {os.path.basename(rel)[:-4]: abs_ for rel, abs_ in pdfs_em(storage).items()}
+
+
+def _kinds(snapshot: str) -> list[str]:
+    conn = sqlite3.connect(snapshot)
+    try:
+        return [r[0] for r in conn.execute("SELECT name FROM material_kinds ORDER BY name")]
+    finally:
+        conn.close()
 
 
 def _louvores(snapshot: str, ids: set[str], indice: dict[str, str]) -> dict[str, dict]:
@@ -103,7 +118,8 @@ def _chave_grupo(g: dict) -> tuple:
 
 
 def carregar(findings: str, snapshot: str = SNAPSHOT_DB, storage: str = STORAGE_PRAISES,
-             plpcjf: str = PLPCJF_ASSETS, baixados: str = PLPCG_BAIXADOS) -> Dados:
+             plpcjf: str = PLPCJF_ASSETS, baixados: str = PLPCG_BAIXADOS,
+             decisoes: str = DECISOES_PADRAO) -> Dados:
     linhas = _ler_findings(findings)
     resumo = {f: 0 for f in FAIXAS_CROSSWALK}
     grupos: dict[str, dict] = {}
@@ -143,8 +159,12 @@ def carregar(findings: str, snapshot: str = SNAPSHOT_DB, storage: str = STORAGE_
         g["entradas"].sort(key=lambda x: x["short_id"])
     lista = sorted(grupos.values(), key=_chave_grupo)
     criar.sort(key=lambda x: x["nome"].lower())
+    decididas = dec.ler(decisoes)
+    # praises que só as decisões citam (o dono escolheu um candidato que o finding não propunha)
+    ids |= {d["praise_id"] for d in decididas.values() if d.get("praise_id")}
     return Dados(run_id=run_id, checksum=checksum, resumo=resumo, grupos=lista, criar=criar,
-                 praises=_louvores(snapshot, ids, indice_storage(storage)), origem=findings)
+                 praises=_louvores(snapshot, ids, indice_storage(storage)), origem=findings,
+                 decisoes=decididas, kinds=_kinds(snapshot))
 
 
 def _dentro(raiz: str, caminho: str) -> bool:
@@ -169,9 +189,11 @@ def caminho_pdf_coldigom(material_id: str, indice: dict[str, str]) -> str | None
     return p if p and os.path.isfile(p) else None
 
 
-def fazer_handler(dados: Dados, plpcjf: str, baixados: str, storage: str):
-    corpo = dados.json()
+def fazer_handler(dados: Dados, plpcjf: str, baixados: str, storage: str,
+                  decisoes: str = DECISOES_PADRAO):
+    cache = {"corpo": dados.json()}
     indice = indice_storage(storage)
+    kinds = set(dados.kinds)
 
     class Handler(SimpleHTTPRequestHandler):
         def log_message(self, fmt, *args):  # só erros no terminal
@@ -197,7 +219,9 @@ def fazer_handler(dados: Dados, plpcjf: str, baixados: str, storage: str):
             if rota in ("/", "/index.html"):
                 return self._arquivo(PAGINA, "text/html; charset=utf-8")
             if rota == "/api/dados":
-                return self._enviar(200, "application/json; charset=utf-8", corpo)
+                if cache["corpo"] is None:
+                    cache["corpo"] = dados.json()
+                return self._enviar(200, "application/json; charset=utf-8", cache["corpo"])
             if rota.startswith("/pdf/plpcg/"):
                 p = caminho_pdf_plpcg(rota[len("/pdf/plpcg/"):], plpcjf, baixados)
                 if p:
@@ -211,6 +235,19 @@ def fazer_handler(dados: Dados, plpcjf: str, baixados: str, storage: str):
                 return self._enviar(404, "text/plain; charset=utf-8", b"PDF do coldigom nao esta em storage/")
             self._enviar(404, "text/plain; charset=utf-8", b"nao existe")
 
+        def do_POST(self):
+            if urllib.parse.urlsplit(self.path).path != "/decide":
+                return self._enviar(404, "text/plain; charset=utf-8", b"nao existe")
+            try:
+                bruto = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+                d = dec.validar(json.loads(bruto.decode("utf-8")), kinds)
+            except (ValueError, json.JSONDecodeError) as erro:
+                return self._enviar(400, "text/plain; charset=utf-8", str(erro).encode("utf-8"))
+            dec.gravar(decisoes, d)
+            dados.decisoes[dec.chave(d)] = d
+            cache["corpo"] = None
+            self._enviar(200, "application/json; charset=utf-8", json.dumps(d, ensure_ascii=False).encode("utf-8"))
+
     return Handler
 
 
@@ -222,6 +259,7 @@ def main(argv=None) -> int:
     ap.add_argument("--storage", default=STORAGE_PRAISES, help="espelho local <praise_id>/<material_id>.pdf")
     ap.add_argument("--plpcjf", default=PLPCJF_ASSETS, help="assets/ do plpcjf")
     ap.add_argument("--baixados", default=PLPCG_BAIXADOS, help="cache dos PDFs que só existem no R2")
+    ap.add_argument("--decisoes", default=DECISOES_PADRAO, help="decisoes.jsonl (append-only, entra no git)")
     ap.add_argument("--porta", type=int, default=8765)
     ap.add_argument("--abrir", action="store_true", help="abre o navegador")
     a = ap.parse_args(argv)
@@ -234,13 +272,16 @@ def main(argv=None) -> int:
         print(f"sem snapshot: rode python3 -m core.snapshot antes ({a.snapshot})", file=sys.stderr)
         return 1
 
-    dados = carregar(findings, a.snapshot, a.storage, a.plpcjf, a.baixados)
-    print(f"findings: {findings}\nrun_id: {dados.run_id}\n"
+    dados = carregar(findings, a.snapshot, a.storage, a.plpcjf, a.baixados, a.decisoes)
+    decididas = sum(1 for d in dados.decisoes.values() if d.get("tipo"))
+    print(f"findings: {findings}\ndecisoes: {a.decisoes} ({decididas} decididas, "
+          f"{len(dados.decisoes) - decididas} em Revisão 2)\nrun_id: {dados.run_id}\n"
           f"louvores do PLPCG: {len(dados.grupos)} · entradas: {sum(dados.resumo.values())} · "
           f"a criar: {len(dados.criar)}\n"
           + " · ".join(f"{k} {v}" for k, v in dados.resumo.items()))
     url = f"http://localhost:{a.porta}/"
-    servidor = HTTPServer(("127.0.0.1", a.porta), fazer_handler(dados, a.plpcjf, a.baixados, a.storage))
+    servidor = HTTPServer(("127.0.0.1", a.porta),
+                          fazer_handler(dados, a.plpcjf, a.baixados, a.storage, a.decisoes))
     print(f"\n{url}  (Ctrl+C para parar)")
     if a.abrir:
         webbrowser.open(url)

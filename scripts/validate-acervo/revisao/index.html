@@ -61,10 +61,27 @@
   .cand .rev { color: var(--muted); font-size: 11px; }
   .cand.sem { opacity: .6; }
   .mats summary { cursor: pointer; color: var(--muted); margin: 4px 0; }
-  .notas { margin-top: 12px; display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
-  .notas textarea { width: 100%; min-height: 48px; font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; }
-  .marcas button { font: inherit; padding: 3px 8px; border: 1px solid var(--line); background: #fff; border-radius: 4px; cursor: pointer; }
-  .marcas button.on { background: var(--fg); color: #fff; }
+  .decisao { position: sticky; bottom: 0; margin-top: 12px; box-shadow: 0 -6px 12px -8px rgba(0,0,0,.25); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 8px; }
+  .duvida { background: #fff3cd; border: 1px solid #e6c65a; border-radius: 4px; padding: 6px 10px; }
+  .duvida b { color: #8a5a00; }
+  .estado { color: var(--muted); }
+  .estado b { color: var(--fg); }
+  .botoes { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .botoes button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); background: #fff; border-radius: 4px; cursor: pointer; }
+  .botoes button:hover { background: #f1efe9; }
+  .botoes button.on { background: var(--fg); color: #fff; border-color: var(--fg); }
+  .botoes button.proposta { border-color: #b64d2e; box-shadow: 0 0 0 2px #f3d9d0; }
+  .botoes button:disabled { opacity: .45; cursor: default; }
+  .botoes .sep { color: var(--line); }
+  .botoes input[type=text] { width: 70px; font-family: ui-monospace, Menlo, monospace; }
+  .botoes input.nome { width: 300px; font-family: inherit; }
+  .decisao textarea { width: 100%; min-height: 44px; font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; }
+  .salvo { color: var(--alta); font-size: 11px; }
+  .erro { color: var(--ambiguo); font-size: 11px; }
+  .item .dec { width: 14px; text-align: center; font-weight: 700; }
+  .item .dec.r2 { color: #b64d2e; }
+  .modo button.r2 { border-color: #e6c65a; background: #fff3cd; }
+  .modo button.r2.on { background: #b64d2e; border-color: #b64d2e; }
   .criar-item { padding: 5px 10px; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; border-bottom: 1px solid var(--line); }
   .criar-item:hover { background: #f1efe9; } .criar-item.sel { background: #e8e4d9; }
   .criar-item .par { grid-column: 1 / -1; color: var(--muted); font-size: 11px; }
@@ -72,29 +89,27 @@
   .vazio-lista { padding: 20px; color: var(--muted); }
   kbd { border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; font-size: 11px; background: #fff; }
   a { color: #2b6cb0; }
-  dialog { max-width: 800px; width: 90vw; } dialog textarea { width: 100%; height: 60vh; font: 12px ui-monospace, Menlo, monospace; }
 </style>
 </head>
 <body>
 <header>
   <h1>Revisão PLPCG → Coldigom</h1>
-  <span class="modo"><button id="modo-entradas" class="on">Entradas</button><button id="modo-criar">Louvores novos</button></span>
+  <span class="modo"><button id="modo-entradas" class="on">Entradas</button><button id="modo-criar">Louvores novos</button><button id="modo-r2" class="r2">Revisão 2</button></span>
   <span class="faixas" id="faixas"></span>
   <input type="search" id="busca" placeholder="nome, número, short_id, path…">
   <select id="f-cat"><option value="">categoria: todas</option></select>
   <select id="f-cls"><option value="">classificação: todas</option></select>
   <select id="f-ev"><option value="">evidência: qualquer</option></select>
   <select id="f-nota"><option value="">nota: qualquer</option></select>
-  <select id="f-marca"><option value="">marca: qualquer</option><option value="0">sem marca</option><option value="ok">✓ ok</option><option value="erro">✗ erro</option><option value="duvida">? dúvida</option></select>
+  <select id="f-estado"><option value="pendentes">estado: pendentes</option><option value="decididas">estado: decididas</option><option value="">estado: todas</option></select>
+  <select id="f-tipo"><option value="">decisão: qualquer</option></select>
   <select id="ordem"><option value="num">ordem: número/nome</option><option value="atencao">ordem: pior faixa primeiro</option></select>
-  <span class="acoes"><button id="exportar">Exportar anotações</button></span>
   <span class="meta" id="meta"></span>
 </header>
 <main>
   <div id="lista"></div>
   <div id="painel"><div class="vazio-lista">Carregando…</div></div>
 </main>
-<dialog id="dlg"><p>Cole isto no chat — são as marcas ✓/✗/? e as notas, agrupadas por faixa.</p><textarea id="dlg-txt"></textarea><p><button id="dlg-copiar">Copiar</button> <button id="dlg-fechar">Fechar</button></p></dialog>
 
 <script>
 const FAIXAS = ["alta", "media", "ambiguo", "faltante", "sem_louvor"];
@@ -105,18 +120,21 @@ const $ = (s) => document.querySelector(s);
 const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 let D = null;                       // /api/dados
-let modo = "entradas";              // "entradas" | "criar"
+let modo = "entradas";              // "entradas" | "criar" | "r2"
 let sel = null;                     // entrada ou grupo selecionado
 let candSel = null;                 // {praise_id, material_id} mostrado à direita
 const faixasOn = new Set(FAIXAS);
 let visiveis = [];                  // itens na ordem da lista (para j/k)
 
-// --- anotações locais (só neste navegador; "Exportar" cola no chat) ---
-const KEY = "revisao-plpcg";
-const notas = JSON.parse(localStorage.getItem(KEY) || "{}");
-const salvar = () => localStorage.setItem(KEY, JSON.stringify(notas));
-const nota = (id) => notas[id] || { marca: "", texto: "" };
-const MARCA = { ok: "✓", erro: "✗", duvida: "?" };
+// --- decisões: vêm do servidor (decisoes.jsonl), POST /decide grava ---
+const TIPO = { link: "Já existe", adicionar: "Adicionar", substituir: "Substituir", criar: "Criar praise", nao_levar: "Não levar", descartar: "Descartar" };
+const GLIFO = { link: "=", adicionar: "+", substituir: "⇄", criar: "★", nao_levar: "–", descartar: "✕" };
+const TECLA = { a: "adicionar", c: "criar", n: "nao_levar" };
+const decisao = (id) => D.decisoes[id] || null;
+const decidida = (id) => !!decisao(id)?.tipo;
+const emRevisao2 = (id) => { const d = decisao(id); return !!(d && !d.tipo && d.duvida); };
+const porShort = () => { if (!D._porShort) D._porShort = new Map(D.grupos.flatMap((g) => g.entradas).map((e) => [e.short_id, e])); return D._porShort; };
+const porPdf = () => { if (!D._porPdf) D._porPdf = new Map(D.grupos.flatMap((g) => g.entradas).map((e) => [e.pdf_id, e])); return D._porPdf; };
 
 async function iniciar() {
   D = await (await fetch("/api/dados")).json();
@@ -133,27 +151,33 @@ async function iniciar() {
   opcoes($("#f-cls"), contar((e) => e.classificacao));
   opcoes($("#f-ev"), [...new Set(todas.flatMap((e) => e.evidencias))].sort());
   opcoes($("#f-nota"), contar((e) => e.nota));
-  for (const s of ["#busca", "#f-cat", "#f-cls", "#f-ev", "#f-nota", "#f-marca", "#ordem"]) $(s).oninput = render;
+  opcoes($("#f-tipo"), Object.keys(TIPO));
+  for (const s of ["#busca", "#f-cat", "#f-cls", "#f-ev", "#f-nota", "#f-estado", "#f-tipo", "#ordem"]) $(s).oninput = render;
   $("#modo-entradas").onclick = () => trocarModo("entradas");
   $("#modo-criar").onclick = () => trocarModo("criar");
+  $("#modo-r2").onclick = () => trocarModo("r2");
   $("#modo-criar").textContent = `Louvores novos (${D.criar.length})`;
-  $("#exportar").onclick = exportar;
-  $("#dlg-fechar").onclick = () => $("#dlg").close();
-  $("#dlg-copiar").onclick = () => navigator.clipboard.writeText($("#dlg-txt").value);
+  contarR2();
   document.addEventListener("keydown", (ev) => {
     if (ev.target.matches("input, textarea, select")) return;
     if (ev.key === "j" || ev.key === "k") { ev.preventDefault(); const i = visiveis.indexOf(sel); const n = visiveis[i + (ev.key === "j" ? 1 : -1)]; if (n) selecionar(n); }
+    if (TECLA[ev.key] && sel) { const b = $(`#painel .botoes button[data-tipo="${TECLA[ev.key]}"]`); if (b && !b.disabled) b.click(); }
   });
   render();
   if (visiveis.length) selecionar(visiveis[0]);
 }
 
+function contarR2() {
+  const n = Object.keys(D.decisoes).filter(emRevisao2).length;
+  $("#modo-r2").textContent = `Revisão 2 (${n})`;
+}
+
 function trocarModo(m) {
   modo = m; sel = null;
-  $("#modo-entradas").classList.toggle("on", m === "entradas");
-  $("#modo-criar").classList.toggle("on", m === "criar");
+  for (const [id, x] of [["#modo-entradas", "entradas"], ["#modo-criar", "criar"], ["#modo-r2", "r2"]]) $(id).classList.toggle("on", m === x);
   $("#faixas").style.display = m === "criar" ? "none" : "";
   for (const s of ["#f-cat", "#f-cls", "#f-ev", "#f-nota"]) $(s).style.display = m === "criar" ? "none" : "";
+  for (const s of ["#f-estado", "#f-tipo"]) $(s).style.display = m === "r2" ? "none" : "";
   render();
   if (visiveis.length) selecionar(visiveis[0]);
 }
@@ -164,7 +188,15 @@ function filtroEntrada(e) {
   if ($("#f-cls").value && e.classificacao !== $("#f-cls").value) return false;
   if ($("#f-ev").value && !e.evidencias.includes($("#f-ev").value)) return false;
   if ($("#f-nota").value && e.nota !== $("#f-nota").value) return false;
-  const m = $("#f-marca").value; if (m && (nota(e.pdf_id).marca || "0") !== m) return false;
+  return filtroEstado(e.pdf_id);
+}
+
+function filtroEstado(id) {
+  if (modo === "r2") return emRevisao2(id);
+  const est = $("#f-estado").value, d = decisao(id);
+  if (est === "pendentes" && d?.tipo) return false;
+  if (est === "decididas" && !d?.tipo) return false;
+  if ($("#f-tipo").value && d?.tipo !== $("#f-tipo").value) return false;
   return true;
 }
 
@@ -178,16 +210,15 @@ function render() {
   const q = $("#busca").value.trim();
   const lista = $("#lista"); visiveis = [];
   if (modo === "criar") {
-    const m = $("#f-marca").value;
     const itens = D.criar.filter((g) => bate(q, g.nome, g.numero, g.group_id, ...g.entradas.map((e) => e.short_id + " " + e.path)))
-      .filter((g) => !m || (nota(g.group_id).marca || "0") === m);
+      .filter((g) => filtroEstado(g.group_id));
     if ($("#ordem").value === "atencao") itens.sort((a, b) => (b.parecido?.score || 0) - (a.parecido?.score || 0));
     else itens.sort((a, b) => a.nome.localeCompare(b.nome, "pt"));
     visiveis = itens;
     lista.innerHTML = itens.length ? itens.map((g) => {
-      const p = g.parecido; const nt = nota(g.group_id);
+      const p = g.parecido; const d = decisao(g.group_id);
       return `<div class="criar-item ${g === sel ? "sel" : ""}" data-id="${h(g.group_id)}">
-        <span>${MARCA[nt.marca] || ""} <b>${h(g.nome)}</b> ${g.numero ? `<span class="chip">${h(g.numero)}</span>` : ""}</span>
+        <span><span class="dec">${d?.tipo ? GLIFO[d.tipo] : ""}</span> <b>${h(g.nome)}</b> ${g.numero ? `<span class="chip">${h(g.numero)}</span>` : ""}</span>
         <span class="sid">${g.entradas.length} pdf · ${h(g.tags.join(", "))}</span>
         <span class="par ${p && p.score >= 0.8 ? "forte" : ""}">${p ? `parecido: ${h(p.nome)} (${p.score})` : "nenhum parecido"}</span></div>`;
     }).join("") : `<div class="vazio-lista">Nada com esse filtro.</div>`;
@@ -200,12 +231,12 @@ function render() {
   lista.innerHTML = grupos.length ? grupos.map(({ g, ents }) => `<div class="grupo">
       <div class="cab"><span class="num">${h(g.numero)}</span><span>${h(g.nome)}</span><span class="cls">${h(g.classificacao)}${ents.length < g.entradas.length ? ` · +${g.entradas.length - ents.length} ocultas` : ""}</span></div>
       ${ents.map((e) => `<div class="item ${e === sel ? "sel" : ""}" data-id="${h(e.pdf_id)}">
-        <span class="marca">${MARCA[nota(e.pdf_id).marca] || ""}</span><span class="badge ${e.faixa}">${ROTULO[e.faixa]}</span>
+        <span class="dec ${emRevisao2(e.pdf_id) ? "r2" : ""}">${emRevisao2(e.pdf_id) ? "?" : GLIFO[decisao(e.pdf_id)?.tipo] || ""}</span><span class="badge ${e.faixa}">${ROTULO[e.faixa]}</span>
         <span class="cat">${h(e.categoria)}</span><span class="ev">${h(e.evidencias.join("+")) || "—"}</span><span class="sid">${h(e.short_id)}</span></div>`).join("")}
     </div>`).join("") : `<div class="vazio-lista">Nada com esse filtro.</div>`;
   const idx = new Map(visiveis.map((e) => [e.pdf_id, e]));
   lista.querySelectorAll(".item").forEach((el) => el.onclick = () => selecionar(idx.get(el.dataset.id)));
-  $("#modo-entradas").textContent = `Entradas (${visiveis.length})`;
+  $(modo === "r2" ? "#modo-r2" : "#modo-entradas").textContent = `${modo === "r2" ? "Revisão 2" : "Entradas"} (${visiveis.length})`;
 }
 
 function selecionar(x) {
@@ -217,23 +248,68 @@ function selecionar(x) {
   modo === "criar" ? painelGrupo(x) : painelEntrada(x);
 }
 
+function atualizarItem(id) {
+  const li = [...document.querySelectorAll("#lista [data-id]")].find((el) => el.dataset.id === id);
+  const d = decisao(id); const g = li?.querySelector(".dec");
+  if (g) { g.textContent = emRevisao2(id) ? "?" : GLIFO[d?.tipo] || ""; g.classList.toggle("r2", emRevisao2(id)); }
+  contarR2();
+}
+
 const louvor = (pid) => D.praises[pid] || { id: pid, name: "(louvor fora do snapshot)", number: "", tags: [], materiais: [] };
 const chips = (arr, on = []) => arr.map((v) => `<span class="chip ${on.includes(v) ? "on" : ""}">${h(v)}</span>`).join("");
 
-function blocoNotas(id) {
-  const nt = nota(id);
-  return `<div class="notas"><span class="marcas">
-      ${Object.entries(MARCA).map(([k, v]) => `<button data-m="${k}" class="${nt.marca === k ? "on" : ""}">${v} ${k}</button>`).join(" ")}
-    </span><textarea placeholder="por que está certo/errado, qual padrão você vê…">${h(nt.texto)}</textarea></div>`;
+// ctx: {pdf_id | group_id, categoria, nome, irmaos[], tiposDisponiveis[]}; alvo() lê o candidato selecionado na hora do clique.
+function blocoDecisao(ctx) {
+  const id = ctx.pdf_id || ctx.group_id; const d = decisao(id);
+  const kindIni = d?.kind || D.kind_padrao[ctx.categoria] || "Choir";
+  const irmaos = ctx.irmaos.filter((s) => porShort().get(s));
+  const juntoIni = d?.junto_com ? (porPdf().get(d.junto_com)?.short_id || d.junto_com) : "";
+  const tipos = ctx.tipos || Object.keys(TIPO);
+  return `<div class="decisao" id="decisao">
+    ${d?.duvida && !d.tipo ? `<div class="duvida"><b>Minha dúvida:</b> ${h(d.duvida)}${d.marca_rodada1 ? ` <span class="rev">(rodada 1: ${h({ ok: "✓", erro: "✗", duvida: "?" }[d.marca_rodada1])}${d.motivo ? " — " + h(d.motivo) : ""})</span>` : ""}</div>` : ""}
+    <div class="estado" id="estado">${textoEstado(d)}</div>
+    <div class="botoes">
+      ${tipos.map((t) => `<button data-tipo="${t}" class="${d?.tipo === t ? "on" : ""} ${!d?.tipo && d?.proposta === t ? "proposta" : ""}" title="${{ adicionar: "tecla a", criar: "tecla c", nao_levar: "tecla n" }[t] || ""}">${TIPO[t]}</button>`).join("")}
+      <span class="sep">|</span>
+      <label>kind <select id="d-kind">${D.kinds.map((k) => `<option ${k === kindIni ? "selected" : ""}>${h(k)}</option>`).join("")}</select></label>
+      ${ctx.pdf_id ? `<label>junto com <input type="text" id="d-junto" value="${h(juntoIni)}" placeholder="short_id"></label>
+        ${irmaos.map((s) => `<span class="chip" style="cursor:pointer" data-irmao="${s}" title="${h(porShort().get(s).categoria)}">${s}</span>`).join("")}` : ""}
+      <label>nome <input type="text" class="nome" id="d-nome" value="${h(d?.nome || ctx.nome)}"></label>
+      <span id="d-msg"></span>
+    </div>
+    <textarea id="d-motivo" placeholder="motivo / observação (opcional — o texto continua mandando mais que o botão)">${h(d?.motivo && d.tipo ? d.motivo : "")}</textarea>
+  </div>`;
 }
-function ligarNotas(id, raiz) {
-  raiz.querySelectorAll(".marcas button").forEach((b) => b.onclick = () => {
-    const nt = nota(id); nt.marca = nt.marca === b.dataset.m ? "" : b.dataset.m; notas[id] = nt; salvar();
-    raiz.querySelectorAll(".marcas button").forEach((x) => x.classList.toggle("on", x.dataset.m === nt.marca));
-    const li = [...document.querySelectorAll("#lista [data-id]")].find((el) => el.dataset.id === id);
-    if (li) { const m = li.querySelector(".marca"); if (m) m.textContent = MARCA[nt.marca] || ""; else render(); }
+
+function textoEstado(d) {
+  if (!d) return "sem decisão";
+  if (!d.tipo) return `sem decisão (proposta: <b>${h(TIPO[d.proposta] || "—")}</b>)`;
+  const P = d.praise_id ? louvor(d.praise_id) : null; const j = d.junto_com ? porPdf().get(d.junto_com) : null;
+  return `decidido: <b>${h(TIPO[d.tipo])}</b>${d.kind ? ` <span class="chip">${h(d.kind)}</span>` : ""}${P ? ` em <b>${h(P.number ? P.number + " · " : "")}${h(P.name)}</b>` : ""}${j ? ` junto com <span class="chip">${h(j.short_id)}</span> ${h(j.nome)}` : d.junto_com ? ` junto com ${h(d.junto_com)}` : ""}${d.material_id ? ` · material ${h(d.material_id.slice(0, 8))}` : ""}${d.nome && d.tipo === "criar" ? ` "${h(d.nome)}"` : ""}${d.motivo ? ` — ${h(d.motivo)}` : ""} <span class="rev">(${h(d.origem)}, ${h((d.quando || "").slice(0, 16).replace("T", " "))})</span>`;
+}
+
+function ligarDecisao(ctx, alvo) {
+  const id = ctx.pdf_id || ctx.group_id; const raiz = $("#decisao");
+  const msg = (t, cls) => { $("#d-msg").innerHTML = `<span class="${cls}">${h(t)}</span>`; };
+  raiz.querySelectorAll("[data-irmao]").forEach((c) => c.onclick = () => { $("#d-junto").value = c.dataset.irmao; });
+  raiz.querySelectorAll(".botoes button[data-tipo]").forEach((b) => b.onclick = async () => {
+    const tipo = b.dataset.tipo; const a = alvo(); const junto = ($("#d-junto")?.value || "").trim();
+    const jref = junto ? porShort().get(junto) : null;
+    if (junto && !jref) return msg(`short_id ${junto} não existe`, "erro");
+    const corpo = { pdf_id: ctx.pdf_id || null, group_id: ctx.group_id || null, short_id: ctx.short_id || null, tipo, kind: $("#d-kind").value,
+      praise_id: jref ? null : a.praise_id, material_id: a.material_id, junto_com: jref?.pdf_id || null,
+      nome: $("#d-nome").value.trim(), tags: ctx.tags || null, motivo: $("#d-motivo").value.trim(), duvida: null };
+    if (tipo === "criar" && jref) corpo.tipo = "adicionar";  // "criar junto com X" = material do praise que X cria
+    if ((corpo.tipo === "adicionar" || corpo.tipo === "substituir") && !corpo.praise_id && !corpo.junto_com) return msg("escolha um candidato à direita, ou preencha 'junto com'", "erro");
+    if ((corpo.tipo === "substituir" || corpo.tipo === "link") && !corpo.material_id) return msg("clique no material do coldigom que este PDF substitui / é", "erro");
+    const r = await fetch("/decide", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
+    if (!r.ok) return msg(await r.text(), "erro");
+    const d = await r.json(); D.decisoes[id] = d;
+    if (d.praise_id && !D.praises[d.praise_id]) D.praises[d.praise_id] = louvor(d.praise_id);
+    raiz.querySelectorAll(".botoes button[data-tipo]").forEach((x) => { x.classList.toggle("on", x.dataset.tipo === d.tipo); x.classList.remove("proposta"); });
+    raiz.querySelector(".duvida")?.remove();
+    $("#estado").innerHTML = textoEstado(d); msg("salvo", "salvo"); atualizarItem(id);
   });
-  raiz.querySelector("textarea").oninput = (ev) => { const nt = nota(id); nt.texto = ev.target.value; notas[id] = nt; salvar(); };
 }
 
 function pdfColdigom(pid, mid, local) {
@@ -268,17 +344,24 @@ function painelEntrada(e) {
           ${P.materiais.map((m) => `<div class="cand" data-pid="${P.id}" data-mid="${m.id}"><span class="chip ${m.kind === e.kind_esperado ? "on" : ""}">${h(m.kind)}</span><span class="rev">${h(m.type)} · ${m.is_reviewed ? "revisado" : "não revisado"}${m.local ? "" : " · sem PDF local"}</span><span class="rev" style="font-family:ui-monospace,Menlo,monospace">${m.id.slice(0, 8)}</span></div>`).join("")}</details>` : ""}
       </div>
     </div>
-    ${blocoNotas(e.pdf_id)}`;
+    ${blocoDecisao({ pdf_id: e.pdf_id, categoria: e.categoria, nome: e.nome, irmaos: g.entradas.map((x) => x.short_id).filter((s) => s !== e.short_id) })}`;
+  const dAtual = decisao(e.pdf_id);
+  if (dAtual?.praise_id) { const c = cands.find((c) => c.praise_id === dAtual.praise_id && (!dAtual.material_id || c.material_id === dAtual.material_id)); if (c) candSel = c; else candSel = { praise_id: dAtual.praise_id, material_id: dAtual.material_id }; }
   $("#cands").querySelectorAll(".cand").forEach((el) => el.onclick = () => {
-    candSel = cands[+el.dataset.i]; $("#cands").querySelectorAll(".cand").forEach((x) => x.classList.toggle("sel", x === el));
+    candSel = cands[+el.dataset.i]; marcarAlvo(el);
     const m = louvor(candSel.praise_id).materiais.find((m) => m.id === candSel.material_id);
     $("#cand-pdf").innerHTML = pdfColdigom(candSel.praise_id, candSel.material_id, m?.local);
   });
   $("#painel").querySelectorAll(".mats .cand").forEach((el) => el.onclick = () => {
     const m = louvor(el.dataset.pid).materiais.find((m) => m.id === el.dataset.mid);
+    candSel = { praise_id: el.dataset.pid, material_id: el.dataset.mid }; marcarAlvo(el);
     $("#cand-pdf").innerHTML = m.type === "pdf" ? pdfColdigom(el.dataset.pid, el.dataset.mid, m.local) : `<div class="vazio">material ${h(m.type)} — <a href="${COLDIGOM}${el.dataset.pid}" target="_blank">ver no coldigom web</a></div>`;
   });
-  ligarNotas(e.pdf_id, $("#painel"));
+  ligarDecisao({ pdf_id: e.pdf_id, short_id: e.short_id }, () => ({ praise_id: candSel?.praise_id || e.praise_id || null, material_id: candSel?.material_id || null }));
+}
+
+function marcarAlvo(el) {
+  $("#painel").querySelectorAll(".cand[data-i], .mats .cand").forEach((x) => x.classList.toggle("sel", x === el));
 }
 
 function painelGrupo(g) {
@@ -297,7 +380,7 @@ function painelGrupo(g) {
           <div id="cand-pdf">${m0 ? (m0.type === "pdf" ? pdfColdigom(P.id, m0.id, m0.local) : `<div class="vazio">material ${h(m0.type)}</div>`) : `<div class="vazio">sem materiais</div>`}</div>` : `<div class="vazio">score &lt; 0,5 para todos — é louvor novo mesmo, salvo engano de grafia</div>`}
       </div>
     </div>
-    ${blocoNotas(g.group_id)}`;
+    ${blocoDecisao({ group_id: g.group_id, categoria: primeira.categoria, nome: g.nome, irmaos: [], tipos: ["criar", "nao_levar", "descartar"] })}`;
   $("#cands").querySelectorAll(".cand").forEach((el) => el.onclick = () => {
     $("#cands").querySelectorAll(".cand").forEach((x) => x.classList.toggle("sel", x === el));
     $("#plpcg-pdf").innerHTML = `<iframe src="/pdf/plpcg/${encodeURIComponent(g.entradas[+el.dataset.i].path).replace(/%2F/g, "/")}"></iframe>`;
@@ -307,22 +390,7 @@ function painelGrupo(g) {
     const m = louvor(el.dataset.pid).materiais.find((m) => m.id === el.dataset.mid);
     $("#cand-pdf").innerHTML = m.type === "pdf" ? pdfColdigom(el.dataset.pid, el.dataset.mid, m.local) : `<div class="vazio">material ${h(m.type)}</div>`;
   });
-  ligarNotas(g.group_id, $("#painel"));
-}
-
-function exportar() {
-  const porFaixa = {}; const idx = new Map(D.grupos.flatMap((g) => g.entradas).map((e) => [e.pdf_id, e]));
-  const grupos = new Map(D.criar.map((g) => [g.group_id, g]));
-  for (const [id, nt] of Object.entries(notas)) {
-    if (!nt.marca && !nt.texto.trim()) continue;
-    const e = idx.get(id); const g = grupos.get(id);
-    const faixa = e ? e.faixa : g ? "criar" : "?";
-    const linha = e ? `- ${MARCA[nt.marca] || "·"} s=${e.short_id} ${e.categoria} "${e.nome}"${e.numero ? " " + e.numero : ""} [${e.evidencias.join("+")}]${e.material_id ? " → " + e.material_id.slice(0, 8) : ""}${nt.texto.trim() ? " — " + nt.texto.trim() : ""}`
-                    : g ? `- ${MARCA[nt.marca] || "·"} grupo ${g.group_id} "${g.nome}"${g.parecido ? ` (parecido: ${g.parecido.nome} ${g.parecido.score})` : ""}${nt.texto.trim() ? " — " + nt.texto.trim() : ""}` : `- ${id}: ${nt.texto}`;
-    (porFaixa[faixa] ||= []).push(linha);
-  }
-  const txt = [`# Revisão PLPCG — run ${D.run_id}`, ...Object.entries(porFaixa).flatMap(([f, ls]) => ["", `## ${f} (${ls.length})`, ...ls])].join("\n");
-  $("#dlg-txt").value = txt || "(nenhuma anotação ainda)"; $("#dlg").showModal();
+  ligarDecisao({ group_id: g.group_id, tags: g.tags }, () => ({ praise_id: null, material_id: null }));
 }
 
 iniciar().catch((e) => { $("#painel").innerHTML = `<div class="vazio-lista">Erro: ${h(e.message)}</div>`; });

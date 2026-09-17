@@ -95,8 +95,12 @@ def validar(d: dict, kinds: set[str] | None = None) -> dict:
             raise ValueError(f"{tipo} precisa de kind")
         if kinds and saida["kind"] not in kinds:
             raise ValueError(f"kind não existe no coldigom: {saida['kind']!r}")
-    if tipo in ("adicionar", "substituir") and not (saida["praise_id"] or saida["junto_com"]):
+    if tipo == "adicionar" and not (saida["praise_id"] or saida["junto_com"]):
         raise ValueError(f"{tipo} precisa de praise_id ou junto_com")
+    # link/substituir têm alvo fixo (o material já existe): junto_com não faz
+    # sentido para eles, só para adicionar (que pode nascer junto de outra entrada).
+    if tipo in ("substituir", "link") and not saida["praise_id"]:
+        raise ValueError(f"{tipo} precisa de praise_id")
     if tipo in ("substituir", "link") and not saida["material_id"]:
         raise ValueError(f"{tipo} precisa de material_id")
     if tipo == "criar" and not saida["nome"]:

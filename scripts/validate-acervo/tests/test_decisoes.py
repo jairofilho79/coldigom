@@ -93,7 +93,10 @@ def test_validar_exige_os_campos_de_cada_tipo():
                  {"pdf_id": "x", "tipo": "adicionar", "praise_id": "p", "kind": "Banjo"},
                  {"pdf_id": "x", "tipo": "substituir", "praise_id": "p", "kind": "Choir"},
                  {"pdf_id": "x", "tipo": "criar", "kind": "Choir"}, {"pdf_id": "x", "tipo": None},
-                 {"pdf_id": "x", "tipo": "adicionar", "junto_com": "x", "kind": "Choir"}]:
+                 {"pdf_id": "x", "tipo": "adicionar", "junto_com": "x", "kind": "Choir"},
+                 # A3: link/substituir têm alvo fixo — junto_com não substitui praise_id para eles.
+                 {"pdf_id": "x", "tipo": "link", "material_id": "m"},
+                 {"pdf_id": "x", "tipo": "substituir", "material_id": "m", "junto_com": "y", "kind": "Choir"}]:
         with pytest.raises(ValueError):
             dec.validar(ruim, {"Choir"})
     assert dec.validar({"group_id": "g", "tipo": "criar", "nome": "N", "kind": "Choir", "tags": ["", "Avulsos"]},

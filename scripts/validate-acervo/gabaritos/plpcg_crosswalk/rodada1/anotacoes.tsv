@@ -1,0 +1,1041 @@
+short_id	faixa	marca	classe	categoria	nome	numero	evidencias	praise	texto	pdf_id
+0000	ambiguo	✓	(sem texto)	Partitura	A Cristo Corai		nome~	52f8dcfa		QXZ1bHNvcy8wMTcucGRm
+0001	ambiguo	✓	nao_levar	Partitura	A Deus Demos Glória		num+slug		Não precisa levar	QXZ1bHNvcy8wMTkucGRm
+0002	ambiguo	✓	(sem texto)	Partitura	A Luz que brilha mais que o sol		nome	a12e88cb		QXZ1bHNvcy9BIGx1eiBxdWUgYnJpbGhhIG1haXMgcXVlIG8gc29sLnBkZg==
+0003	alta	✓	(sem texto)	Partitura	A Minha Paz te Dou (Coro Masculino)		nome+hash	b5d63843		QXZ1bHNvcy8xMDU4LnBkZg==
+0004	ambiguo	✓	nao_levar	Partitura	A Nova Do Evangelho		num	ad131f75	Não precisa levar.	QXZ1bHNvcy8wMjgucGRm
+0005	ambiguo	✓	adicionar_material	Partitura	A Obra do Senhor é Perfeita		num	265d1c8f	Adicione como Coro e Piano	MDUwNDIwMjYvQSBPYnJhIGRvIFNlbmhvciBlzIEgUGVyZmVpdGEvQ29yby5wZGY=
+0006	media	✓	(sem texto)	Partitura	A Oração da Tua Igreja		nome+kind-unico	54a966a5		MzAxMDIwMjUvQSBPUkFDzKdBzINPIERBIFRVQSBJR1JFSkEgLSBDb3JvLnBkZg==
+0007	sem_louvor	✓	criar_praise	Cifra	A Porta				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQlFiM0owWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+0008	sem_louvor	✓	criar_praise	Partitura	A Teus Pés, Jesus				Criar praise e adicionar como Choir	QXZ1bHNvcy8wNDMucGRm
+0009	media	✓	nao_levar	Partitura	A Ti Que Habitas		nome~+kind-unico	6f7137fb	Não precisa levar	QXZ1bHNvcy8wNDYucGRm
+000a	faltante	✓	adicionar_material	Cifra	A Ti Senhor		nome	13f78240	Adicionar como Cifra	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MgKEdMVE0pL0EgVGkgU2VuaG9yIC0gQ2lmcmEucGRm
+000b	media	✓	(sem texto)	Partitura	A Ti Senhor		nome+kind-unico	13f78240		MzAxMDIwMjUvQSBUaSBTZW5ob3IgLSBTb2xvIGUgVm96ZXMucGRm
+000c	media	✓	(sem texto)	Partitura	A Trombeta Está Pra Soar (O Fim Vem)		nome~+hash	f392c328		QXZ1bHNvcy82NTQucGRm
+000d	media	✓	nao_levar	Partitura	A Vida No mundo é Cruel		num+kind-unico	93e9e7ee	Não precisa levar	QXZ1bHNvcy8wNDgucGRm
+000e	media	✓	(sem texto)	Partitura	A Vida Tem Tristeza (Vem a Mim)		nome~+hash	aff0c1f1		QXZ1bHNvcy8xMTQ4LnBkZg==
+000f	media	✓	adicionar_material	Partitura	A Vitória Desta Igreja é Oração		num+kind-unico	fd64e158	Adicione como choir	QXZ1bHNvcy8wNDIucGRm
+0010	sem_louvor	✓	criar_praise	Cifra	A ceia do Senhor (I Corintios 1123-26)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQmpaV2xoSUdSdklGTmxibWh2Y2lBb1NTQkRiM0pwYm5ScGIzTWdNVEV5TXkweU5pa3ZRMmxtY21FdWNHUm0ucGRm
+0011	sem_louvor	✓	criar_praise	Cifra	A colheita				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQmpiMnhvWldsMFlTOURhV1p5WVM1d1pHWT0ucGRm
+0012	sem_louvor	✓	criar_praise	Cifra	A graça de Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQm5jbUhEcDJFZ1pHVWdSR1YxY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0015	sem_louvor	✓	criar_praise	Cifra	A lágrima do crente				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnN3NkZuY21sdFlTQmtieUJqY21WdWRHVXZRMmxtY21FdWNHUm0ucGRm
+0016	faltante	✓	criar_praise	Cifra	A melhor coisa		nome	f8e14e5d	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnRaV3hvYjNJZ1kyOXBjMkV2UTJsbWNtRXVjR1JtLnBkZg==
+0017	sem_louvor	✓	criar_praise	Cifra	A minh'alma confia em ti, Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnRhVzVvSjJGc2JXRWdZMjl1Wm1saElHVnRJSFJwTENCVFpXNW9iM0l2UTJsbWNtRXVjR1JtLnBkZg==
+0018	sem_louvor	✓	criar_praise	Cifra	A minh'alma espera somente em Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnRhVzVvSjJGc2JXRWdaWE53WlhKaElITnZiV1Z1ZEdVZ1pXMGdSR1YxY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0019	sem_louvor	✓	criar_praise	Cifra	A minh'alma se enche da graça				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnRhVzVvSjJGc2JXRWdjMlVnWlc1amFHVWdaR0VnWjNKaHc2ZGhMME5wWm5KaExuQmtaZz09LnBkZg==
+001a	media	✓	(sem texto)	Cifra	A minha voz ó Deus		nome~+kind-unico	feb7c9b3		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnRhVzVvWVNCMmIzb2d3N01nUkdWMWN5OURhV1p5WVM1d1pHWT0ucGRm
+001b	sem_louvor	✓	nao_levar	Cifra	A oração (lá onde eu não posso ver)				Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnZjbUhEcDhPamJ5QW9iTU9oSUc5dVpHVWdaWFVnYnNPamJ5QndiM056YnlCMlpYSXBMME5wWm5KaExuQmtaZz09LnBkZg==
+001c	ambiguo	✗	match_errado_criar_praise	Cifra	A palavra de poder		num		As sugestões estão erradas, mas o louvor está certo. Vai ter que criar o praise e o material kind Cifra	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlFTQndZV3hoZG5KaElHUmxJSEJ2WkdWeUwwTnBabkpoTG5Ca1pnPT0ucGRm
+001d	sem_louvor	✓	criar_praise	Cifra	A quem tenho eu no céu				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnhkV1Z0SUhSbGJtaHZJR1YxSUc1dklHUERxWFV2UTJsbWNtRXVjR1JtLnBkZg==
+001e	sem_louvor	✓	criar_praise	Cifra	A solução				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnpiMngxdzZmRG8yOHZRMmxtY21FdWNHUm0ucGRm
+001f	sem_louvor	✓	criar_praise	Cifra	A sua entrega é total				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQnpkV0VnWlc1MGNtVm5ZU0REcVNCMGIzUmhiQzlEYVdaeVlTNXdaR1k9LnBkZg==
+0020	sem_louvor	✓	criar_praise	Cifra	A terra vai um dia contemplar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQjBaWEp5WVNCMllXa2dkVzBnWkdsaElHTnZiblJsYlhCc1lYSXZRMmxtY21FdWNHUm0ucGRm
+0021	sem_louvor	✓	criar_praise	Cifra	A tormenta				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQjBiM0p0Wlc1MFlTOURhV1p5WVM1d1pHWT0ucGRm
+0022	sem_louvor	✓	criar_praise	Cifra	A tua graça me basta				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQjBkV0VnWjNKaHc2ZGhJRzFsSUdKaGMzUmhMME5wWm5KaExuQmtaZz09LnBkZg==
+0023	sem_louvor	✓	criar_praise	Cifra	A vitória				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFTQjJhWFREczNKcFlTOURhV1p5WVM1d1pHWT0ucGRm
+0024	faltante	✓	adicionar_material	Cifra	Abra meus olhos		nome	c20932c4	Adicionar como cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXSnlZU0J0WlhWeklHOXNhRzl6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0025	sem_louvor	✓	criar_praise	Cifra	Abre meus olhos (Se esfriar a minha fé)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXSnlaU0J0WlhWeklHOXNhRzl6SUNoVFpTQmxjMlp5YVdGeUlHRWdiV2x1YUdFZ1pzT3BLUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0026	faltante	✓	adicionar_material	Cifra	Abre o coração		nome	7265fdf8	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXSnlaU0J2SUdOdmNtSERwOE9qYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+0027	faltante	✓	adicionar_material	Cifra	Abriga-me		nome	685fb177	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXSnlhV2RoTFcxbEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0029	sem_louvor	✓	criar_praise	Cifra	Abrigo Seguro				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXSnlhV2R2SUZObFozVnlieTlEYVdaeVlTNXdaR1k9LnBkZg==
+002a	faltante	·	adicionar_material	Cifra	Abrindo teu livro		num+slug	d623ab86	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXSnlhVzVrYnlCMFpYVWdiR2wyY204dlEybG1jbUV1Y0dSbS5wZGY=
+002b	sem_louvor	✓	criar_praise	Cifra	Acabou-se o tempo da derrota				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXTmhZbTkxTFhObElHOGdkR1Z0Y0c4Z1pHRWdaR1Z5Y205MFlTOURhV1p5WVM1d1pHWT0ucGRm
+002c	sem_louvor	✓	criar_praise	Cifra	Aceita o Salvador				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXTmxhWFJoSUc4Z1UyRnNkbUZrYjNJdlEybG1jbUV1Y0dSbS5wZGY=
+002d	faltante	✓	adicionar_material	Cifra	Acende a minha candeia		nome	f50d6905	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXTmxibVJsSUdFZ2JXbHVhR0VnWTJGdVpHVnBZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+002e	sem_louvor	·	criar_praise	Cifra	Acima de tudo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXTnBiV0VnWkdVZ2RIVmtieTlEYVdaeVlTNXdaR1k9LnBkZg==
+002f	media	✓	manter_coldigom	Cifra	Adorador eu sou		nome+kind-unico	080c3784	Manter do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXUnZjbUZrYjNJZ1pYVWdjMjkxTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0030	sem_louvor	✓	criar_praise	Cifra	Adoramos o teu nome				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXUnZjbUZ0YjNNZ2J5QjBaWFVnYm05dFpTOURhV1p5WVM1d1pHWT0ucGRm
+0031	sem_louvor	✓	nao_levar	Cifra	Ageu				Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZGxkUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0032	sem_louvor	✓	criar_praise	Cifra	Agnus Dei				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZHVkWE1nUkdWcEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0033	sem_louvor	✓	criar_praise	Cifra	Agradecemos a ti, Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZHlZV1JsWTJWdGIzTWdZU0IwYVN3Z1UyVnVhRzl5TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0034	sem_louvor	✓	criar_praise	Cifra	Agradeça ao Pai				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZHlZV1JsdzZkaElHRnZJRkJoYVM5RGFXWnlZUzV3WkdZPS5wZGY=
+0035	sem_louvor	✓	criar_praise	Cifra	Ah! Filho meu pequenino				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZ2hJRVpwYkdodklHMWxkU0J3WlhGMVpXNXBibTh2UTJsbWNtRXVjR1JtLnBkZg==
+0036	sem_louvor	✓	criar_praise	Cifra	Ah! Se eu pudesse				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZ2hJRk5sSUdWMUlIQjFaR1Z6YzJVdlEybG1jbUV1Y0dSbS5wZGY=
+0037	sem_louvor	✓	criar_praise	Cifra	Ah! Se tu soubesses				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXZ2hJRk5sSUhSMUlITnZkV0psYzNObGN5OURhV1p5WVM1d1pHWT0ucGRm
+0038	media	✓	(sem texto)	Cifra	Ainda há tempo		num+slug+kind-unico	2cfe2e7a		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlFXbHVaR0VnYU1PaElIUmxiWEJ2TDBOcFpuSmhMbkJrWmc9PS5wZGY
+0039	sem_louvor	✓	criar_praise	Cifra	Ainda que a figueira não floresça				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXbHVaR0VnY1hWbElHRWdabWxuZFdWcGNtRWdic09qYnlCbWJHOXlaWFBEcDJFdlEybG1jbUV1Y0dSbS5wZGY=
+003a	sem_louvor	✓	criar_praise	Cifra	Ajoelhado				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXcHZaV3hvWVdSdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+003b	sem_louvor	✓	criar_praise	Cifra	Ajuntamento				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXcDFiblJoYldWdWRHOHZRMmxtY21FdWNHUm0ucGRm
+003c	sem_louvor	✓	criar_praise	Cifra	Alegrei-me quando disseram-me				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeGxaM0psYVMxdFpTQnhkV0Z1Wkc4Z1pHbHpjMlZ5WVcwdGJXVXZRMmxtY21FdWNHUm0ucGRm
+003d	sem_louvor	✓	criar_praise	Cifra	Alegrei-me quando me disseram				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeGxaM0psYVMxdFpTQnhkV0Z1Wkc4Z2JXVWdaR2x6YzJWeVlXMHZRMmxtY21FdWNHUm0ucGRm
+003e	ambiguo	✗	criar_praise	Partitura	Aleluia		num	29c483d4	Crie um praise para esse material e o coloque como Choir	MjYxMTIwMjUvQWxlbHVpYS5wZGY=
+003f	alta	✓	(sem texto)	Partitura	Aleluia! Cristo é Vivo		nome+hash	0899c85b		QXZ1bHNvcy8wNzIucGRm
+0040	sem_louvor	✓	criar_praise	Cifra	Aleluia, Aleluia (Eu descobri)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeGxiSFZwWVN3Z1FXeGxiSFZwWVNBb1JYVWdaR1Z6WTI5aWNta3BMME5wWm5KaExuQmtaZz09LnBkZg==
+0041	alta	✓	(sem texto)	Partitura	Aleluia, Amém		nome+hash	0ab507d5		MDYxMTIwMjUvQWxlbHVpYSwgQW3DqW0vUGFydGl0dXJhLnBkZg==
+0042	media	✓	(sem texto)	Partitura	Aleluia, Amém		nome+kind-unico	0ab507d5		QXZ1bHNvcy8wNjgucGRm
+0043	faltante	✓	adicionar_material	Cifra	Aleluia, Cristo é vivo!		nome	0899c85b	Adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeGxiSFZwWVN3Z1EzSnBjM1J2SU1PcElIWnBkbThoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0044	media	✓	(sem texto)	Partitura	Alerta, ó Terra, Entoa (Nasceu o Redentor)		nome~+hash	0bb15348		QXZ1bHNvcy8wODIucGRm
+0045	ambiguo	·	nao_levar	Partitura	Algemado Por Um Peso		num	0579beef	Não precisa levar	QXZ1bHNvcy8wODQucGRm
+0046	ambiguo	✓	nao_levar	Cifra	Algemado por um peso		num	0579beef	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeG5aVzFoWkc4Z2NHOXlJSFZ0SUhCbGMyOHZRMmxtY21FdWNHUm0ucGRm
+0047	sem_louvor	✓	criar_praise	Cifra	Alguém está agora				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeG5kY09wYlNCbGMzVERvU0JoWjI5eVlTOURhV1p5WVM1d1pHWT0ucGRm
+0048	sem_louvor	✓	criar_praise	Cifra	Alguém me falou do amor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeG5kY09wYlNCdFpTQm1ZV3h2ZFNCa2J5QmhiVzl5TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0049	sem_louvor	✓	criar_praise	Cifra	Aliança				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeHBZVzdEcDJFdlEybG1jbUV1Y0dSbS5wZGY=
+004a	sem_louvor	✓	criar_praise	Cifra	Aliança do Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeHBZVzdEcDJFZ1pHOGdVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+004b	ambiguo	✓	(sem texto)	Partitura	Alma Cansada (Coro Masculino)		num	7da77ce9		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvMTA2MS5wZGY
+004c	ambiguo	✓	nao_levar	Cifra	Alma cansada		num	7da77ce9	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXeHRZU0JqWVc1ellXUmhMME5wWm5KaExuQmtaZz09LnBkZg==
+004d	ambiguo	✓	adicionar_material	Partitura	Alto Preço		nome	372607a9	Adicione como choir	YXNzZXRzL1BFUy9BbHRvIFByZcOnbyAtICBDb3JvLnBkZg
+004e	faltante	✓	adicionar_material	Cifra	Alto Preço (Gm)		nome	372607a9	adicionar como Cifra	YXNzZXRzL1BFUy9BbHRvIHByZWPMp28gLSBDSUZSQS5wZGY
+004f	faltante	✓	adicionar_material	Cifra	Alto preço (F#)		nome	372607a9	adicionar como Cifra	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlFXeDBieUJ3Y21YRHAyOHZRMmxtY21FdWNHUm0ucGRm
+0050	sem_louvor	✓	criar_praise	Cifra	Além Jordão				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXekRxVzBnU205eVpNT2pieTlEYVdaeVlTNXdaR1k9LnBkZg==
+0051	sem_louvor	✓	criar_praise	Cifra	Além do pó				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXekRxVzBnWkc4Z2NNT3pMME5wWm5KaExuQmtaZz09LnBkZg==
+0052	ambiguo	✗	criar_praise	Cifra	Amado meu		nome~	72f95ed1	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXMWhaRzhnYldWMUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0053	alta	✓	(sem texto)	Partitura	Amigo, Não Saia Sem Cristo		nome+hash	d3e41efc		QXZ1bHNvcy8wODYucGRm
+0054	sem_louvor	✓	criar_praise	Cifra	Amigo, eu quero lhe dizer				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXMXBaMjhzSUdWMUlIRjFaWEp2SUd4b1pTQmthWHBsY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+0056	sem_louvor	✓	criar_praise	Cifra	Amor Eterno				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXMXZjaUJGZEdWeWJtOHZRMmxtY21FdWNHUm0ucGRm
+0057	media	✓	(sem texto)	Partitura	Amor Que Por Amor		nome+kind-unico	a00a3d80		QXZ1bHNvcy8wOTMucGRm
+0058	sem_louvor	✓	criar_praise	Cifra	Amor incondicional				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXMXZjaUJwYm1OdmJtUnBZMmx2Ym1Gc0wwTnBabkpoTG5Ca1pnPT0ucGRm
+0059	sem_louvor	✓	criar_praise	Cifra	Amor revelado				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXMXZjaUJ5WlhabGJHRmtieTlEYVdaeVlTNXdaR1k9LnBkZg==
+005a	media	✓	adicionar_material	Cifra	Amor, dom de Deus		nome~	37bc7027	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXMXZjaXdnWkc5dElHUmxJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+005b	alta	✓	(sem texto)	Partitura	Amparo Divino		nome+hash	f7da0795		QXZ1bHNvcy8wOTQucGRm
+005c	sem_louvor	✓	criar_praise	Cifra	Andam procurando a razão de viver				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXNWtZVzBnY0hKdlkzVnlZVzVrYnlCaElISmhlc09qYnlCa1pTQjJhWFpsY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+005d	ambiguo	✓	substituir	Partitura	Ao Deus De Abraão Louvai		num	b481ee87	Substitua o que está no coldigom por esse (Choir)	QXZ1bHNvcy8wOTUucGRm
+005e	alta	✓	(sem texto)	Partitura	Ao Deus De Amor		nome+hash	efc473c1		QXZ1bHNvcy8wOTYucGRm
+005f	media	✓	(sem texto)	Partitura	Ao Prostrar-me Em Teu Altar (Que Grande Amor)		nome~+hash	c1a3cdb5		QXZ1bHNvcy84MzIucGRm
+0060	media	✓	(sem texto)	Partitura	Ao Sentir		num+kind-unico	7119c38c		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvMDk4LnBkZg
+0061	ambiguo	✓	nao_levar	Cifra	Ao sentir o mundo		num	7119c38c	Não precisa levar	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlFXOGdjMlZ1ZEdseUlHOGdiWFZ1Wkc4dlEybG1jbUV1Y0dSbS5wZGY
+0062	sem_louvor	✓	criar_praise	Cifra	Ao seu lado (eu estarei)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXOGdjMlYxSUd4aFpHOGdLR1YxSUdWemRHRnlaV2twTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0063	sem_louvor	✓	criar_praise	Partitura	Ao Único				Criar praise e adicionar como Choir	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvQW8gVcyBbmljby5wZGY
+0064	faltante	✓	adicionar_material	Cifra	Aos olhos do céu		nome	d39f2ea5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXOXpJRzlzYUc5eklHUnZJR1BEcVhVdlEybG1jbUV1Y0dSbS5wZGY=
+0065	media	✓	adicionar_material	Cifra	Aos pés da cruz		nome~	e2606a27	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXOXpJSEREcVhNZ1pHRWdZM0oxZWk5RGFXWnlZUzV3WkdZPS5wZGY=
+0066	media	✓	manter_coldigom	Cifra	Aos pés de Jesus		nome+kind-unico	7065b3ab	Manter Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFXOXpJSEREcVhNZ1pHVWdTbVZ6ZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+0067	media	✓	(sem texto)	Cifra	Aquele que há de vir, virá		num+slug+kind-unico	6f2c05b0		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlFYRjFaV3hsSUhGMVpTQm93NkVnWkdVZ2RtbHlMQ0IyYVhMRG9TOURhV1p5WVM1d1pHWT0ucGRm
+0068	alta	✓	(sem texto)	Partitura	Aqui Chegamos Pela Fé (Coro Masculino)		nome+hash	04327b69		QXZ1bHNvcy8xMDYzLnBkZg==
+0069	sem_louvor	✓	criar_praise	Cifra	Aqui eu estou				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYRjFhU0JsZFNCbGMzUnZkUzlEYVdaeVlTNXdaR1k9LnBkZg==
+006a	media	✓	(sem texto)	Cifra nível I	Aquilo Que Fui Não Sou Mais		nome+hash-fora	2910ffd8		TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzL0FxdWlsbyBxdWUgZnVpIE7Do28gc291IE1haXMgKENvbnRyYSBjYXBhKSAoQ0MpL0NpZnJhIEkucGRm
+006b	media	✓	adicionar_material	Partitura	Aquilo Que Fui Não Sou Mais		nome+kind-unico	2910ffd8	ADicione como Choir	QXZ1bHNvcy8xMTEucGRm
+006c	media	✓	nao_levar	Partitura	Aquilo que fui não sou mais		nome+kind-unico	2910ffd8	Não precisa levar	Q29sQWR1bHRvcy8wMDAucGRm
+006d	ambiguo	✗	criar_praise	Cifra	Arrebatados		nome~	b4bd5cf7	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYSnlaV0poZEdGa2IzTXZRMmxtY21FdWNHUm0ucGRm
+006e	faltante	✓	criar_praise	Partitura	Arrependei-vos		nome	8381cc15	Criar praise e adicionar como Choir	MzAxMDIwMjUvQXJyZXBlbmRlaS12b3MgLSBDb3JvLnBkZg==
+006f	alta	✓	(sem texto)	Partitura	As Muitas Águas (Coro Masculino)		nome+hash	108a7028		QXZ1bHNvcy8xMDY1LnBkZg==
+0070	alta	✓	(sem texto)	Partitura	As Muitas Águas (Misto)		nome+hash	821de68a		QXZ1bHNvcy8xMTMucGRm
+0073	sem_louvor	✓	criar_praise	Cifra	As estrelas do céu				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYTWdaWE4wY21Wc1lYTWdaRzhnWThPcGRTOURhV1p5WVM1d1pHWT0ucGRm
+0074	alta	✓	(sem texto)	Cifra	As parábolas do reino		nome+hash	cf5ebaf3		MDQxMTIwMjUvQXMgcGFyw6Fib2xhcyBkbyByZWluby9DaWZyYS5wZGY=
+0075	alta	✓	(sem texto)	Gestos em Gravura	As parábolas do reino		nome+hash	cf5ebaf3		MDQxMTIwMjUvQXMgcGFyw6Fib2xhcyBkbyByZWluby9HZXN0b3MgQ0lBcy5wZGY=
+0076	alta	✓	(sem texto)	Partitura	As parábolas do reino		nome+hash	cf5ebaf3		QXZ1bHNvcy9BcyBwYXJhYm9sYXMgZG8gcmVpbm8gLSBDb3JvLnBkZg==
+0077	ambiguo	✓	adicionar_material	Partitura	Atende a voz do meu clamor (Coro Masculino)		nome~	28ae394d	Adicione como Choir	QXZ1bHNvcy9EcExJQ00gLSBBdGVuZGUgYSBWb3ogZG8gTWV1IENsYW1vciAtIENvcm8gTWFzY3VsaW5vLnBkZg==
+0078	sem_louvor	✓	criar_praise	Cifra	Através do teu sangue				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYUnlZWGJEcVhNZ1pHOGdkR1YxSUhOaGJtZDFaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0079	sem_louvor	✓	criar_praise	Cifra	Até aqui nos ajudou o Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYVERxU0JoY1hWcElHNXZjeUJoYW5Wa2IzVWdieUJUWlc1b2IzSXZRMmxtY21FdWNHUm0ucGRm
+007a	sem_louvor	✓	criar_praise	Cifra	Aumenta a minha fé				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYVnRaVzUwWVNCaElHMXBibWhoSUdiRHFTOURhV1p5WVM1d1pHWT0ucGRm
+007b	sem_louvor	✓	criar_praise	Cifra	Aviva tua Obra				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYWnBkbUVnZEhWaElFOWljbUV2UTJsbWNtRXVjR1JtLnBkZg==
+007c	sem_louvor	✓	criar_praise	Cifra	Aviva tua Obra em nós Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFYWnBkbUVnZEhWaElFOWljbUVnWlcwZ2JzT3pjeUJUWlc1b2IzSXZRMmxtY21FdWNHUm0ucGRm
+007d	media	✓	manter_coldigom	Cifra	Barnabé, homem de Deus		num+slug+kind-unico	48a89774	Manter Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtRnlibUZpdzZrc0lHaHZiV1Z0SUdSbElFUmxkWE12UTJsbWNtRXVjR1JtLnBkZg==
+007e	media	✓	(sem texto)	Cifra	Baruch Haba (Multidões no vale da decisão)		nome~+hash	0de673f5		MDYxMTIwMjUvQmFydWNoIEhhYmEgKE11bHRpZMO1ZXMgbm8gdmFsZSBkYSBkZWNpc8OjbykvQ2lmcmEucGRm
+007f	media	✓	(sem texto)	Partitura	Baruch Haba (Multidões no vale da decisão)		nome~+hash	0de673f5		MDYxMTIwMjUvQmFydWNoIEhhYmEgKE11bHRpZMO1ZXMgbm8gdmFsZSBkYSBkZWNpc8OjbykvUGFydGl0dXJhLnBkZg==
+0080	media	✓	manter_coldigom	Cifra	Basta-nos tua graça		nome~+kind-unico	09320370	Mantenha a do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtRnpkR0V0Ym05eklIUjFZU0JuY21IRHAyRXZRMmxtY21FdWNHUm0ucGRm
+0081	media	✓	(sem texto)	Partitura	Basta-nos tua graça, Senhor		nome+kind-unico	09320370		QXZ1bHNvcy8xMzAucGRm
+0082	sem_louvor	✓	criar_praise	Cifra	Beija-me filho meu				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnBhbUV0YldVZ1ptbHNhRzhnYldWMUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0083	alta	✓	(sem texto)	Partitura	Bem De Manhã		nome+hash	7b2e61ca		QXZ1bHNvcy8xMzgucGRm
+0084	faltante	✓	adicionar_material	Cifra	Bem aventurado		nome	4b97799e	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnRJR0YyWlc1MGRYSmhaRzh2UTJsbWNtRXVjR1JtLnBkZg==
+0085	media	✓	adicionar_material	Cifra	Bem aventurado aquele		nome~	4b97799e	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnRJR0YyWlc1MGRYSmhaRzhnWVhGMVpXeGxMME5wWm5KaExuQmtaZz09LnBkZg==
+0086	sem_louvor	✓	criar_praise	Cifra	Bem maior				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnRJRzFoYVc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0087	sem_louvor	✓	criar_praise	Cifra	Bem mais além				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnRJRzFoYVhNZ1lXekRxVzB2UTJsbWNtRXVjR1JtLnBkZg==
+0088	sem_louvor	✓	criar_praise	Cifra	Bem presente				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnRJSEJ5WlhObGJuUmxMME5wWm5KaExuQmtaZz09LnBkZg==
+0089	ambiguo	✓	nao_levar	Cifra	Bem sei que tudo podes		num	ad01d861	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnRJSE5sYVNCeGRXVWdkSFZrYnlCd2IyUmxjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+008a	media	✓	(sem texto)	Partitura	Bem-Aventurado (Salmo 89)		nome~+hash	4b97799e		QXZ1bHNvcy84ODYucGRm
+008b	sem_louvor	✓	criar_praise	Cifra	Bendirei				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtVnVaR2x5WldrdlEybG1jbUV1Y0dSbS5wZGY=
+008c	media	✓	(sem texto)	Partitura	Bendita a Hora De Oração (Hora Bendita)		nome~+classe+hash	09f80d8b		QXZ1bHNvcy8xNDEucGRm
+008d	sem_louvor	✓	criar_praise	Partitura	Bênção Aarônica (Bênção Apostólica)				Crie o praise e adicione como Choir	MDUwNDIwMjYvQmXMgm5jzKdhzINvIEFhcm/Mgm5pY2EgKEJlzIJuY8ynYcyDbyBBcG9zdG/MgWxpY2EpL0Nvcm8ucGRm
+008e	faltante	✓	nao_levar	Cifra	Bodas do cordeiro		nome	7d9c64a3	Não precisa	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFtOWtZWE1nWkc4Z1kyOXlaR1ZwY204dlEybG1jbUV1Y0dSbS5wZGY=
+008f	alta	✓	(sem texto)	Partitura	Bondoso Salvador (Coro Masculino)		nome+hash	9eea5fc7		QXZ1bHNvcy8xMDY3LnBkZg==
+0090	faltante	✓	criar_praise	Cifra	Brevemente		nome	8e7c2785	Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFuSmxkbVZ0Wlc1MFpTOURhV1p5WVM1d1pHWT0ucGRm
+0091	sem_louvor	✓	criar_praise	Cifra	Brilhante				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFuSnBiR2hoYm5SbEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0092	sem_louvor	✓	criar_praise	Cifra	Buscai primeiro				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFuVnpZMkZwSUhCeWFXMWxhWEp2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0093	ambiguo	·	nao_levar	Cifra	Buscar-me-eis e me achareis		nome~	bdf942c5	Não precisa	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFuVnpZMkZ5TFcxbExXVnBjeUJsSUcxbElHRmphR0Z5WldsekwwTnBabkpoTG5Ca1pnPT0ucGRm
+0094	media	✓	adicionar_material	Partitura	Buscar-te-ei, Senhor!		nome~+kind-unico	ea114f87	Adicione como choir	MDUwNDIwMjYvQnVzY2FyLXRlLWVpLCBTZW5ob3IhL0Nvcm8ucGRm
+0095	sem_louvor	✓	criar_praise	Cifra	Busquem a Jesus				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlFuVnpjWFZsYlNCaElFcGxjM1Z6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0096	alta	✓	(sem texto)	Partitura	Bênçãos Sobre Nós Virão		nome+hash	55d7add6		QXZ1bHNvcy8xMzYucGRm
+0097	sem_louvor	✓	criar_praise	Cifra	Caminhar sem nunca olhar pra trás				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnRhVzVvWVhJZ2MyVnRJRzUxYm1OaElHOXNhR0Z5SUhCeVlTQjBjc09oY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0098	sem_louvor	✓	criar_praise	Cifra	Canaã é logo ali				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnVZY09qSU1PcElHeHZaMjhnWVd4cEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0099	ambiguo	✓	manter_coldigom	Partitura	Canta Igreja, Igreja Fiel		num+slug	7f8a375e	Manter Coldigom	QXZ1bHNvcy8xNDgucGRm
+009a	media	✓	manter_coldigom	Cifra	Canta, igreja, igreja fiel		num+slug+kind-unico	7f8a375e	Manter Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnVkR0VzSUdsbmNtVnFZU3dnYVdkeVpXcGhJR1pwWld3dlEybG1jbUV1Y0dSbS5wZGY=
+009b	media	✓	(sem texto)	Partitura	Cantai Um Cântico Novo Ao Senhor (Salmo 98)		nome~+hash	dab1c60a		QXZ1bHNvcy8xNTIucGRm
+009c	sem_louvor	✓	criar_praise	Cifra	Cantarei				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnVkR0Z5WldrdlEybG1jbUV1Y0dSbS5wZGY=
+009d	faltante	✓	adicionar_material	Cifra	Cantarei a Cristo		num+slug	ed340136	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnVkR0Z5WldrZ1lTQkRjbWx6ZEc4dlEybG1jbUV1Y0dSbS5wZGY=
+009e	ambiguo	✓	(sem texto)	Partitura	Cantares 2		num+slug	c60bc0d4		MzAxMDIwMjUvQ2FudGFyZXMgMiAtIENvcm8ucGRm
+009f	ambiguo	✓	(sem texto)	Partitura	Cantares 2		num+slug	c60bc0d4		QXZ1bHNvcy8xNTcucGRm
+00a0	media	✓	(sem texto)	Partitura	Cante aleluia (Coro Masculino)		nome~	325c43f2		QXZ1bHNvcy9EcExJQ00gLSBDYW50ZSBBbGVsdWlhISAtIENvcm8gTWFzY3VsaW5vLnBkZg==
+00a1	ambiguo	✗	adicionar_junto_com	Cifra	Cante aleluia!		num		Adicione no mesmo Cante Aleluia (Coro Masculino)	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnVkR1VnWVd4bGJIVnBZU0V2UTJsbWNtRXVjR1JtLnBkZg==
+00a2	ambiguo	✓	nao_levar	Partitura	Careço De Jesus		num	061572f5	Não precisa levar	QXZ1bHNvcy8xNjMucGRm
+00a3	alta	✓	(sem texto)	Partitura	Castelo Forte (Coro Masculino)		nome+hash	0c8b03f9		QXZ1bHNvcy8xMDY5LnBkZg==
+00a4	alta	✓	(sem texto)	Partitura	Castelo Forte (Misto)		nome+hash	d8e68678		QXZ1bHNvcy8xNjQucGRm
+00a5	ambiguo	✓	nao_levar	Cifra	Castelo forte		num	c9400dfe	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyRnpkR1ZzYnlCbWIzSjBaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+00a6	media	✓	manter_coldigom	Cifra	Celebrai		num+slug+kind-unico	8ea1a466	Manter o do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyVnNaV0p5WVdrdlEybG1jbUV1Y0dSbS5wZGY=
+00a7	sem_louvor	·	criar_praise	Cifra	Chame a Deus				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyaGhiV1VnWVNCRVpYVnpMME5wWm5KaExuQmtaZz09LnBkZg==
+00a8	alta	✓	(sem texto)	Partitura	Chuva De Bênçãos		nome+hash	10361b46		QXZ1bHNvcy8xNzEucGRm
+00a9	media	✓	manter_coldigom	Cifra	Cidade eternal		num+slug+kind-unico	5bd1d53a	Manter o do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEybGtZV1JsSUdWMFpYSnVZV3d2UTJsbWNtRXVjR1JtLnBkZg==
+00aa	sem_louvor	✓	criar_praise	Cifra	Clama a mim				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyeGhiV0VnWVNCdGFXMHZRMmxtY21FdWNHUm0ucGRm
+00ab	faltante	✓	adicionar_material	Cifra	Clamor de Ana		nome	ec28fc6a	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyeGhiVzl5SUdSbElFRnVZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+00ac	ambiguo	✓	(sem texto)	Partitura	Com Meu Coração Venho Agora		nome	185983c5		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvMTc4LnBkZg
+00ad	ambiguo	✓	nao_levar	Partitura	Com a Minha Voz		nome~	b9f513ff	Não precisa levar	QXZ1bHNvcy8xNzYucGRm
+00ae	ambiguo	✗	nao_levar	Cifra	Com a minha voz clamo ao Senhor		num+slug	b9f513ff	Não precisa levar pro coldigom.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRJR0VnYldsdWFHRWdkbTk2SUdOc1lXMXZJR0Z2SUZObGJtaHZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+00b0	sem_louvor	✓	criar_praise	Cifra	Com muito louvor				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRJRzExYVhSdklHeHZkWFp2Y2k5RGFXWnlZUzV3WkdZPS5wZGY=
+00b1	media	✓	(sem texto)	Partitura	Comigo Habita (Comunhão Divina)		hash-so	c9bf5e62		QXZ1bHNvcy8xMDcwLnBkZg==
+00b2	alta	✓	(sem texto)	Partitura	Comigo Habita (Misto)		nome+hash	bf55c6a9		QXZ1bHNvcy8xODAucGRm
+00b3	ambiguo	✓	outro	Partitura	Como Cristo Ensinou		num	593b0444	Subtitua por esse Choir	MDUwNDIwMjYvQ29tbyBDcmlzdG8gRW5zaW5vdS9Db3JvLnBkZg==
+00b8	faltante	✓	adicionar_material	Cifra	Como agradecer		nome	386a2abd	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRieUJoWjNKaFpHVmpaWEl2UTJsbWNtRXVjR1JtLnBkZg==
+00b9	faltante	✓	adicionar_material	Cifra	Como não entoar teu louvor		nome	e2d757e9	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRieUJ1dzZOdklHVnVkRzloY2lCMFpYVWdiRzkxZG05eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+00ba	faltante	✓	adicionar_material	Cifra	Como ovelhas perdidas		nome	64fef8eb	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRieUJ2ZG1Wc2FHRnpJSEJsY21ScFpHRnpMME5wWm5KaExuQmtaZz09LnBkZg==
+00bb	sem_louvor	✓	criar_praise	Cifra	Como é bom Senhor estar na tua presença				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRieUREcVNCaWIyMGdVMlZ1YUc5eUlHVnpkR0Z5SUc1aElIUjFZU0J3Y21WelpXN0RwMkV2UTJsbWNtRXVjR1JtLnBkZg==
+00bc	media	✓	criar_praise	Cifra	Como é importante o meu Jesus		nome~	f5ce0c60	Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXRieUREcVNCcGJYQnZjblJoYm5SbElHOGdiV1YxSUVwbGMzVnpMME5wWm5KaExuQmtaZz09LnBkZg==
+00bd	ambiguo	✓	nao_levar	Cifra	Confia e ora		num	6276ed52	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXVabWxoSUdVZ2IzSmhMME5wWm5KaExuQmtaZz09LnBkZg==
+00bf	sem_louvor	✓	criar_praise	Cifra	Conheci o mundo mal				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXVhR1ZqYVNCdklHMTFibVJ2SUcxaGJDOURhV1p5WVM1d1pHWT0ucGRm
+00c0	ambiguo	✓	(sem texto)	Cifra	Conheçamos e prossigamos		nome	b045daec		MDQxMTIwMjUvQ29uaGXDp2Ftb3MgZSBwcm9zc2lnYW1vcy9DaWZyYS5wZGY=
+00c1	alta	✓	(sem texto)	Gestos em Gravura	Conheçamos e prossigamos		nome+hash	b045daec		MDQxMTIwMjUvQ29uaGXDp2Ftb3MgZSBwcm9zc2lnYW1vcy9HZXN0b3MgQ0lBcy5wZGY=
+00c2	ambiguo	✓	(sem texto)	Partitura	Conheçamos e prossigamos		nome	b045daec		QXZ1bHNvcy9Db25oZWNhbW9zIGUgUHJvc3NpZ2Ftb3MgLSBDb3JvLnBkZg==
+00c3	sem_louvor	✓	criar_praise	Cifra	Consolador				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXVjMjlzWVdSdmNpOURhV1p5WVM1d1pHWT0ucGRm
+00c4	ambiguo	✓	adicionar_material	Partitura	Conta Pra Jesus Onde é a Tua Dor		num+slug		Adicione como Choir	QXZ1bHNvcy8xOTUucGRm
+00c5	media	✓	(sem texto)	Partitura	Contra os Males Deste Mundo (Cristo Cura, Sim!)		nome~+hash	b6a6c0ed		QXZ1bHNvcy8yMTMucGRm
+00c6	sem_louvor	✓	criar_praise	Cifra	Coração igual ao teu				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXlZY09udzZOdklHbG5kV0ZzSUdGdklIUmxkUzlEYVdaeVlTNXdaR1k9LnBkZg==
+00c7	sem_louvor	✓	criar_praise	Cifra	Cordeiro Santo				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXlaR1ZwY204Z1UyRnVkRzh2UTJsbWNtRXVjR1JtLnBkZg==
+00c8	faltante	·	adicionar_material	Cifra	Cordeiro de Deus		nome	f1733be4	adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEyOXlaR1ZwY204Z1pHVWdSR1YxY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+00ca	ambiguo	✓	adicionar_material	Partitura	Coroai-o Rei		nome	1ee5793f	Adicionar como Choir	YXNzZXRzL1BFUy83MzQ2MjYwMi1iMTVhLTQ3NmItOWMzZS1mNDNmOWFkZDQxMWEucGRm
+00cb	faltante	✓	adicionar_material	Cifra	Coroai-o rei dos reis		nome	1ee5793f	adicione como Cifra	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlEyOXliMkZwTFc4Z2NtVnBJR1J2Y3lCeVpXbHpMME5wWm5KaExuQmtaZz09LnBkZg
+00cc	ambiguo	✓	manter_coldigom	Cifra	Creio neste Deus		nome	75359a48	Manter do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEzSmxhVzhnYm1WemRHVWdSR1YxY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+00cd	ambiguo	✓	(sem texto)	Partitura	Creio neste Deus		nome	75359a48		QXZ1bHNvcy8yMDcucGRm
+00ce	sem_louvor	✓	criar_praise	Partitura	Crer e Observar				Crie o praise e adicione como Choir	MDUwNDIwMjYvQ3JlciBlIE9ic2VydmFyL0Nvcm8ucGRm
+00cf	alta	✓	(sem texto)	Partitura	Cristo Já Ressuscitou (Coro Masculino)		nome+hash	f93b4df2		QXZ1bHNvcy8xMDczLnBkZg==
+00d0	alta	✓	(sem texto)	Partitura	Cristo Já Ressuscitou (Misto)		nome+hash	2fbce423		QXZ1bHNvcy8yMTYucGRm
+00d1	ambiguo	✓	(sem texto)	Partitura	Cristo Valerá		nome	4e247e83		QXZ1bHNvcy8yMTkucGRm
+00d2	media	✓	(sem texto)	Cifra	Cristo cura sim		nome+kind-unico	de7ef180		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEzSnBjM1J2SUdOMWNtRWdjMmx0TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+00d3	sem_louvor	✓	criar_praise	Cifra	Cristo está em meu viver				Crie o praise e adicione como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEzSnBjM1J2SUdWemRNT2hJR1Z0SUcxbGRTQjJhWFpsY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+00d4	media	✓	adicionar_material	Partitura	Cristo já ressucitou (Coro Masculino)		nome~+kind-unico	f93b4df2	Adicione como choir	QXZ1bHNvcy9EcExJQ00gLSBDcmlzdG8gSmEgUmVzc3VzY2l0b3UgLSBDb3JvIE1hc2N1bGluby5wZGY=
+00d5	ambiguo	✓	nao_levar	Cifra	Cristo já ressuscitou		num	788ad82d	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEzSnBjM1J2SUdyRG9TQnlaWE56ZFhOamFYUnZkUzlEYVdaeVlTNXdaR1k9LnBkZg==
+00d6	ambiguo	✓	nao_levar	Cifra	Cristo vem me buscar		num	c8244268	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlEzSnBjM1J2SUhabGJTQnRaU0JpZFhOallYSXZRMmxtY21FdWNHUm0ucGRm
+00d8	sem_louvor	✓	criar_praise	Partitura	Cristo, o Cordeiro				Criar praise e adicionar como Choir	MDUwNDIwMjYvQ3Jpc3RvLCBvIENvcmRlaXJvL0Nvcm8ucGRm
+00d9	ambiguo	✓	nao_levar	Partitura	Da Igreja o Fundamento (A Pedra Fundamental)		num	ae124b21	Não precisa levar	QXZ1bHNvcy8wNDEucGRm
+00db	sem_louvor	✓	criar_praise	Cifra	Da manhã a estrela ele é				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHRWdiV0Z1YU1PaklHRWdaWE4wY21Wc1lTQmxiR1VndzZrdlEybG1jbUV1Y0dSbS5wZGY=
+00dc	media	✓	adicionar_material	Partitura	Dai Glória a Deus		num+kind-unico	f370074f	Adicionar como choir	QXZ1bHNvcy8yMjcucGRm
+00dd	alta	✓	(sem texto)	Partitura	Das Profundezas Clamo a Ti		nome+hash	aabede80		QXZ1bHNvcy8yMjkucGRm
+00de	ambiguo	✗	(sem texto)	Cifra	Das profundezas		num+slug	ff9eebe6		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHRnpJSEJ5YjJaMWJtUmxlbUZ6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+00e1	sem_louvor	✓	criar_praise	Partitura	De Tantas Coisas (A Melhor Coisa)				Criar praise e adicionar como Choir	QXZ1bHNvcy8wMjYucGRm
+00e2	sem_louvor	✓	criar_praise	Cifra	De fé em fé				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVWdac09wSUdWdElHYkRxUzlEYVdaeVlTNXdaR1k9LnBkZg==
+00e3	faltante	✓	adicionar_material	Cifra	De hoje em diante		nome	f5e90fdd	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVWdhRzlxWlNCbGJTQmthV0Z1ZEdVdlEybG1jbUV1Y0dSbS5wZGY=
+00e4	sem_louvor	·	criar_praise	Cifra	De joelhos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVWdhbTlsYkdodmN5OURhV1p5WVM1d1pHWT0ucGRm
+00e5	sem_louvor	✓	criar_praise	Cifra	De todas as tribos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVWdkRzlrWVhNZ1lYTWdkSEpwWW05ekwwTnBabkpoTG5Ca1pnPT0ucGRm
+00e6	sem_louvor	✓	criar_praise	Cifra	Deixa a luz de Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnBlR0VnWVNCc2RYb2daR1VnUkdWMWN5OURhV1p5WVM1d1pHWT0ucGRm
+00e7	media	✓	adicionar_material	Cifra	Deixa o Salvador		nome~	057662e5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnBlR0VnYnlCVFlXeDJZV1J2Y2k5RGFXWnlZUzV3WkdZPS5wZGY=
+00e8	alta	✓	(sem texto)	Partitura	Deixa-me Chorar Aos Teus Pés		nome+hash	32733fb7		QXZ1bHNvcy8yMzgucGRm
+00e9	ambiguo	✓	(sem texto)	Partitura	Descansa ó Alma		nome	dc4ea038		QXZ1bHNvcy8yNDMucGRm
+00eb	faltante	✓	adicionar_material	Cifra	Descansa ó alma		nome	dc4ea038	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnpZMkZ1YzJFZ3c3TWdZV3h0WVM5RGFXWnlZUzV3WkdZPS5wZGY=
+00ec	sem_louvor	✓	adicionar_junto_com	Cifra	Descansar em Deus				Adicionar junto com o praise de Desde o dia em que aeitei Jesus (Eis-me aqui, Senhor) e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnpZMkZ1YzJGeUlHVnRJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+00ed	ambiguo	✗	criar_praise	Cifra	Desde o dia		nome~	ec7ad2b6	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnpaR1VnYnlCa2FXRXZRMmxtY21FdWNHUm0ucGRm
+00ee	sem_louvor	✓	criar_praise	Partitura	Desde o dia em que aceitei Jesus (Eis-me aqui, Senhor)				Criar praise e adicionar como Choir	MDYxMTIwMjUvRGVzZGUgbyBkaWEgZW0gcXVlIGFjZWl0ZWkgSmVzdXMgKEVpcy1tZSBhcXVpLCBTZW5ob3IpL1BhcnRpdHVyYS5wZGY=
+00ef	sem_louvor	✓	criar_praise	Cifra	Desde que Jesus achou-me				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnpaR1VnY1hWbElFcGxjM1Z6SUdGamFHOTFMVzFsTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+00f0	alta	✓	(sem texto)	Partitura	Desejado Das Nações		nome+hash	aa970a9b		QXZ1bHNvcy8yNDUucGRm
+00f2	sem_louvor	✓	criar_praise	Cifra	Desfaço as tuas transgressões				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVnpabUhEcDI4Z1lYTWdkSFZoY3lCMGNtRnVjMmR5WlhOenc3VmxjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+00f3	faltante	✓	adicionar_material	Cifra	Deus		nome	779932c5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+00f4	alta	✓	(sem texto)	Partitura	Deus		nome+hash	779932c5		QXZ1bHNvcy8yNDkucGRm
+00f5	alta	✓	(sem texto)	Partitura	Deus Cuida De Ti (Coro Masculino)		nome+hash	30093e7f		QXZ1bHNvcy8xMDc3LnBkZg==
+00f7	media	·	criar_praise	Cifra	Deus El Shadai		nome~	5ee4d271	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJGYkNCVGFHRmtZV2t2UTJsbWNtRXVjR1JtLnBkZg==
+00fa	alta	✓	(sem texto)	Partitura	Deus Guiou o teu Caminho		nome+hash	71f9987d		QXZ1bHNvcy8yNTkucGRm
+00fb	alta	✓	(sem texto)	Partitura	Deus Tem Um Plano (Coro Masculino)		nome+hash	eb53c770		QXZ1bHNvcy8xMDgyLnBkZg==
+00fd	media	✓	(sem texto)	Partitura	Deus da Provisão (Pai, mais uma vez)		nome~+hash	c0de93ce		QXZ1bHNvcy9FTERNMDQyMDI1IC0gRGV1cyBkYSBQcm92aXNhbyAoUGFpLCBtYWlzIHVtYSB2ZXopIC0gQ29yby5wZGY=
+00fe	sem_louvor	·	criar_praise	Cifra	Deus de milagres				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJrWlNCdGFXeGhaM0psY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+00ff	sem_louvor	·	criar_praise	Cifra	Deus de vitória				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJrWlNCMmFYVERzM0pwWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+0100	sem_louvor	✓	criar_praise	Cifra	Deus escolheu te amar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJsYzJOdmJHaGxkU0IwWlNCaGJXRnlMME5wWm5KaExuQmtaZz09LnBkZg==
+0101	faltante	✓	adicionar_material	Cifra	Deus guiou o teu caminho		nome	71f9987d	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJuZFdsdmRTQnZJSFJsZFNCallXMXBibWh2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0102	ambiguo	✓	adicionar_junto_com	Partitura	Deus guiou o teu caminho (Celebrando a união)		nome	ec69afca	Adicionar como Choir junto com 0101	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvRGV1cyBHdWlvdSBvIFRldSBDYW1pbmhvIHZvemVzIHJldiAzLnBkZg
+0103	sem_louvor	✓	criar_praise	Cifra	Deus indecifrável				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJwYm1SbFkybG1jc09oZG1Wc0wwTnBabkpoTG5Ca1pnPT0ucGRm
+0104	sem_louvor	✓	criar_praise	Cifra	Deus nos mostrará				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJ1YjNNZ2JXOXpkSEpoY3NPaEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0105	media	✓	(sem texto)	Partitura	Deus não te chamou pra contar derrotas (Ele está agindo)		hash-so	7dbd2f96		MDYxMTIwMjUvRGV1cyBuw6NvIHRlIGNoYW1vdSBwcmEgY29udGFyIGRlcnJvdGFzIChFbGUgZXN0w6EgYWdpbmRvKS9QYXJ0aXR1cmEucGRm
+0106	faltante	✓	criar_praise	Cifra	Deus preparou		nome	f0cafbf7	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUJ3Y21Wd1lYSnZkUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0107	ambiguo	✓	manter_coldigom	Partitura	Deus preparou		nome	f0cafbf7	Manter partitura do Coldigom	QXZ1bHNvcy8yNjIucGRm
+0108	sem_louvor	✓	criar_praise	Cifra	Deus tem cuidado de nós				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUIwWlcwZ1kzVnBaR0ZrYnlCa1pTQnV3N056TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0109	media	✓	adicionar_material	Cifra	Deus tem um plano		nome~	eb53c770	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUIwWlcwZ2RXMGdjR3hoYm04dlEybG1jbUV1Y0dSbS5wZGY=
+010a	faltante	✓	adicionar_material	Cifra	Deus três vezes santo		nome	c72c5e0a	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUIwY3NPcWN5QjJaWHBsY3lCellXNTBieTlEYVdaeVlTNXdaR1k9LnBkZg==
+010b	sem_louvor	✓	criar_praise	Cifra	Deus tudo pode				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUIwZFdSdklIQnZaR1V2UTJsbWNtRXVjR1JtLnBkZg==
+010c	ambiguo	✓	nao_levar	Cifra	Deus é minha Rocha		num	bf51c554	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeUREcVNCdGFXNW9ZU0JTYjJOb1lTOURhV1p5WVM1d1pHWT0ucGRm
+010e	sem_louvor	✓	criar_praise	Cifra	Deus, como eu preciso de ti				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeXdnWTI5dGJ5QmxkU0J3Y21WamFYTnZJR1JsSUhScEwwTnBabkpoTG5Ca1pnPT0ucGRm
+010f	sem_louvor	✓	criar_praise	Cifra	Deus, quanto tempo falta				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjFjeXdnY1hWaGJuUnZJSFJsYlhCdklHWmhiSFJoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0110	sem_louvor	✓	criar_praise	Cifra	Devo a ti (tudo o que sou)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHVjJieUJoSUhScElDaDBkV1J2SUc4Z2NYVmxJSE52ZFNrdlEybG1jbUV1Y0dSbS5wZGY=
+0111	media	·	criar_praise	Partitura	Dias Há, Bem Sei (Não Desistir)		hash-so	c33a3cfd	Criar praise e adicionar como Cifra	QXZ1bHNvcy8xMTA4LnBkZg==
+0112	ambiguo	✓	nao_levar	Partitura	Digno é Jesus		num+slug		Não precisa levar	QXZ1bHNvcy8yNzIucGRm
+0113	faltante	✓	adicionar_material	Cifra	Digno é o Cordeiro		nome	45647a0d	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHbG5ibThndzZrZ2J5QkRiM0prWldseWJ5OURhV1p5WVM1d1pHWT0ucGRm
+0114	ambiguo	✓	manter_coldigom	Partitura	Digno é o Cordeiro		nome	45647a0d	Manter do coldigom	QXZ1bHNvcy8yNzUucGRm
+0115	media	✗	criar_praise	Cifra	Digno é o Cordeiro (Uma voz ouvi)		nome~	45647a0d	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHbG5ibThndzZrZ2J5QkRiM0prWldseWJ5QW9WVzFoSUhadmVpQnZkWFpwS1M5RGFXWnlZUzV3WkdZPS5wZGY=
+0116	media	✓	criar_praise	Cifra	Digno é o Senhor		nome~+classe	a77b2161	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHbG5ibThndzZrZ2J5QlRaVzVvYjNJdlEybG1jbUV1Y0dSbS5wZGY=
+0117	sem_louvor	·	criar_praise	Cifra	Direção				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHbHlaY09udzZOdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+0118	alta	·	criar_praise	Partitura	Divino Companheiro (Coro Masculino)		nome+hash	ba9ec5c4	Criar praise e adicionar como Cifra	QXZ1bHNvcy8xMDg0LnBkZg==
+0119	media	✓	(sem texto)	Partitura	Do Profundo De Um Abismo (Salmo 130)		hash-so	c7b07ad5		QXZ1bHNvcy84OTQucGRm
+011a	ambiguo	✗	(sem texto)	Cifra	Dobro os meus joelhos		num+slug	e91c543b		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHOWljbThnYjNNZ2JXVjFjeUJxYjJWc2FHOXpMME5wWm5KaExuQmtaZz09LnBkZg==
+011b	media	✓	(sem texto)	Partitura	Doce Esperança (A Esperança)		hash-so	a6ad2973		QXZ1bHNvcy8wMjIucGRm
+011c	ambiguo	✗	criar_praise	Cifra	Dos altos céus		nome~	86379ef1	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJHOXpJR0ZzZEc5eklHUERxWFZ6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+011d	ambiguo	·	adicionar_material	Partitura	Dá-me Mais Fé		num	a4e88e4b	Adicione mais esse material como Choir	QXZ1bHNvcy8yMjIucGRm
+011e	sem_louvor	·	criar_praise	Cifra	E o mesmo Deus da paz				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJTQnZJRzFsYzIxdklFUmxkWE1nWkdFZ2NHRjZMME5wWm5KaExuQmtaZz09LnBkZg==
+011f	ambiguo	✓	adicionar_material	Cifra	E teu sangue (arranjo novo)		nome~+classe		adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJTQjBaWFVnYzJGdVozVmxJQ2hoY25KaGJtcHZJRzV2ZG04cEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0120	ambiguo	✓	adicionar_material	Cifra	E veio a mim		num+slug	704909ad	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJTQjJaV2x2SUdFZ2JXbHRMME5wWm5KaExuQmtaZz09LnBkZg==
+0121	media	✓	nao_levar	Partitura	Eis Marchamos Para Aquele Bom País (Acordai, Acordai)		nome~+kind-unico	4f4acc20	Não precisa levar	QXZ1bHNvcy8yODUucGRm
+0125	ambiguo	✓	nao_levar	Cifra	Eis os milhões		num	f71de542	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXbHpJRzl6SUcxcGJHakR0V1Z6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0126	ambiguo	✓	nao_levar	Cifra	Eis que abro a porta		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXbHpJSEYxWlNCaFluSnZJR0VnY0c5eWRHRXZRMmxtY21FdWNHUm0ucGRm
+0127	alta	✓	(sem texto)	Partitura	Eis-me Aqui		nome+slug+classe+hash	ba0b296e		QXZ1bHNvcy8yOTIucGRm
+0128	ambiguo	✓	criar_praise	Cifra	Eis-me aqui ao teu lado		nome~+classe		Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXbHpMVzFsSUdGeGRXa2dZVzhnZEdWMUlHeGhaRzh2UTJsbWNtRXVjR1JtLnBkZg==
+0129	ambiguo	✓	adicionar_material	Cifra	Eis-me aqui pra te servir		nome~+classe		adicionar como Cifra no 0127	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXbHpMVzFsSUdGeGRXa2djSEpoSUhSbElITmxjblpwY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+012a	media	✓	adicionar_junto_com	Cifra	Eis-me ó Salvador		nome~	1edeacbf	adicionar como Cifra junto com 012b	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXbHpMVzFsSU1PeklGTmhiSFpoWkc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+012b	ambiguo	✓	criar_praise	Partitura	Eis-me ó Salvador Aqui		num+slug	1edeacbf	Criar praise e adicionar como Choir	QXZ1bHNvcy8yOTEucGRm
+012c	faltante	✓	adicionar_material	Cifra	Ele está agindo		nome	7dbd2f96	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJR1Z6ZE1PaElHRm5hVzVrYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+012d	sem_louvor	✓	criar_praise	Cifra	Ele está vivo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJR1Z6ZE1PaElIWnBkbTh2UTJsbWNtRXVjR1JtLnBkZg==
+012e	sem_louvor	✓	criar_praise	Cifra	Ele vem				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJSFpsYlM5RGFXWnlZUzV3WkdZPS5wZGY=
+012f	sem_louvor	✓	criar_praise	Cifra	Ele vem pra te salvar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJSFpsYlNCd2NtRWdkR1VnYzJGc2RtRnlMME5wWm5KaExuQmtaZz09LnBkZg==
+0130	sem_louvor	✓	criar_praise	Cifra	Ele virá				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJSFpwY3NPaEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0131	media	✓	adicionar_material	Partitura	Ele é Exaltado		nome+kind-unico	061f4822	adicionar como Choir	QXZ1bHNvcy8zMDMucGRm
+0134	ambiguo	✓	nao_levar	Cifra	Ele é a minha alegria		num+slug	f5b3b08d	Não precisa levar.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJTU9wSUdFZ2JXbHVhR0VnWVd4bFozSnBZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0135	faltante	✓	adicionar_material	Cifra	Ele é a minha força		nome	6c373901	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJTU9wSUdFZ2JXbHVhR0VnWm05eXc2ZGhMME5wWm5KaExuQmtaZz09LnBkZg==
+0136	faltante	✓	(sem texto)	Cifra	Ele é exaltado		nome	061f4822		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJTU9wSUdWNFlXeDBZV1J2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0137	media	✓	(sem texto)	Partitura	Ele é o Leão da Tribo de Judá		hash-so	5e040fe5		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvMmNkMjcxMGEtYmE1MC00MWY2LThjOWUtNGE5MjIyYThiMjRjLnBkZg
+0138	sem_louvor	·	adicionar_junto_com	Cifra	Ele é o Leão da tribo de Judá				adicionar como Cifra junto com 0137	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJTU9wSUc4Z1RHWERvMjhnWkdFZ2RISnBZbThnWkdVZ1NuVmt3NkV2UTJsbWNtRXVjR1JtLnBkZg==
+0139	sem_louvor	✓	criar_praise	Cifra	Ele é o Senhor Jeová				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJTU9wSUc4Z1UyVnVhRzl5SUVwbGIzYkRvUzlEYVdaeVlTNXdaR1k9LnBkZg==
+013a	sem_louvor	·	criar_praise	Cifra	Ele é o meu Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxJTU9wSUc4Z2JXVjFJRk5sYm1odmNpOURhV1p5WVM1d1pHWT0ucGRm
+013b	sem_louvor	✓	criar_praise	Cifra	Elevo a minha voz				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxkbThnWVNCdGFXNW9ZU0IyYjNvdlEybG1jbUV1Y0dSbS5wZGY=
+013c	sem_louvor	✓	criar_praise	Partitura	Elevo a minha voz				Criar praise e adicionar como CHoir junto com 013b	MjAwMzIwMjYvRWxldm8gYSBtaW5oYSB2b3ovQ29yby5wZGY=
+013d	sem_louvor	✓	criar_praise	Cifra	Elevo os meus olhos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXeGxkbThnYjNNZ2JXVjFjeUJ2YkdodmN5OURhV1p5WVM1d1pHWT0ucGRm
+013e	media	✓	(sem texto)	Partitura	Em Breve Sei (Não Mais Dor)		nome~+hash	07260914		QXZ1bHNvcy8xMTIzLnBkZg==
+013f	ambiguo	✓	nao_levar	Partitura	Em Nada Ponho a Minha Fé		num	05a9b42f	Não precisa levar	QXZ1bHNvcy8zMTMucGRm
+0140	media	✓	(sem texto)	Partitura	Em Oração (Aos Olhos Do Céu)		hash-so	d39f2ea5		QXZ1bHNvcy8xMDMucGRm
+0141	alta	✓	(sem texto)	Partitura	Em Suas Mãos		nome+hash	4fcb8dd8		QXZ1bHNvcy8zMTcucGRm
+0143	ambiguo	✓	(sem texto)	Cifra	Em breve, mui breve (Maranata)		nome~	2e593a7a		MDYxMTIwMjUvRW0gYnJldmUsIG11aSBicmV2ZSAoTWFyYW5hdGEpL0NpZnJhLnBkZg==
+0144	ambiguo	✓	(sem texto)	Partitura	Em breve, mui breve (Maranata)		nome~	2e593a7a		MDYxMTIwMjUvRW0gYnJldmUsIG11aSBicmV2ZSAoTWFyYW5hdGEpL1BhcnRpdHVyYS5wZGY=
+0145	ambiguo	·	nao_levar	Cifra	Em caminhos de dor		num+slug	6516d4b4	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXMGdZMkZ0YVc1b2IzTWdaR1VnWkc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0146	media	✓	manter_coldigom	Cifra	Em meio a multidão		num+slug+kind-unico	445aa22c	Manter do coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXMGdiV1ZwYnlCaElHMTFiSFJwWk1PamJ5OURhV1p5WVM1d1pHWT0ucGRm
+0147	faltante	✓	adicionar_material	Cifra	Em obediência, servi ao Senhor		nome	1a202311	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXMGdiMkpsWkduRHFtNWphV0VzSUhObGNuWnBJR0Z2SUZObGJtaHZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+0148	sem_louvor	✓	criar_praise	Cifra	Em silêncio				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXMGdjMmxzdzZwdVkybHZMME5wWm5KaExuQmtaZz09LnBkZg==
+0149	ambiguo	✗	criar_praise	Cifra	Em tua presença		nome~	4fcf0944	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXMGdkSFZoSUhCeVpYTmxic09uWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+014a	media	✓	(sem texto)	Partitura	Emanuel, Salvador, Deus forte (Voltará)		nome~+hash	982ea1d7		QXZ1bHNvcy8xMDUwLnBkZg==
+014b	sem_louvor	✓	criar_praise	Cifra	Enche-me Espírito				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXNWphR1V0YldVZ1JYTnd3NjF5YVhSdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+014c	sem_louvor	✓	criar_praise	Cifra	Enquanto eu viver				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXNXhkV0Z1ZEc4Z1pYVWdkbWwyWlhJdlEybG1jbUV1Y0dSbS5wZGY=
+014d	alta	✓	(sem texto)	Partitura	Enquanto, ó Salvador		nome+hash	80196f3e		QXZ1bHNvcy8zMjUucGRm
+014e	sem_louvor	✓	criar_praise	Cifra	Ensina-me a amar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXNXphVzVoTFcxbElHRWdZVzFoY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+014f	sem_louvor	✓	criar_praise	Cifra	Entrando no santo dos santos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXNTBjbUZ1Wkc4Z2JtOGdjMkZ1ZEc4Z1pHOXpJSE5oYm5SdmN5OURhV1p5WVM1d1pHWT0ucGRm
+0151	sem_louvor	·	adicionar_junto_com	Cifra	Entrega (Preciso me entregar, Senhor)				adicionar como Cifra junto com 0150, inclusive enriqueça com (Preciso me entregar, Senhor) o título do praise.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXNTBjbVZuWVNBb1VISmxZMmx6YnlCdFpTQmxiblJ5WldkaGNpd2dVMlZ1YUc5eUtTOURhV1p5WVM1d1pHWT0ucGRm
+0152	sem_louvor	✓	criar_praise	Cifra	Entregue-se a Jesus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJXNTBjbVZuZFdVdGMyVWdZU0JLWlhOMWN5OURhV1p5WVM1d1pHWT0ucGRm
+0153	sem_louvor	✓	criar_praise	Cifra	Espera em Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTndaWEpoSUdWdElFUmxkWE12UTJsbWNtRXVjR1JtLnBkZg==
+0154	sem_louvor	·	criar_praise	Cifra	Esperei com paciência				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTndaWEpsYVNCamIyMGdjR0ZqYWNPcWJtTnBZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0156	sem_louvor	✓	criar_praise	Cifra	Essência de Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTnp3NnB1WTJsaElHUmxJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+0157	ambiguo	✓	substituir	Partitura	Esta Alegria Não Vai Mais Sair		num	1ec1d016	Substituir o choir do coldigom por esse	QXZ1bHNvcy8zMzEucGRm
+0158	ambiguo	✓	nao_levar	Cifra	Esta Obra é de Deus		num	40952ea7	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBZU0JQWW5KaElNT3BJR1JsSUVSbGRYTXZRMmxtY21FdWNHUm0ucGRm
+0159	sem_louvor	✓	criar_praise	Cifra	Esta mensagem que estas ouvindo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBZU0J0Wlc1ellXZGxiU0J4ZFdVZ1pYTjBZWE1nYjNWMmFXNWtieTlEYVdaeVlTNXdaR1k9LnBkZg==
+015d	ambiguo	✓	nao_levar	Partitura	Estamos Aqui, ó Deus		num+slug		Não precisa levar	QXZ1bHNvcy8zMzIucGRm
+015e	ambiguo	✓	nao_levar	Cifra	Estamos aqui, ó Deus		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBZVzF2Y3lCaGNYVnBMQ0REc3lCRVpYVnpMME5wWm5KaExuQmtaZz09LnBkZg==
+015f	ambiguo	✓	(sem texto)	Partitura	Este é o Meu Desejo (Toma Meu O Coração)		nome~+classe	185983c5		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvOTc1LnBkZg
+0160	sem_louvor	✓	criar_praise	Cifra	Este é o meu Deus (Deus de Abraão)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBaU0REcVNCdklHMWxkU0JFWlhWeklDaEVaWFZ6SUdSbElFRmljbUhEbzI4cEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0162	ambiguo	✓	manter_coldigom	Cifra	Estende tua mão		num	59d84bec	Mantenha do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBaVzVrWlNCMGRXRWdiY09qYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+0163	media	✓	adicionar_material	Partitura	Estou Ao Teu Dispor		nome+kind-unico	458389d3	adicionar como choir	QXZ1bHNvcy8zMzkucGRm
+0164	ambiguo	✓	(sem texto)	Partitura	Estou Aqui (venho a ti)		nome	44b1997a		YXNzZXRzL1BFUyAoRW5jb250cm8gZGUgTG91dm9yIFNldGVtYnJvIDIwMjYpLzIzNmUwYzVlLTBiM2EtNDM2MC05MGE5LWIzOWZiZDY4NmJmNi5wZGY
+0165	media	✗	criar_praise	Cifra	Estou ao seu dispor		nome~	458389d3	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBiM1VnWVc4Z2MyVjFJR1JwYzNCdmNpOURhV1p5WVM1d1pHWT0ucGRm
+0166	faltante	✓	adicionar_material	Cifra	Estou aqui		nome	44b1997a	adicionar como Cifra	YXNzZXRzL1BFUyAoRW5jb250cm8gZGUgTG91dm9yIFNldGVtYnJvIDIwMjYpL0VTVE9VIEFRVUkucGRm
+0167	sem_louvor	✓	criar_praise	Cifra	Estou contigo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBiM1VnWTI5dWRHbG5ieTlEYVdaeVlTNXdaR1k9LnBkZg==
+0168	sem_louvor	✓	criar_praise	Cifra	Estou em paz				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYTjBiM1VnWlcwZ2NHRjZMME5wWm5KaExuQmtaZz09LnBkZg==
+0169	media	✓	(sem texto)	Partitura	Estou passando por provas (Maravilhoso é servir a Deus)		hash-so	6644f510		MDYxMTIwMjUvRXN0b3UgcGFzc2FuZG8gcG9yIHByb3ZhcyAoTWFyYXZpbGhvc28gw6kgc2VydmlyIGEgRGV1cykvUGFydGl0dXJhLnBkZg==
+016d	media	✓	nao_levar	Cifra	Está é a mensagem eterna de Deus		nome+kind-unico	cadaf656	Não precisa levar	QXZ1bHNvcy9Fc3RhIGUgYSBtZW5zYWdlbSBldGVybmEgZGUgRGV1cyAtIENpZnJhLnBkZg==
+016f	media	✓	(sem texto)	Partitura	Eu Acordei Já Louvando (Louvar Em Meio Às Provas)		nome~+hash	bf52f714		QXZ1bHNvcy81MTEucGRm
+0170	media	✓	(sem texto)	Partitura	Eu Cantarei Ao Meu Senhor (Salmus)		nome~+hash	9c0124bd		QXZ1bHNvcy85MDMucGRm
+0171	ambiguo	✓	(sem texto)	Partitura	Eu Clamo Pelo Sangue de Jesus		nome	13a20300		MzAxMDIwMjUvRXUgQ2xhbW8gUGVsbyBTYW5ndWUgZGUgSmVzdXMgLSBDb3JvLnBkZg==
+0175	media	✓	(sem texto)	Partitura	Eu Sei Que Ele Virá (Deus Três Vezes Santo)		hash-so	c72c5e0a		QXZ1bHNvcy8yNjYucGRm
+0177	ambiguo	✓	(sem texto)	Partitura	Eu Vi o Senhor		num+slug			QXZ1bHNvcy8wNjAucGRm
+0178	media	✓	(sem texto)	Partitura	Eu Vou Cantar Da Glória (Louvar Seu Nome Sempre)		nome~+classe+hash	3aec18e9		QXZ1bHNvcy81MTYucGRm
+017c	ambiguo	✓	nao_levar	Cifra	Eu confio em Ti, Senhor		num	95fe5e63	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdZMjl1Wm1sdklHVnRJRlJwTENCVFpXNW9iM0l2UTJsbWNtRXVjR1JtLnBkZg==
+017d	sem_louvor	✓	criar_praise	Cifra	Eu creio (Quando o impossível)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdZM0psYVc4Z0tGRjFZVzVrYnlCdklHbHRjRzl6YzhPdGRtVnNLUzlEYVdaeVlTNXdaR1k9LnBkZg==
+017e	ambiguo	✗	criar_praise	Cifra	Eu creio em ti		nome~+classe		Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdZM0psYVc4Z1pXMGdkR2t2UTJsbWNtRXVjR1JtLnBkZg==
+017f	media	✓	(sem texto)	Partitura	Eu não posso fugir do Espírito		nome~+hash	df0bcb70		QXZ1bHNvcy9EcExJQ00gLSBFdSBuYW8gcG9zc28gZnVnaXIgLSBDT1JPLnBkZg==
+0180	ambiguo	✗	criar_praise	Cifra	Eu não posso fugir do teu espírito		nome+slug+classe		Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdic09qYnlCd2IzTnpieUJtZFdkcGNpQmtieUIwWlhVZ1pYTnd3NjF5YVhSdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+0181	alta	✓	(sem texto)	Partitura	Eu preciso de Ti		nome+hash	7b3536f9		QXZ1bHNvcy9EcExJQ00gLSBFdSBwcmVjaXNvIGRlIHRpIC0gQ09STy5wZGY=
+0182	faltante	✓	adicionar_material	Cifra	Eu preciso de ti		nome	7b3536f9	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdjSEpsWTJsemJ5QmtaU0IwYVM5RGFXWnlZUzV3WkdZPS5wZGY=
+0183	media	✓	criar_praise	Cifra	Eu quero amá-lo mais		nome~	99520464	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdjWFZsY204Z1lXM0RvUzFzYnlCdFlXbHpMME5wWm5KaExuQmtaZz09LnBkZg==
+0184	sem_louvor	✓	criar_praise	Cifra	Eu quero ir também				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdjWFZsY204Z2FYSWdkR0Z0WXNPcGJTOURhV1p5WVM1d1pHWT0ucGRm
+0185	ambiguo	✓	criar_praise	Cifra	Eu sei Senhor		nome~		Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdjMlZwSUZObGJtaHZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+0186	ambiguo	✓	nao_levar	Cifra	Eu sirvo um Deus		num+slug	ec5a9dce	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdjMmx5ZG04Z2RXMGdSR1YxY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0187	sem_louvor	✓	criar_praise	Cifra	Eu só quero estar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdjOE96SUhGMVpYSnZJR1Z6ZEdGeUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0188	media	✓	criar_praise	Cifra	Eu te amei		nome~+kind-unico	e348833a	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkR1VnWVcxbGFTOURhV1p5WVM1d1pHWT0ucGRm
+0189	sem_louvor	✓	criar_praise	Cifra	Eu te amo (Senhor, venho hoje)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkR1VnWVcxdklDaFRaVzVvYjNJc0lIWmxibWh2SUdodmFtVXBMME5wWm5KaExuQmtaZz09LnBkZg==
+018a	sem_louvor	✓	criar_praise	Cifra	Eu te amo mais que a abelha ama a flor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkR1VnWVcxdklHMWhhWE1nY1hWbElHRWdZV0psYkdoaElHRnRZU0JoSUdac2IzSXZRMmxtY21FdWNHUm0ucGRm
+018b	sem_louvor	✓	criar_praise	Cifra	Eu tomo posse				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkRzl0YnlCd2IzTnpaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+018c	sem_louvor	✓	criar_praise	Cifra	Eu verei (um milagre em minha vida)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkbVZ5WldrZ0tIVnRJRzFwYkdGbmNtVWdaVzBnYldsdWFHRWdkbWxrWVNrdlEybG1jbUV1Y0dSbS5wZGY=
+018d	sem_louvor	✓	criar_praise	Cifra	Eu viverei por ti				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkbWwyWlhKbGFTQndiM0lnZEdrdlEybG1jbUV1Y0dSbS5wZGY=
+018e	sem_louvor	✓	criar_praise	Cifra	Eu vivo sempre a cantar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkbWwyYnlCelpXMXdjbVVnWVNCallXNTBZWEl2UTJsbWNtRXVjR1JtLnBkZg==
+018f	sem_louvor	✓	criar_praise	Cifra	Eu vos escolhi				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkbTl6SUdWelkyOXNhR2t2UTJsbWNtRXVjR1JtLnBkZg==
+0190	ambiguo	✗	criar_praise	Cifra	Eu vou cantar na glória		nome~	4d8e9f4a	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYVWdkbTkxSUdOaGJuUmhjaUJ1WVNCbmJNT3pjbWxoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0191	faltante	✓	adicionar_material	Cifra	Exaltado		nome	e057d608	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYaGhiSFJoWkc4dlEybG1jbUV1Y0dSbS5wZGY=
+0192	alta	✓	(sem texto)	Partitura	Exaltado, ó Deus, Seja o Teu Nome		nome+hash	6d348daa		QXZ1bHNvcy8zNjAucGRm
+0193	ambiguo	✓	nao_levar	Cifra	Existe um lar		num	aeab0670	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYaHBjM1JsSUhWdElHeGhjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+0194	sem_louvor	✓	criar_praise	Cifra	Existe uma Estrela a brilhar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYaHBjM1JsSUhWdFlTQkZjM1J5Wld4aElHRWdZbkpwYkdoaGNpOURhV1p5WVM1d1pHWT0ucGRm
+0195	faltante	✓	adicionar_material	Cifra	Expirou!		num+slug	8f299167	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJYaHdhWEp2ZFNFdlEybG1jbUV1Y0dSbS5wZGY=
+0196	sem_louvor	✓	criar_praise	Cifra	Fala Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtRnNZU0JUWlc1b2IzSXZRMmxtY21FdWNHUm0ucGRm
+0197	sem_louvor	✓	criar_praise	Cifra	Fala Senhor que o teu servo ouve				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtRnNZU0JUWlc1b2IzSWdjWFZsSUc4Z2RHVjFJSE5sY25adklHOTFkbVV2UTJsbWNtRXVjR1JtLnBkZg==
+0199	media	✓	criar_praise	Cifra	Falar com Deus		nome+kind-unico	384dcfba	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtRnNZWElnWTI5dElFUmxkWE12UTJsbWNtRXVjR1JtLnBkZg==
+019a	sem_louvor	✓	criar_praise	Cifra	Família				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtRnR3NjFzYVdFdlEybG1jbUV1Y0dSbS5wZGY=
+019b	alta	✓	(sem texto)	Partitura	Faz De Nós Um		nome+hash	9d9dd7a9		QXZ1bHNvcy8zNzIucGRm
+019c	faltante	✓	adicionar_material	Cifra	Faz de nós um		nome	9d9dd7a9	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtRjZJR1JsSUc3RHMzTWdkVzB2UTJsbWNtRXVjR1JtLnBkZg==
+019d	faltante	✗	criar_praise	Partitura	Faz-me Lembrar		nome	147a5398	Criar praise e adicionar como Choir	MzAxMDIwMjUvRmF6LW1lIExlbWJyYXIgLSBDb3JvLnBkZg==
+019e	alta	✓	(sem texto)	Partitura	Fica Ao Meu Lado (Coro Masculino)		nome+hash	97e460ab		QXZ1bHNvcy8xMDkyLnBkZg==
+019f	sem_louvor	·	criar_praise	Cifra	Fico a pensar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtbGpieUJoSUhCbGJuTmhjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+01a0	sem_louvor	·	criar_praise	Cifra	Fidelidade				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtbGtaV3hwWkdGa1pTOURhV1p5WVM1d1pHWT0ucGRm
+01a1	sem_louvor	·	criar_praise	Cifra	Filho é meu				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtbHNhRzhndzZrZ2JXVjFMME5wWm5KaExuQmtaZz09LnBkZg==
+01a2	sem_louvor	·	criar_praise	Cifra	Filipenses 220-21				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtbHNhWEJsYm5ObGN5QXlNakF0TWpFdlEybG1jbUV1Y0dSbS5wZGY=
+01a3	media	✓	(sem texto)	Partitura	Finda-se Este Dia		num+slug+kind-unico	d7479c3c		QXZ1bHNvcy8zNzcucGRm
+01a4	faltante	✓	adicionar_material	Cifra	Finda-se este dia		num+slug	d7479c3c	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtbHVaR0V0YzJVZ1pYTjBaU0JrYVdFdlEybG1jbUV1Y0dSbS5wZGY=
+01a5	faltante	✓	adicionar_material	Cifra	Firme estarei		nome	f68e9263	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtbHliV1VnWlhOMFlYSmxhUzlEYVdaeVlTNXdaR1k9LnBkZg==
+01a6	alta	✓	(sem texto)	Partitura	Florescerá		nome+hash	8d782e66		QXZ1bHNvcy8zODIucGRm
+01a7	faltante	✓	adicionar_material	Cifra	Fogo renovador		nome	f7667b43	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOW5ieUJ5Wlc1dmRtRmtiM0l2UTJsbWNtRXVjR1JtLnBkZg==
+01a8	ambiguo	✗	match_errado_criar_praise	Cifra	Fonte da vida		num	0a7de57b	Outro louvor criar praise pra ele.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOXVkR1VnWkdFZ2RtbGtZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+01a9	ambiguo	✗	criar_praise	Cifra	Fonte de água viva		nome~	3aadba9f	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOXVkR1VnWkdVZ3c2Rm5kV0VnZG1sMllTOURhV1p5WVM1d1pHWT0ucGRm
+01aa	sem_louvor	·	criar_praise	Cifra	Forasteiro sou				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOXlZWE4wWldseWJ5QnpiM1V2UTJsbWNtRXVjR1JtLnBkZg==
+01ab	media	·	manter_coldigom	Cifra	Forte Deus		num+slug+kind-unico	e7aa4e9a	Manter Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOXlkR1VnUkdWMWN5OURhV1p5WVM1d1pHWT0ucGRm
+01ac	sem_louvor	✓	criar_praise	Cifra	Forte sou				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOXlkR1VnYzI5MUwwTnBabkpoTG5Ca1pnPT0ucGRm
+01ad	sem_louvor	✓	criar_praise	Cifra	Fortes, corajosos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJtOXlkR1Z6TENCamIzSmhhbTl6YjNNdlEybG1jbUV1Y0dSbS5wZGY=
+01ae	media	✓	(sem texto)	Partitura	Força Me Dá (Tudo Pra Mim Tu És)		nome~+hash	29a0f340		QXZ1bHNvcy85ODEucGRm
+01af	sem_louvor	✓	criar_praise	Cifra	Fui chamado por Cristo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlJuVnBJR05vWVcxaFpHOGdjRzl5SUVOeWFYTjBieTlEYVdaeVlTNXdaR1k9LnBkZg==
+01b3	faltante	✓	criar_praise	Partitura	Gadareno		nome	edbd8f0d	Criar praise e adicionar como Choir	MzAxMDIwMjUvR2FkYXJlbm8gLSBDb3JvLnBkZg==
+01b4	sem_louvor	✓	criar_praise	Cifra	Geração eleita				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIyVnlZY09udzZOdklHVnNaV2wwWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+01b5	faltante	·	nao_levar	Cifra	Glorifica		nome	eb3bc7a2	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIyeHZjbWxtYVdOaEwwTnBabkpoTG5Ca1pnPT0ucGRm
+01b6	sem_louvor	✓	criar_praise	Cifra	Glória ao Rei				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIyekRzM0pwWVNCaGJ5QlNaV2t2UTJsbWNtRXVjR1JtLnBkZg==
+01b7	alta	✓	(sem texto)	Partitura	Grande Amor (Coro Masculino)		nome+hash	2696d0cb		QXZ1bHNvcy8xMDk0LnBkZg==
+01b8	alta	✓	(sem texto)	Partitura	Grande Amor (Misto)		nome+hash	c48ba585		QXZ1bHNvcy80MDQucGRm
+01b9	media	✓	adicionar_material	Cifra	Grande Senhor		nome~+classe	88024eea	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJsSUZObGJtaHZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+01ba	faltante	·	nao_levar	Cifra	Grande amor		nome	1aaa927d	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJsSUdGdGIzSXZRMmxtY21FdWNHUm0ucGRm
+01bb	media	✗	match_errado_criar_praise	Partitura	Grande é o Senhor		num+kind-unico	c0ab98e3	Outro louvor, crie um praise só pra ele	QXZ1bHNvcy8zOTgucGRm
+01bc	faltante	✓	adicionar_material	Cifra	Grande é o Senhor (Inclinai-vos)		num+slug	99e2b2b3	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJsSU1PcElHOGdVMlZ1YUc5eUlDaEpibU5zYVc1aGFTMTJiM01wTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+01bd	faltante	✓	adicionar_material	Cifra	Grande é o Senhor Santo e Justo		nome	f15fe429	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJsSU1PcElHOGdVMlZ1YUc5eUlGTmhiblJ2SUdVZ1NuVnpkRzh2UTJsbWNtRXVjR1JtLnBkZg==
+01be	media	✓	(sem texto)	Partitura	Grande é o Senhor, Digno de Louvor (Meu Deus)		nome~+classe+hash	bac0c676		QXZ1bHNvcy81NDkucGRm
+01bf	alta	✓	(sem texto)	Partitura	Grande é o Senhor, Santo e Justo		nome+hash	f15fe429		QXZ1bHNvcy80MDEucGRm
+01c0	media	✗	criar_praise	Cifra	Grandes São Senhor Tuas Promessas		nome~	88024eea	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJsY3lCVHc2TnZJRk5sYm1odmNpQlVkV0Z6SUZCeWIyMWxjM05oY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+01c1	media	✓	nao_levar	Cifra	Grandes coisas fez o Senhor por nós		nome~	f3471e07	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJsY3lCamIybHpZWE1nWm1WNklHOGdVMlZ1YUc5eUlIQnZjaUJ1dzdOekwwTnBabkpoTG5Ca1pnPT0ucGRm
+01c2	sem_louvor	✓	criar_praise	Cifra	Grandioso Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJwYjNOdklFUmxkWE12UTJsbWNtRXVjR1JtLnBkZg==
+01c3	sem_louvor	·	criar_praise	Cifra	Grandioso é				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhibVJwYjNOdklNT3BMME5wWm5KaExuQmtaZz09LnBkZg==
+01c4	media	✗	criar_praise	Cifra	Gratidão (Grandes são, Senhor)		nome~	cb6b0992	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhkR2xrdzZOdklDaEhjbUZ1WkdWeklIUERvMjhzSUZObGJtaHZjaWt2UTJsbWNtRXVjR1JtLnBkZg==
+01c5	sem_louvor	·	criar_praise	Cifra	Grato a ti, Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmhkRzhnWVNCMGFTd2dVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+01c6	alta	✓	(sem texto)	Partitura	Graças Dou Por Esta Vida		nome+hash	5e93eec3		QXZ1bHNvcy8zOTcucGRm
+01c7	media	✗	criar_praise	Cifra	Graças Senhor		nome~	3ddecb58	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmh3NmRoY3lCVFpXNW9iM0l2UTJsbWNtRXVjR1JtLnBkZg==
+01c8	faltante	✓	adicionar_material	Cifra	Graças dou por esta vida		nome	5e93eec3	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmh3NmRoY3lCa2IzVWdjRzl5SUdWemRHRWdkbWxrWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+01c9	media	·	manter_coldigom	Cifra	Graças te dou, ó Senhor		nome+kind-unico	87204941	Manter do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzSmh3NmRoY3lCMFpTQmtiM1VzSU1PeklGTmxibWh2Y2k5RGFXWnlZUzV3WkdZPS5wZGY=
+01ca	alta	✓	(sem texto)	Partitura	Graças, Senhor (Coro Masculino)		nome+hash	3ddecb58		QXZ1bHNvcy8xMDk3LnBkZg==
+01cb	media	·	nao_levar	Cifra	Guia-me		nome+kind-unico	608a633b	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlIzVnBZUzF0WlM5RGFXWnlZUzV3WkdZPS5wZGY=
+01cc	media	·	nao_levar	Partitura	Guia-me		nome+kind-unico	608a633b	Não precisa levar	QXZ1bHNvcy80MTUucGRm
+01ce	media	✓	(sem texto)	Partitura	Hoje Estamos Na Presença (Louvamos-te)		nome~+hash	425f71b6		QXZ1bHNvcy81MDYucGRm
+01cf	media	✓	(sem texto)	Partitura	Hoje O Mundo Espera (O Amor De Deus Não Muda)		nome~+hash	d8fc6222		QXZ1bHNvcy82MTgucGRm
+01d0	sem_louvor	✓	criar_praise	Cifra	Hoje aqui				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNHOXFaU0JoY1hWcEwwTnBabkpoTG5Ca1pnPT0ucGRm
+01d1	faltante	✓	adicionar_material	Cifra	Hoje eu descobri		nome	1b556326	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNHOXFaU0JsZFNCa1pYTmpiMkp5YVM5RGFXWnlZUzV3WkdZPS5wZGY=
+01d2	alta	✓	(sem texto)	Partitura	Hoje eu descobri		nome+hash	1b556326		MDYxMTIwMjUvSG9qZSBldSBkZXNjb2JyaS9QYXJ0aXR1cmEucGRm
+01d3	sem_louvor	✓	criar_praise	Cifra	Hoje é o dia do seu aniversário				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNHOXFaU0REcVNCdklHUnBZU0JrYnlCelpYVWdZVzVwZG1WeWM4T2hjbWx2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+01d4	sem_louvor	✓	criar_praise	Cifra	Hoje é o seu aniversário				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNHOXFaU0REcVNCdklITmxkU0JoYm1sMlpYSnp3NkZ5YVc4dlEybG1jbUV1Y0dSbS5wZGY=
+01d5	faltante	✗	criar_praise	Cifra	Honra e glória ao Cordeiro		nome	73794e27	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNHOXVjbUVnWlNCbmJNT3pjbWxoSUdGdklFTnZjbVJsYVhKdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+01d6	sem_louvor	·	criar_praise	Cifra	Hosana ao criador				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNHOXpZVzVoSUdGdklHTnlhV0ZrYjNJdlEybG1jbUV1Y0dSbS5wZGY=
+01db	ambiguo	✓	(sem texto)	Partitura	Há Um Povo Que Te Adora		num+slug			QXZ1bHNvcy80MjIucGRm
+01dc	alta	✓	(sem texto)	Partitura	Há Uma Pátria No Além (Coro Masculino)		nome+hash	4ae05f24		QXZ1bHNvcy8xMTAwLnBkZg==
+01dd	media	✓	nao_levar	Cifra	Há esperança		nome+kind-unico	7a2080b1	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNNT2hJR1Z6Y0dWeVlXN0RwMkV2UTJsbWNtRXVjR1JtLnBkZg==
+01de	media	✓	nao_levar	Cifra	Há um maior conosco (II Crônicas 327-8)		nome~+kind-unico	d27c80a2	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNNT2hJSFZ0SUcxaGFXOXlJR052Ym05elkyOGdLRWxKSUVOeXc3UnVhV05oY3lBek1qY3RPQ2t2UTJsbWNtRXVjR1JtLnBkZg==
+01df	ambiguo	✓	nao_levar	Cifra	Há um povo que te adora		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNNT2hJSFZ0SUhCdmRtOGdjWFZsSUhSbElHRmtiM0poTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+01e0	media	✓	adicionar_material	Cifra	Há um óleo que procede		nome~	7567db30	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNNT2hJSFZ0SU1PemJHVnZJSEYxWlNCd2NtOWpaV1JsTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+01e1	media	✓	adicionar_junto_com	Cifra	Há uma Pátria no Além		nome~	4ae05f24	adicionar como Cifra junto com 01dc	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNNT2hJSFZ0WVNCUXc2RjBjbWxoSUc1dklFRnN3Nmx0TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+01e2	sem_louvor	✓	criar_praise	Cifra	Há unção neste lugar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNNT2hJSFZ1dzZmRG8yOGdibVZ6ZEdVZ2JIVm5ZWEl2UTJsbWNtRXVjR1JtLnBkZg==
+01e3	ambiguo	·	nao_levar	Cifra	Imutável Deus		num+slug	68625c52	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNXMTFkTU9oZG1Wc0lFUmxkWE12UTJsbWNtRXVjR1JtLnBkZg==
+01e4	ambiguo	✓	(sem texto)	Partitura	Inda é longe Canaã (O caminho é longo e mau)		nome~	4ef7d8bc		QXZ1bHNvcy9FTERNMDQyMDI1IC0gSW5kYSBlIGxvbmdlIENhbmFhIChPIGNhbWluaG8gZSBsb25nbyBlIG1hdSkgLSBDb3JvLnBkZg==
+01e5	media	·	nao_levar	Cifra	Jardim de oração		nome+kind-unico	0ec22a6b	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtRnlaR2x0SUdSbElHOXlZY09udzZOdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+01e6	faltante	✓	adicionar_material	Cifra	Jerusalém		nome	94cadcd8	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnlkWE5oYk1PcGJTOURhV1p5WVM1d1pHWT0ucGRm
+01e7	ambiguo	✓	(sem texto)	Partitura	Jerusalém Eterna		num	562c9834		QXZ1bHNvcy80NTAucGRm
+01e8	media	✓	nao_levar	Partitura	Jerusalém Excelsa		num+kind-unico	cea87217	Não precisa levar	QXZ1bHNvcy80NjAucGRm
+01e9	faltante	·	adicionar_material	Cifra	Jerusalém de ouro		nome	93e5b296	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnlkWE5oYk1PcGJTQmtaU0J2ZFhKdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+01eb	sem_louvor	✓	criar_praise	Cifra	Jesus Glorificado				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nUjJ4dmNtbG1hV05oWkc4dlEybG1jbUV1Y0dSbS5wZGY=
+01ec	media	✓	adicionar_material	Partitura	Jesus Me Ama		num+slug+kind-unico	af9f7d88	Adicionar como choir	MDYxMTIwMjUvSmVzdXMgTWUgQW1hL1BhcnRpdHVyYS5wZGY=
+01ee	sem_louvor	·	criar_praise	Cifra	Jesus Nazareno				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nVG1GNllYSmxibTh2UTJsbWNtRXVjR1JtLnBkZg==
+01ef	media	✓	adicionar_material	Partitura	Jesus Tão Belo		num+kind-unico	244e1768	Adicionar como Choir	QXZ1bHNvcy80NzgucGRm
+01f0	sem_louvor	✓	criar_praise	Cifra	Jesus Virá				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nVm1seXc2RXZRMmxtY21FdWNHUm0ucGRm
+01f4	ambiguo	✓	nao_levar	Cifra	Jesus a luz divina		num+slug	9ca6dfcb	Está certo, mas não precisa levar pro coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nWVNCc2RYb2daR2wyYVc1aEwwTnBabkpoTG5Ca1pnPT0ucGRm
+01f5	sem_louvor	✓	criar_praise	Cifra	Jesus em breve				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nWlcwZ1luSmxkbVV2UTJsbWNtRXVjR1JtLnBkZg==
+01f6	media	·	nao_levar	Cifra	Jesus irá voltar		num+slug+kind-unico	c01e9d65	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nYVhMRG9TQjJiMngwWVhJdlEybG1jbUV1Y0dSbS5wZGY=
+01f7	sem_louvor	·	criar_praise	Cifra	Jesus passou seu sangue aqui				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nY0dGemMyOTFJSE5sZFNCellXNW5kV1VnWVhGMWFTOURhV1p5WVM1d1pHWT0ucGRm
+01f8	faltante	✓	adicionar_material	Cifra	Jesus sempre te amo		nome	c1d7f547	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nYzJWdGNISmxJSFJsSUdGdGJ5OURhV1p5WVM1d1pHWT0ucGRm
+01f9	media	✓	manter_coldigom	Partitura	Jesus sempre te amo		nome+kind-unico	c1d7f547	Manter a do coldigom	QXZ1bHNvcy80NzkucGRm
+01fa	media	✓	adicionar_material	Cifra	Jesus vem logo		nome~	cfa491fc	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1nZG1WdElHeHZaMjh2UTJsbWNtRXVjR1JtLnBkZg==
+01fb	sem_louvor	✓	criar_praise	Cifra	Jesus é o lugar em que me escondo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1ndzZrZ2J5QnNkV2RoY2lCbGJTQnhkV1VnYldVZ1pYTmpiMjVrYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+01fc	sem_louvor	✓	criar_praise	Cifra	Jesus é real				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1ndzZrZ2NtVmhiQzlEYVdaeVlTNXdaR1k9LnBkZg==
+01fe	ambiguo	✓	(sem texto)	Partitura	Jesus, Senhor, Me Chego a Ti (Eu Venho Como Estou)		nome~	8d577ae1		QXZ1bHNvcy8xMDg4LnBkZg==
+0200	ambiguo	✓	adicionar_material	Partitura	Jesus, a luz divina (Coro Masculino)		nome~	9ca6dfcb	Adicionar como choir	QXZ1bHNvcy9EcExJQ00gLSBKZXN1cywgYSBsdXogZGl2aW5hIC0gQ29ybyBNYXNjdWxpbm8ucGRm
+0201	ambiguo	✗	criar_praise	Cifra	Jesus, o Pão da Vida		nome~	08a66eb2	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1zSUc4Z1VNT2pieUJrWVNCV2FXUmhMME5wWm5KaExuQmtaZz09LnBkZg==
+0202	ambiguo	✓	manter_coldigom	Cifra	Jesus, o mistério revelado		num+slug	2de7624a	Manter coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1zSUc4Z2JXbHpkTU9wY21sdklISmxkbVZzWVdSdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+0203	sem_louvor	✓	criar_praise	Cifra	Jesus, prometeste				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1zSUhCeWIyMWxkR1Z6ZEdVdlEybG1jbUV1Y0dSbS5wZGY=
+0204	media	✓	manter_coldigom	Cifra	Jesus, somente tu		nome+kind-unico	6d640ad0	Manter coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1zSUhOdmJXVnVkR1VnZEhVdlEybG1jbUV1Y0dSbS5wZGY=
+0205	ambiguo	✓	(sem texto)	Partitura	Jesus, somente tu		nome	6d640ad0		QXZ1bHNvcy80NzYucGRm
+0206	sem_louvor	✓	criar_praise	Cifra	Jesus, teu ser já me atraiu				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtVnpkWE1zSUhSbGRTQnpaWElnYXNPaElHMWxJR0YwY21GcGRTOURhV1p5WVM1d1pHWT0ucGRm
+0207	sem_louvor	✓	criar_praise	Cifra	Jovem cristão				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNtOTJaVzBnWTNKcGMzVERvMjh2UTJsbWNtRXVjR1JtLnBkZg==
+0208	media	✓	(sem texto)	Partitura	João Viu o Trono (Jerusalém)		nome~+kind-unico	af87e463		QXZ1bHNvcy80NDMucGRm
+0209	faltante	✓	adicionar_material	Cifra	Junto a ti		nome	457a86bc	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNuVnVkRzhnWVNCMGFTOURhV1p5WVM1d1pHWT0ucGRm
+020a	media	✓	adicionar_material	Partitura	Junto a ti		nome+kind-unico	457a86bc	Adicionar como choir	QXZ1bHNvcy80ODQucGRm
+020b	sem_louvor	✓	criar_praise	Cifra	Juntos estamos aqui				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNuVnVkRzl6SUdWemRHRnRiM01nWVhGMWFTOURhV1p5WVM1d1pHWT0ucGRm
+020c	sem_louvor	✓	criar_praise	Cifra	Juramento de Rute				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNuVnlZVzFsYm5SdklHUmxJRkoxZEdVdlEybG1jbUV1Y0dSbS5wZGY=
+020e	alta	✓	(sem texto)	Partitura	Justos e Santos		nome+hash	70885179		QXZ1bHNvcy80OTIucGRm
+020f	media	✓	(sem texto)	Partitura	Já Andaste Só, Em Tristezas (Deixa o Salvador Te Ajudar)		hash-so	057662e5		QXZ1bHNvcy8yNDEucGRm
+0210	media	✓	(sem texto)	Partitura	Já Posso Ouvir o Som (No Clamor Da Noite)		nome~+hash	d51a5e7a		QXZ1bHNvcy81OTEucGRm
+0211	faltante	✓	adicionar_junto_com	Cifra	Já posso ouvir o som		nome	d51a5e7a	adicionar Cifra junto com 0210	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNzT2hJSEJ2YzNOdklHOTFkbWx5SUc4Z2MyOXRMME5wWm5KaExuQmtaZz09LnBkZg==
+0212	ambiguo	✓	nao_levar	Cifra	Já refulge a Glória Eterna		num	52ca551a	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlNzT2hJSEpsWm5Wc1oyVWdZU0JIYk1PemNtbGhJRVYwWlhKdVlTOURhV1p5WVM1d1pHWT0ucGRm
+0213	sem_louvor	·	criar_praise	Cifra	Lamento de Israel				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHRnRaVzUwYnlCa1pTQkpjM0poWld3dlEybG1jbUV1Y0dSbS5wZGY=
+0214	sem_louvor	·	criar_praise	Cifra	Lança o teu cuidado				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHRnV3NmRoSUc4Z2RHVjFJR04xYVdSaFpHOHZRMmxtY21FdWNHUm0ucGRm
+0215	sem_louvor	·	criar_praise	Cifra	Lar de fé				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHRnlJR1JsSUdiRHFTOURhV1p5WVM1d1pHWT0ucGRm
+0219	sem_louvor	·	criar_praise	Cifra	Louvado seja, Senhor, teu nome				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbUZrYnlCelpXcGhMQ0JUWlc1b2IzSXNJSFJsZFNCdWIyMWxMME5wWm5KaExuQmtaZz09LnBkZg==
+021a	media	✓	adicionar_material	Partitura	Louvai a Deus Senhor		nome+kind-unico	fdd87b2e	adicionar como choir	QXZ1bHNvcy81MDQucGRm
+021b	ambiguo	✗	criar_praise	Cifra	Louvamos-te		nome~	e8934a59	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbUZ0YjNNdGRHVXZRMmxtY21FdWNHUm0ucGRm
+021c	media	✓	nao_levar	Partitura	Louvamos-te, ó Deus		num+kind-unico	e8934a59	Não precisa levar	QXZ1bHNvcy81MTAucGRm
+021d	media	✗	criar_praise	Cifra	Louvar a Deus, Senhor		nome~+classe	fdd87b2e	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbUZ5SUdFZ1JHVjFjeXdnVTJWdWFHOXlMME5wWm5KaExuQmtaZz09LnBkZg==
+021e	sem_louvor	·	criar_praise	Cifra	Louvar em meio às provas				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbUZ5SUdWdElHMWxhVzhndzZCeklIQnliM1poY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+021f	media	✓	adicionar_junto_com	Cifra	Louvarei Sempre Ao Senhor (Salmo 86)		nome~	b96e0052	adicionar como Cifra junto com 0220	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlUyRnNiVzl6SURnMklDaE1iM1YyWVhKbGFTQnpaVzF3Y21VZ1lXOGdVMlZ1YUc5eUtTOURhV1p5WVM1d1pHWT0ucGRm
+0220	media	✓	(sem texto)	Partitura	Louvarei Sempre Ao Senhor (Salmo 86)		nome~+hash	b96e0052		QXZ1bHNvcy84ODAucGRm
+0221	sem_louvor	✓	criar_praise	Cifra	Louvo pra agradecer				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbThnY0hKaElHRm5jbUZrWldObGNpOURhV1p5WVM1d1pHWT0ucGRm
+0222	faltante	✓	adicionar_junto_com	Cifra	Louvo-te, ó Deus		nome	1ee2cad7	adicionar como Cifra junto com 0223	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbTh0ZEdVc0lNT3pJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+0223	ambiguo	✓	(sem texto)	Partitura	Louvo-te, ó Deus		nome	1ee2cad7		QXZ1bHNvcy81MjEucGRm
+0224	ambiguo	✗	match_errado_criar_praise	Cifra	Louvor e glória		num	44ec5565	São louvores diferentes. Crie um novo praise pra isso.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbTl5SUdVZ1oyekRzM0pwWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+0225	faltante	✗	criar_praise	Cifra	Louvor e honra		nome	754fa66a	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRHOTFkbTl5SUdVZ2FHOXVjbUV2UTJsbWNtRXVjR1JtLnBkZg==
+0226	media	·	nao_levar	Cifra	Lugar de oração		num+classe+kind-unico	00403a19	não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRIVm5ZWElnWkdVZ2IzSmh3NmZEbzI4dlEybG1jbUV1Y0dSbS5wZGY=
+0227	ambiguo	✓	(sem texto)	Partitura	Lá No Céu Todos Cantam Aleluia!		num+slug			QXZ1bHNvcy8wMzQucGRm
+0228	ambiguo	✓	nao_levar	Cifra	Lá está o meu tesouro		num	15444f1c	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRNT2hJR1Z6ZE1PaElHOGdiV1YxSUhSbGMyOTFjbTh2UTJsbWNtRXVjR1JtLnBkZg==
+0229	faltante	·	nao_levar	Cifra	Lázaro		nome	5926edb5	não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRNT2hlbUZ5Ynk5RGFXWnlZUzV3WkdZPS5wZGY=
+022a	sem_louvor	·	criar_praise	Cifra	Magnífico				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRm5ic090Wm1samJ5OURhV1p5WVM1d1pHWT0ucGRm
+022b	sem_louvor	·	criar_praise	Cifra	Maior é o que está em mim				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRnBiM0lndzZrZ2J5QnhkV1VnWlhOMHc2RWdaVzBnYldsdEwwTnBabkpoTG5Ca1pnPT0ucGRm
+022d	media	✓	nao_levar	Partitura	Mais Perto Quero Estar		num+kind-unico	8bcd44ec	Não precisa levar	QXZ1bHNvcy81MzAucGRm
+022e	media	✓	adicionar_material	Partitura	Mais pureza		nome~+kind-unico	d6a8f0dc	adicionar como choir	QXZ1bHNvcy81MzEucGRm
+022f	faltante	·	adicionar_junto_com	Cifra	Mais pureza da-me		nome	d6a8f0dc	adicionar como Cifra junto com 022e	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRnBjeUJ3ZFhKbGVtRWdaR0V0YldVdlEybG1jbUV1Y0dSbS5wZGY=
+0230	ambiguo	✓	nao_levar	Cifra	Mais que maravilhoso		nome	fb8b74c6	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRnBjeUJ4ZFdVZ2JXRnlZWFpwYkdodmMyOHZRMmxtY21FdWNHUm0ucGRm
+0231	ambiguo	✓	adicionar_material	Partitura	Mais que maravilhoso		nome	fb8b74c6	levar como choir	QXZ1bHNvcy81MzIucGRm
+0232	ambiguo	·	nao_levar	Partitura	Maranata é o Grito		nome	90060ea3	não precisa levar	QXZ1bHNvcy9HTEdWIC0gTWFyYW5hdGEgZSBvIGdyaXRvIC0gQ09STy5wZGY=
+0233	ambiguo	✓	nao_levar	Cifra	Maranata é o grito		nome	90060ea3	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRnlZVzVoZEdFZ3c2a2dieUJuY21sMGJ5OURhV1p5WVM1d1pHWT0ucGRm
+0235	faltante	✗	criar_praise	Partitura	Maravilhoso		nome	2fbb38d6	Criar praise e adicionar como Choir	MzAxMDIwMjUvTWFyYXZpbGhvc28gLSBDb3JvLnBkZg==
+0236	media	✓	adicionar_material	Cifra	Maravilhoso é servir a Deus		nome+kind-unico	6644f510	Adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRnlZWFpwYkdodmMyOGd3NmtnYzJWeWRtbHlJR0VnUkdWMWN5OURhV1p5WVM1d1pHWT0ucGRm
+0237	sem_louvor	·	criar_praise	Cifra	Marcas do amor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXRnlZMkZ6SUdSdklHRnRiM0l2UTJsbWNtRXVjR1JtLnBkZg==
+0239	sem_louvor	·	criar_praise	Cifra	Me rendo aos teus pés				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXVWdjbVZ1Wkc4Z1lXOXpJSFJsZFhNZ2NNT3BjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+023a	media	✓	(sem texto)	Cifra	Me torna em teus braços (Adorador eu sou)		hash-so	080c3784		MDYxMTIwMjUvTWUgdG9ybmEgZW0gdGV1cyBicmHDp29zIChBZG9yYWRvciBldSBzb3UpL0NpZnJhLnBkZg==
+023b	media	✓	(sem texto)	Partitura	Me torna em teus braços (Adorador eu sou)		hash-so	080c3784		MDYxMTIwMjUvTWUgdG9ybmEgZW0gdGV1cyBicmHDp29zIChBZG9yYWRvciBldSBzb3UpL1BhcnRpdHVyYS5wZGY=
+023c	ambiguo	✓	nao_levar	Partitura	Medo Tens Que o Tentador Te Vá Vencer		num+slug		Não precisa levar	QXZ1bHNvcy81NDUucGRm
+023d	media	✓	(sem texto)	Partitura	Mesmo Que o Caminho (Ele é a Minha Força)		hash-so	6c373901		QXZ1bHNvcy8yOTkucGRm
+0240	ambiguo	✓	nao_levar	Cifra	Meu Deus vence batalhas		num	d97426b4	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXVjFJRVJsZFhNZ2RtVnVZMlVnWW1GMFlXeG9ZWE12UTJsbWNtRXVjR1JtLnBkZg==
+0241	ambiguo	✗	criar_praise	Cifra	Meu Deus, meu Pai		nome	c6bd51a8	Criar praise e adicionar como Cifra	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlRXVjFJRVJsZFhNc0lHMWxkU0JRWVdrdlEybG1jbUV1Y0dSbS5wZGY
+0242	sem_louvor	✓	criar_praise	Cifra	Meu Jesus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXVjFJRXBsYzNWekwwTnBabkpoTG5Ca1pnPT0ucGRm
+0245	sem_louvor	✓	criar_praise	Cifra	Meu lar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXVjFJR3hoY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+0246	sem_louvor	✓	criar_praise	Cifra	Meu pai (subimos a este lugar)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXVjFJSEJoYVNBb2MzVmlhVzF2Y3lCaElHVnpkR1VnYkhWbllYSXBMME5wWm5KaExuQmtaZz09LnBkZg==
+0247	faltante	·	adicionar_junto_com	Cifra	Meu tributo		nome	f7ec4162	adicionar como Cifra junto com 0248	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXVjFJSFJ5YVdKMWRHOHZRMmxtY21FdWNHUm0ucGRm
+0248	ambiguo	✓	(sem texto)	Partitura	Meu tributo		nome	f7ec4162		QXZ1bHNvcy81NTUucGRm
+0249	media	✓	(sem texto)	Partitura	Mil Glórias		nome+kind-unico	0a6fd94f		QXZ1bHNvcy81NTgucGRm
+024a	faltante	✓	adicionar_material	Cifra	Mil glórias		nome	0a6fd94f	adicionar como Cifra 0249	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXbHNJR2RzdzdOeWFXRnpMME5wWm5KaExuQmtaZz09LnBkZg==
+024d	ambiguo	✓	(sem texto)	Partitura	Minha Possessão Eterna (Junto a Ti)		num+slug	1cd5b2d9		QXZ1bHNvcy80ODgucGRm
+024e	sem_louvor	·	criar_praise	Cifra	Minha benção				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXbHVhR0VnWW1WdXc2ZkRvMjh2UTJsbWNtRXVjR1JtLnBkZg==
+024f	sem_louvor	·	criar_praise	Cifra	Minha esperança firme				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXbHVhR0VnWlhOd1pYSmhic09uWVNCbWFYSnRaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0250	ambiguo	✓	nao_levar	Cifra	Minha porção		num	7a60f97d	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXbHVhR0VnY0c5eXc2ZkRvMjh2UTJsbWNtRXVjR1JtLnBkZg==
+0251	sem_louvor	·	criar_praise	Cifra	Minha vida pertence a ti				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXbHVhR0VnZG1sa1lTQndaWEowWlc1alpTQmhJSFJwTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0252	sem_louvor	·	criar_praise	Cifra	Molda-me				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRXOXNaR0V0YldVdlEybG1jbUV1Y0dSbS5wZGY=
+0254	media	✓	(sem texto)	Partitura	Mui Doce Soa Ao Coração (Nome Adorável)		nome~+hash	8984c91a		QXZ1bHNvcy81OTYucGRm
+0255	media	✓	(sem texto)	Partitura	Muitas Vezes Nesta Vida (Nas Mãos de Cristo)		nome~+hash	de9962d5		QXZ1bHNvcy81ODMucGRm
+0256	sem_louvor	✓	criar_praise	Cifra	Muitas vezes, Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRYVnBkR0Z6SUhabGVtVnpMQ0JUWlc1b2IzSXZRMmxtY21FdWNHUm0ucGRm
+025a	sem_louvor	·	criar_praise	Cifra	Muitos vivem				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRYVnBkRzl6SUhacGRtVnRMME5wWm5KaExuQmtaZz09LnBkZg==
+025c	media	✓	(sem texto)	Cifra	Na Eternidade com Deus (Num abrir e fechar de olhos)		nome~+classe+hash	a01acab2		MDYxMTIwMjUvTmEgRXRlcm5pZGFkZSBjb20gRGV1cyAoTnVtIGFicmlyIGUgZmVjaGFyIGRlIG9saG9zKS9DaWZyYS5wZGY=
+025d	media	✓	(sem texto)	Partitura	Na Oração (Falar Com Deus)		hash-so	384dcfba		QXZ1bHNvcy8zNjgucGRm
+025f	media	✓	(sem texto)	Partitura	Na batalha eu oro ao Senhor (A vitória da igreja)		hash-so	123ab1f5		QXZ1bHNvcy9OYSBiYXRhbGhhIGV1IG9ybyBhbyBTZW5ob3IgKEEgVml0b3JpYSBkYSBJZ3JlamEpIC0gQ29yby5wZGY=
+0260	media	✓	(sem texto)	Cifra	Na batalha, eu oro ao Senhor (A vitória da igreja)		hash-so	123ab1f5		MDQxMTIwMjUvTmEgYmF0YWxoYSwgZXUgb3JvIGFvIFNlbmhvciAoQSB2aXTDs3JpYSBkYSBpZ3JlamEpL0NpZnJhLnBkZg==
+0261	ambiguo	✓	(sem texto)	Gestos em Gravura	Na batalha, eu oro ao Senhor (A vitória da igreja)		hash-so			MDQxMTIwMjUvTmEgYmF0YWxoYSwgZXUgb3JvIGFvIFNlbmhvciAoQSB2aXTDs3JpYSBkYSBpZ3JlamEpL0dlc3RvcyBDSUFzLnBkZg==
+0262	media	·	manter_coldigom	Cifra	Na estrada da vida		nome~+kind-unico	23e84d6c	Manter do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtRWdaWE4wY21Ga1lTQmtZU0IyYVdSaEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0263	ambiguo	✓	nao_levar	Cifra	Na eternidade		num	997fbaf0	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtRWdaWFJsY201cFpHRmtaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0264	sem_louvor	✓	criar_praise	Cifra	Na vida há sempre um tempo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtRWdkbWxrWVNCb3c2RWdjMlZ0Y0hKbElIVnRJSFJsYlhCdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+0265	sem_louvor	✓	criar_praise	Cifra	Nada encontrará de bom				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtRmtZU0JsYm1OdmJuUnlZWExEb1NCa1pTQmliMjB2UTJsbWNtRXVjR1JtLnBkZg==
+0266	sem_louvor	✓	criar_praise	Cifra	Nas estrelas vejo a sua mão				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtRnpJR1Z6ZEhKbGJHRnpJSFpsYW04Z1lTQnpkV0VnYmNPamJ5OURhV1p5WVM1d1pHWT0ucGRm
+0267	sem_louvor	✓	criar_praise	Cifra	Nas mãos de Cristo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtRnpJRzNEbzI5eklHUmxJRU55YVhOMGJ5OURhV1p5WVM1d1pHWT0ucGRm
+0269	ambiguo	✗	nao_levar	Cifra	Nesta hora de clamor		num+slug	56261d22	Pode descartar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtVnpkR0VnYUc5eVlTQmtaU0JqYkdGdGIzSXZRMmxtY21FdWNHUm0ucGRm
+026a	ambiguo	✓	manter_coldigom	Cifra	Nesta vida o servo é provado		nome+slug+classe		Manter Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtVnpkR0VnZG1sa1lTQnZJSE5sY25adklNT3BJSEJ5YjNaaFpHOHZRMmxtY21FdWNHUm0ucGRm
+026b	ambiguo	✓	(sem texto)	Partitura	No Céu Não Entra Pecado		num+slug	de35add1		QXZ1bHNvcy81ODkucGRm
+026c	sem_louvor	✓	criar_praise	Cifra	No caminho para o céu (Marcas)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOGdZMkZ0YVc1b2J5QndZWEpoSUc4Z1k4T3BkU0FvVFdGeVkyRnpLUzlEYVdaeVlTNXdaR1k9LnBkZg==
+026d	media	✓	manter_coldigom	Cifra	No exílio		nome+kind-unico	e44cc835	Manter Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOGdaWGpEcld4cGJ5OURhV1p5WVM1d1pHWT0ucGRm
+026e	sem_louvor	✓	criar_praise	Cifra	No mundo a gente chora				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOGdiWFZ1Wkc4Z1lTQm5aVzUwWlNCamFHOXlZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+026f	sem_louvor	✓	criar_praise	Cifra	Nos braços de Jesus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOXpJR0p5WWNPbmIzTWdaR1VnU21WemRYTXZRMmxtY21FdWNHUm0ucGRm
+0270	sem_louvor	✓	criar_praise	Cifra	Nos galhos secos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOXpJR2RoYkdodmN5QnpaV052Y3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0272	ambiguo	✓	nao_levar	Cifra	Nossa gratidão		num	1c73d801	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOXpjMkVnWjNKaGRHbGt3Nk52TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0274	sem_louvor	✓	criar_praise	Cifra	Nossos corações se enchem de louvor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRtOXpjMjl6SUdOdmNtSERwOE8xWlhNZ2MyVWdaVzVqYUdWdElHUmxJR3h2ZFhadmNpOURhV1p5WVM1d1pHWT0ucGRm
+0277	sem_louvor	✓	criar_praise	Cifra	Nunca me esquecerei				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRuVnVZMkVnYldVZ1pYTnhkV1ZqWlhKbGFTOURhV1p5WVM1d1pHWT0ucGRm
+0279	ambiguo	✓	(sem texto)	Partitura	Não Há Batalhas		nome	bd407d00		QXZ1bHNvcy8xMTE0LnBkZg==
+027b	media	✓	(sem texto)	Partitura	Não Sei Quando Cristo Jesus Há De Vir		num+kind-unico	9e7117f2		QXZ1bHNvcy81NzEucGRm
+027d	sem_louvor	✓	criar_praise	Cifra	Não estou só, tenho o Consolador				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJsYzNSdmRTQnp3N01zSUhSbGJtaHZJRzhnUTI5dWMyOXNZV1J2Y2k5RGFXWnlZUzV3WkdZPS5wZGY=
+027e	media	✓	manter_coldigom	Cifra	Não há Deus		nome~+classe+kind-unico	fab29e30	Manter o do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJvdzZFZ1JHVjFjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+027f	sem_louvor	✓	criar_praise	Cifra	Não há como descrever teu amor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJvdzZFZ1kyOXRieUJrWlhOamNtVjJaWElnZEdWMUlHRnRiM0l2UTJsbWNtRXVjR1JtLnBkZg==
+0280	sem_louvor	✓	criar_praise	Cifra	Não há no mundo (Não há impossível)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJvdzZFZ2JtOGdiWFZ1Wkc4Z0tFN0RvMjhnYU1PaElHbHRjRzl6YzhPdGRtVnNLUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0281	ambiguo	·	adicionar_material	Cifra	Não há o que temer		nome+slug+classe		adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJvdzZFZ2J5QnhkV1VnZEdWdFpYSXZRMmxtY21FdWNHUm0ucGRm
+0282	sem_louvor	·	criar_praise	Cifra	Não irás retroceder				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJwY3NPaGN5QnlaWFJ5YjJObFpHVnlMME5wWm5KaExuQmtaZz09LnBkZg==
+0283	sem_louvor	·	criar_praise	Cifra	Não por acaso				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJ3YjNJZ1lXTmhjMjh2UTJsbWNtRXVjR1JtLnBkZg==
+0284	sem_louvor	✓	criar_praise	Cifra	Não sei se você já ouviu falar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUJ6WldrZ2MyVWdkbTlqdzZvZ2FzT2hJRzkxZG1sMUlHWmhiR0Z5TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0285	sem_louvor	✓	criar_praise	Cifra	Não tenhas sobre ti				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUIwWlc1b1lYTWdjMjlpY21VZ2RHa3ZRMmxtY21FdWNHUm0ucGRm
+0286	media	✓	adicionar_material	Cifra	Não toqueis em nada impuro		nome+kind-unico	f9df5995	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT2pieUIwYjNGMVpXbHpJR1Z0SUc1aFpHRWdhVzF3ZFhKdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+0288	sem_louvor	·	adicionar_junto_com	Partitura	Nós Estamos Aqui (Exaltado)				adicione como choir junto com 028a	QXZ1bHNvcy8zNTYucGRm
+0289	sem_louvor	·	criar_praise	Cifra	Nós devemos estar confiantes				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlRzT3pjeUJrWlhabGJXOXpJR1Z6ZEdGeUlHTnZibVpwWVc1MFpYTXZRMmxtY21FdWNHUm0ucGRm
+028b	media	✓	manter_coldigom	Cifra	O Amigo incomparável		num+slug+kind-unico	e74885a8	manter do coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QkJiV2xuYnlCcGJtTnZiWEJoY3NPaGRtVnNMME5wWm5KaExuQmtaZz09LnBkZg==
+028d	ambiguo	✓	(sem texto)	Partitura	O Amor De Deus é Grande		num+slug			QXZ1bHNvcy82MjEucGRm
+028e	ambiguo	✓	adicionar_material	Partitura	O Anjo Do Egito		nome	37770946	Adicionar como choir	QXZ1bHNvcy82MzAucGRm
+028f	alta	✓	(sem texto)	Partitura	O Deserto		nome+hash	100b2a15		MDYxMTIwMjUvTyBEZXNlcnRvL1BhcnRpdHVyYS5wZGY=
+0290	ambiguo	✓	nao_levar	Partitura	O Deus a Quem Servimos		num+slug		Mas não precisa levar pro PLPCG	QXZ1bHNvcy82NDQucGRm
+0291	sem_louvor	·	criar_praise	Cifra	O Escudo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QkZjMk4xWkc4dlEybG1jbUV1Y0dSbS5wZGY=
+0295	media	✓	nao_levar	Partitura	O Estandarte Desta Igreja		num+kind-unico	7a513a04	Não precisa levar	QXZ1bHNvcy82NDcucGRm
+0296	media	✓	(sem texto)	Partitura	O Fim Vem!		hash-so	20d07a34		QXZ1bHNvcy9EcExJQ00gLSBPIEZpbSBWZW0gLSBDT1JPLnBkZg==
+0297	ambiguo	✓	nao_levar	Partitura	O Grande Amor do Meu Senhor		num+slug	f760faed	Não precisa levar pro Coldigom.	QXZ1bHNvcy82NjAucGRm
+0298	ambiguo	✓	(sem texto)	Partitura	O Grande Dia Está Chegando		num	663cbf81		QXZ1bHNvcy82NjUucGRm
+0299	sem_louvor	·	criar_praise	Partitura	O Jardim Onde Cristo Me Espera (Jardim de oração) (Oh Que Lindo Jardim)				Criar praise e adicionar como Choir	QXZ1bHNvcy80NDEucGRm
+029a	ambiguo	✓	nao_levar	Partitura	O Meu Viver é Cristo		num	befde552	Não precisa levar	QXZ1bHNvcy82NzEucGRm
+029b	sem_louvor	·	criar_praise	Partitura	O Que Deus Pode Fazer (Deus El Shaday)				Criar praise e adicionar como Cifra	QXZ1bHNvcy8yNTUucGRm
+029e	sem_louvor	✓	criar_praise	Partitura	O Rei Vem!				Criar praise e adicionar como Coro e piano	MDUwNDIwMjYvTyBSZWkgVmVtIS9Db3JvLnBkZg==
+029f	sem_louvor	✓	criar_praise	Cifra	O Senhor está cuidando de você				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QlRaVzVvYjNJZ1pYTjB3NkVnWTNWcFpHRnVaRzhnWkdVZ2RtOWp3Nm92UTJsbWNtRXVjR1JtLnBkZg==
+02a0	ambiguo	✗	criar_praise	Cifra	O Senhor me guarda		nome~	f5fdc84c	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QlRaVzVvYjNJZ2JXVWdaM1ZoY21SaEwwTnBabkpoTG5Ca1pnPT0ucGRm
+02a1	media	✓	manter_coldigom	Cifra	O Senhor tu és o meu pastor		num+classe+kind-unico	10b4247d	Manter o do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QlRaVzVvYjNJZ2RIVWd3Nmx6SUc4Z2JXVjFJSEJoYzNSdmNpOURhV1p5WVM1d1pHWT0ucGRm
+02a2	media	✓	(sem texto)	Partitura	O Senhor é Minha Luz (Salmo 27)		nome~+hash	7cf98f00		QXZ1bHNvcy82ODUucGRm
+02a3	media	·	adicionar_material	Cifra	O Senhor é a minha rocha		nome~+classe	3fc02b31	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QlRaVzVvYjNJZ3c2a2dZU0J0YVc1b1lTQnliMk5vWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+02a4	ambiguo	✓	(sem texto)	Partitura	O Senhor é a minha rocha		nome~+classe	3fc02b31		YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvNjkyLnBkZg
+02a5	media	✓	(sem texto)	Partitura	O Senhor é meu Pastor (Cântico de Davi)		hash-so	25d9d234		MDYxMTIwMjUvTyBTZW5ob3Igw6kgbWV1IFBhc3RvciAoQ8OibnRpY28gZGUgRGF2aSkvUGFydGl0dXJhLnBkZg==
+02a6	media	✓	(sem texto)	Partitura	O Senhor é o Meu Pastor (Salmo 23)		nome~+classe+hash	edfa2a86		QXZ1bHNvcy84NzMucGRm
+02a8	sem_louvor	·	criar_praise	Cifra	O Senhor é um guerreiro				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QlRaVzVvYjNJZ3c2a2dkVzBnWjNWbGNuSmxhWEp2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02ab	sem_louvor	·	criar_praise	Cifra	O amor de Deus não muda				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmhiVzl5SUdSbElFUmxkWE1nYnNPamJ5QnRkV1JoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02ac	ambiguo	✗	criar_praise	Cifra	O amor de Jesus		nome~	e98e145e	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmhiVzl5SUdSbElFcGxjM1Z6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02ad	faltante	·	adicionar_junto_com	Cifra	O amor do nosso Pai		num+slug	cc765216	adicionar como Cifra junto com 0524	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmhiVzl5SUdSdklHNXZjM052SUZCaGFTOURhV1p5WVM1d1pHWT0ucGRm
+02ae	media	✓	manter_coldigom	Cifra	O anjo do Egito		nome+kind-unico	37770946	Manter do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmhibXB2SUdSdklFVm5hWFJ2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02af	sem_louvor	·	criar_praise	Cifra	O bem da salvação				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmlaVzBnWkdFZ2MyRnNkbUhEcDhPamJ5OURhV1p5WVM1d1pHWT0ucGRm
+02b0	media	✗	adicionar_junto_com	Cifra	O bom Pastor		nome~	cdd78f61	adicionar como Cifra junto com 02b1	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmliMjBnVUdGemRHOXlMME5wWm5KaExuQmtaZz09LnBkZg==
+02b1	media	✓	(sem texto)	Partitura	O bom Pastor (Quero o Salvador)		nome+kind-unico	cdd78f61		QXZ1bHNvcy82MzcucGRm
+02b2	media	✓	adicionar_material	Cifra	O caminho de Sião		num+slug+kind-unico	a812fdb8	adicionar como cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmpZVzFwYm1odklHUmxJRk5wdzZOdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+02b3	sem_louvor	·	criar_praise	Cifra	O chamado				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmphR0Z0WVdSdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+02b4	sem_louvor	·	criar_praise	Cifra	O choro				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmphRzl5Ynk5RGFXWnlZUzV3WkdZPS5wZGY=
+02b5	media	✗	criar_praise	Cifra	O clamor pelo sangue de Jesus		nome~+classe+kind-unico	13a20300	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmpiR0Z0YjNJZ2NHVnNieUJ6WVc1bmRXVWdaR1VnU21WemRYTXZRMmxtY21FdWNHUm0ucGRm
+02b6	sem_louvor	✓	criar_praise	Cifra	O culto hoje vai ser maravilhoso				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmpkV3gwYnlCb2IycGxJSFpoYVNCelpYSWdiV0Z5WVhacGJHaHZjMjh2UTJsbWNtRXVjR1JtLnBkZg==
+02b7	faltante	✗	criar_praise	Cifra	O dia da vitória		nome	b4d70d09	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmthV0VnWkdFZ2RtbDB3N055YVdFdlEybG1jbUV1Y0dSbS5wZGY=
+02b8	media	✗	criar_praise	Cifra	O espírito de Deus te trouxe aqui		nome~	01a2c719	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QmxjM0REclhKcGRHOGdaR1VnUkdWMWN5QjBaU0IwY205MWVHVWdZWEYxYVM5RGFXWnlZUzV3WkdZPS5wZGY=
+02b9	sem_louvor	·	criar_praise	Cifra	O filho pródigo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5Qm1hV3hvYnlCd2NzT3paR2xuYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+02ba	sem_louvor	·	adicionar_junto_com	Cifra	O fim vem				adicionar Cifra junto com 0296	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5Qm1hVzBnZG1WdEwwTnBabkpoTG5Ca1pnPT0ucGRm
+02bb	ambiguo	✓	nao_levar	Cifra	O grande amor do meu Senhor		num+slug	f760faed	Não precisa levar pro Coldigom.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5Qm5jbUZ1WkdVZ1lXMXZjaUJrYnlCdFpYVWdVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+02bc	sem_louvor	·	criar_praise	Cifra	O maior milagre				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnRZV2x2Y2lCdGFXeGhaM0psTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02bd	sem_louvor	·	criar_praise	Cifra	O melhor lugar do mundo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnRaV3hvYjNJZ2JIVm5ZWElnWkc4Z2JYVnVaRzh2UTJsbWNtRXVjR1JtLnBkZg==
+02be	sem_louvor	·	criar_praise	Cifra	O meu Amor é Jesus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnRaWFVnUVcxdmNpRERxU0JLWlhOMWN5OURhV1p5WVM1d1pHWT0ucGRm
+02bf	sem_louvor	·	criar_praise	Cifra	O meu Jesus pode voltar agora				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnRaWFVnU21WemRYTWdjRzlrWlNCMmIyeDBZWElnWVdkdmNtRXZRMmxtY21FdWNHUm0ucGRm
+02c0	ambiguo	✓	nao_levar	Cifra	O meu viver é Cristo		num	befde552	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnRaWFVnZG1sMlpYSWd3NmtnUTNKcGMzUnZMME5wWm5KaExuQmtaZz09LnBkZg==
+02c2	sem_louvor	✓	criar_praise	Cifra	O nosso general é Cristo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnViM056YnlCblpXNWxjbUZzSU1PcElFTnlhWE4wYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+02c3	faltante	✗	criar_praise	Cifra	O novo céu		nome	9bd3c958	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnViM1p2SUdQRHFYVXZRMmxtY21FdWNHUm0ucGRm
+02c4	ambiguo	✓	nao_levar	Cifra	O que os olhos nunca viram		num	448c7d76	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnhkV1VnYjNNZ2IyeG9iM01nYm5WdVkyRWdkbWx5WVcwdlEybG1jbUV1Y0dSbS5wZGY=
+02c5	faltante	✗	criar_praise	Cifra	O rei da glória		nome	af4a335f	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QnlaV2tnWkdFZ1oyekRzM0pwWVM5RGFXWnlZUzV3WkdZPS5wZGY=
+02c6	sem_louvor	·	criar_praise	Cifra	O toque de Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlR5QjBiM0YxWlNCa1pTQkVaWFZ6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02c7	sem_louvor	·	criar_praise	Cifra	Obedecer				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQySmxaR1ZqWlhJdlEybG1jbUV1Y0dSbS5wZGY=
+02c8	sem_louvor	·	adicionar_junto_com	Partitura	Obedecer				adicionar como Choir junto com 02c7	MDUwNDIwMjYvT2JlZGVjZXIvQ29yby5wZGY=
+02c9	sem_louvor	·	criar_praise	Partitura	Obra Santa				Criar praise e adicionar como Choir	MDUwNDIwMjYvT2JyYSBTYW50YS9Db3JvLnBkZg==
+02ca	faltante	✗	criar_praise	Cifra	Obra especial		nome	f40957c4	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQySnlZU0JsYzNCbFkybGhiQzlEYVdaeVlTNXdaR1k9LnBkZg==
+02cf	media	✓	(sem texto)	Partitura	Oh Senhor vem me dirigir		nome~+classe+hash	271b3a28		QXZ1bHNvcy82MTMucGRm
+02d0	media	✓	adicionar_material	Partitura	Oh! Contemplai		num+kind-unico	ea70ec7b	Adiciona como Choir	MDUwNDIwMjYvT2ghIENvbnRlbXBsYWkgL0Nvcm8ucGRm
+02d1	sem_louvor	✓	criar_praise	Cifra	Oh! Deus aqui viemos te adorar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyZ2hJRVJsZFhNZ1lYRjFhU0IyYVdWdGIzTWdkR1VnWVdSdmNtRnlMME5wWm5KaExuQmtaZz09LnBkZg==
+02d2	sem_louvor	✓	criar_praise	Cifra	Oh! Deus triuno				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyZ2hJRVJsZFhNZ2RISnBkVzV2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02d3	sem_louvor	✓	criar_praise	Partitura	Oh! Fronte Ensanguentada				Criar praise e adicionar como Choir	MDUwNDIwMjYvT2ghIEZyb250ZSBFbnNhbmd1ZW50YWRhIC9Db3JvLnBkZg==
+02d4	ambiguo	✗	(sem texto)	Cifra	Oh! Vem adorar		nome~	63804ec5		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyZ2hJRlpsYlNCaFpHOXlZWEl2UTJsbWNtRXVjR1JtLnBkZg==
+02d5	sem_louvor	·	criar_praise	Cifra	Olha pra mim Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyeG9ZU0J3Y21FZ2JXbHRJRk5sYm1odmNpOURhV1p5WVM1d1pHWT0ucGRm
+02d6	ambiguo	✓	(sem texto)	Partitura	Olhar Unicamente Para Jesus		num+classe	7903174b		QXZ1bHNvcy83MjAucGRm
+02d7	ambiguo	·	manter_coldigom	Cifra	Olhar unicamente a Jesus		nome	7903174b	Manter o do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyeG9ZWElnZFc1cFkyRnRaVzUwWlNCaElFcGxjM1Z6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02d8	sem_louvor	·	criar_praise	Cifra	Onde está				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyNWtaU0JsYzNURG9TOURhV1p5WVM1d1pHWT0ucGRm
+02d9	faltante	·	adicionar_material	Cifra	Onde está Jesus		nome	88d3b0d4	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQyNWtaU0JsYzNURG9TQktaWE4xY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+02db	sem_louvor	✓	criar_praise	Cifra	Oração				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzSmh3NmZEbzI4dlEybG1jbUV1Y0dSbS5wZGY=
+02dc	faltante	·	adicionar_material	Cifra	Oração do pastor		nome	10c1f2b7	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzSmh3NmZEbzI4Z1pHOGdjR0Z6ZEc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+02dd	ambiguo	✓	nao_levar	Partitura	Os Céus Proclamam		num+slug		Não precisa levar	QXZ1bHNvcy83MzAucGRm
+02df	media	·	adicionar_material	Cifra	Os céus declaram a glória de Deus		nome~	54a6c7c5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzTWdZOE9wZFhNZ1pHVmpiR0Z5WVcwZ1lTQm5iTU96Y21saElHUmxJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+02e0	sem_louvor	✓	criar_praise	Cifra	Os céus manifestam				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzTWdZOE9wZFhNZ2JXRnVhV1psYzNSaGJTOURhV1p5WVM1d1pHWT0ucGRm
+02e1	ambiguo	✓	nao_levar	Cifra	Os céus proclamam		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzTWdZOE9wZFhNZ2NISnZZMnhoYldGdEwwTnBabkpoTG5Ca1pnPT0ucGRm
+02e2	media	·	manter_coldigom	Cifra	Os olhos da fé		num+slug+kind-unico	8572ab1e	manter do coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzTWdiMnhvYjNNZ1pHRWdac09wTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02e3	ambiguo	✓	nao_levar	Cifra	Os teus anjos te exaltam		num	354f6685	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzTWdkR1YxY3lCaGJtcHZjeUIwWlNCbGVHRnNkR0Z0TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+02e4	ambiguo	✓	nao_levar	Partitura	Ouve, Pois, Israel		num	8e256459	Não precisa levar	QXZ1bHNvcy83MzkucGRm
+02e5	ambiguo	✗	criar_praise	Cifra	Ouve-se a voz do Senhor		nome~	8bb2d131	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzVjJaUzF6WlNCaElIWnZlaUJrYnlCVFpXNW9iM0l2UTJsbWNtRXVjR1JtLnBkZg==
+02e6	ambiguo	✓	(sem texto)	Partitura	Ouvi Como Que a Voz		num			QXZ1bHNvcy83NDIucGRm
+02e7	ambiguo	✓	nao_levar	Cifra	Ouvi como que a voz		num		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzVjJhU0JqYjIxdklIRjFaU0JoSUhadmVpOURhV1p5WVM1d1pHWT0ucGRm
+02e9	ambiguo	✓	(sem texto)	Partitura	Ouvi, ó Céus e Falarei		num+slug			QXZ1bHNvcy83NDYucGRm
+02ea	ambiguo	·	manter_coldigom	Cifra	Ouço o som		num+slug	2c45f590	manter do coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlQzWERwMjhnYnlCemIyMHZRMmxtY21FdWNHUm0ucGRm
+02eb	sem_louvor	·	criar_praise	Cifra	Pai				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBMME5wWm5KaExuQmtaZz09LnBkZg==
+02ec	ambiguo	✓	(sem texto)	Partitura	Pai Nosso (Coro Masculino)		num			QXZ1bHNvcy8xMTMyLnBkZg==
+02ee	sem_louvor	·	criar_praise	Cifra	Pai andei distante				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBJR0Z1WkdWcElHUnBjM1JoYm5SbEwwTnBabkpoTG5Ca1pnPT0ucGRm
+02ef	sem_louvor	·	criar_praise	Cifra	Pai da vida				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBJR1JoSUhacFpHRXZRMmxtY21FdWNHUm0ucGRm
+02f0	sem_louvor	·	criar_praise	Cifra	Pai nosso				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBJRzV2YzNOdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+02f1	sem_louvor	·	criar_praise	Cifra	Pai reunidos estamos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBJSEpsZFc1cFpHOXpJR1Z6ZEdGdGIzTXZRMmxtY21FdWNHUm0ucGRm
+02f2	media	✓	(sem texto)	Partitura	Pai, Reunidos Estamos (Aleluia Ao Cordeiro)		hash-so	8dc296fa		QXZ1bHNvcy8wNzYucGRm
+02f3	sem_louvor	·	criar_praise	Cifra	Pai, que tua luz				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBMQ0J4ZFdVZ2RIVmhJR3gxZWk5RGFXWnlZUzV3WkdZPS5wZGY=
+02f4	ambiguo	✗	criar_praise	Cifra	Pai, quem me dera		nome~	94262c10	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnBMQ0J4ZFdWdElHMWxJR1JsY21FdlEybG1jbUV1Y0dSbS5wZGY=
+02f5	sem_louvor	·	criar_praise	Cifra	Palavras				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnNZWFp5WVhNdlEybG1jbUV1Y0dSbS5wZGY=
+02f6	sem_louvor	·	criar_praise	Cifra	Para sempre te amarei				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnlZU0J6Wlcxd2NtVWdkR1VnWVcxaGNtVnBMME5wWm5KaExuQmtaZz09LnBkZg==
+02f7	sem_louvor	·	criar_praise	Cifra	Passarão, passarei				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRnpjMkZ5dzZOdkxDQndZWE56WVhKbGFTOURhV1p5WVM1d1pHWT0ucGRm
+02f8	media	·	criar_praise	Partitura	Pastor De Israel (Pai Que Estás No Céu)		hash-so	797e9106	Criar praise e adicionar como Cifra	QXZ1bHNvcy82MDYucGRm
+02f9	sem_louvor	·	criar_praise	Cifra	Paz lhe deixarei				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHRjZJR3hvWlNCa1pXbDRZWEpsYVM5RGFXWnlZUzV3WkdZPS5wZGY=
+02fa	ambiguo	·	nao_levar	Cifra	Pega tua parte		nome~	719dcabc	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVm5ZU0IwZFdFZ2NHRnlkR1V2UTJsbWNtRXVjR1JtLnBkZg==
+02fb	sem_louvor	·	adicionar_junto_com	Partitura	Pegue a tua parte				adiciona como Choir junto com 02fa	MzAxMDIwMjUvUGVndWUgYSB0dWEgcGFydGUgLSBWb2NhbC5wZGY=
+02fd	ambiguo	·	nao_levar	Partitura	Pelas Maravilhas		nome	99aa7749	Não precisa levar	QXZ1bHNvcy83NTkucGRm
+02fe	media	·	nao_levar	Cifra	Pelas maravilhas		nome+kind-unico	99aa7749	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVnNZWE1nYldGeVlYWnBiR2hoY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0300	faltante	·	adicionar_material	Cifra	Pelo vale escuro		nome	5d6e4bc5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVnNieUIyWVd4bElHVnpZM1Z5Ynk5RGFXWnlZUzV3WkdZPS5wZGY=
+0301	media	·	adicionar_material	Partitura	Pendurado no Madeiro		nome+kind-unico	195a6eec	adicionar como choir	QXZ1bHNvcy83NjQucGRm
+0302	faltante	·	adicionar_material	Cifra	Pendurado no madeiro		nome	195a6eec	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVnVaSFZ5WVdSdklHNXZJRzFoWkdWcGNtOHZRMmxtY21FdWNHUm0ucGRm
+0303	media	·	nao_levar	Cifra	Perante a Tua grandeza		num+slug+kind-unico	7af3cf4e	não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVnlZVzUwWlNCaElGUjFZU0JuY21GdVpHVjZZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0306	ambiguo	✓	(sem texto)	Partitura	Perfeito Amor Eu Conheci		num	b2d48a69		QXZ1bHNvcy83NjcucGRm
+0307	sem_louvor	·	criar_praise	Cifra	Pertences a mim				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVnlkR1Z1WTJWeklHRWdiV2x0TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0308	ambiguo	✗	criar_praise	Cifra	Perto quero estar		nome~	8bcd44ec	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHVnlkRzhnY1hWbGNtOGdaWE4wWVhJdlEybG1jbUV1Y0dSbS5wZGY=
+0309	media	·	nao_levar	Cifra	Pilares de um cristão		nome+kind-unico	5e2371e3	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHbHNZWEpsY3lCa1pTQjFiU0JqY21semRNT2pieTlEYVdaeVlTNXdaR1k9LnBkZg==
+030a	media	✓	(sem texto)	Partitura	Por Onde Quer Que Tu Fores (Cântico De Rute)		hash-so	6e4ae024		QXZ1bHNvcy83NzAucGRm
+030b	sem_louvor	✓	criar_praise	Cifra	Por entre os caminhos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHOXlJR1Z1ZEhKbElHOXpJR05oYldsdWFHOXpMME5wWm5KaExuQmtaZz09LnBkZg==
+030c	sem_louvor	·	criar_praise	Cifra	Por mim (ele deu a sua vida)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHOXlJRzFwYlNBb1pXeGxJR1JsZFNCaElITjFZU0IyYVdSaEtTOURhV1p5WVM1d1pHWT0ucGRm
+030d	sem_louvor	·	criar_praise	Cifra	Por minha vida				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHOXlJRzFwYm1oaElIWnBaR0V2UTJsbWNtRXVjR1JtLnBkZg==
+030e	media	·	manter_coldigom	Cifra	Por nossa Pátria oramos		nome+kind-unico	1a503574	Manter do coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHOXlJRzV2YzNOaElGRERvWFJ5YVdFZ2IzSmhiVzl6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+030f	ambiguo	✗	criar_praise	Cifra	Por onde quer que tu fores		nome~	9071f63a	Criar praise e adicionar como Cifra e colocar junto com 030a	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHOXlJRzl1WkdVZ2NYVmxjaUJ4ZFdVZ2RIVWdabTl5WlhNdlEybG1jbUV1Y0dSbS5wZGY=
+0310	sem_louvor	✓	criar_praise	Partitura	Porque Deus Ama				Criar praise e adicionar como Choir	MTIwNDIwMjYvUG9ycXVlIERldXMgQW1hL0Nvcm8ucGRm
+0311	sem_louvor	·	criar_praise	Cifra	Povo escolhido				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVHOTJieUJsYzJOdmJHaHBaRzh2UTJsbWNtRXVjR1JtLnBkZg==
+0312	sem_louvor	·	criar_praise	Cifra	Pra Deus você é especial				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISmhJRVJsZFhNZ2RtOWp3Nm9ndzZrZ1pYTndaV05wWVd3dlEybG1jbUV1Y0dSbS5wZGY=
+0313	sem_louvor	·	criar_praise	Cifra	Pra teu louvor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISmhJSFJsZFNCc2IzVjJiM0l2UTJsbWNtRXVjR1JtLnBkZg==
+0314	sem_louvor	✓	nao_levar	Partitura	Preciosa graça de Jesus				Não precisa levar	MzAxMDIwMjUvUHJlY2lvc2EgZ3JhY8ynYSBkZSBKZXN1cyAoVCZGIFYpIC0gVm9jYWwgLTE2IDEwIDIwMjUtLnBkZg==
+0315	media	✓	adicionar_material	Cifra	Preciosa graça de Jesus		nome~	4271e4be	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISmxZMmx2YzJFZ1ozSmh3NmRoSUdSbElFcGxjM1Z6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0316	media	✓	adicionar_material	Partitura	Preciosa graça de Jesus		nome~+kind-unico	4271e4be	adicionar como Choir	MjYxMTIwMjUvUHJlY2lvc2EgZ3Jhw6dhIGRlIEplc3VzLnBkZg==
+0318	media	·	nao_levar	Cifra	Prepara-te, ó Israel		nome+kind-unico	e3b7e2b8	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISmxjR0Z5WVMxMFpTd2d3N01nU1hOeVlXVnNMME5wWm5KaExuQmtaZz09LnBkZg==
+0319	ambiguo	✓	adicionar_material	Partitura	Prepara-te, ó Israel		nome	e3b7e2b8	adicionar como Choir	QXZ1bHNvcy83NzQucGRm
+031d	media	·	nao_levar	Cifra	Primeiro quero ver		nome~+kind-unico	55224844	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISnBiV1ZwY204Z2NYVmxjbThnZG1WeUwwTnBabkpoTG5Ca1pnPT0ucGRm
+031f	sem_louvor	·	criar_praise	Cifra	Proclamamos tua glória				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISnZZMnhoYldGdGIzTWdkSFZoSUdkc3c3TnlhV0V2UTJsbWNtRXVjR1JtLnBkZg==
+0321	faltante	·	adicionar_material	Cifra	Proclame a glória do Senhor		nome	5240e81d	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISnZZMnhoYldVZ1lTQm5iTU96Y21saElHUnZJRk5sYm1odmNpOURhV1p5WVM1d1pHWT0ucGRm
+0322	sem_louvor	·	criar_praise	Cifra	Profecia				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISnZabVZqYVdFdlEybG1jbUV1Y0dSbS5wZGY=
+0323	sem_louvor	·	criar_praise	Cifra	Promessas				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVISnZiV1Z6YzJGekwwTnBabkpoTG5Ca1pnPT0ucGRm
+0324	ambiguo	✓	manter_coldigom	Partitura	Pátria Minha		num	9d807e22	Manter do Coldigom	QXZ1bHNvcy83NDkucGRm
+0325	media	·	nao_levar	Cifra	Pés divinos		num+slug+kind-unico	982df145	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVNT3BjeUJrYVhacGJtOXpMME5wWm5KaExuQmtaZz09LnBkZg==
+0326	faltante	✓	adicionar_material	Cifra	Põe-me como selo		nome	072836e3	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVNTzFaUzF0WlNCamIyMXZJSE5sYkc4dlEybG1jbUV1Y0dSbS5wZGY=
+0327	media	✓	nao_levar	Cifra	Qual foi o preço		num+slug+kind-unico	da714e15	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhiQ0JtYjJrZ2J5QndjbVhEcDI4dlEybG1jbUV1Y0dSbS5wZGY=
+0328	media	·	nao_levar	Cifra	Quando Jesus aparecer		nome~+kind-unico	c939aee1	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUVwbGMzVnpJR0Z3WVhKbFkyVnlMME5wWm5KaExuQmtaZz09LnBkZg==
+032d	ambiguo	✓	(sem texto)	Partitura	Quando a Angústia Vem (As Lágrimas Falam)		nome~	56bf97bb		QXZ1bHNvcy83OTgucGRm
+032f	media	✓	adicionar_junto_com	Cifra	Quando ao fim da jornada		nome~	2d1172c2	adicionar como Cifra junto com 0330	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUdGdklHWnBiU0JrWVNCcWIzSnVZV1JoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0331	media	·	nao_levar	Cifra	Quando chego em tua casa		nome+kind-unico	2e095bcf	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUdOb1pXZHZJR1Z0SUhSMVlTQmpZWE5oTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0332	faltante	✓	adicionar_junto_com	Cifra	Quando dobro os joelhos		nome	226312d1	adicionar como Cifra junto com 0334	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUdSdlluSnZJRzl6SUdwdlpXeG9iM012UTJsbWNtRXVjR1JtLnBkZg==
+0333	media	✓	nao_levar	Cifra	Quando entrei neste lugar		num+slug+kind-unico	fc0473b4	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUdWdWRISmxhU0J1WlhOMFpTQnNkV2RoY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+0334	media	✓	(sem texto)	Partitura	Quando eu Tenho Sede de Ti (Quando Dobro os Joelhos)		hash-so	226312d1		QXZ1bHNvcy84MDIucGRm
+0335	media	✗	criar_praise	Cifra	Quando eu te conheci		nome~+kind-unico	c1d4be1f	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUdWMUlIUmxJR052Ym1obFkya3ZRMmxtY21FdWNHUm0ucGRm
+0336	media	✓	adicionar_material	Cifra	Quando o Senhor me convocou		nome~	1eb43d94	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUc4Z1UyVnVhRzl5SUcxbElHTnZiblp2WTI5MUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0337	media	✗	criar_praise	Partitura	Quando o Senhor me convocou		nome~	1eb43d94	Criar praise e adicionar como Choir e tag PES e Avulsos	YXNzZXRzL1BFUy9RdWFuZG8gbyBTZW5ob3IgTWUgQ29udm9jb3UgLSBDb3JvLnBkZg
+0338	sem_louvor	·	criar_praise	Cifra	Quando o meu Senhor voltar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUc4Z2JXVjFJRk5sYm1odmNpQjJiMngwWVhJdlEybG1jbUV1Y0dSbS5wZGY=
+0339	sem_louvor	·	criar_praise	Cifra	Quando os sonhos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUc5eklITnZibWh2Y3k5RGFXWnlZUzV3WkdZPS5wZGY=
+033a	ambiguo	✓	nao_levar	Cifra	Quando será		num	951b5c66	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUhObGNzT2hMME5wWm5KaExuQmtaZz09LnBkZg==
+033b	media	·	adicionar_material	Cifra	Quando só me encontrar		nome~	f95e3070	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUhQRHN5QnRaU0JsYm1OdmJuUnlZWEl2UTJsbWNtRXVjR1JtLnBkZg==
+033c	sem_louvor	·	criar_praise	Cifra	Quando vivias tão longe de mim				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhibVJ2SUhacGRtbGhjeUIwdzZOdklHeHZibWRsSUdSbElHMXBiUzlEYVdaeVlTNXdaR1k9LnBkZg==
+033e	media	✓	(sem texto)	Partitura	Quanto Anseio Encontrar Jesus (Feridas)		hash-so	1a70bc66		QXZ1bHNvcy8xMDg5LnBkZg==
+033f	media	·	manter_coldigom	Cifra	Quanto tempo faz que você não ora		nome~+kind-unico	0093e325	Manter a do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmhiblJ2SUhSbGJYQnZJR1poZWlCeGRXVWdkbTlqdzZvZ2JzT2pieUJ2Y21FdlEybG1jbUV1Y0dSbS5wZGY=
+0341	sem_louvor	·	descartar	Partitura	Quarteto				excluir esse material, pois está em branco.	QXZ1bHNvcy8xMDU3LnBkZg==
+0343	media	✓	nao_levar	Partitura	Que Consolação		num+kind-unico	cff4104a	Não precisa levar	QXZ1bHNvcy84MjgucGRm
+0344	media	✓	(sem texto)	Partitura	Que Deus Te Abençoe (Bênção)		hash-so	f3d663c5		QXZ1bHNvcy8xMzUucGRm
+0346	ambiguo	✓	(sem texto)	Partitura	Que Grande Reunião (Jesus De Nazaré)		nome~	7c97e525		QXZ1bHNvcy8xMTAzLnBkZg==
+0348	faltante	·	adicionar_material	Cifra	Que amor é esse		nome	291c4e65	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxJR0Z0YjNJZ3c2a2daWE56WlM5RGFXWnlZUzV3WkdZPS5wZGY=
+0349	sem_louvor	·	criar_praise	Cifra	Que dia feliz				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxJR1JwWVNCbVpXeHBlaTlEYVdaeVlTNXdaR1k9LnBkZg==
+034a	sem_louvor	·	criar_praise	Cifra	Que diremos pois				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxJR1JwY21WdGIzTWdjRzlwY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+034b	sem_louvor	·	criar_praise	Cifra	Que o amor cresça sempre				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxJRzhnWVcxdmNpQmpjbVZ6dzZkaElITmxiWEJ5WlM5RGFXWnlZUzV3WkdZPS5wZGY=
+034c	sem_louvor	·	criar_praise	Cifra	Que o amor perdure sempre				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxJRzhnWVcxdmNpQndaWEprZFhKbElITmxiWEJ5WlM5RGFXWnlZUzV3WkdZPS5wZGY=
+034d	ambiguo	✓	(sem texto)	Partitura	Quem Sou Eu Senhor (Vaso de Alabastro)		nome	855aef91		QXZ1bHNvcy84NDcucGRm
+0350	sem_louvor	·	criar_praise	Cifra	Quem pode livrar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0J3YjJSbElHeHBkbkpoY2k5RGFXWnlZUzV3WkdZPS5wZGY=
+0351	sem_louvor	·	criar_praise	Cifra	Quem sabe				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0J6WVdKbEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0352	ambiguo	✓	nao_levar	Cifra	Quem sou eu Senhor		num	fb940dbd	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0J6YjNVZ1pYVWdVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0353	media	·	manter_coldigom	Cifra	Quem sou eu, Senhor		nome+kind-unico	855aef91	manter a versão do Coldigom	YXNzZXRzL0F2dWxzb3MgRGl2ZXJzb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0J6YjNVZ1pYVXNJRk5sYm1odmNpOURhV1p5WVM1d1pHWT0ucGRm
+0354	ambiguo	✓	(sem texto)	Partitura	Quem sou eu, Senhor (Vaso de Alabastro)		nome	855aef91		QXZ1bHNvcy9EcExJQ00gLSBRdWVtIHNvdSBldSBTZW5ob3IgKFZhc28gZGUgQWxhYmFzdHJvKSAtIENPUk8ucGRm
+0355	faltante	✓	adicionar_material	Cifra	Quem são estes de brancos vestidos		nome	f8be77a5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0J6dzZOdklHVnpkR1Z6SUdSbElHSnlZVzVqYjNNZ2RtVnpkR2xrYjNNdlEybG1jbUV1Y0dSbS5wZGY=
+035a	media	✓	adicionar_material	Cifra	Quem é este povo		nome~	618185ad	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0REcVNCbGMzUmxJSEJ2ZG04dlEybG1jbUV1Y0dSbS5wZGY=
+035b	sem_louvor	·	criar_praise	Cifra	Quem é este que vem com suas vestes				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxiU0REcVNCbGMzUmxJSEYxWlNCMlpXMGdZMjl0SUhOMVlYTWdkbVZ6ZEdWekwwTnBabkpoTG5Ca1pnPT0ucGRm
+035c	sem_louvor	✓	criar_praise	Partitura	Queres saber como ao céu chegar (Jesus é a porta)				Criar praise e adicionar como Choir	MDYxMTIwMjUvUXVlcmVzIHNhYmVyIGNvbW8gYW8gY8OpdSBjaGVnYXIgKEplc3VzIMOpIGEgcG9ydGEpL1BhcnRpdHVyYS5wZGY=
+035d	media	✓	(sem texto)	Partitura	Quero Buscar (Ó Senhor, Vem Me Dirigir)		hash-so	be318f97		QXZ1bHNvcy8xMTMwLnBkZg==
+035e	ambiguo	✗	criar_praise	Cifra	Quero amar-te		nome~	22261c8e	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxjbThnWVcxaGNpMTBaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+035f	sem_louvor	·	criar_praise	Cifra	Quero buscar e pedir ao Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxjbThnWW5WelkyRnlJR1VnY0dWa2FYSWdZVzhnVTJWdWFHOXlMME5wWm5KaExuQmtaZz09LnBkZg==
+0360	sem_louvor	·	criar_praise	Cifra	Quero crer				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYVmxjbThnWTNKbGNpOURhV1p5WVM1d1pHWT0ucGRm
+0363	ambiguo	✓	(sem texto)	Partitura	Quão Grande Amor (Vigiai)		nome	de8cc0a9		QXZ1bHNvcy83OTIucGRm
+0364	faltante	·	adicionar_junto_com	Cifra	Quão grande amor		nome	834d467b	adicionar como Cifra junto com 0363	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYWERvMjhnWjNKaGJtUmxJR0Z0YjNJdlEybG1jbUV1Y0dSbS5wZGY=
+0365	sem_louvor	·	criar_praise	Cifra	Quão grande é o meu Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYWERvMjhnWjNKaGJtUmxJTU9wSUc4Z2JXVjFJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+0366	sem_louvor	·	criar_praise	Cifra	Quão sublime é este amor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVYWERvMjhnYzNWaWJHbHRaU0REcVNCbGMzUmxJR0Z0YjNJdlEybG1jbUV1Y0dSbS5wZGY=
+0367	media	✓	(sem texto)	Partitura	Recebi de ti, Senhor (Abba Pai)		hash-so	ea7992fd		MDYxMTIwMjUvUmVjZWJpIGRlIHRpLCBTZW5ob3IgKEFiYmEgUGFpKS9QYXJ0aXR1cmEucGRm
+0369	media	✓	(sem texto)	Partitura	Refúgio Verdadeiro		nome+kind-unico	877c38e8		QXZ1bHNvcy84NTMucGRm
+036a	faltante	✓	adicionar_material	Cifra	Refúgio verdadeiro		nome	877c38e8	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVm13N3BuYVc4Z2RtVnlaR0ZrWldseWJ5OURhV1p5WVM1d1pHWT0ucGRm
+036b	ambiguo	✓	nao_levar	Cifra	Regozijai-vos		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVm5iM3BwYW1GcExYWnZjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+036c	ambiguo	✓	(sem texto)	Partitura	Regozijai-vos		num+slug			QXZ1bHNvcy84NTYucGRm
+036d	sem_louvor	·	criar_praise	Cifra	Reina o Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVnBibUVnYnlCVFpXNW9iM0l2UTJsbWNtRXVjR1JtLnBkZg==
+036e	sem_louvor	·	criar_praise	Cifra	Renova-me				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVnViM1poTFcxbEwwTnBabkpoTG5Ca1pnPT0ucGRm
+036f	ambiguo	✗	criar_praise	Cifra	Resgatado fui		nome~	b4bd5cf7	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVnpaMkYwWVdSdklHWjFhUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0370	ambiguo	·	nao_levar	Cifra	Resplandece oh Jerusalém		nome~+classe		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVnpjR3hoYm1SbFkyVWdiMmdnU21WeWRYTmhiTU9wYlM5RGFXWnlZUzV3WkdZPS5wZGY=
+0372	faltante	·	adicionar_junto_com	Cifra	Restaura		nome	c3e05813	adicionar como Cifra junto com 0373	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVnpkR0YxY21FdlEybG1jbUV1Y0dSbS5wZGY=
+0374	sem_louvor	·	criar_praise	Cifra	Revelação de Jesus Cristo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtVjJaV3hodzZmRG8yOGdaR1VnU21WemRYTWdRM0pwYzNSdkwwTnBabkpoTG5Ca1pnPT0ucGRm
+0375	ambiguo	✓	manter_coldigom	Cifra	Rocha Eterna		num	81df3c3f	Mantenha do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtOWphR0VnUlhSbGNtNWhMME5wWm5KaExuQmtaZz09LnBkZg==
+0376	media	✓	nao_levar	Partitura	Rochedo Forte		num+kind-unico	4b2e3055	Não precisa levar	QXZ1bHNvcy84NjcucGRm
+0377	sem_louvor	·	criar_praise	Cifra	Rompendo em fé				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtOXRjR1Z1Wkc4Z1pXMGdac09wTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0378	media	·	manter_coldigom	Cifra	Rosa vermelha		num+slug+kind-unico	4f3375f0	Manter a versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlVtOXpZU0IyWlhKdFpXeG9ZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0379	media	·	nao_levar	Cifra	Sabe filho		num+slug+kind-unico	02509208	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRmlaU0JtYVd4b2J5OURhV1p5WVM1d1pHWT0ucGRm
+037a	faltante	·	adicionar_material	Cifra	Salmo 150		nome	5000de1f	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnNiVzhnTVRVd0wwTnBabkpoTG5Ca1pnPT0ucGRm
+037b	media	✓	(sem texto)	Partitura	Salmo 150		nome+kind-unico	5000de1f		QXZ1bHNvcy84OTYucGRm
+037d	ambiguo	✓	(sem texto)	Partitura	Salmo 91		num+slug	9bc8bfee		QXZ1bHNvcy84ODkucGRm
+037f	media	✗	criar_praise	Cifra	Salmos 23 (O Senhor é o meu Pastor)		nome~+classe	edfa2a86	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnNiVzl6SURJeklDaFBJRk5sYm1odmNpRERxU0J2SUcxbGRTQlFZWE4wYjNJcEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0380	sem_louvor	·	criar_praise	Cifra	Salmos 23 (Poesia de Davi)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnNiVzl6SURJeklDaFFiMlZ6YVdFZ1pHVWdSR0YyYVNrdlEybG1jbUV1Y0dSbS5wZGY=
+0381	media	✗	criar_praise	Cifra	Salmus (Eu cantarei ao meu Senhor)		nome~	9c0124bd	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnNiWFZ6SUNoRmRTQmpZVzUwWVhKbGFTQmhieUJ0WlhVZ1UyVnVhRzl5S1M5RGFXWnlZUzV3WkdZPS5wZGY=
+0382	media	✓	(sem texto)	Partitura	Salvo de Graça		nome+kind-unico	b0995ded		QXZ1bHNvcy85MDYucGRm
+0383	faltante	✓	adicionar_material	Cifra	Salvo de graça		nome	b0995ded	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnNkbThnWkdVZ1ozSmh3NmRoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0384	sem_louvor	✓	criar_praise	Cifra	Sangue precioso				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnVaM1ZsSUhCeVpXTnBiM052TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0385	faltante	✓	adicionar_material	Cifra	Sansão		nome	d04f0ed9	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnVjOE9qYnk5RGFXWnlZUzV3WkdZPS5wZGY=
+0386	media	✓	adicionar_material	Partitura	Sansão		nome+kind-unico	d04f0ed9	Adicionar como Choir	QXZ1bHNvcy85MDcucGRm
+0387	faltante	✓	adicionar_material	Cifra	Santo Deus dos exércitos		nome	6539ebdf	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnVkRzhnUkdWMWN5QmtiM01nWlhqRHFYSmphWFJ2Y3k5RGFXWnlZUzV3WkdZPS5wZGY=
+0389	ambiguo	✗	criar_praise	Cifra	Santo é Senhor		nome~+classe	dbf57c8c	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyRnVkRzhndzZrZ1UyVnVhRzl5TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+038a	media	✓	adicionar_material	Partitura	Santo é Seu Nome		num+kind-unico	5ffc1838	Crie esse material kind como Choir	QXZ1bHNvcy85MTEucGRm
+038b	media	✓	(sem texto)	Partitura	Santo, Deus dos exércitos		nome+kind-unico	6539ebdf		QXZ1bHNvcy85MTQucGRm
+038d	ambiguo	✓	adicionar_material	Partitura	Saudai o Nome de Jesus		num	c2c678ad	Adicionar como Choir	MjYxMTIwMjUvU2F1ZGFpIG8gTm9tZSBkZSBKZXN1cy5wZGY=
+038e	media	✓	(sem texto)	Partitura	Se Da Vida As Vagas (Conta As Bênçãos)		hash-so	623dc416		QXZ1bHNvcy8xOTMucGRm
+038f	sem_louvor	·	criar_praise	Cifra	Se Jesus não morresse				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdTbVZ6ZFhNZ2JzT2pieUJ0YjNKeVpYTnpaUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0393	ambiguo	✗	criar_praise	Cifra	Se as ondas		nome~	42663e2f	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdZWE1nYjI1a1lYTXZRMmxtY21FdWNHUm0ucGRm
+0394	faltante	✓	adicionar_material	Cifra	Se confessarmos		num+slug	ffad139d	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdZMjl1Wm1WemMyRnliVzl6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0395	ambiguo	✗	criar_praise	Cifra	Se confiares no Senhor		nome~	d4ea440a	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdZMjl1Wm1saGNtVnpJRzV2SUZObGJtaHZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+0396	sem_louvor	·	criar_praise	Cifra	Se eu disser que para mim				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdaWFVnWkdsemMyVnlJSEYxWlNCd1lYSmhJRzFwYlM5RGFXWnlZUzV3WkdZPS5wZGY=
+0397	sem_louvor	·	criar_praise	Cifra	Se na luta estiver				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdibUVnYkhWMFlTQmxjM1JwZG1WeUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0398	media	✓	manter_coldigom	Cifra	Se tua alma alegre está (cante aleluia)		nome~+kind-unico	21687b60	Manter o do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdkSFZoSUdGc2JXRWdZV3hsWjNKbElHVnpkTU9oSUNoallXNTBaU0JoYkdWc2RXbGhLUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0399	sem_louvor	·	criar_praise	Cifra	Se você chegou até aqui				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVWdkbTlqdzZvZ1kyaGxaMjkxSUdGMHc2a2dZWEYxYVM5RGFXWnlZUzV3WkdZPS5wZGY=
+039a	sem_louvor	·	criar_praise	Cifra	Sei que em Deus, eu posso confiar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnBJSEYxWlNCbGJTQkVaWFZ6TENCbGRTQndiM056YnlCamIyNW1hV0Z5TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+039b	sem_louvor	·	criar_praise	Cifra	Sei que um dia				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnBJSEYxWlNCMWJTQmthV0V2UTJsbWNtRXVjR1JtLnBkZg==
+039c	media	✓	(sem texto)	Cifra	Sei que és fiel		nome~	a0634012		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnBJSEYxWlNERHFYTWdabWxsYkM5RGFXWnlZUzV3WkdZPS5wZGY=
+039d	sem_louvor	·	criar_praise	Cifra	Seja bendito				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnFZU0JpWlc1a2FYUnZMME5wWm5KaExuQmtaZz09LnBkZg==
+039e	ambiguo	✓	adicionar_material	Partitura	Sempre Imaginei Em Minha Vida		nome	2b4f6431	adicionar como choir	QXZ1bHNvcy85MjAucGRm
+039f	media	✓	(sem texto)	Cifra	Sempre imaginei		nome~+kind-unico	2b4f6431		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnRjSEpsSUdsdFlXZHBibVZwTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+03a0	ambiguo	✓	(sem texto)	Partitura	Sempre imaginei em minha vida		nome	2b4f6431		QXZ1bHNvcy9EcExJQ00gLSBTZW1wcmUgSW1hZ2luZWkgZW0gTWluaGEgVmlkYSAtIENPUk8ucGRm
+03a1	ambiguo	✓	nao_levar	Cifra	Sempre que quiseres falarei contigo		num	42bb3271	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnRjSEpsSUhGMVpTQnhkV2x6WlhKbGN5Qm1ZV3hoY21WcElHTnZiblJwWjI4dlEybG1jbUV1Y0dSbS5wZGY=
+03a2	ambiguo	✓	nao_levar	Cifra	Sempre vou lembrar		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnRjSEpsSUhadmRTQnNaVzFpY21GeUwwTnBabkpoTG5Ca1pnPT0ucGRm
+03a3	media	✓	(sem texto)	Partitura	Senhor, Nosso Deus Majestoso é Teu Nome		hash-so	42892f8a		QXZ1bHNvcy81MzcucGRm
+03a4	ambiguo	✓	(sem texto)	Partitura	Senhor, Tu Me Sondaste e Me Conheces (Asas Da Alva) (Salmo 139)		nome~	4fea5632		QXZ1bHNvcy8xMjIucGRm
+03a5	ambiguo	✓	adicionar_material	Partitura	Senhor, meu Deus, quando eu maravilhado		num+slug	13620534	adicionar como choir	MjYxMTIwMjUvU2VuaG9yLCBtZXUgRGV1cywgcXVhbmRvIGV1IG1hcmF2aWxoYWRvLnBkZg==
+03a6	ambiguo	✓	nao_levar	Cifra	Senhor, quem são aqueles		num	591bf454	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnVhRzl5TENCeGRXVnRJSFBEbzI4Z1lYRjFaV3hsY3k5RGFXWnlZUzV3WkdZPS5wZGY=
+03a7	sem_louvor	✓	criar_praise	Cifra	Senhor, renova a minha fé				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnVhRzl5TENCeVpXNXZkbUVnWVNCdGFXNW9ZU0JtdzZrdlEybG1jbUV1Y0dSbS5wZGY=
+03a9	media	✓	adicionar_junto_com	Cifra	Senhor, tu me sondaste e me conheces		nome~	4fea5632	sdicionar como Cifra junto com 03a4	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnVhRzl5TENCMGRTQnRaU0J6YjI1a1lYTjBaU0JsSUcxbElHTnZibWhsWTJWekwwTnBabkpoTG5Ca1pnPT0ucGRm
+03aa	sem_louvor	·	criar_praise	Cifra	Servo devedor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyVnlkbThnWkdWMlpXUnZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+03ac	ambiguo	✓	(sem texto)	Partitura	Sete Castiçais		num+slug			QXZ1bHNvcy85NDEucGRm
+03ad	media	✓	(sem texto)	Cifra	Shekinah		num+slug+kind-unico	ccdb8cee		QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyaGxhMmx1WVdndlEybG1jbUV1Y0dSbS5wZGY=
+03ae	faltante	✗	criar_praise	Partitura	Sobe aqui		nome	379f6708	Criar praise e adicionar como Choir	MzAxMDIwMjUvU29iZSBhcXVpIFsyNi0wNy0yMDI1XSAtIENvcm8ucGRm
+03af	ambiguo	✓	(sem texto)	Partitura	Socorre-me, Senhor		nome+slug			QXZ1bHNvcy9FTERNMDQyMDI1IC0gU29jb3JyZS1tZSwgU2VuaG9yIC0gQ29yby5wZGY=
+03b0	sem_louvor	·	criar_praise	Cifra	Sol da Justiça				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyOXNJR1JoSUVwMWMzUnB3NmRoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+03b1	sem_louvor	·	criar_praise	Cifra	Somente a Ti				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyOXRaVzUwWlNCaElGUnBMME5wWm5KaExuQmtaZz09LnBkZg==
+03b2	sem_louvor	·	criar_praise	Cifra	Somente agradecer				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyOXRaVzUwWlNCaFozSmhaR1ZqWlhJdlEybG1jbUV1Y0dSbS5wZGY=
+03b3	ambiguo	✓	(sem texto)	Partitura	Somos Teu Povo, Tua Igreja		num+slug			QXZ1bHNvcy85NTYucGRm
+03b5	ambiguo	✓	manter_coldigom	Cifra	Somos teu povo		num+slug		Mantenha do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyOXRiM01nZEdWMUlIQnZkbTh2UTJsbWNtRXVjR1JtLnBkZg==
+03b6	faltante	✗	criar_praise	Cifra	Somos um		nome	cdd4fa30	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUyOXRiM01nZFcwdlEybG1jbUV1Y0dSbS5wZGY=
+03ba	media	✓	(sem texto)	Partitura	Supremo Deus (Digno De Louvor)		hash-so	93daedc3		QXZ1bHNvcy8yNzYucGRm
+03bb	sem_louvor	·	adicionar_junto_com	Cifra	Supremo Deus, meu Pai Eterno				adicionar como Cifra junto com 03ba	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlUzVndjbVZ0YnlCRVpYVnpMQ0J0WlhVZ1VHRnBJRVYwWlhKdWJ5OURhV1p5WVM1d1pHWT0ucGRm
+03bc	media	✓	(sem texto)	Partitura	São tantas aflições (Creia)		hash-so	1fe455a8		MDYxMTIwMjUvU8OjbyB0YW50YXMgYWZsacOnw7VlcyAoQ3JlaWEpL1BhcnRpdHVyYS5wZGY=
+03be	media	✓	(sem texto)	Partitura	Só a Cruz Lá Do Calvário (O Amor Do Calvário)		hash-so	8284aaae		QXZ1bHNvcy82MjYucGRm
+03bf	sem_louvor	·	criar_praise	Cifra	Só de ouvir tua voz				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlU4T3pJR1JsSUc5MWRtbHlJSFIxWVNCMmIzb3ZRMmxtY21FdWNHUm0ucGRm
+03c0	faltante	·	adicionar_material	Cifra	Só em Jesus		nome	a0ee8546	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlU4T3pJR1Z0SUVwbGMzVnpMME5wWm5KaExuQmtaZz09LnBkZg==
+03c1	sem_louvor	·	criar_praise	Cifra	Só o Teu nome elevo, ó Deus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlU4T3pJRzhnVkdWMUlHNXZiV1VnWld4bGRtOHNJTU96SUVSbGRYTXZRMmxtY21FdWNHUm0ucGRm
+03c2	ambiguo	✗	criar_praise	Cifra	Só o poder do sangue de Jesus		nome~	e4156019	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlU4T3pJRzhnY0c5a1pYSWdaRzhnYzJGdVozVmxJR1JsSUVwbGMzVnpMME5wWm5KaExuQmtaZz09LnBkZg==
+03c3	sem_louvor	·	criar_praise	Cifra	Súplica (quando sinto a tristeza chegar)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlU4TzZjR3hwWTJFZ0tIRjFZVzVrYnlCemFXNTBieUJoSUhSeWFYTjBaWHBoSUdOb1pXZGhjaWt2UTJsbWNtRXVjR1JtLnBkZg==
+03c4	sem_louvor	·	adicionar_material	Partitura	Tabernáculo				adicionar como Choir	MDUwNDIwMjYvVGFiZXJuYcyBY3Vsby9Db3JvLnBkZg==
+03c7	faltante	·	adicionar_material	Cifra	Tantos anos passaram		nome	7d7646c1	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHRnVkRzl6SUdGdWIzTWdjR0Z6YzJGeVlXMHZRMmxtY21FdWNHUm0ucGRm
+03c9	ambiguo	✓	nao_levar	Partitura	Te Louvamos Senhor		num+slug		Não precisa levar	QXZ1bHNvcy85NjgucGRm
+03ca	sem_louvor	·	criar_praise	Cifra	Te agradeço				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHVWdZV2R5WVdSbHc2ZHZMME5wWm5KaExuQmtaZz09LnBkZg==
+03cb	ambiguo	✓	nao_levar	Cifra	Te louvamos Senhor		num+slug		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHVWdiRzkxZG1GdGIzTWdVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+03cd	sem_louvor	·	criar_praise	Partitura	Teu Santo Filho sem pecar (Cordeiro de Deus)				Criar praise e adicionar como Cifra	QXZ1bHNvcy8xOTYucGRm
+03ce	sem_louvor	·	criar_praise	Cifra	Teu amor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHVjFJR0Z0YjNJdlEybG1jbUV1Y0dSbS5wZGY=
+03cf	sem_louvor	·	criar_praise	Cifra	Teu santo nome				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHVjFJSE5oYm5SdklHNXZiV1V2UTJsbWNtRXVjR1JtLnBkZg==
+03d1	faltante	·	adicionar_material	Cifra	Toca em mim Senhor		nome	41f7cfd3	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOWpZU0JsYlNCdGFXMGdVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+03d2	sem_louvor	·	nao_levar	Cifra	Toca-me				Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOWpZUzF0WlM5RGFXWnlZUzV3WkdZPS5wZGY=
+03d3	ambiguo	✓	(sem texto)	Partitura	Toda Terra Exaltai (Jubilate Deo - II)		nome	ab3cb24b		QXZ1bHNvcy80ODIucGRm
+03d4	media	✓	(sem texto)	Partitura	Toda Terra Exaltei (Jubilate Deo II)		nome~+hash	ab3cb24b		QXZ1bHNvcy9EcExJQ00gLSBUb2RhIHRlcnJhIGV4YWx0YWkgKEp1YmlsYXRlIERlbyBJSSkgLSBDT1JPLnBkZg==
+03d5	ambiguo	✗	criar_praise	Cifra	Toda a terra exaltai		nome~	782a3bc5	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOWtZU0JoSUhSbGNuSmhJR1Y0WVd4MFlXa3ZRMmxtY21FdWNHUm0ucGRm
+03d6	media	✓	(sem texto)	Partitura	Todo Vós Que Tendes Sede (Vinde Às Águas)		nome~+hash	f485cb75		QXZ1bHNvcy8xMDQxLnBkZg==
+03da	sem_louvor	·	criar_praise	Cifra	Todos eram vis pecadores				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOWtiM01nWlhKaGJTQjJhWE1nY0dWallXUnZjbVZ6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+03db	sem_louvor	·	criar_praise	Cifra	Todos nós e tantos mais				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOWtiM01nYnNPemN5QmxJSFJoYm5SdmN5QnRZV2x6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+03dc	media	✗	adicionar_material	Cifra	Toma o meu coração		nome~+classe+kind-unico	185983c5	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOXRZU0J2SUcxbGRTQmpiM0podzZmRG8yOHZRMmxtY21FdWNHUm0ucGRm
+03dd	media	·	manter_coldigom	Cifra	Torre Forte		num+slug+kind-unico	34a2f0c8	Manter a versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZHOXljbVVnUm05eWRHVXZRMmxtY21FdWNHUm0ucGRm
+03de	sem_louvor	·	criar_praise	Cifra	Trono branco				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZISnZibThnWW5KaGJtTnZMME5wWm5KaExuQmtaZz09LnBkZg==
+03e0	media	✓	(sem texto)	Partitura	Tu Que Sobre a Amarga Cruz (Vem, Jesus, Nos Despertar)		nome~+kind-unico	8ba55eea		QXZ1bHNvcy8xMTUxLnBkZg==
+03e1	media	·	manter_coldigom	Cifra	Tu conservarás em paz		nome+kind-unico	8a81f5dd	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVWdZMjl1YzJWeWRtRnl3NkZ6SUdWdElIQmhlaTlEYVdaeVlTNXdaR1k9LnBkZg==
+03e3	media	✓	(sem texto)	Partitura	Tu és Maravilhoso (Quantas vezes, Senhor)		nome~+hash	2b309bf1		QXZ1bHNvcy9FTFRNMDQyMDI1IC0gVHUgZXMgTWFyYXZpbGhvc28gKFF1YW50YXMgdmV6ZXMsIFNlbmhvcikgLSBDb3JvLnBkZg==
+03e4	sem_louvor	·	criar_praise	Cifra	Tu és Santo				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVWd3Nmx6SUZOaGJuUnZMME5wWm5KaExuQmtaZz09LnBkZg==
+03e5	ambiguo	✗	criar_praise	Cifra	Tu és a minha luz, a minha salvação		nome~	2a4586a3	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVWd3Nmx6SUdFZ2JXbHVhR0VnYkhWNkxDQmhJRzFwYm1oaElITmhiSFpodzZmRG8yOHZRMmxtY21FdWNHUm0ucGRm
+03e6	media	✗	criar_praise	Cifra	Tu és o meu Deus		nome~+classe	3984796b	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVWd3Nmx6SUc4Z2JXVjFJRVJsZFhNdlEybG1jbUV1Y0dSbS5wZGY=
+03e7	media	✓	(sem texto)	Partitura	Tu, ó Senhor (Aviva, Senhor, a Tua Obra)		nome~+kind-unico	732d6058		QXZ1bHNvcy8xMjYucGRm
+03e8	media	·	manter_coldigom	Cifra	Tua alma está ferida		nome~+kind-unico	8ddfc464	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVmhJR0ZzYldFZ1pYTjB3NkVnWm1WeWFXUmhMME5wWm5KaExuQmtaZz09LnBkZg==
+03e9	sem_louvor	·	criar_praise	Cifra	Tua graça				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVmhJR2R5WWNPbllTOURhV1p5WVM1d1pHWT0ucGRm
+03ea	ambiguo	✗	criar_praise	Cifra	Tua graça me basta		nome~	256a4205	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVmhJR2R5WWNPbllTQnRaU0JpWVhOMFlTOURhV1p5WVM1d1pHWT0ucGRm
+03ec	media	·	manter_coldigom	Cifra	Tudo está pronto		nome+kind-unico	91f2a5fd	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVmtieUJsYzNURG9TQndjbTl1ZEc4dlEybG1jbUV1Y0dSbS5wZGY=
+03ed	ambiguo	·	manter_coldigom	Cifra	Tudo o que precisamos		num+slug	5d19c789	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVmtieUJ2SUhGMVpTQndjbVZqYVhOaGJXOXpMME5wWm5KaExuQmtaZz09LnBkZg==
+03ee	media	✓	(sem texto)	Partitura	Tudo o que tenho (Estou Ao Teu Dispor)		hash-so	458389d3		MDYxMTIwMjUvVHVkbyBvIHF1ZSB0ZW5obyAoRXN0b3UgQW8gVGV1IERpc3BvcikvUGFydGl0dXJhLnBkZg==
+03ef	faltante	✗	criar_praise	Cifra	Tudo pra mim Tu és		nome	c7136649	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZIVmtieUJ3Y21FZ2JXbHRJRlIxSU1PcGN5OURhV1p5WVM1d1pHWT0ucGRm
+03f1	ambiguo	·	nao_levar	Partitura	Tudo, ó Cristo, a Ti Entrego (Misto)		nome~	a912ad40	Não precisa levar	QXZ1bHNvcy85OTAucGRm
+03f3	media	✓	(sem texto)	Partitura	Um Fogo Nos Aquecerá (O Fogo Renovador)		hash-so	f7667b43		QXZ1bHNvcy82NTYucGRm
+03f6	sem_louvor	·	criar_praise	Cifra	Um ano mais de vida				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMGdZVzV2SUcxaGFYTWdaR1VnZG1sa1lTOURhV1p5WVM1d1pHWT0ucGRm
+03f7	sem_louvor	·	criar_praise	Cifra	Um dia um nobre homem				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMGdaR2xoSUhWdElHNXZZbkpsSUdodmJXVnRMME5wWm5KaExuQmtaZz09LnBkZg==
+03f8	ambiguo	✗	criar_praise	Cifra	Um milagre, Senhor		nome~	fcdd08e5	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMGdiV2xzWVdkeVpTd2dVMlZ1YUc5eUwwTnBabkpoTG5Ca1pnPT0ucGRm
+03f9	faltante	·	adicionar_material	Cifra	Um novo coração		nome	c851890d	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMGdibTkyYnlCamIzSmh3NmZEbzI4dlEybG1jbUV1Y0dSbS5wZGY=
+03fa	sem_louvor	·	criar_praise	Cifra	Uma força chamada amor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMWhJR1p2Y3NPbllTQmphR0Z0WVdSaElHRnRiM0l2UTJsbWNtRXVjR1JtLnBkZg==
+03fb	media	✓	(sem texto)	Partitura	Uma história de busca e entrega (Obra especial)		hash-so	f40957c4		MDYxMTIwMjUvVW1hIGhpc3TDs3JpYSBkZSBidXNjYSBlIGVudHJlZ2EgKE9icmEgZXNwZWNpYWwpL1BhcnRpdHVyYS5wZGY=
+03fc	media	✓	manter_coldigom	Cifra	Uma vez mais		nome~+kind-unico	e231e0b2	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMWhJSFpsZWlCdFlXbHpMME5wWm5KaExuQmtaZz09LnBkZg==
+03fd	media	✓	manter_coldigom	Cifra	Uma voz mansa		nome~+classe+kind-unico	53bfcdfb	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZXMWhJSFp2ZWlCdFlXNXpZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+03fe	sem_louvor	✓	criar_praise	Cifra	Vai passar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnBJSEJoYzNOaGNpOURhV1p5WVM1d1pHWT0ucGRm
+03ff	sem_louvor	✓	criar_praise	Cifra	Vai, Moisés				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnBMQ0JOYjJsenc2bHpMME5wWm5KaExuQmtaZz09LnBkZg==
+0400	sem_louvor	✓	criar_praise	Cifra	Vai, valente do Senhor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnBMQ0IyWVd4bGJuUmxJR1J2SUZObGJtaHZjaTlEYVdaeVlTNXdaR1k9LnBkZg==
+0401	media	✓	(sem texto)	Partitura	Vamos Louvar Ao Senhor (Louvor e Honra)		hash-so	754fa66a		QXZ1bHNvcy81MjQucGRm
+0402	sem_louvor	✓	criar_praise	Cifra	Vamos louvar a Jesus, o Redentor				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnRiM01nYkc5MWRtRnlJR0VnU21WemRYTXNJRzhnVW1Wa1pXNTBiM0l2UTJsbWNtRXVjR1JtLnBkZg==
+0403	sem_louvor	✓	(sem texto)	Cifra	Vamos proclamar					QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnRiM01nY0hKdlkyeGhiV0Z5TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0404	ambiguo	✓	manter_coldigom	Cifra	Varão de guerra é o Senhor		num+slug	bf32dda5	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnl3Nk52SUdSbElHZDFaWEp5WVNERHFTQnZJRk5sYm1odmNpOURhV1p5WVM1d1pHWT0ucGRm
+0405	sem_louvor	✓	criar_praise	Cifra	Vaso de Alabastro (Arautos do Rei)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnpieUJrWlNCQmJHRmlZWE4wY204Z0tFRnlZWFYwYjNNZ1pHOGdVbVZwS1M5RGFXWnlZUzV3WkdZPS5wZGY=
+0406	sem_louvor	✓	criar_praise	Cifra	Vaso de alabastro				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtRnpieUJrWlNCaGJHRmlZWE4wY204dlEybG1jbUV1Y0dSbS5wZGY=
+0408	sem_louvor	✓	criar_praise	Partitura	Vem Segura a Minha Mão (Acende a Minha Candeia)				Criar praise e adicionar como Cifra	QXZ1bHNvcy8wNTUucGRm
+0409	media	✗	criar_praise	Cifra	Vem Senhor		nome~+classe	3f0f2d9e	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRJRk5sYm1odmNpOURhV1p5WVM1d1pHWT0ucGRm
+040a	media	✓	adicionar_material	Partitura	Vem Senhor Visita a Tua Vinha		nome~+classe+kind-unico	3f0f2d9e	adicionar como Choir	QXZ1bHNvcy8xMDMyLnBkZg==
+040b	alta	✓	(sem texto)	Partitura	Vem a Cristo, Vem Agora (Coro Masculino)		nome+hash	0a6812d6		QXZ1bHNvcy8xMTQ3LnBkZg==
+040c	sem_louvor	·	adicionar_junto_com	Cifra	Vem a mim				adicionar como Cifra junto com 040d	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRJR0VnYldsdEwwTnBabkpoTG5Ca1pnPT0ucGRm
+040d	ambiguo	✓	(sem texto)	Partitura	Vem a mim, se cansado e ferido estás		nome	b951d8e4		QXZ1bHNvcy8xMDEwLnBkZg==
+040e	sem_louvor	✓	criar_praise	Cifra	Vem com Josué lutar em Jericó				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRJR052YlNCS2IzTjF3NmtnYkhWMFlYSWdaVzBnU21WeWFXUERzeTlEYVdaeVlTNXdaR1k9LnBkZg==
+040f	sem_louvor	✓	criar_praise	Cifra	Vem morar				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRJRzF2Y21GeUwwTnBabkpoTG5Ca1pnPT0ucGRm
+0410	media	✗	criar_praise	Cifra	Vem! (sim, vem!)		num+slug+kind-unico	eb09962e	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRJU0FvYzJsdExDQjJaVzBoS1M5RGFXWnlZUzV3WkdZPS5wZGY=
+0412	ambiguo	✗	criar_praise	Cifra	Vem, Espírito		nome~	5f96a05b	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRMQ0JGYzNERHJYSnBkRzh2UTJsbWNtRXVjR1JtLnBkZg==
+0413	ambiguo	✓	nao_levar	Partitura	Vem, Jesus Cristo já Vem		num	28dabf4b	Não precisa levar	QXZ1bHNvcy8xMDI4LnBkZg==
+0414	ambiguo	✓	manter_coldigom	Partitura	Vem, Maranata, Jesus Vem		num	b11ca4cf	Manter a do Coldigom	QXZ1bHNvcy8xMDMwLnBkZg==
+0415	alta	✓	(sem texto)	Partitura	Vem, Visita a Tua Igreja (Coro Masculino)		nome+hash	fc300235		QXZ1bHNvcy8xMTUyLnBkZg==
+0416	alta	✓	(sem texto)	Partitura	Vem, Visita a Tua Igreja (Misto)		nome+hash	6fc3dc7e		QXZ1bHNvcy8xMDM0LnBkZg==
+0417	media	✓	adicionar_material	Cifra	Vem, chegou o tempo de adorar		nome+kind-unico	b33e5ce0	Adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRMQ0JqYUdWbmIzVWdieUIwWlcxd2J5QmtaU0JoWkc5eVlYSXZRMmxtY21FdWNHUm0ucGRm
+0418	sem_louvor	✓	criar_praise	Cifra	Vem, entrega tua vida				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRMQ0JsYm5SeVpXZGhJSFIxWVNCMmFXUmhMME5wWm5KaExuQmtaZz09LnBkZg==
+0419	ambiguo	✓	nao_levar	Cifra	Vem, maranata Jesus vem!		num	b11ca4cf	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRMQ0J0WVhKaGJtRjBZU0JLWlhOMWN5QjJaVzBoTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+041a	media	✓	(sem texto)	Partitura	Vem, meu filho! (Algemas) (quanta dor e vergonha)		nome~+hash	0918d62f		YXNzZXRzL1BFUyAoRW5jb250cm8gZGUgTG91dm9yIEFicmlsIDIwMjUpL1ZlbSwgbWV1IGZpbGhvISAtIENvcm8ucGRm
+041b	media	✓	manter_coldigom	Cifra	Vem, o Senhor te chama		nome+kind-unico	c716ff99	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRMQ0J2SUZObGJtaHZjaUIwWlNCamFHRnRZUzlEYVdaeVlTNXdaR1k9LnBkZg==
+041c	ambiguo	✓	adicionar_material	Partitura	Vem, o Senhor te chama		nome	c716ff99	Adicionar como Choir	QXZ1bHNvcy8xMDE2LnBkZg==
+041d	media	·	manter_coldigom	Cifra	Vem, sim, vem!		num+slug+kind-unico	eb09962e	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnRMQ0J6YVcwc0lIWmxiU0V2UTJsbWNtRXVjR1JtLnBkZg==
+041e	sem_louvor	·	criar_praise	Cifra	Vencedor cada dia				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnVZMlZrYjNJZ1kyRmtZU0JrYVdFdlEybG1jbUV1Y0dSbS5wZGY=
+041f	sem_louvor	·	criar_praise	Cifra	Vencerei a tentação				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnVZMlZ5WldrZ1lTQjBaVzUwWWNPbnc2TnZMME5wWm5KaExuQmtaZz09LnBkZg==
+0420	sem_louvor	·	criar_praise	Cifra	Verei Jesus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnlaV2tnU21WemRYTXZRMmxtY21FdWNHUm0ucGRm
+0421	sem_louvor	·	criar_praise	Cifra	Verei Jesus (almejo o dia em que verei)				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtVnlaV2tnU21WemRYTWdLR0ZzYldWcWJ5QnZJR1JwWVNCbGJTQnhkV1VnZG1WeVpXa3BMME5wWm5KaExuQmtaZz09LnBkZg==
+0422	sem_louvor	·	criar_praise	Cifra	Vi no céu				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZta2dibThnWThPcGRTOURhV1p5WVM1d1pHWT0ucGRm
+0423	media	✗	criar_praise	Cifra	Via dolorosa		nome~	b813c643	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbGhJR1J2Ykc5eWIzTmhMME5wWm5KaExuQmtaZz09LnBkZg==
+0424	ambiguo	·	nao_levar	Partitura	Vida Em Abundância		nome	6ea4188e	Não levar	QXZ1bHNvcy8xMDM4LnBkZg==
+0425	ambiguo	✓	(sem texto)	Partitura	Vida em Abundância (Olha em teu coração)		nome~	6ea4188e		QXZ1bHNvcy9FTERNMDQyMDI1IC0gVmlkYSBlbSBBYnVuZGFuY2lhIChPbGhhIGVtIHRldSBjb3JhY2FvKSAtIENvcm8ucGRm
+0426	ambiguo	·	manter_coldigom	Cifra	Vida em abudância		nome~	6ea4188e	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbGtZU0JsYlNCaFluVmt3Nkp1WTJsaEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0427	sem_louvor	·	criar_praise	Cifra	Vim para adorar-te				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbHRJSEJoY21FZ1lXUnZjbUZ5TFhSbEwwTnBabkpoTG5Ca1pnPT0ucGRm
+0428	media	✓	adicionar_material	Cifra	Vinde após mim		nome+kind-unico	a3e6b4f8	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbHVaR1VnWVhERHMzTWdiV2x0TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0429	media	✓	(sem texto)	Partitura	Vinde, Cantai (Exultação do Crente)		hash-so	0ecf715d		QXZ1bHNvcy8xMDQ1LnBkZg==
+042a	sem_louvor	·	criar_praise	Cifra	Vinho e pão				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbHVhRzhnWlNCd3c2TnZMME5wWm5KaExuQmtaZz09LnBkZg==
+042b	sem_louvor	·	nao_levar	Cifra	Vitórias				Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbDB3N055YVdGekwwTnBabkpoTG5Ca1pnPT0ucGRm
+042c	ambiguo	✗	criar_praise	Cifra	Vive em mim		nome~	93aec720	Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtbDJaU0JsYlNCdGFXMHZRMmxtY21FdWNHUm0ucGRm
+042d	faltante	·	adicionar_material	Cifra	Você não está sozinho		nome	031eabb4	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtOWp3Nm9nYnNPamJ5QmxjM1REb1NCemIzcHBibWh2TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+042e	faltante	·	adicionar_material	Cifra	Voltará		nome	393ecff2	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtOXNkR0Z5dzZFdlEybG1jbUV1Y0dSbS5wZGY=
+042f	sem_louvor	·	criar_praise	Cifra	Vossa Obra tem uma recompensa				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtOXpjMkVnVDJKeVlTQjBaVzBnZFcxaElISmxZMjl0Y0dWdWMyRXZRMmxtY21FdWNHUm0ucGRm
+0430	sem_louvor	·	criar_praise	Cifra	Voz de trovão				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtOTZJR1JsSUhSeWIzYkRvMjh2UTJsbWNtRXVjR1JtLnBkZg==
+0431	media	·	adicionar_material	Cifra	Vozes lindas		nome~	b0895d70	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdlZtOTZaWE1nYkdsdVpHRnpMME5wWm5KaExuQmtaZz09LnBkZg==
+0433	ambiguo	✓	nao_levar	Cifra	alma cantará		nome~+classe		Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdllXeHRZU0JqWVc1MFlYTERvUzlEYVdaeVlTNXdaR1k9LnBkZg==
+0434	media	✓	nao_levar	Partitura	À Minha Voz, Ó Deus, Atende (Salmo 5)		num+slug+kind-unico	feb7c9b3	Não levar	QXZ1bHNvcy84NzAucGRm
+0435	sem_louvor	·	criar_praise	Cifra	À cruz Ele subiu				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0QWdZM0oxZWlCRmJHVWdjM1ZpYVhVdlEybG1jbUV1Y0dSbS5wZGY=
+0436	sem_louvor	·	criar_praise	Cifra	Águas que curam				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0Rm5kV0Z6SUhGMVpTQmpkWEpoYlM5RGFXWnlZUzV3WkdZPS5wZGY=
+0437	sem_louvor	·	criar_praise	Cifra	Águas que saram				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0Rm5kV0Z6SUhGMVpTQnpZWEpoYlM5RGFXWnlZUzV3WkdZPS5wZGY=
+0438	ambiguo	✓	(sem texto)	Partitura	É Tempo, É Tempo (Marchar Avante)		num	88ea62cf		QXZ1bHNvcy8yODAucGRm
+0439	media	✓	(sem texto)	Partitura	É Teu Sangue		num+slug+kind-unico	fb8fab52		QXZ1bHNvcy8yODMucGRm
+043a	media	·	manter_coldigom	Cifra	É chegado o momento		nome+kind-unico	f91c162a	Manter versão Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0a2dZMmhsWjJGa2J5QnZJRzF2YldWdWRHOHZRMmxtY21FdWNHUm0ucGRm
+043c	sem_louvor	·	criar_praise	Cifra	É de joelhos				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0a2daR1VnYW05bGJHaHZjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+043d	sem_louvor	·	criar_praise	Cifra	É hora de não olhar pra trás				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0a2dhRzl5WVNCa1pTQnV3Nk52SUc5c2FHRnlJSEJ5WVNCMGNzT2hjeTlEYVdaeVlTNXdaR1k9LnBkZg==
+043e	media	✓	manter_coldigom	Cifra	É lindo! É lindo sim!		num+slug+kind-unico	b97c0d2a	Manter versão do coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0a2diR2x1Wkc4aElNT0pJR3hwYm1SdklITnBiU0V2UTJsbWNtRXVjR1JtLnBkZg==
+043f	sem_louvor	·	criar_praise	Cifra	És o orvalho				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0bHpJRzhnYjNKMllXeG9ieTlEYVdaeVlTNXdaR1k9LnBkZg==
+0440	sem_louvor	·	criar_praise	Cifra	És tu para mim				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0bHpJSFIxSUhCaGNtRWdiV2x0TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0441	media	·	manter_coldigom	Cifra	És um remido de Deus		nome+kind-unico	87ee8bc9	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc0bHpJSFZ0SUhKbGJXbGtieUJrWlNCRVpYVnpMME5wWm5KaExuQmtaZz09LnBkZg==
+0443	media	✓	(sem texto)	Partitura	Ó Coração Não Se Turbe (Jesus Vem Logo)		hash-so	cfa491fc		QXZ1bHNvcy8xMTA2LnBkZg==
+0447	media	✓	adicionar_material	Cifra	Ó Que paz Jesus me dá		nome~+kind-unico	a6896d9d	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdVWFZsSUhCaGVpQktaWE4xY3lCdFpTQmt3NkV2UTJsbWNtRXVjR1JtLnBkZg==
+0448	sem_louvor	✓	criar_praise	Cifra	Ó Senhor Jesus				Criar praise e adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdVMlZ1YUc5eUlFcGxjM1Z6TDBOcFpuSmhMbkJrWmc9PS5wZGY=
+044a	ambiguo	✓	(sem texto)	Partitura	Ó Venha!		nome	dc990f77		QXZ1bHNvcy83MDAucGRm
+044b	media	✓	nao_levar	Partitura	Ó Vinde Adorar		num+kind-unico	63804ec5	Não precisa levar	QXZ1bHNvcy83MDgucGRm
+044c	media	✓	adicionar_material	Cifra	Ó como é grande e doce		nome~	0f72d337	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdZMjl0YnlERHFTQm5jbUZ1WkdVZ1pTQmtiMk5sTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+044d	alta	✓	(sem texto)	Partitura	Ó como é grande e doce a promessa		nome+hash	0f72d337		QXZ1bHNvcy9EcExJQ00gLSBPIGNvbW8gZSBncmFuZGUgZSBkb2NlIGEgcHJvbWVzc2EgLSBDT1JPLnBkZg==
+044e	ambiguo	✗	match_errado_criar_praise	Cifra	Ó grande Deus		num	61ee5ee1	Outro louvor, criar praise pra ele.	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdaM0poYm1SbElFUmxkWE12UTJsbWNtRXVjR1JtLnBkZg==
+044f	ambiguo	✓	nao_levar	Cifra	Ó grande dia está chegando		num	663cbf81	Não precisa levar	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdaM0poYm1SbElHUnBZU0JsYzNURG9TQmphR1ZuWVc1a2J5OURhV1p5WVM1d1pHWT0ucGRm
+0450	faltante	·	adicionar_material	Cifra	Ó vem, Emanuel		num+slug	ce2d0718	adicionar como Cifra	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdkbVZ0TENCRmJXRnVkV1ZzTDBOcFpuSmhMbkJrWmc9PS5wZGY=
+0451	ambiguo	·	manter_coldigom	Cifra	Ó venha		nome	dc990f77	Manter versão do Coldigom	QWRpY2lvbmFkb3MvUVdScFkybHZibUZrYjNNdnc1TWdkbVZ1YUdFdlEybG1jbUV1Y0dSbS5wZGY=
+0452	ambiguo	✓	(sem texto)	Partitura	Ainda há tempo	001	num+slug	2cfe2e7a		QXZ1bHNvcy8wNjUucGRm
+0453	alta	✓	(sem texto)	Cifra nível I	Meu Deus, meu pai	001	num+slug+hash+path	c6bd51a8		TG91dm9yZXMgQ29sZXTDom5lYSBDSUFzLzAwMSAtIE1ldSBEZXVzLCBtZXUgcGFpL0NpZnJhIEkucGRm
+0454	alta	✓	(sem texto)	Cifra nível II	Meu Deus, meu pai	001	num+slug+hash+path	c6bd51a8		TG91dm9yZXMgQ29sZXTDom5lYSBDSUFzLzAwMSAtIE1ldSBEZXVzLCBtZXUgcGFpL0NpZnJhIElJLnBkZg==
+0455	alta	✓	(sem texto)	Gestos em Gravura	Meu Deus, meu pai	001	num+slug+hash+path	c6bd51a8		TG91dm9yZXMgQ29sZXTDom5lYSBDSUFzLzAwMSAtIE1ldSBEZXVzLCBtZXUgcGFpL0dlc3RvcyBDSUFzLnBkZg==
+0456	alta	✓	(sem texto)	Partitura	Meu Deus, meu pai	001	num+slug+hash+path	c6bd51a8		Q29sQ0lBcy8wMDEucGRm
+0457	alta	✓	(sem texto)	Partitura	O Sangue de Jesus tem poder	001	num+slug+path	ebebe96e		Q29sQWR1bHRvcy8wMDEucGRm
+0458	alta	✓	(sem texto)	Cifra nível I	O sangue de Jesus tem poder	001	num+slug+hash+path	ebebe96e		TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzLzAwMSAtIE8gc2FuZ3VlIGRlIEplc3VzIHRlbSBwb2Rlci9DaWZyYSBJLnBkZg==
+0459	alta	✓	(sem texto)	Cifra nível II	O sangue de Jesus tem poder	001	num+slug+hash+path	ebebe96e		TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzLzAwMSAtIE8gc2FuZ3VlIGRlIEplc3VzIHRlbSBwb2Rlci9DaWZyYSBJSS5wZGY=
+045a	ambiguo	✓	(sem texto)	Partitura	Aquele que há de vir, virá (Viveremos pela fé)	002	num+slug	6f2c05b0		QXZ1bHNvcy8xMDcucGRm
+045e	alta	✓	(sem texto)	Cifra nível I	Pai, estou a te clamar	002	num+slug+hash+path	3d32aa4e		TG91dm9yZXMgQ29sZXTDom5lYSBDSUFzLzAwMiAtIFBhaSwgZXN0b3UgYSB0ZSBjbGFtYXIvQ2lmcmEgSS5wZGY=
+0462	alta	✓	(sem texto)	Partitura	Abrindo teu livro	003	num+slug+hash	d623ab86		QXZ1bHNvcy9BMDAzIC0gQWJyaW5kbyBUZXUgTGl2cm8gLSBDb3JvLnBkZg==
+0473	alta	✓	(sem texto)	Partitura	À minha Voz, ó Deus, Atende (Salmo 5)	004	num+slug+hash	feb7c9b3		QXZ1bHNvcy9BMDA0IC0gQSBNaW5oYSBWb3osIG8gRGV1cywgQXRlbmRlLSBDb3JvLnBkZg==
+0474	ambiguo	✓	manter_coldigom	Partitura	Barnabé, Homem de Deus	005	num+slug	48a89774	Manter Coldigom	QXZ1bHNvcy8xMjgucGRm
+047d	alta	✓	(sem texto)	Partitura	Canta Igreja, Igreja Fiel	006	num+slug+hash	7f8a375e		QXZ1bHNvcy9BMDA2IC0gQ2FudGEgSWdyZWphLCBJZ3JlamEgRmllbCAtIENvcm8ucGRm
+0480	faltante	✓	adicionar_material	Partitura	Jesus, ó meu Jesus	006	num+slug	db308fa5	Deve virar music sheet no coldigom	Q29sQWR1bHRvcy8wMDYucGRm
+048d	media	✗	adicionar_junto_com	Partitura	Cante Aleluia	008	num+classe+kind-unico	d543897f	Coloque como no mesmo de Coro Masculino	QXZ1bHNvcy9BMDA4IC0gQ2FudGUgQWxlbHVpYSAtIENvcm8ucGRm
+0496	ambiguo	✓	(sem texto)	Partitura	Cidade Eternal	009	num+slug	5bd1d53a		QXZ1bHNvcy8xNzIucGRm
+049e	media	✗	adicionar_material	Partitura	Clama, ó Igreja	010	num+slug+kind-unico	bb38bd5c	Isso deve virar Choir no Coldigom	MzAxMDIwMjUvQ2xhbWEsIMOzIElncmVqYSAtIE1lbG9kaWEucGRm
+04a3	media	✓	(sem texto)	Partitura	Das Profundezas (Salmo 130)	010	num+slug+kind-unico	f9cf6525		QXZ1bHNvcy9BMDEwIC0gRGFzIFByb2Z1bmRlemFzIChTYWxtbyAxMzApIC0gQ29yby5wZGY=
+04af	ambiguo	✓	manter_coldigom	Partitura	Vai, Moisés (Deixa meu povo ir)	011	num+classe		Manter o do Coldigom	QXZ1bHNvcy8yNDAucGRm
+04b8	alta	✓	(sem texto)	Partitura	Eis-me, ó Salvador, aqui	013	num+slug+hash	1edeacbf		QXZ1bHNvcy9BMDEzIC0gRWlzLW1lLCBvIFNhbHZhZG9yLCBBcXVpIC0gQ29yby5wZGY=
+04c4	ambiguo	✓	manter_coldigom	Partitura	Expirou	014	num+slug	8f299167	Manter o do Coldigom	QXZ1bHNvcy8zNjQucGRm
+04cc	ambiguo	✓	(sem texto)	Partitura	Em caminhos de dor	015	num+slug	6516d4b4		QXZ1bHNvcy8zMDkucGRm
+04d1	ambiguo	✓	(sem texto)	Partitura	Em obediência, servi ao Senhor (I Sam. 17.47)	016	num+classe	6b1e46ea		QXZ1bHNvcy8zMTQucGRm
+04e4	ambiguo	✓	(sem texto)	Partitura	Firme estarei e confiarei	018	num+slug	9d0124c4		QXZ1bHNvcy8zNzgucGRm
+04e8	ambiguo	✓	(sem texto)	Partitura	Forte Deus	019	num+slug	e7aa4e9a		QXZ1bHNvcy8zODgucGRm
+04f0	ambiguo	✓	manter_coldigom	Partitura	Jesus No Céu Me Encontrará (Honra e glória ao Cordeiro)	020	num+classe	73794e27	Manter o do Coldigom	QXZ1bHNvcy80MzIucGRm
+04f8	ambiguo	✓	(sem texto)	Partitura	Imutável Deus	021	num+slug	68625c52		QXZ1bHNvcy80MzcucGRm
+04fb	ambiguo	✓	(sem texto)	Partitura	Nesta hora de clamor	021	num+slug	56261d22		Q29sQWR1bHRvcy8wMjEucGRm
+0502	ambiguo	✓	(sem texto)	Partitura	Bendito seja o Cordeiro	022	num+slug	1a1d8b30		Q29sQWR1bHRvcy8wMjIucGRm
+0507	ambiguo	✓	substituir	Partitura	Jesus, o mistério revelado	022	num+slug	2de7624a	Substituir o que está no coldigom por esse do PLPCG	QXZ1bHNvcy80NzEucGRm
+0513	ambiguo	✓	(sem texto)	Partitura	Não há o que temer (Sei que Deus é Por Mim)	024	num+slug	d3aa914d		QXZ1bHNvcy8xMTE5LnBkZg==
+0518	media	✓	(sem texto)	Partitura	No exílio (Oh Bela Sião)	025	num+classe+hash-fora	e44cc835		QXZ1bHNvcy8xMTI3LnBkZg==
+0524	ambiguo	✓	(sem texto)	Partitura	O amor do nosso Pai	026	num+slug	cc765216		QXZ1bHNvcy9BMDI2IC0gTyBBbW9yIGRvIE5vc3NvIFBhaSAtIENvcm8ucGRm
+0528	ambiguo	✓	substituir	Partitura	Cordeiro Eterno	027	num+slug	c4b51273	Substituir pelo do PLPCG	MzAxMDIwMjUvQ29yZGVpcm8gRXRlcm5vIC0gQ29yby5wZGY=
+0530	ambiguo	✓	(sem texto)	Partitura	O caminho de Sião	027	num+slug	a812fdb8		QXZ1bHNvcy82MzkucGRm
+0538	ambiguo	✓	(sem texto)	Partitura	Ó, Senhor, Tu És o meu Pastor	028	num+classe	10b4247d		QXZ1bHNvcy82MDkucGRm
+0549	ambiguo	✗	match_errado_criar_praise	Partitura	Olhar unicamente para Jesus	030	num+classe	7903174b	Isso é outro louvor chamado Oh! Que paz Jesus me dá pode criar no Coldigom.	QXZ1bHNvcy83MTkucGRm
+0551	ambiguo	✓	manter_coldigom	Partitura	Os céus declaram	031	num+slug	54a6c7c5	Manter do coldigom	QXZ1bHNvcy83MjgucGRm
+0554	media	?	adicionar_material	Partitura	O sangue de Jesus vertido ali na cruz	032	num+slug+kind-unico	7e49a278	Está certo, mas é um novo material: salvar como Choir	MzAxMDIwMjUvTyBzYW5ndWUgZGUgSmVzdXMgdmVydGlkbyBhbGkgbmEgY3J1ei5wZGY=
+0556	ambiguo	✓	(sem texto)	Cifra	Pega tua parte, irmão	032	num+slug	719dcabc		QXZ1bHNvcy9BMDMyIC0gUGVnYSBhIHR1YSBwYXJ0ZSBpcm1hbyAtIENvcm8ucGRm
+056d	media	✓	(sem texto)	Partitura	A meu Senhor	035	num+slug+kind-unico	63f82990		Q29sQWR1bHRvcy8wMzUucGRm
+0579	ambiguo	✓	(sem texto)	Partitura	Por nossa pátria oramos (oração pela Pátria)	036	num+classe	1a503574		QXZ1bHNvcy83MjYucGRm
+0581	media	✓	(sem texto)	Partitura	Preciosa Graça de Jesus (Amazing Grace)	037	num+slug+kind-unico	4271e4be		QXZ1bHNvcy83NzIucGRm
+058a	media	✓	(sem texto)	Partitura	Jesus, Tu És o Meu Deus	039	num+slug+kind-unico	a3da93b3		QXZ1bHNvcy9QRVMtMDM5IC0gSmVzdXMsIFR1IEVzIG8gTWV1IERldXMgLSBDb3JvLnBkZg==
+0595	ambiguo	✓	(sem texto)	Partitura	Quando entrei neste lugar	040	num+slug	fc0473b4		QXZ1bHNvcy84MDYucGRm
+05bb	ambiguo	✓	(sem texto)	Partitura	Varão de guerra é o Senhor	044	num+slug	bf32dda5		QXZ1bHNvcy8xMTQ1LnBkZg==
+05c3	media	✓	(sem texto)	Partitura	Se confessarmos	045	num+slug+kind-unico	ffad139d		QXZ1bHNvcy9BMDQ1IC0gU2UgQ29uZmVzc2FybW9zIC0gQ29yby5wZGY=
+05cd	ambiguo	✓	(sem texto)	Partitura	Shekinah	047	num+slug	ccdb8cee		QXZ1bHNvcy85NDQucGRm
+05e5	ambiguo	✓	(sem texto)	Partitura	Tu conservará em paz	049	num+classe			QXZ1bHNvcy9BMDQ5IC0gVHUgQ29uc2VydmFyYXMgZW0gUGF6IC0gQ29yby5wZGY=
+05f5	ambiguo	✓	(sem texto)	Partitura	Vozes Lindas (Coro Celestial)	051	num+slug	b0895d70		QXZ1bHNvcy8xMDUzLnBkZg==
+05f6	ambiguo	✓	(sem texto)	Partitura	Deus Mesmo Revelou O Novo Céu	052	num+classe	9bd3c958		QXZ1bHNvcy82NzQucGRm
+0601	ambiguo	✓	(sem texto)	Partitura	Pai Nosso (Coro Masculino)	053	num			QXZ1bHNvcy83NTEucGRm
+060a	ambiguo	✓	(sem texto)	Partitura	Era ainda tão novo (Oração do Pastor)	054	num+classe			QXZ1bHNvcy83MjQucGRm
+060f	ambiguo	✓	(sem texto)	Partitura	Senhor Meu Deus e Pai	055	num+slug	4a00835d		QXZ1bHNvcy9QRVMtMDU1IC0gU2VuaG9yIE1ldSBEZXVzIGUgUGFpIC0gQ29yby5wZGY=
+0612	ambiguo	✓	(sem texto)	Partitura	Senhor, meu Deus e Pai	055	num+slug	4a00835d		Q29sQWR1bHRvcy8wNTUucGRm
+061c	ambiguo	✓	(sem texto)	Partitura	Uma voz mansa e delicada (I Reis 19)	056	num+slug	53bfcdfb		QXZ1bHNvcy8xMDAyLnBkZg==
+0638	media	?	adicionar_material	Partitura	Deus Falou Comigo	060	num+slug+kind-unico	b12d7bc6	Coloque como novo material Choir	MzAxMDIwMjUvRGV1cyBGYWxvdSBDb21pZ28gLSBNZWxvZGlhLnBkZg==
+063d	ambiguo	✓	(sem texto)	Partitura	Tudo Está Pronto (A Ceia)	060	num+classe	91f2a5fd		QXZ1bHNvcy8wMTEucGRm
+063e	alta	✓	(sem texto)	Partitura	Grande é o Senhor, inclinai-vos	061	num+slug+hash	99e2b2b3		QXZ1bHNvcy9BMDYxIC0gR3JhbmRlIGUgbyBTZW5ob3IhIC0gQ29yby5wZGY=
+063f	media	?	adicionar_material	Partitura	Sei Que na Cruz Seu Sangue Verteu	061	num+slug+kind-unico	fe296940	Adicione como novo material kind Choir	MzAxMDIwMjUvU2VpIFF1ZSBuYSBDcnV6IFNldSBTYW5ndWUgVmVydGV1IC0gTWVsb2RpYS5wZGY=
+064a	ambiguo	✓	(sem texto)	Partitura	Ouço o som	062	num+slug	2c45f590		QXZ1bHNvcy83MzYucGRm
+0652	ambiguo	✓	(sem texto)	Partitura	Me Encontrava Ôrfão (Eu Tenho um Pai) (Adoção)	063	num+classe	401bf8d4		QXZ1bHNvcy8wNTgucGRm
+065e	ambiguo	✓	(sem texto)	Partitura	Qual foi o preço	064	num+slug	da714e15		QXZ1bHNvcy83ODcucGRm
+0669	ambiguo	✓	(sem texto)	Partitura	Jesus irá voltar!	066	num+slug	c01e9d65		QXZ1bHNvcy80NjIucGRm
+0672	ambiguo	✓	(sem texto)	Partitura	Não há Deus como nosso Deus	067	num+slug	fab29e30		QXZ1bHNvcy8xMTEwLnBkZg==
+0679	ambiguo	✓	(sem texto)	Partitura	Os olhos da fé	068	num+slug	8572ab1e		QXZ1bHNvcy83MzQucGRm
+0681	ambiguo	✓	(sem texto)	Partitura	Tudo o que precisamos	069	num+slug	5d19c789		QXZ1bHNvcy85OTEucGRm
+068d	alta	✓	(sem texto)	Partitura	Vem, sim, vem	070	num+slug+hash	eb09962e		QXZ1bHNvcy9BMDcwIC0gVmVtLCBTaW0sIFZlbSAtIENvcm8ucGRm
+068e	ambiguo	✓	(sem texto)	Partitura	Celebrai	071	num+slug	8ea1a466		QXZ1bHNvcy8xNjYucGRm
+0696	media	✓	manter_coldigom	Partitura	A vida tem tristezas mil (Confia Em Deus)	072	num+classe+kind-unico	6c8752ed	Mantenha a do Coldigom	QXZ1bHNvcy8xOTEucGRm
+06d2	media	✓	(sem texto)	Partitura	O Jordão eu não passarei só	079	num+slug+kind-unico	0b72f7ee		QXZ1bHNvcy82NjcucGRm
+06e6	alta	✓	(sem texto)	Partitura	E veio a mim	082	num+slug+hash	704909ad		QXZ1bHNvcy9BMDgyIC0gRSB2ZWlvIGEgbWltIC0gQ29yby5wZGY=
+06eb	alta	✓	(sem texto)	Partitura	Em meio à multidão	083	num+slug+hash	445aa22c		QXZ1bHNvcy9BMDgzIC0gRU0gTUVJTyBBIE1VTFRJREFPIC0gQ29yby5wZGY=
+0706	alta	✓	(sem texto)	Partitura	Lugar de Oração	086	num+classe+hash	00403a19		QXZ1bHNvcy9BMDg2IC0gTHVnYXIgZGEgT3JhY2FvIC0gQ29yby5wZGY=
+070f	media	?	adicionar_material	Partitura	O Senhor é o Bom Pastor	087	num+slug+kind-unico	f0772d6c	Adicione como Choir a versão do PLPCG no coldigom	MzAxMDIwMjUvTyBTZW5ob3Igw6kgbyBCb20gUGFzdG9yIC0gVm96ZXMgSW5mYW50aXMucGRm
+0723	alta	✓	(sem texto)	Partitura	Rosa Vermelha	089	num+slug+hash	4f3375f0		QXZ1bHNvcy9BMDg5IC0gUm9zYSBWZXJtZWxoYSAtIENvcm8ucGRm
+072b	ambiguo	✓	(sem texto)	Partitura	Se tua alma alegre está (Canta Aleluia)	090	num+slug	21687b60		QXZ1bHNvcy9BMDkwIC0gU2UgVHVhIEFsbWEgQWxlZ3JlIEVzdGEgKENhbnRhIEFsZWx1aWEpIC0gQ29yby5wZGY=
+0738	alta	✓	(sem texto)	Partitura	No céu não entra pecado	092	num+slug+hash	de35add1		QXZ1bHNvcy9BMDkyIC0gTm8gY2V1IG5hbyBlbnRyYSBwZWNhZG8gLSBDb3JvLnBkZg==
+0753	media	✓	adicionar_material	Partitura	Finda-se este dia	095	num+slug+kind-unico	d7479c3c	adicionar como Choir	QXZ1bHNvcy9BMDk1IC0gRmluZGEtc2UgRXN0ZSBEaWEgLSBDb3JvLnBkZg==
+0763	ambiguo	✓	(sem texto)	Partitura	Salmo 91	097	num+slug	9bc8bfee		QXZ1bHNvcy9BMDk3IC0gU0FMTU8gOTEgLSBDb3JvLnBkZg==
+0764	alta	✓	(sem texto)	Partitura	Cantares 2	098	num+slug+hash	c60bc0d4		QXZ1bHNvcy9BMDk4IC0gQ2FudGFyZXMgMiAtIENvcm8ucGRm
+077c	ambiguo	✗	match_errado_criar_praise	Partitura	A Palavra de Poder	101	num		As sugestões estão erradas, mas o louvor está certo. Vai ter que criar o praise e o material kind Choir (cifra também pode estar criando o mesmo praise)	MzAxMDIwMjUvQSBQYWxhdnJhIGRlIFBvZGVyIC0gQ29yby5wZGY=
+088f	ambiguo	✓	(sem texto)	Partitura	Não sei porque de Deus o amor	139	num+classe	bbf7c034		Q29sQWR1bHRvcy8xMzkucGRm
+096e	media	✓	adicionar_material	Partitura	Sou o Santo	171	num+slug+kind-unico	47f80b90	Criar novo material kind Choir	MzAxMDIwMjUvU291IG8gU2FudG8gLSBNZWxvZGlhLnBkZg==
+0996	media	✓	adicionar_material	Partitura	Fala ao Meu Coração, Jesus	177	num+slug+kind-unico	d8a7b948	Criar novo material kind Choir	MzAxMDIwMjUvRmFsYSBhbyBNZXUgQ29yYcOnw6NvLCBKZXN1cyAtIE1lbG9kaWEucGRm
+0a26	ambiguo	✓	(sem texto)	Partitura	Hoje quero somente agradecer	197	num+slug	9688d13d		Q29sQWR1bHRvcy8xOTcucGRm
+0a53	ambiguo	✓	(sem texto)	Partitura	Jesus ia Subindo o Monte	203	num+slug	027dee98		MjAwMzIwMjYvSmVzdXMgaWEgU3ViaW5kbyBvIE1vbnRlL0Nvcm8ucGRm
+0abf	media	✓	adicionar_material	Partitura	Maranata	218	num+slug+kind-unico	eeee8e0d	Criar novo material kind Choir	MzAxMDIwMjUvTWFyYW5hdGEgLSBNZWxvZGlhLnBkZg==
+0b8b	media	✓	(sem texto)	Partitura	Olhai para o alto	254	num+kind-unico	e29f6acc		Q29sQWR1bHRvcy8yNTQucGRm
+0b8c	media	✓	(sem texto)	Partitura	Meu Coração Engrandece ao Senhor	255	num+slug+kind-unico	f2dfeb97		QXZ1bHNvcy9SR0EtMjU1IC0gTWV1IENvcmFjYW8gRW5ncmFuZGVjZSBhbyBTZW5ob3IgLSBQaWFubyBlIENvcm8ucGRm
+0c0e	media	✓	(sem texto)	Partitura	Toda a minha dor Jesus levou	296	num+kind-unico	4d1c5f09		Q29sQWR1bHRvcy8yOTYucGRm
+0c42	media	✓	nao_levar	Partitura	O que habita no abrigo de Deus	313	num+kind-unico	9a331555	Não precisa levar	Q29sQWR1bHRvcy8zMTMucGRm
+0c93	media	✓	(sem texto)	Partitura	Deus te guardará	340	num+kind-unico	e62a8060		Q29sQWR1bHRvcy8zNDAucGRm
+0d52	media	✓	adicionar_material	Partitura	Jesus, Quero amar-te	404	num+kind-unico	22261c8e	Adicione como Choir	YXNzZXRzL1BFUy9KZXN1cywgUXVlcm8gQW1hci10ZSAtIENvcm8ucGRm
+0d6e	ambiguo	✓	adicionar_material	Partitura	Sou forasteiro aqui	412	num	7a562cb7	Adicione como Music Sheet	Q29sQWR1bHRvcy80MTIucGRm
+0d78	media	✓	adicionar_material	Partitura	Quero ser um vaso de bênção	415	num+kind-unico	09c3b38c	Adicionar como Music Sheet	Q29sQWR1bHRvcy80MTUucGRm
+0dd9	media	✓	(sem texto)	Partitura	A tua palavra	446	num+kind-unico	55504a9a		Q29sQWR1bHRvcy80NDYucGRm
+0e90	media	✓	(sem texto)	Partitura	Eu sei que Jesus	504	num+kind-unico	9aef65aa		Q29sQWR1bHRvcy81MDQucGRm
+0e91	media	✓	(sem texto)	Cifra nível I	Os Seus Cabelos Brancos	505	hash-so	9aef65aa		TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzLzUwNSAtIE9zIFNldXMgQ2FiZWxvcyBCcmFuY29zL0NpZnJhIEkucGRm
+0e92	media	✓	(sem texto)	Cifra nível II	Os Seus Cabelos Brancos	505	hash-so	9aef65aa		TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzLzUwNSAtIE9zIFNldXMgQ2FiZWxvcyBCcmFuY29zL0NpZnJhIElJLnBkZg==
+0e93	sem_louvor	✓	adicionar_material	Partitura	Os seus cabelos brancos	505			Crie como Music Sheet	Q29sQWR1bHRvcy81MDUucGRm
+0e94	ambiguo	✓	(sem texto)	Cifra nível I	Tu Que Estás Assentado	506	hash-so			TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzLzUwNiAtIFR1IFF1ZSBFc3TDoXMgQXNzZW50YWRvL0NpZnJhIEkucGRm
+0e95	ambiguo	✓	(sem texto)	Cifra nível II	Tu Que Estás Assentado	506	hash-so			TG91dm9yZXMgQ29sZXTDom5lYSBkZSBQYXJ0aXR1cmFzLzUwNiAtIFR1IFF1ZSBFc3TDoXMgQXNzZW50YWRvL0NpZnJhIElJLnBkZg==
+0e96	sem_louvor	✓	adicionar_material	Partitura	Tu que estás assentado	506			Crie como Music Sheet	Q29sQWR1bHRvcy81MDYucGRm
+0eb3	ambiguo	✓	(sem texto)	Partitura	Quando a Angelical Trombeta	516	num	0597d6e1		MjAwMzIwMjYvUXVhbmRvIGEgQW5nZWxpY2FsIFRyb21iZXRhL0Nvcm8ucGRm
+0eb4	ambiguo	✓	adicionar_material	Partitura	Quando a Angelical Trombeta	516	num	0597d6e1	Adicione como Choir	MjYxMTIwMjUvUXVhbmRvIGEgQW5nZWxpY2FsIFRyb21iZXRhLnBkZg==
+0edb	ambiguo	✓	outro	Partitura	Regozijai-vos	527	num+slug+classe	a43a1c4f	Duplicado no PLPCG e no Coldigom aparentemente.	QXZ1bHNvcy9QRVMtNTI3IC0gUmVnb3ppamFpLXZvcyAtIENvcm8ucGRm
+0f8f	media	✓	adicionar_material	Partitura	Ó profundidade de riquezas	586	num+kind-unico	293975f4	Criar como Choir	YXNzZXRzL1BFUy9PzIEgcHJvZnVuZGlkYWRlIGRhcyByaXF1ZXphcyAtIFZvY2FsIFsyMCAwMyAyMDI2XS5wZGY
+0fce	media	✓	adicionar_material	Partitura	A Deus Seja o Louvor	607	num+kind-unico	b54afd46	Adicionar como Choir	YXNzZXRzL1BFUyAoVHJvbWJldGFzIGUgRmVzdGFzIDIwMjUpIChBKS9BIERldXMgU2VqYSBvIExvdXZvciAoQSkucGRm
+0fcf	media	✓	adicionar_material	Partitura	A Deus Seja o Louvor	607	num+kind-unico	b54afd46	Adicionar como choir	YXNzZXRzL1BFUyAoVHJvbWJldGFzIGUgRmVzdGFzIDIwMjUpIChCKS9BIERldXMgU2VqYSBvIExvdXZvciAtIFZvY2FsIC0yNCAxMCAyMDI1LS5wZGY
+1042	media	✓	(sem texto)	Partitura	Em nossos lábios	642	num+kind-unico	33332ff5		Q29sQWR1bHRvcy82NDIucGRm
+10af	media	✓	adicionar_material	Partitura	A Ti, Que Habitas Entre os Querubins	677	num+kind-unico	6f7137fb	Crie como Choir	MzAxMDIwMjUvQSBUaSwgUXVlIEhhYml0YXMgRW50cmUgb3MgUXVlcnViaW5zIC0gQ29yby5wZGY=
+11f9	media	✓	adicionar_material	Partitura	Cantai ao Senhor um Cântico Novo	784	num+kind-unico	a00ce662	Adicione como choir	QXZ1bHNvcy9QRVMtNzg0IC0gQ2FudGFpIGFvIFNlbmhvciB1bSBDYW50aWNvIE5vdm8tIENvcm8ucGRm

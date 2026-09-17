@@ -1185,7 +1185,7 @@ def test_undo_reverte_criar_e_substituir_e_apaga_so_o_r2_do_run(mundo, stubs):
     pa.executar(plano, "criar", execute=True, run_id="run-3", novo_id=_ids(), **kw)
     stubs["chamadas"]["sql"].clear()
     r = pa.desfazer("run-3", log, sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
-    assert r == {"desfeitas": 1, "puladas": 1, "falharam": 0}   # a op 'nada' do run é pulada
+    assert r == {"desfeitas": 1, "puladas": 0, "falharam": 0}   # a op 'nada' já tinha sido registrada no run-1, não está no run-3
     sql = "".join(open(a).read() for a in stubs["chamadas"]["sql"])
     assert "DELETE FROM plpcg_crosswalk WHERE pdf_id = 'pdf-0003' AND run_id = 'run-3';" in sql
     assert "DELETE FROM praise_materials WHERE praise_id = 'id-01';" in sql

@@ -40,6 +40,11 @@ function limparErroSalvo(): void {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  // Espelho de `ready` para os listeners de foco/visibilidade/storage: com o
+  // estado na closure, o efeito precisava reinscrever os listeners quando
+  // `ready` virava true, e um foco que chegasse entre o render e essa
+  // reinscrição era descartado pela closure velha. O ref não envelhece.
+  const readyRef = useRef(false);
   // Lido no inicializador do useState, que roda DURANTE o render: com
   // armazenamento bloqueado o acesso lança e a árvore inteira cai. É o mesmo
   // cenário Safari/iPhone que o projeto já contornou na sessão por cookie.
@@ -64,9 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const revalidateIfReady = useCallback(() => {
-    if (!ready) return;
+    if (!readyRef.current) return;
     void refetch();
-  }, [ready, refetch]);
+  }, [refetch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,7 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!cancelled) await refetch();
-      if (!cancelled) setReady(true);
+      if (!cancelled) {
+        readyRef.current = true;
+        setReady(true);
+      }
     })();
 
     return () => {

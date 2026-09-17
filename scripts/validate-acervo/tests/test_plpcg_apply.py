@@ -159,3 +159,146 @@ def test_sql_criar_praise_tags_e_materiais(mundo):
     with pytest.raises(ValueError, match="tag"):
         pa.sql_op(c, ids, kinds, {}, "run-x")
     assert pa.sql_op(plano.por_tipo("nada")[0], ids, kinds, {}, "run-x") == []
+
+
+# --- execução ------------------------------------------------------------------
+
+@pytest.fixture
+def stubs(monkeypatch):
+    """Substitui as quatro portas para o mundo. `prod` é o estado que `query` responde."""
+    prod = {"praises": {"p1", "p2"}, "materiais": {"m1": "p1", "m2": "p1"}, "crosswalk": set(),
+            "nomes": [("p1", "Aleluia", "Coletânea"), ("p2", "Gadareno", None)]}
+    chamadas = {"query": [], "sql": [], "put": [], "delete": []}
+    falhar = {"sql": False}
+
+    def query(sql, remote=True):
+        chamadas["query"].append(sql)
+        if "FROM plpcg_crosswalk WHERE run_id" in sql:
+            return [{"pdf_id": p} for p in sorted(prod["crosswalk"])]
+        if sql.startswith("SELECT pdf_id FROM plpcg_crosswalk"):
+            return [{"pdf_id": p} for p in sorted(prod["crosswalk"])]
+        if sql.startswith("SELECT id FROM praises"):
+            return [{"id": p} for p in sorted(prod["praises"])]
+        if sql.startswith("SELECT id, praise_id FROM praise_materials"):
+            return [{"id": m, "praise_id": p} for m, p in sorted(prod["materiais"].items())]
+        if sql.startswith("SELECT id FROM praise_materials WHERE id IN"):
+            return [{"id": m} for m in sorted(prod["materiais"]) if m in sql]
+        if "AS tag FROM praises" in sql:
+            return [{"id": i, "name": n, "tag": t} for i, n, t in prod["nomes"]]
+        raise AssertionError("query inesperada: " + sql)
+
+    def run_sql_files(arquivos, remote=True):
+        chamadas["sql"].extend(arquivos)
+        if falhar["sql"]:
+            raise RuntimeError("wrangler caiu")
+        for a in arquivos:
+            for linha in open(a, encoding="utf-8"):
+                if linha.startswith("INSERT INTO plpcg_crosswalk"):
+                    prod["crosswalk"].add(linha.split("VALUES ('")[1].split("'")[0])
+                if linha.startswith("DELETE FROM praise_materials WHERE id = '"):
+                    prod["materiais"].pop(linha.split("'")[1], None)
+                if linha.startswith("INSERT INTO praise_materials"):
+                    mid, pid = linha.split("VALUES ('")[1].split("'")[0], linha.split("', '")[1]
+                    prod["materiais"][mid] = pid
+                if linha.startswith("INSERT INTO praises "):
+                    prod["praises"].add(linha.split("VALUES ('")[1].split("'")[0])
+
+    monkeypatch.setattr(pa, "query", query)
+    monkeypatch.setattr(pa, "run_sql_files", run_sql_files)
+    monkeypatch.setattr(pa, "r2_put", lambda key, arquivo, content_type="application/pdf": chamadas["put"].append(key))
+    monkeypatch.setattr(pa, "r2_delete", lambda key: chamadas["delete"].append(key))
+    return {"prod": prod, "chamadas": chamadas, "falhar": falhar}
+
+
+def _ids():
+    n = iter(range(1, 100))
+    return lambda: f"id-{next(n):02d}"
+
+
+def _log(path):
+    return [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
+
+
+def test_simulacao_nao_toca_rede_e_confere_sha(mundo, stubs, capsys):
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    r = pa.executar(plano, "todos", execute=False, run_id="run-s", log_path=str(mundo["tmp"] / "log.jsonl"),
+                    conn=mundo["conn"], sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"))
+    assert stubs["chamadas"] == {"query": [], "sql": [], "put": [], "delete": []}
+    assert r["simuladas"] == 2 and r["falharam"] == 2 and r["sem_escrita"] == 1  # 0002/0004+0003 têm sha 's' ≠ real
+    assert not (mundo["tmp"] / "log.jsonl").exists()
+    assert "INSERT INTO plpcg_crosswalk" in capsys.readouterr().out
+
+
+def test_execute_exige_tipo(mundo, stubs):
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    with pytest.raises(ValueError, match="--tipo"):
+        pa.executar(plano, "todos", execute=True, run_id="r", log_path=str(mundo["tmp"] / "l"), conn=mundo["conn"])
+
+
+def _com_sha_real(mundo):
+    """Os findings da fixture têm sha 's'; aqui os alinhamos com o disco para a execução passar."""
+    from core.plpcg import arquivo_local, sha256_arquivo
+    for f in mundo["findings"]:
+        p = arquivo_local(f["evidence"]["path"], mundo["plpcjf"], mundo["baixados"])
+        if p:
+            f["evidence"]["sha256"] = sha256_arquivo(p)
+
+
+def test_execute_link_em_lote_e_pos_condicao(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "link", execute=True, run_id="run-l", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert (r["aplicadas"], r["falharam"], r["sem_escrita"]) == (2, 0, 1)
+    assert len(stubs["chamadas"]["sql"]) == 1 and stubs["chamadas"]["put"] == []   # 2 links num chunk só
+    assert stubs["prod"]["crosswalk"] == {"pdf-0001", "pdf-0007"}
+    finais = {l["op_id"]: l for l in _log(log)}
+    assert all(l["ok"] for l in finais.values()) and finais[plano.por_tipo("nada")[0].op_id]["estado"] == "sem_escrita"
+    assert (mundo["tmp"] / "exec" / "run-l.jsonl").read_text().count("\n") == len(_log(log))
+    # retomada: nada a fazer
+    r2 = pa.executar(plano, "link", execute=True, run_id="run-l2", log_path=log, conn=mundo["conn"],
+                     sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert r2["ja_aplicadas"] == 3 and r2["aplicadas"] == 0
+
+
+def test_execute_criar_e_substituir_sobem_r2_antes_do_sql(mundo, stubs):
+    _com_sha_real(mundo)
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "criar", execute=True, run_id="run-c", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert r["aplicadas"] == 1
+    assert stubs["chamadas"]["put"] == ["storage/assets/praises/id-01/id-02.pdf", "storage/assets/praises/id-01/id-03.pdf"]
+    (c,) = plano.por_tipo("criar")
+    fim = [l for l in _log(log) if l["op_id"] == c.op_id][-1]
+    assert fim["ids"] == {"praise_id": "id-01", "material_ids": {"pdf-0003": "id-02", "pdf-0004": "id-03"}}
+    assert fim["r2"] == stubs["chamadas"]["put"] and fim["escreveu"] and fim["ok"]
+    r = pa.executar(plano, "substituir", execute=True, run_id="run-r", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert r["aplicadas"] == 1 and "m2" not in stubs["prod"]["materiais"]
+    fim = [l for l in _log(log) if l["run_id"] == "run-r" and l["tipo"] == "substituir"][-1]
+    assert fim["antes"]["id"] == "m2" and fim["antes"]["r2_key"] == "assets/praises/p1/m2.pdf"
+
+
+def test_execute_pre_condicao_e_falha_do_wrangler(mundo, stubs):
+    _com_sha_real(mundo)
+    stubs["prod"]["crosswalk"].add("pdf-0001")            # já vinculado em produção
+    stubs["prod"]["nomes"].append(("p-alheio", "A palavra de poder", None))  # homônimo Avulsos criado DEPOIS do snapshot
+    plano = pa.montar_plano(mundo["decisoes"], mundo["findings"], mundo["conn"], mundo["plpcjf"], mundo["baixados"])
+    log = str(mundo["tmp"] / "log.jsonl")
+    r = pa.executar(plano, "link", execute=True, run_id="run-1", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert (r["aplicadas"], r["falharam"]) == (1, 1)
+    ruim = [l for l in _log(log) if l["pdf_ids"] == ["pdf-0001"]][-1]
+    assert ruim["estado"] == "pre_condicao" and "plpcg_crosswalk" in ruim["motivo"] and not ruim["escreveu"]
+    r = pa.executar(plano, "criar", execute=True, run_id="run-2", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    assert r["falharam"] == 1 and "mesmo nome" in _log(log)[-1]["motivo"] and stubs["chamadas"]["put"] == []
+    # Gadareno já estava no snapshot: um 'criar' homônimo dele NÃO é recusado (Revisão 3 já cobriu)
+    assert "gadareno" not in pa.estado_producao(praises_snapshot={"p1", "p2"})["nomes"]
+    stubs["falhar"]["sql"] = True
+    r = pa.executar(plano, "substituir", execute=True, run_id="run-3", log_path=log, conn=mundo["conn"],
+                    sql_dir=str(mundo["tmp"] / "sql"), execucao_dir=str(mundo["tmp"] / "exec"), novo_id=_ids())
+    fim = _log(log)[-1]
+    assert r["falharam"] == 1 and fim["escreveu"] and not fim["ok"] and "wrangler caiu" in fim["erro"] and len(fim["r2"]) == 1

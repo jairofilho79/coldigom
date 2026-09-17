@@ -289,3 +289,234 @@ def sql_op(op: Op, ids: dict, kinds: dict[str, str], tags: dict[str, str], run_i
             stmts += [_sql_material(e, pid, mid, kinds), _sql_crosswalk(e, pid, mid, op, run_id)]
         return stmts
     raise ValueError(f"tipo desconhecido: {op.tipo}")
+
+
+# --- execução ------------------------------------------------------------------
+
+LOTE_SQL = 300  # statements por chunk (o wrangler engasga com arquivo grande)
+
+
+def ja_aplicadas(log_path: str) -> set[str]:
+    """op_id com ok:true, descontando as desfeitas depois — mesma regra do core.apply."""
+    feitas: set[str] = set()
+    if not os.path.exists(log_path):
+        return feitas
+    with open(log_path, encoding="utf-8") as f:
+        for linha in f:
+            if not linha.strip():
+                continue
+            r = json.loads(linha)
+            if r.get("estado") == "desfeito":
+                if r.get("ok"):          # undo que falhou no SQL deixa a escrita em produção
+                    feitas.discard(r["op_id"])
+            elif r.get("ok"):
+                feitas.add(r["op_id"])
+    return feitas
+
+
+def estado_producao(remote: bool = True, praises_snapshot: set[str] = frozenset()) -> dict:
+    """Quatro leituras, uma vez por run — nunca uma por op (3588 links).
+    `nomes` só tem os praises que não estavam no snapshot: os outros o dono
+    já viu na Revisão 3 quando confirmou 'criar'."""
+    nomes: dict[str, set[str]] = {}
+    for r in query("SELECT p.id AS id, p.name AS name, t.name AS tag FROM praises p "
+                   "LEFT JOIN praise_tags pt ON pt.praise_id = p.id LEFT JOIN tags t ON t.id = pt.tag_id", remote=remote):
+        if r["id"] not in praises_snapshot:
+            nomes.setdefault(norm_nome(r["name"]), set()).add(r["tag"] or "")
+    return {
+        "crosswalk": {r["pdf_id"] for r in query("SELECT pdf_id FROM plpcg_crosswalk", remote=remote)},
+        "praises": {r["id"] for r in query("SELECT id FROM praises", remote=remote)},
+        "materiais": {r["id"]: r["praise_id"] for r in query("SELECT id, praise_id FROM praise_materials", remote=remote)},
+        "nomes": nomes,
+    }
+
+
+def _tag_base(tags: set[str]) -> str:
+    return "Coletânea" if "Coletânea" in tags else "Avulsos"
+
+
+def _pre_condicao(op: Op, estado: dict) -> str | None:
+    """Motivo da recusa, ou None. Lê o estado de PRODUÇÃO, não o snapshot."""
+    ja = [e.pdf_id for e in op.entradas if e.pdf_id in estado["crosswalk"]]
+    if ja:
+        return f"pdf_id já está em plpcg_crosswalk: {', '.join(p[:16] for p in ja)}"
+    if op.tipo in ("link", "importar", "substituir") and op.praise_id not in estado["praises"]:
+        return f"praise {op.praise_id} não existe mais em produção"
+    if op.tipo in ("link", "substituir") and estado["materiais"].get(op.material_id) != op.praise_id:
+        return f"material {op.material_id} não existe em produção ou não é do praise {op.praise_id}"
+    if op.tipo == "criar":
+        bases = estado["nomes"].get(norm_nome(op.nome), set())
+        if bases and _tag_base(set(op.tags)) in {_tag_base({b}) for b in bases}:
+            return f"apareceu em produção, depois do snapshot, um praise com o mesmo nome e tag-base: {op.nome!r}"
+    for e in op.entradas:
+        if op.tipo != "link" and e.arquivo and sha256_arquivo(e.arquivo) != e.sha256:
+            return f"sha256 do PDF local difere do finding: {e.short_id} {e.path}"
+    return None
+
+
+def _antes(op: Op, conn: sqlite3.Connection) -> dict:
+    if op.tipo != "substituir":
+        return {}
+    r = conn.execute("SELECT * FROM praise_materials WHERE id = ?", (op.material_id,)).fetchone()
+    return dict(r) if r else {}
+
+
+def copiar_execucao(run_id: str, log_path: str, execucao_dir: str) -> str:
+    os.makedirs(execucao_dir, exist_ok=True)
+    destino = os.path.join(execucao_dir, f"{run_id}.jsonl")
+    with open(log_path, encoding="utf-8") as origem, open(destino, "w", encoding="utf-8") as saida:
+        for linha in origem:
+            if linha.strip() and json.loads(linha).get("run_id") == run_id:
+                saida.write(linha)
+    return destino
+
+
+def _catalogos(conn: sqlite3.Connection) -> tuple[dict[str, str], dict[str, str], set[str]]:
+    kinds = {r[1]: r[0] for r in conn.execute("SELECT id, name FROM material_kinds")}
+    tags = {r[1]: r[0] for r in conn.execute("SELECT id, name FROM tags")}
+    praises = {r[0] for r in conn.execute("SELECT id FROM praises")}
+    return kinds, tags, praises
+
+
+def executar(plano: Plano, tipo: str, execute: bool, run_id: str, log_path: str,
+             conn: sqlite3.Connection, remote: bool = True, sql_dir: str | None = None,
+             execucao_dir: str | None = None, novo_id=lambda: str(uuid.uuid4())) -> dict:
+    if execute and tipo not in TIPOS:
+        raise ValueError(f"--execute exige --tipo explícito ({' | '.join(TIPOS)}); a ordem do spec §9 é link → "
+                         "importar/substituir → criar, com core.snapshot entre eles")
+    kinds, tags, praises_snapshot = _catalogos(conn)
+    feitas = ja_aplicadas(log_path)
+    fila = [o for o in plano.ops if (tipo == "todos" or o.tipo in (tipo, "nada")) and o.op_id not in feitas]
+    resumo = {"ops": len(plano.ops), "recusadas_no_plano": len(plano.recusas),
+              "ja_aplicadas": len(plano.ops) - len(fila) if tipo == "todos"
+              else sum(1 for o in plano.ops if o.tipo in (tipo, "nada")) - len(fila),
+              "simuladas": 0, "aplicadas": 0, "falharam": 0, "sem_escrita": 0}
+
+    if not execute:
+        # Portão da simulação: sem rede, sem credencial. O sha é disco.
+        mostrados = 0
+        for op in fila:
+            if op.tipo == "nada":
+                resumo["sem_escrita"] += 1
+                continue
+            ids = {"praise_id": novo_id() if op.tipo == "criar" else op.praise_id,
+                   "material_ids": {} if op.tipo == "link" else {e.pdf_id: novo_id() for e in op.entradas}}
+            ruim = next((f"sha256 difere: {e.short_id}" for e in op.entradas
+                         if op.tipo != "link" and e.arquivo and sha256_arquivo(e.arquivo) != e.sha256), None)
+            try:
+                stmts = sql_op(op, ids, kinds, tags, run_id)
+            except ValueError as erro:
+                ruim = str(erro)
+            if ruim:
+                print(f"  RECUSADO {op.tipo} {','.join(e.short_id for e in op.entradas)}: {ruim}")
+                resumo["falharam"] += 1
+                continue
+            resumo["simuladas"] += 1
+            if mostrados < 3:
+                mostrados += 1
+                print(f"\n--- exemplo: {op.tipo} {','.join(e.short_id for e in op.entradas)} ---")
+                for e in op.entradas:
+                    if op.tipo != "link":
+                        print(f"    R2 put {chave_bucket(r2_key(ids['praise_id'], ids['material_ids'][e.pdf_id]))} ← {e.arquivo}")
+                for s in stmts:
+                    print("   ", s)
+        return resumo
+
+    estado = estado_producao(remote, praises_snapshot)
+    base_sql = os.path.join(sql_dir or os.path.join(OUT, "sql"), run_id)
+    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
+    log = open(log_path, "a", encoding="utf-8")
+
+    def gravar(linha: dict) -> None:
+        log.write(json.dumps(linha, ensure_ascii=False) + "\n")
+        log.flush()
+
+    abertas: list[tuple[Op, dict]] = []   # ops de link acumuladas no chunk corrente
+    pendencias: list[tuple[Op, dict]] = []  # tudo que escreveu e espera a pós-condição
+    removidos: list[str] = []
+    chunk: list[str] = []
+    n_chunk = 0
+
+    def fechar_chunk() -> None:
+        nonlocal chunk, abertas, n_chunk
+        if not chunk:
+            return
+        arquivos = write_sql_chunks(chunk, base_sql, prefix=f"lote_{n_chunk:03d}", per_file=LOTE_SQL)
+        n_chunk += 1
+        for _, linha in abertas:
+            linha["escreveu"] = True
+        try:
+            run_sql_files(arquivos, remote=remote)
+            pendencias.extend(abertas)
+        except Exception as erro:  # o wrangler levantou: todas do chunk falharam, todas reversíveis
+            for op, linha in abertas:
+                gravar(dict(linha, ts=time.time(), ok=False, erro=f"{type(erro).__name__}: {erro}"))
+                resumo["falharam"] += 1
+        chunk, abertas = [], []
+
+    try:
+        for op in fila:
+            base = {"op_id": op.op_id, "run_id": run_id, "tipo": op.tipo, "pdf_ids": op.pdf_ids}
+            if op.tipo == "nada":
+                gravar(dict(base, ts=time.time(), ok=True, escreveu=False, estado="sem_escrita", motivo=op.motivo))
+                resumo["sem_escrita"] += 1
+                continue
+            motivo = _pre_condicao(op, estado)
+            if motivo:
+                gravar(dict(base, ts=time.time(), ok=False, escreveu=False, estado="pre_condicao", motivo=motivo))
+                resumo["falharam"] += 1
+                continue
+            ids = {"praise_id": novo_id() if op.tipo == "criar" else op.praise_id,
+                   "material_ids": {} if op.tipo == "link" else {e.pdf_id: novo_id() for e in op.entradas}}
+            linha = dict(base, ts=time.time(), estado="pendente", escreveu=False, ids=ids, r2=[], antes=_antes(op, conn))
+            gravar(linha)
+            try:
+                stmts = sql_op(op, ids, kinds, tags, run_id)
+            except ValueError as erro:
+                gravar(dict(linha, ts=time.time(), ok=False, estado="pre_condicao", motivo=str(erro)))
+                resumo["falharam"] += 1
+                continue
+            if op.tipo == "link":
+                chunk.extend(stmts)
+                abertas.append((op, linha))
+                if len(chunk) >= LOTE_SQL:
+                    fechar_chunk()
+                continue
+            fechar_chunk()
+            # A partir daqui o R2 pode ter objeto novo: cada chave entra na linha antes do SQL.
+            try:
+                for e in op.entradas:
+                    chave = chave_bucket(r2_key(ids["praise_id"], ids["material_ids"][e.pdf_id]))
+                    r2_put(chave, e.arquivo)
+                    linha["r2"].append(chave)
+                arquivos = write_sql_chunks(stmts, base_sql, prefix=op.op_id, per_file=LOTE_SQL)
+                linha["escreveu"] = True
+                run_sql_files(arquivos, remote=remote)
+                if op.tipo == "substituir":
+                    removidos.append(op.material_id)
+                pendencias.append((op, linha))
+            except Exception as erro:
+                gravar(dict(linha, ts=time.time(), ok=False, erro=f"{type(erro).__name__}: {erro}"))
+                resumo["falharam"] += 1
+        fechar_chunk()
+
+        # Pós-condição, uma vez: o que entrou no crosswalk neste run e o que devia ter saído.
+        if pendencias:
+            no_crosswalk = {r["pdf_id"] for r in query(
+                f"SELECT pdf_id FROM plpcg_crosswalk WHERE run_id = {sql_str(run_id)}", remote=remote)}
+            ainda = set()
+            if removidos:
+                lista = ", ".join(sql_str(m) for m in removidos)
+                ainda = {r["id"] for r in query(f"SELECT id FROM praise_materials WHERE id IN ({lista})", remote=remote)}
+            for op, linha in pendencias:
+                ok = all(p in no_crosswalk for p in op.pdf_ids) and (op.tipo != "substituir" or op.material_id not in ainda)
+                if ok:
+                    gravar(dict(linha, ts=time.time(), ok=True, estado="ok"))
+                    resumo["aplicadas"] += 1
+                else:
+                    gravar(dict(linha, ts=time.time(), ok=False, estado="guarda_barrou"))
+                    resumo["falharam"] += 1
+    finally:
+        log.close()
+    copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+    return resumo

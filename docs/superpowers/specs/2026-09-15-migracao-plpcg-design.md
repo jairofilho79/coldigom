@@ -118,6 +118,10 @@ Fatos que o spike fixou:
 | D5 | **Grupo do PLPCG com coletânea + arranjo PES continua sendo dois praises.** Fusão, se um dia, é Fase 7. |
 | D6 | **Destino no mesmo spec, fase final**: tabela `plpcg_crosswalk` no D1, endpoint de resolução, manifest gerado pelo coldigom. |
 | D7 | **Ele vai apontar padrões de erro e pedir ajuste de regra.** O ciclo detector → site → ajuste → re-rodada é parte do desenho, não exceção. |
+| D8 | *(17/09)* **O texto da decisão manda; a marca ✓/✗ não.** Na rodada 1 ele usou ✓/✗ como "onde eu estava". O site passou a ter botões com o vocabulário dele (§6). |
+| D9 | *(17/09)* **Adicionar é o padrão.** Uma partitura/cifra do PLPCG que difere da do coldigom é uma variante (arranjo) que ele não quer perder: "é mais fácil remover no coldigom do que voltar no PLPCG desligado". "Não levar" / "manter o do coldigom" = zero upload. |
+| D10 | *(17/09)* **`Partitura` do PLPCG é `Choir`**, não `Sheet Music` (77 de 84 vezes que ele nomeou o kind). `Cifra` é `Chord Chart`; nível I/II preservado. |
+| D11 | *(17/09)* **Nada disso entra no coldigom (`api/`, `web/`).** Decisões, migração e o `apply` vivem só em `scripts/validate-acervo/`. O coldigom só recebe o resultado: praises, materiais, remoções, `plpcg_crosswalk`. |
 
 ## 4. Arquitetura
 
@@ -238,37 +242,79 @@ página estática (HTML + JS sem build, sem framework). Nada disso entra no
 coldigom web nem na catraca de cobertura.
 
 **Lista** (esquerda): entradas filtráveis por faixa, categoria, classificação,
-evidência; **agrupadas por louvor do PLPCG**, para revisar um hino de cada vez.
-Contadores por faixa no topo. Já decididas somem por padrão.
+evidência e **estado** (pendentes · decididas · todas); **agrupadas por louvor
+do PLPCG**, para revisar um hino de cada vez. Contadores por faixa no topo.
+Decididas somem por padrão. Modos extras: **Louvores novos** (os grupos só
+do PLPCG), **Revisão 2** (linhas com `tipo: null` + `duvida`, vindas da
+migração ou do chat) e **Revisão 3** (decisão `criar` cujo nome é igual ou
+parecido — Jaccard das palavras ≥ 0,6 — ao de um praise do coldigom que o
+detector não mostrou; sai da lista quando ele confirma `criar` de novo ou
+troca por `adicionar` no homônimo).
 
-**Painel** (direita), por entrada:
+**Painel** (direita), por entrada: o PDF do PLPCG (iframe local; fallback
+`plpcg.com/assets/…`); os candidatos (§5.2) e os homônimos, cada um com o PDF
+do coldigom (achado por `material_id` no espelho `storage/`; fallback link
+para o coldigom web), nome, número, tags, kind e *por que*; e a barra de
+decisão, fixa no rodapé, com os **botões no vocabulário do dono** (D8):
 
-- o PDF do PLPCG (iframe do arquivo local; fallback `plpcg.com/assets/…`);
-- os candidatos (§5.2), cada um com o PDF do coldigom (iframe de `storage/`
-  local; fallback link para a página do louvor no coldigom web), o nome do
-  louvor, número, tags, kind, e *por que* é candidato (`hash`, `path`, `num`,
-  `nome~ 0,84`…);
-- ações: **é este** (escolhe o material) · **é este louvor, importar** (louvor
-  certo, material não existe → upload) · **criar louvor** (nome/tags
-  pré-preenchidos do PLPCG, editáveis) · **ignorar** (com motivo) ·
-  **kind/tag divergente** (anota a correção que o apply leva junto).
+| tipo | significa | o `apply` (§7) faz |
+|---|---|---|
+| `link` ("Já existe") | o arquivo já está no coldigom (hash idêntico) | `link_plpcg` |
+| `adicionar` | material novo no praise escolhido (o padrão, D9) | `import_plpcg_material` |
+| `substituir` | importa e tira o material do coldigom que estava errado | `replace_plpcg_material` |
+| `criar` | praise novo com este material | `create_praise_plpcg` |
+| `nao_levar` | zero upload ("não precisa levar", "manter o do coldigom") | nada; a `pdf_id` fica no `apply_log` como decidida-sem-escrita |
+| `descartar` | o PDF é lixo (em branco, duplicado) | idem |
+
+Mais: `kind` (pré-selecionado por D10, editável entre os `material_kinds` do
+snapshot), `nome` (para criar, editável), `junto com <short_id>` (o material
+vai para o praise que aquela outra entrada usa ou cria — é como ele junta
+Cifra + Partitura do mesmo louvor que o detector separou), motivo em texto
+livre, **Desfazer** (volta para "sem decisão"), teclas `a`/`c`/`n`.
 
 **Persistência**: `POST /decide` faz append em
-`gabaritos/plpcg_crosswalk/decisoes.jsonl` (`pdf_id`, `tipo`, `material_id`,
-`praise_id`, `kind`, `tags`, `nome`, `motivo`, `quando`). Append-only, a
-última linha por `pdf_id` vale. É gabarito humano: entra no git, nunca fica
-só em `out/`.
+`gabaritos/plpcg_crosswalk/decisoes.jsonl` (`pdf_id` ou `group_id`, `short_id`,
+`tipo`, `praise_id`, `material_id`, `kind`, `junto_com` (pdf_id), `nome`,
+`tags`, `motivo`, `duvida`, `proposta`, `confirma`, `origem`, `quando`).
+Append-only, a última linha por chave vale. É gabarito humano: entra no git,
+nunca fica só em `out/`. Validação por tipo em `revisao/decisoes.py`
+(`adicionar`/`substituir` exigem praise ou `junto_com`; `substituir`/`link`
+exigem material; `criar` exige nome; kind tem que existir no snapshot).
 
-**O ciclo de ajuste (D7)**: o dono anota `motivo` em texto livre. Eu leio os
-motivos, ajusto a regra do detector, re-rodo. `core.gold` mede a nova rodada
-contra as decisões já tomadas (`é este` = verdade), então um ajuste que quebra
-o que já estava certo aparece antes de qualquer `--execute`.
+**Rodada 1 (15–17/09, o que aconteceu):** o dono anotou 1040 entradas com
+marca + texto livre no `localStorage`; `revisao.migrar_anotacoes` converteu
+pelo texto (D8) em decisões `origem: rodada1-texto`, com 57 dúvidas; ele
+fechou Revisão 2 (63 cliques) e Revisão 3 (94 cliques). Contra essas 1240
+decisões o detector teve: alvo proposto aceito em 179/198 média, 104/107
+ambíguo, 91/91 faltante, 70/70 alta; 319/326 "sem louvor" confirmados como
+criar; 50 casos em que ele propôs praise e o dono criou outro (colisões de
+`[num]` e `nome~`); 7 praises que só a busca de homônimos achou. **Não houve
+rodada 2 do detector**: com tudo decidido por `pdf_id`, ajustar regra só
+mudaria a apresentação. D7 fica registrado como lição para o próximo
+detector (sufixo "(Coro Masculino)/(Misto)", `[num]` sozinho é fraco,
+homônimos antes de criar), não como re-rodada.
 
-**Modo gabarito** (`?cego=1`): mesma página, sem a proposta e sem os scores —
-só o PDF do PLPCG e os materiais do louvor casado por número. É o portão do
-§5.3.
+**Modo gabarito** (`?cego=1`) e `core.gold` desta migração não foram feitos:
+a medição acima, contra decisões reais, cumpriu o papel do §5.3.
 
-## 7. Escrita: as três ações novas do `apply`
+## 7. Escrita: as ações do `apply` (Fase C)
+
+Entrada: `decisoes.jsonl` (última linha por `pdf_id`) + `findings.jsonl` da
+rodada 1 (hash, path, kind_esperado) + snapshot fresco. Regras de leitura:
+
+- **alta sem decisão = `link`** (3588 entradas): hash idêntico num praise
+  casado por número/nome; o dono amostrou 70 e confirmou. Não geram linha no
+  `decisoes.jsonl` (gabarito humano fica humano); o `apply_log` registra
+  `decidido_por: detector`.
+- `nao_levar` / `descartar`: nenhuma escrita; o `apply_log` registra a
+  `pdf_id` como decidida-sem-escrita, para o §12 fechar em 100 %.
+- `junto_com`: resolvido em cadeia até uma entrada com `praise_id` ou
+  `criar`; ciclo ou ponta solta = recusa.
+- `criar` repetido para o mesmo nome normalizado (ex. Cifra e Partitura de
+  "A palavra de poder") = **um** praise com todos os materiais. Nome = campo
+  `nome` da decisão; número só se grupo numerado de coletânea; tags pelo
+  mapa `TAGS_POR_CLASSE`; `is_reviewed = 0` (D4).
+- kind = campo `kind` da decisão (D10 já veio pré-selecionado no site).
 
 Todas simulam por padrão, geram `.sql` em `out/sql/<run_id>/`, gravam no
 `apply_log.jsonl` com o estado anterior, e são desfeitas por `--undo <run_id>`.
@@ -276,8 +322,9 @@ Todas simulam por padrão, geram `.sql` em `out/sql/<run_id>/`, gravam no
 | ação | escreve | undo |
 |---|---|---|
 | `link_plpcg` | `INSERT INTO plpcg_crosswalk (pdf_id, short_id, group_id, praise_material_id, praise_id, evidencia, confianca, decidido_por, run_id)` | `DELETE` pela `pdf_id` |
-| `import_plpcg_material` | upload S3 para `storage/assets/praises/<praise_id>/<material_id>.pdf` (chave nova, uuid4); `INSERT INTO praise_materials (type='pdf', material_kind=família→kind, is_reviewed=0)`; depois `link_plpcg` | `DELETE` da linha + `DeleteObject` no R2 (a chave fica no log) |
-| `create_praise_plpcg` | `INSERT INTO praises (name=nome do PLPCG, number=NNN se grupo numerado e classificação coletânea, senão '')` + `praise_tags` pelo mapa do §2.2; depois `import_plpcg_material` para cada entrada do grupo | `DELETE` em cascata (materiais, tags, praise), R2 idem |
+| `import_plpcg_material` | upload S3 para `storage/assets/praises/<praise_id>/<material_id>.pdf` (chave nova, uuid4); `INSERT INTO praise_materials (type='pdf', material_kind=kind da decisão, is_reviewed=0)`; depois `link_plpcg` | `DELETE` da linha + `DeleteObject` no R2 (a chave fica no log) |
+| `replace_plpcg_material` | `import_plpcg_material` + `DELETE FROM praise_materials WHERE id = <material_id da decisão>` (o objeto R2 antigo **fica**: órfão é inofensivo e reversível) | re-`INSERT` da linha antiga (estado anterior no log) + undo do import |
+| `create_praise_plpcg` | `INSERT INTO praises (name, number)` + `praise_tags`; depois `import_plpcg_material` para cada entrada que cria ou aponta (`junto_com`) para ele | `DELETE` em cascata (materiais, tags, praise), R2 idem |
 
 Pré-condições (recusa em vez de escrever): `praise_id`/`material_id` ainda
 existem no D1 remoto; `pdf_id` ainda não está em `plpcg_crosswalk`; para
@@ -288,6 +335,11 @@ nenhum praise com o mesmo slug e mesma tag-base apareceu desde o snapshot
 Credenciais: as mesmas de `api/scripts/import_gestures.ts` (S3 derivado de
 `CLOUDFLARE_R2_API_TOKEN`; tudo sob `storage/` no bucket). Nenhuma é lida na
 simulação.
+
+Pendência anotada para a Fase C: o material `Chord Chart I/II` de "Tu que
+estás assentado" (PLPCG 506) está arquivado dentro de "O Sol Escurecerá 507"
+no coldigom (foi o `hash-so`); o dono quer o 506 como praise novo, e aquele
+material do 507 é candidato a limpeza depois.
 
 ## 8. Destino
 
@@ -338,13 +390,14 @@ pode ter várias `pdf_id` (duplicatas internas do PLPCG — 56 casos medidos).
 | fase | entrega | portão |
 |---|---|---|
 | **A — arnês** | `core/plpcg.py`, `detectors/plpcg_crosswalk.py` com testes de fixture (uma entrada por faixa, páginas compartilhadas, grupo com 2 praises, `nome~`), `findings.jsonl` da rodada 1, migração 019 aplicada | tabela do §2.3 reproduzida (± ajustes de regra) |
-| **B — site + gabarito** | `revisao/`, decisões gravadas, gabarito cego de 30 | §5.3 passa |
-| **C — aplicação** | `apply` com as três ações; `--execute` da alta, dos faltantes, dos 338; depois dos aprovados no site | `plpcg_crosswalk` cobre 100 % das `pdf_id`; undo testado numa corrida real e desfeita |
+| **B — site + gabarito** *(feita 17/09)* | `revisao/` com botões (§6), `decisoes.jsonl` com 1240 decisões, Revisão 2 e 3 fechadas; a medição contra decisões reais substituiu o gabarito cego | 1040/1045 entradas não-alta decididas (5 em Revisão 2) |
+| **C — aplicação** | `apply` com as quatro ações do §7 lendo `decisoes.jsonl`; `--execute` dos `link` (alta), depois `adicionar`/`substituir`, depois `criar` | `plpcg_crosswalk` cobre 100 % das `pdf_id`; undo testado numa corrida real e desfeita |
 | **D — destino** | endpoints `resolve`/`manifest`, coldigui apontado | coldigui em modo único por uma semana sem "não encontrado" |
 
-Dentro de C a ordem é: primeiro `link_plpcg` (não destrutivo) → snapshot novo
-→ `import_plpcg_material` dos faltantes → `create_praise_plpcg` dos 338 →
-snapshot novo → aprovados do site. Cada `--execute` é um `run_id` e um
+Dentro de C a ordem é: primeiro `link_plpcg` (não destrutivo: alta + `link`
+do site) → snapshot novo → `import_plpcg_material` / `replace` dos
+`adicionar`/`substituir` → `create_praise_plpcg` dos `criar` (com os
+`junto_com` que apontam para eles) → snapshot novo. Cada `--execute` é um `run_id` e um
 registro em `gabaritos/plpcg_crosswalk/execucao/` (a regra que ficou da
 Fase 1: `out/` é git-ignored e já morreu com um worktree; nada fica só lá).
 

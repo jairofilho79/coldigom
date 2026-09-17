@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
 import { resolveUserFromRequest, type AuthUser } from './auth';
+import type { AppUser } from './appUser';
 import {
   handleDriveImportQueueBatch,
   type DriveImportQueueMessage,
@@ -18,7 +19,9 @@ import { registerPraisesRoutes } from './routes/praises';
 import { registerTagsRoutes } from './routes/tags';
 import { registerValidationRoutes } from './routes/validation';
 
-const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
+// Variables inclui appUser (Task 2, contribuições) para bater com o tipo `App`
+// de env.ts — os módulos de rota tipam seu parâmetro como `App`.
+const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser; appUser: AppUser } }>();
 
 // CORS: with credentials, never use '*'. If WEB_ORIGIN is set, only listed origins are allowed.
 app.use('/*', async (c, next) => {

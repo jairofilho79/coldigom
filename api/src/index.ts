@@ -2,14 +2,18 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
 import { resolveUserFromRequest, type AuthUser } from './auth';
+import type { AppUser } from './appUser';
+import { handleContribScanBatch, requeueStaleContributions } from './contributions/scan';
 import {
   handleDriveImportQueueBatch,
   type DriveImportQueueMessage,
 } from './driveImport';
-import type { Env } from './env';
+import type { ContribScanMessage, Env } from './env';
 import { corsAllowOrigin } from './origins';
 import { registerAssetsRoutes } from './routes/assets';
 import { registerAuthRoutes } from './routes/auth';
+import { registerContributionsAdminRoutes } from './routes/contributionsAdmin';
+import { registerContributionsRoutes } from './routes/contributions';
 import { registerDriveRoutes } from './routes/drive';
 import { registerGesturesRoutes } from './routes/gestures';
 import { registerHealthRoutes } from './routes/health';
@@ -19,7 +23,9 @@ import { registerPraisesRoutes } from './routes/praises';
 import { registerTagsRoutes } from './routes/tags';
 import { registerValidationRoutes } from './routes/validation';
 
-const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser } }>();
+// Variables inclui appUser (Task 2, contribuições) para bater com o tipo `App`
+// de env.ts — os módulos de rota tipam seu parâmetro como `App`.
+const app = new Hono<{ Bindings: Env; Variables: { user: AuthUser; appUser: AppUser } }>();
 
 // CORS: with credentials, never use '*'. If WEB_ORIGIN is set, only listed origins are allowed.
 app.use('/*', async (c, next) => {
@@ -76,6 +82,8 @@ registerGesturesRoutes(app);
 registerTagsRoutes(app);
 registerValidationRoutes(app);
 registerDriveRoutes(app);
+registerContributionsRoutes(app);
+registerContributionsAdminRoutes(app);
 registerAssetsRoutes(app);
 registerHealthRoutes(app);
 
@@ -83,8 +91,17 @@ export { app };
 
 const worker = {
   fetch: app.fetch.bind(app),
-  async queue(batch: MessageBatch<DriveImportQueueMessage>, env: Env) {
-    await handleDriveImportQueueBatch(batch, env);
+  // Duas filas passam pelo mesmo binding de nome de método (`queue`) — o
+  // Worker despacha por `batch.queue`, o nome cadastrado no wrangler.toml.
+  async queue(batch: MessageBatch<DriveImportQueueMessage | ContribScanMessage>, env: Env) {
+    if (batch.queue === 'contrib-scan') return handleContribScanBatch(batch as MessageBatch<ContribScanMessage>, env);
+    await handleDriveImportQueueBatch(batch as MessageBatch<DriveImportQueueMessage>, env);
+  },
+  // Cron de resgate (spec §5): contribuições `recebida` presas por mensagem
+  // perdida na fila voltam a ser enfileiradas; depois de 24h, bloqueadas.
+  async scheduled(_event: ScheduledEvent, env: Env) {
+    const r = await requeueStaleContributions(env);
+    console.log(JSON.stringify({ msg: 'contributions.cron', ...r }));
   },
 };
 

@@ -8,8 +8,9 @@ import {
 } from './auth';
 import { isOriginAllowed } from './origins';
 import type { Env } from './env';
+import type { AppUser } from './appUser';
 
-export type AppContext = Context<{ Bindings: Env; Variables: { user: AuthUser } }>;
+export type AppContext = Context<{ Bindings: Env; Variables: { user: AuthUser; appUser: AppUser } }>;
 
 export function getBaseUrl(c: AppContext): string {
   // Prefer explicit AUTH_BASE_URL (recommended in production)

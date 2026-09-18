@@ -36,10 +36,138 @@ python3 -m core.apply --from out/fila/aprovados.jsonl --faixa alta --execute  # 
 python3 -m core.queue --marcar-aplicados out/apply_log.jsonl
 ```
 
+### Migração PLPCG (spec 2026-09-15-migracao-plpcg-design)
+
+```bash
+python3 -m core.plpcg                       # exporta o D1 plpcg-catalog, baixa o que falta, hasheia os dois lados
+python3 -m core.snapshot                    # o acervo do coldigom, fresco
+python3 -m detectors.plpcg_crosswalk        # Fase A — um finding por entrada do PLPCG + um por louvor só de lá
+python3 -m revisao.serve --abrir            # o site local (spec §6): lista por louvor do PLPCG, PDF dos dois lados, botões de decisão
+```
+
+`revisao.serve` sobe `http://localhost:8765` só com a stdlib e lê
+`out/plpcg_crosswalk/findings.jsonl` (ou, sem ele, o gabarito da rodada 1),
+`out/snapshot.sqlite` e os PDFs de `dev/plpcjf/assets`, `out/plpcg/baixados`
+e `storage/assets/praises` — todos sobrescrevíveis por flag (`--findings`,
+`--snapshot`, `--plpcjf`, `--baixados`, `--storage`). O PDF do coldigom é
+achado pelo `material_id`, não por `<praise_id>/<material_id>`: um material
+movido por merge continua na pasta do praise antigo no espelho.
+
+**Decisões** (Fase B): cada botão do painel faz `POST /decide`, que faz
+append em `gabaritos/plpcg_crosswalk/decisoes.jsonl` (`--decisoes` muda o
+caminho). Vale a última linha por `pdf_id` (ou `group_id`, nos louvores
+novos); o arquivo entra no git. Os tipos são o vocabulário que o dono usou
+na rodada 1 (`revisao/decisoes.py`): `link` (hash idêntico, só vincula),
+`adicionar` (material novo no praise — o padrão, porque é mais fácil remover
+no coldigom do que voltar no PLPCG desligado), `substituir` (importa e marca
+o material do coldigom para remoção — quarta ação do spec §7
+(`replace_plpcg_material`)), `criar` (praise novo), `nao_levar` (zero upload:
+"não precisa levar", "manter o do coldigom"), `descartar`. `junto_com`
+aponta outra entrada (por `short_id` na tela, `pdf_id` no arquivo): o
+material vai para o praise que aquela entrada usa ou cria. O kind padrão de
+`Partitura` é `Choir`, não `Sheet Music` — foi o que o dono pediu em 77 das
+84 vezes que nomeou o kind de uma partitura.
+
+`python3 -m revisao.migrar_anotacoes` converteu, uma vez, as 1040 anotações
+da rodada 1 (`rodada1/anotacoes.json`, o `localStorage` da versão anterior
+do site: marca ✓/✗/? + texto livre) em decisões `origem: rodada1-texto`. O
+texto manda, a marca não (o dono disse que a usou como "onde eu estava").
+Onde o texto não decide sozinho, a linha sai com `tipo: null` e `duvida`; o
+modo **Revisão 2** do site lista essas e mostra a dúvida em cima dos botões.
+O modo gabarito (`?cego=1`) e o `core.gold` desta migração ainda não existem.
+
+**Fase C — escrever no coldigom** (`core/plpcg_apply.py`, spec §7):
+
+```bash
+python3 -m core.plpcg_apply                          # simula tudo: plano por tipo, recusas, 3 exemplos de SQL/R2
+python3 -m core.plpcg_apply --tipo link --execute    # 1º: só o crosswalk (alta do detector + "já existe" do site)
+python3 -m core.snapshot
+python3 -m core.plpcg_apply --tipo importar --execute   # "adicionar": upload no R2 + praise_materials + crosswalk
+python3 -m core.plpcg_apply --tipo substituir --execute # idem + DELETE do material trocado (objeto R2 antigo fica)
+python3 -m core.snapshot
+python3 -m core.plpcg_apply --tipo criar --execute      # praises novos (um por nome) + materiais + crosswalk
+python3 -m core.plpcg_apply --undo <run_id>             # desfaz um run inteiro, na ordem inversa
+```
+
+Lê `gabaritos/plpcg_crosswalk/decisoes.jsonl` (última linha por `pdf_id`) e o
+`findings.jsonl` da rodada 1 (hash, path). Alta sem decisão vira `link` do
+detector; `nao_levar`/`descartar` não escrevem mas entram no log como
+decididas-sem-escrita; `junto_com` é resolvido em cadeia; `criar` repetido
+para o mesmo nome vira um praise só. Simulação não toca rede nem lê
+credencial. `--execute` exige `--tipo`; cada run grava em
+`out/plpcg_apply_log.jsonl` e copia as suas linhas para
+`gabaritos/plpcg_crosswalk/execucao/<run_id>.jsonl` (git). Pré-condições
+lidas de produção uma vez por run (praise/material existem, `pdf_id` ainda
+não está no crosswalk, sha256 do PDF confere, nenhum homônimo com a mesma
+tag-base para criar); pós-condição por run (`plpcg_crosswalk WHERE run_id`).
+R2 via `wrangler r2 object put|delete coldigom-assets/storage/…` — mesma
+autenticação do D1. `--limite N` para o primeiro `--execute` ser pequeno.
+
+Se um run morrer no meio (última linha `subindo_r2`/`escrevendo`), rode
+`--undo <run_id>` e depois o mesmo `--tipo` de novo — a retomada por
+pré-condição não distingue "aplicado por um run que caiu" de conflito. Um
+undo com `erros_r2` fica `ok:true`: apague as chaves listadas à mão com
+`wrangler r2 object delete coldigom-assets/<chave> --remote`. O wrangler
+executa cada arquivo .sql como um batch atômico do D1 — é o que a retomada
+assume (chunk que falhou não escreveu nada).
+
+**Fase D — destino** (spec §8.2; código em `api/src/routes/plpcg.ts`, fora
+deste arnês): o coldigom serve o que o plpcg.com servia.
+
+```bash
+API=https://coldigom-api.jairofilho79.workers.dev
+curl -s $API/api/plpcg/manifest | python3 -c 'import json,sys; m=json.load(sys.stdin); print(len(m), m[0])'
+curl -s $API/api/plpcg/manifest/checksum            # o mesmo hex do ETag do manifest
+curl -s $API/api/plpcg/resolve/0453                  # {pdf_id, praise_id, material_id, url}
+curl -sI "$API/api/plpcg/resolve/0453?redirect=1"    # 302 para o PDF
+python3 -m core.plpcg --guardar-final                # exportação final do PLPCG → gabaritos/plpcg_crosswalk/plpcg_catalog_final.sql
+```
+
+O manifest tem uma entrada por linha de `plpcg_crosswalk` com `pdfId`,
+`groupId` e `shortId` do PLPCG e `pdf` apontando para o coldigom; conferir
+`len(m)` contra `SELECT COUNT(*) FROM plpcg_crosswalk` (4429 em 17/09) é o
+teste de fumaça depois do deploy. `--guardar-final` junta os dumps de
+`out/plpcg/dumps` (baixa antes, salvo `--pular-download`) num `.sql` único
+com data e checksum no cabeçalho — rodar de novo no dia em que o
+plpcg-admin parar de publicar (§8.3).
+
+`core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
+(cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de
+`dev/plpcjf/assets` e, o que não está lá, de `plpcg.com`. Ambos sobrescrevíveis
+por `PLPCG_ADMIN_WORKER` e `PLPCJF_ASSETS`. O hash é incremental em
+`out/hashes.sqlite` — arquivo trocado no disco com o mesmo caminho não é
+recalculado; apague a linha para forçar.
+
+A **faixa do cruzamento** (§5.1 do spec) vive em `evidence["faixa"]`; o
+`confidence` do finding é o contrato do arnês, pelo mapa — as cinco primeiras
+linhas vêm de `CONTRATO`; a do louvor inteiro é decidida em `_finding_grupo`:
+
+| faixa | confidence | action | quem decide |
+|---|---|---|---|
+| alta | alta | `link_plpcg` | o apply (depois do gabarito cego, Fase B) |
+| media | media | `link_plpcg` | o site local |
+| faltante | alta | `import_plpcg_material` | o apply (D4) |
+| ambiguo | baixa | `link_plpcg` | o site local |
+| sem_louvor (entrada) | media | `import_plpcg_material` | o site, ou o grupo abaixo |
+| sem_louvor (grupo inteiro, `target_type = plpcg_grupo`) | alta | `create_praise_plpcg` | o apply (D4), depois da pré-visualização no site |
+
+Evidência nova na faixa média: `hash-fora` — arquivo idêntico (mesmo sha256)
+existe em outro louvor, quando o candidato único não tem material da família.
+
+Nenhuma dessas ações escreve ainda: o `apply` as recusa nominalmente
+("chega com a Fase C da migração PLPCG"). A migração 019
+(`api/migrations/019_plpcg_crosswalk.sql`) criou a tabela `plpcg_crosswalk`
+em produção em 15/09/2026, vazia (0 linhas, dois índices); é idempotente e
+pode ser re-aplicada com `cd api && wrangler d1 execute coldigom --remote
+--file=migrations/019_plpcg_crosswalk.sql`.
+
 **A ordem dos três passos é o portão de promoção (spec §5.2), não estilo.**
 Simular, medir com o gabarito preenchido, e só então aplicar. `core.gold`
 sai com código != 0 tanto quando a faixa alta erra quanto quando não há
 veredito nenhum para medir — gabarito em branco não é gabarito zerado.
+
+Cada rodada commita `resumo.md`; `findings.jsonl` (~7 MB) só entra no git na
+rodada que alimenta um gabarito ou uma `execucao/`.
 
 Testes: `python3 -m pytest tests/ -v`
 
@@ -56,7 +184,13 @@ Testes: `python3 -m pytest tests/ -v`
 | `core/apply.py` | a única porta de escrita. Simula por padrão |
 | `core/gold.py` | sorteio, formulário cego, precisão por faixa |
 | `core/queue.py` | a fila de revisão: empurra findings para o D1, puxa os aprovados como faixa alta, marca os aplicados |
+| `core/plpcg.py` | o PLPCG como fonte: exportação do D1 `plpcg-catalog`, `pdf_id` ↔ caminho, download, cache de sha256 dos dois lados |
 | `detectors/youtube_merge.py` | Fase 1 — louvores cujo único material é do YouTube |
+| `detectors/plpcg_crosswalk.py` | Fase A da migração — louvor por número/slug/classe, hash e caminho só dentro do louvor, faixas e candidatos |
+| `revisao/serve.py` + `revisao/index.html` | o site local de revisão da migração PLPCG — findings por louvor, PDFs lado a lado, `POST /decide` |
+| `revisao/decisoes.py` · `revisao/migrar_anotacoes.py` | tipos de decisão, validação, `decisoes.jsonl`; migração única das anotações da rodada 1 |
+| `core/plpcg_apply.py` | Fase C: decisões → link/importar/substituir/criar no D1 + R2, simulação, log, undo |
+| `gabaritos/plpcg_crosswalk/decisoes.jsonl` | as decisões do dono, append-only, última por `pdf_id` vence — é o que o `apply` da Fase C vai ler |
 
 ## As regras que não são óbvias no código
 

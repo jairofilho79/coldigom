@@ -9,6 +9,7 @@ import { GestureDetailPage } from '../GestureDetailPage';
 
 const base = {
   id: 'aaaaaaaaaaaa', name: 'Quero', description: 'Mãos ao peito', exampleTriggers: ['Quero'], image: 'assets/cia/gestures/aaaaaaaaaaaa.png', gif: null,
+  videos: [{ materialId: 'y1', praiseId: 'p1', praiseNumber: '182', praiseName: 'Quero viver', url: 'https://youtu.be/aaaaaaaaaaa', seconds: [83] }],
   status: 'active' as const, replacedBy: null, updatedAt: 't',
 };
 const entrada = {
@@ -19,7 +20,7 @@ const dic = {
   schema: 'coldigom.gesture-dictionary/1' as const, version: 2, generatedAt: 't',
   gestures: [
     base,
-    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: [], image: 'b.png', gif: null, status: 'active' as const, replacedBy: null, updatedAt: 't' },
+    { id: 'bbbbbbbbbbbb', name: 'Viver', description: '', exampleTriggers: [], image: 'b.png', gif: null, videos: [], status: 'active' as const, replacedBy: null, updatedAt: 't' },
   ],
 };
 
@@ -44,10 +45,16 @@ describe('GestureDetailPage', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Quero' })).toBeInTheDocument());
     expect(document.querySelector('img')?.getAttribute('src')).toContain('aaaaaaaaaaaa.png');
     // F5: a imagem carrega uma versão na query — sem isso o navegador continua
-    // mostrando a figura velha depois de "Trocar figura"/"Enviar GIF", porque a
-    // chave (o nome do arquivo) não muda.
+    // mostrando a figura velha depois de "Trocar figura", porque a chave (o
+    // nome do arquivo) não muda.
     expect(document.querySelector('img')?.getAttribute('src')).toContain('?v=');
-    expect(screen.getByRole('link', { name: /182/ })).toHaveAttribute('href', '/praise/p1/gestos/g1');
+    // GIF saiu de uso: nem placeholder nem input. A referência em movimento vai
+    // ser o vídeo do louvor no YouTube.
+    expect(screen.queryByText(/GIF/)).toBeNull();
+    // "182" aparece duas vezes agora (o uso em "Usado em" e o vídeo em "Vídeos"),
+    // ambos com o mesmo nome acessível — desambigua pelo href.
+    const usoLink = screen.getAllByRole('link', { name: /182/ }).find((l) => l.getAttribute('href') === '/praise/p1/gestos/g1');
+    expect(usoLink).toBeDefined();
     expect(screen.getAllByText(/2 vez/).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Salvar alterações' })).toBeNull();
   });
@@ -106,6 +113,7 @@ describe('GestureDetailPage', () => {
     const trocar = vi.spyOn(api, 'uploadGestureImage').mockResolvedValue(entrada);
     await waitFor(() => expect(screen.getByLabelText('Trocar figura')).toBeInTheDocument());
     const png = new File(['x'], 'a.png', { type: 'image/png' });
+    expect(screen.queryByLabelText(/GIF/)).toBeNull();
     await user.upload(screen.getByLabelText('Trocar figura'), png);
     await waitFor(() => expect(trocar).toHaveBeenCalledWith('aaaaaaaaaaaa', png));
   });
@@ -115,5 +123,17 @@ describe('GestureDetailPage', () => {
     await waitFor(() => expect(screen.getByText(/Substituído por/)).toBeInTheDocument());
     expect(screen.getByRole('link', { name: /Viver/ })).toHaveAttribute('href', '/gestos/dicionario/bbbbbbbbbbbb');
     expect(screen.queryByRole('button', { name: 'Substituir' })).toBeNull();
+  });
+
+  it('mostra a seção Vídeos com o link no tempo e, ao desligar, troca a entrada pela resposta', async () => {
+    const user = userEvent.setup();
+    montar();
+    vi.spyOn(api, 'deleteGestureVideo').mockResolvedValue({ ...base, videos: [] });
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Vídeos' })).toBeInTheDocument());
+    expect(screen.getByRole('link', { name: 'Abrir no YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=aaaaaaaaaaa&t=83s');
+    await user.click(screen.getByRole('button', { name: 'Desligar' }));
+    expect(await screen.findByText('Nenhum vídeo ligado a este gesto.')).toBeInTheDocument();
+    // a lista de usos continua: a resposta da rota não traz usages, a página preserva os dela
+    expect(screen.getByRole('link', { name: /182/ })).toBeInTheDocument();
   });
 });

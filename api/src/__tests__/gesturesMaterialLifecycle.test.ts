@@ -14,7 +14,7 @@ async function cabecalhos() {
 }
 
 /** Banco mínimo para criar, listar e apagar material num louvor só. */
-function ambiente(opts: { fonte?: { id: string; praise_id: string } | null } = {}) {
+function ambiente(opts: { fonte?: { id: string; praise_id: string } | null; ocorrencias?: number } = {}) {
   const escritas: { sql: string; args: unknown[] }[] = [];
   const lotes: { sql: string; args: unknown[] }[][] = [];
   const materiais: Record<string, unknown>[] = [
@@ -34,6 +34,7 @@ function ambiente(opts: { fonte?: { id: string; praise_id: string } | null } = {
             if (opts.fonte === null) return null;
             return opts.fonte ?? { id: args[0], praise_id: 'praise-1' };
           }
+          if (/COUNT\(\*\) AS n FROM gesture_video_occurrences WHERE material_id/i.test(sql)) return { n: opts.ocorrencias ?? 0 };
           return null;
         }),
         all: vi.fn(async () => {
@@ -113,14 +114,25 @@ describe('GET /api/praises/:id — has_content nos gestos', () => {
   });
 });
 
-describe('DELETE /api/materials/:materialId — limpa gesture_usage', () => {
-  it('apaga o uso e a linha num único batch, nessa ordem', async () => {
+describe('DELETE /api/materials/:materialId — limpa gesture_usage e ocorrências de vídeo', () => {
+  it('apaga uso, ocorrências e a linha num único batch, nessa ordem; sem ocorrências não mexe na versão', async () => {
     const ctx = ambiente();
     const res = await app.request('/api/materials/g1', { method: 'DELETE', headers: await cabecalhos() }, ctx.env);
     expect(res.status).toBe(200);
     expect(ctx.lotes).toHaveLength(1);
     const sqls = ctx.lotes[0].map((s) => s.sql);
+    expect(sqls).toHaveLength(3);
     expect(sqls[0]).toMatch(/DELETE FROM gesture_usage WHERE material_id = \?/);
-    expect(sqls[1]).toMatch(/DELETE FROM praise_materials WHERE id = \?/);
+    expect(sqls[1]).toMatch(/DELETE FROM gesture_video_occurrences WHERE material_id = \?/);
+    expect(sqls[2]).toMatch(/DELETE FROM praise_materials WHERE id = \?/);
+  });
+
+  it('um vídeo com ocorrências bumpa a versão do dicionário no mesmo batch, para o ETag mudar', async () => {
+    const ctx = ambiente({ ocorrencias: 2 });
+    const res = await app.request('/api/materials/g1', { method: 'DELETE', headers: await cabecalhos() }, ctx.env);
+    expect(res.status).toBe(200);
+    const sqls = ctx.lotes[0].map((s) => s.sql);
+    expect(sqls).toHaveLength(4);
+    expect(sqls[3]).toMatch(/UPDATE gesture_dictionary_meta SET version = version \+ 1/);
   });
 });

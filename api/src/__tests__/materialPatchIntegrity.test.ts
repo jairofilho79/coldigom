@@ -16,7 +16,7 @@ async function sessao() {
     .sign(new TextEncoder().encode(SEGREDO));
 }
 
-function ambiente(material: { type?: string; r2_key?: string | null } = {}) {
+function ambiente(material: { type?: string; r2_key?: string | null; ocorrencias?: number } = {}) {
   const gravados: { sql: string; args: unknown[] }[] = [];
   const apagados: string[] = [];
 
@@ -24,6 +24,9 @@ function ambiente(material: { type?: string; r2_key?: string | null } = {}) {
     prepare: vi.fn((sql: string) => ({
       bind: vi.fn((...args: unknown[]) => ({
         first: vi.fn(async () => {
+          if (sql.includes('COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id')) {
+            return { n: material.ocorrencias ?? 0 };
+          }
           if (sql.includes('FROM praise_materials WHERE id')) {
             return {
               id: 'mat-1',
@@ -175,6 +178,53 @@ describe('PATCH /api/materials/:id — quem revisou é carimbo do servidor', () 
     const { res } = await patch({ is_reviewed: 'sim' });
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe('PATCH /api/materials/:id — url ou type de vídeo mantêm o dicionário honesto', () => {
+  it('url muda em material youtube com ocorrências: batch com a UPDATE do material e o bump por último', async () => {
+    const { res, gravados } = await patch(
+      { url: 'https://youtu.be/xyz123' },
+      { type: 'youtube', r2_key: null, ocorrencias: 2 }
+    );
+
+    expect(res.status).toBe(200);
+    expect(gravados).toHaveLength(2);
+    expect(gravados[0].sql).toMatch(/UPDATE praise_materials SET/);
+    expect(gravados[1].sql).toMatch(/UPDATE gesture_dictionary_meta SET version = version \+ 1/);
+  });
+
+  it('type muda de youtube para pdf com ocorrências: apaga as ocorrências e bumpa no mesmo batch', async () => {
+    const { res, gravados } = await patch(
+      { type: 'pdf' },
+      { type: 'youtube', r2_key: null, ocorrencias: 2 }
+    );
+
+    expect(res.status).toBe(200);
+    const sqls = gravados.map((g) => g.sql);
+    expect(sqls.some((s) => s.includes('DELETE FROM gesture_video_occurrences WHERE material_id = ?'))).toBe(true);
+    expect(sqls.some((s) => s.includes('UPDATE gesture_dictionary_meta SET version = version + 1'))).toBe(true);
+  });
+
+  it('url muda sem ocorrências: continua no caminho de uma instrução só, sem bump', async () => {
+    const { res, gravados } = await patch(
+      { url: 'https://youtu.be/xyz123' },
+      { type: 'youtube', r2_key: null, ocorrencias: 0 }
+    );
+
+    expect(res.status).toBe(200);
+    expect(gravados).toHaveLength(1);
+    expect(gravados[0].sql).toMatch(/UPDATE praise_materials SET/);
+  });
+
+  it('PATCH que não toca url nem type nunca conta ocorrências', async () => {
+    const { res, env } = await patch({ is_reviewed: true }, { type: 'youtube' });
+
+    expect(res.status).toBe(200);
+    const chamouContagem = (env.DB.prepare as unknown as { mock: { calls: unknown[][] } }).mock.calls.some(
+      ([sql]) => typeof sql === 'string' && sql.includes('COUNT(*) AS n FROM gesture_video_occurrences')
+    );
+    expect(chamouContagem).toBe(false);
   });
 });
 

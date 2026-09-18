@@ -69,6 +69,7 @@ describe('GET /api/gestures/dictionary', () => {
         status: 'active',
         replacedBy: null,
         updatedAt: '2026-09-01 00:00:00',
+        videos: [],
       },
     ]);
   });

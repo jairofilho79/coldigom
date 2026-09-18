@@ -7,15 +7,15 @@
  * continuaria recebendo 304 sobre um dicionário que mudou.
  */
 
-import type { GestureEntry, LinhaDoDicionario, Uso } from './dictionaryTypes';
+import type { GestureEntry, GestureVideo, LinhaDeOcorrencia, LinhaDoDicionario, Uso } from './dictionaryTypes';
 
 export { DICTIONARY_SCHEMA } from './dictionaryTypes';
-export type { GestureDictionary, GestureEntry, LinhaDoDicionario, Uso } from './dictionaryTypes';
+export type { GestureDictionary, GestureEntry, GestureVideo, LinhaDeOcorrencia, LinhaDoDicionario, Uso } from './dictionaryTypes';
 
 export const COLUNAS = `id, name, description, example_triggers, image_key, gif_key, status, replaced_by, created_at, updated_at`;
 
-export function chaveDaFigura(id: string, ext: 'png' | 'gif'): string {
-  return `assets/cia/gestures/${id}.${ext}`;
+export function chaveDaFigura(id: string): string {
+  return `assets/cia/gestures/${id}.png`;
 }
 
 /** 12 hex aleatórios — mesma forma dos ids que vêm do pdf_extractor. */
@@ -25,7 +25,7 @@ export function gerarIdDeGesto(): string {
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export function linhaParaEntrada(l: LinhaDoDicionario): GestureEntry {
+export function linhaParaEntrada(l: LinhaDoDicionario, videos: GestureVideo[] = []): GestureEntry {
   let exampleTriggers: string[] = [];
   try {
     const lido = JSON.parse(l.example_triggers || '[]');
@@ -40,11 +40,12 @@ export function linhaParaEntrada(l: LinhaDoDicionario): GestureEntry {
     exampleTriggers,
     // image_key nulo só acontece entre o INSERT e o upload da figura; o
     // contrato promete string, e a chave canônica é derivável do id.
-    image: l.image_key ?? chaveDaFigura(l.id, 'png'),
+    image: l.image_key ?? chaveDaFigura(l.id),
     gif: l.gif_key,
     status: l.status,
     replacedBy: l.replaced_by,
     updatedAt: l.updated_at,
+    videos,
   };
 }
 
@@ -89,4 +90,53 @@ export async function usosDoGesto(db: D1Database, gestureId: string): Promise<Us
     .bind(gestureId)
     .all<Uso>();
   return r.results ?? [];
+}
+
+// pm.type = 'youtube' é reforço, não a fonte de verdade: um material que muda
+// de tipo (PATCH) já apaga suas ocorrências; isso cobre o que passar por fora.
+const SQL_OCORRENCIAS = `SELECT o.gesture_id, o.material_id, pm.praise_id, p.number AS praise_number, p.name AS praise_name, pm.url, o.seconds
+     FROM gesture_video_occurrences o
+     JOIN praise_materials pm ON pm.id = o.material_id
+     JOIN praises p ON p.id = pm.praise_id
+    WHERE pm.type = 'youtube'`;
+
+/** "9" antes de "10"; o que não é número vai para o fim, em ordem de texto. */
+function compararNumero(a: string | null, b: string | null): number {
+  const na = a !== null && /^\d+$/.test(a) ? Number(a) : Number.POSITIVE_INFINITY;
+  const nb = b !== null && /^\d+$/.test(b) ? Number(b) : Number.POSITIVE_INFINITY;
+  if (na !== nb) return na - nb;
+  return (a ?? '').localeCompare(b ?? '', 'pt-BR');
+}
+
+/** Ocorrências → vídeos por gesto: um item por (gesto, vídeo), segundos ordenados, nulo descartado. */
+export function agruparVideos(linhas: LinhaDeOcorrencia[]): Map<string, GestureVideo[]> {
+  const porGesto = new Map<string, Map<string, GestureVideo>>();
+  for (const l of linhas) {
+    let videos = porGesto.get(l.gesture_id);
+    if (!videos) porGesto.set(l.gesture_id, (videos = new Map()));
+    let v = videos.get(l.material_id);
+    if (!v) {
+      v = { materialId: l.material_id, praiseId: l.praise_id, praiseNumber: l.praise_number, praiseName: l.praise_name, url: l.url, seconds: [] };
+      videos.set(l.material_id, v);
+    }
+    if (l.seconds !== null) v.seconds.push(l.seconds);
+  }
+  const resultado = new Map<string, GestureVideo[]>();
+  for (const [gestureId, videos] of porGesto) {
+    const lista = [...videos.values()];
+    for (const v of lista) v.seconds.sort((a, b) => a - b);
+    lista.sort((a, b) => compararNumero(a.praiseNumber, b.praiseNumber) || a.praiseName.localeCompare(b.praiseName, 'pt-BR'));
+    resultado.set(gestureId, lista);
+  }
+  return resultado;
+}
+
+export async function videosDoDicionario(db: D1Database): Promise<Map<string, GestureVideo[]>> {
+  const r = await db.prepare(SQL_OCORRENCIAS).all<LinhaDeOcorrencia>();
+  return agruparVideos(r.results ?? []);
+}
+
+export async function videosDoGesto(db: D1Database, gestureId: string): Promise<GestureVideo[]> {
+  const r = await db.prepare(`${SQL_OCORRENCIAS} AND o.gesture_id = ?`).bind(gestureId).all<LinhaDeOcorrencia>();
+  return agruparVideos(r.results ?? []).get(gestureId) ?? [];
 }

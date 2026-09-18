@@ -390,9 +390,9 @@ Três rotas públicas em `api/src/routes/plpcg.ts` (sem sessão, como
   do Worker `plpcg-catalog`, para o coldigui trocar de fonte mudando só a
   URL base.
 - `GET /api/plpcg/resolve/:shortId` → `200 {pdf_id, praise_id, material_id,
-  url}`; `?redirect=1` → `302 Location: <url>`; `400` se não for hex
-  minúsculo (`^[0-9a-f]{1,16}$`); `404` sem linha no crosswalk ou material
-  apagado. É o que faz `plpcg.com/?s=…` continuar vivo.
+  url}`; `?redirect=1` → `302 Location: <url>`; o id é normalizado (trim,
+  minúsculas) e dá `400` fora de `^[0-9a-f]{1,16}$`; `404` sem linha no
+  crosswalk ou material apagado. É o que faz `plpcg.com/?s=…` continuar vivo.
 
 O que **não** está no manifest: as `pdf_id` decididas como `nao_levar`/
 `descartar` (198) e as pendentes de Revisão 2 — por decisão do dono não

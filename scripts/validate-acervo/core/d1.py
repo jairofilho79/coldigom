@@ -81,3 +81,30 @@ def query(sql: str, remote: bool = True) -> list[dict]:
         args.append("--remote")
     saida = _wrangler(args).stdout
     return json.loads(saida)[0].get("results", [])
+
+
+BUCKET = "coldigom-assets"  # api/wrangler.toml [[r2_buckets]] bucket_name
+
+
+def _wrangler_r2(args: list[str]) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["wrangler", "r2", "object", *args],
+        cwd=API_DIR,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
+def r2_put(key: str, arquivo: str, content_type: str = "application/pdf", remote: bool = True) -> None:
+    """Sobe um arquivo para o bucket do coldigom. `key` já traz o prefixo
+    `storage/` (é como o app grava: storage/assets/praises/<praise>/<material>.pdf).
+    Mesma autenticação do D1 — o wrangler logado — nada de chave S3 em env."""
+    if not os.path.isfile(arquivo):
+        raise FileNotFoundError(arquivo)
+    _wrangler_r2(["put", f"{BUCKET}/{key}", "--file", arquivo, "--content-type", content_type,
+                  "--remote" if remote else "--local"])
+
+
+def r2_delete(key: str, remote: bool = True) -> None:
+    _wrangler_r2(["delete", f"{BUCKET}/{key}", "--remote" if remote else "--local"])

@@ -2317,6 +2317,64 @@ describe('API Routes', () => {
     });
   });
 
+  describe('POST /auth/exchange-code', () => {
+    /** D1 mínimo: o UPDATE condicional de uso afeta 1 linha e o SELECT devolve o par. */
+    function dbComCodigo() {
+      return {
+        prepare: vi.fn((query: string) => ({
+          bind: vi.fn(() => ({
+            first: vi.fn(async () =>
+              query.includes('SELECT')
+                ? {
+                    access_token: 'access-1',
+                    refresh_token: 'refresh-1',
+                    user_json: JSON.stringify({ sub: 'sub-1', email: 'a@b.com' }),
+                  }
+                : null
+            ),
+            run: vi.fn(async () => ({ meta: { changes: query.includes('UPDATE') ? 1 : 0 } })),
+          })),
+        })),
+      } as unknown as D1Database;
+    }
+
+    it('entrega os tokens no corpo E nos cookies de sessão', async () => {
+      // Antes só o corpo vinha, e o cookie HttpOnly só nascia na primeira
+      // renovação (~5 min de uso). No Safari o ITP apaga o localStorage após 7
+      // dias sem interação com o site; o cookie posto pelo servidor não entra
+      // nessa regra, então a sessão precisa estar nele desde o login.
+      const res = await app.request(
+        'https://coldigom-web.pages.dev/auth/exchange-code',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', origin: 'https://coldigom-web.pages.dev' },
+          body: JSON.stringify({ code: 'codigo-1' }),
+        },
+        {
+          DB: dbComCodigo(),
+          ASSETS: createMockR2(),
+          AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef',
+          AUTH_ALLOWED_EMAILS: '*',
+          WEB_ORIGIN: 'https://coldigom-web.pages.dev',
+          AUTH_COOKIE_SAMESITE: 'Lax',
+        }
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as { accessToken: string; refreshToken: string };
+      expect(body.accessToken).toBe('access-1');
+      expect(body.refreshToken).toBe('refresh-1');
+
+      const cookies = res.headers.getSetCookie();
+      const access = cookies.find((c) => c.startsWith('coldigom_access='));
+      const refresh = cookies.find((c) => c.startsWith('coldigom_refresh='));
+      expect(access).toMatch(/^coldigom_access=access-1; .*HttpOnly.*Secure/);
+      expect(access).toMatch(/SameSite=Lax/);
+      expect(refresh).toMatch(/^coldigom_refresh=refresh-1; .*HttpOnly.*Secure/);
+      expect(refresh).toMatch(/Max-Age=2592000/);
+    });
+  });
+
   describe('POST /auth/refresh', () => {
     it('returns 401 when no refresh cookie', async () => {
       const mockDB = createMockD1({});

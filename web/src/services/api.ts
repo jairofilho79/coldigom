@@ -11,10 +11,20 @@ export const API_BASE_URL =
 
 const ACCESS_KEY = 'coldigom_access';
 const REFRESH_KEY = 'coldigom_refresh';
+/** Nome da trava (Web Locks) que serializa a renovação entre abas. */
+const TRAVA_RENOVACAO = 'coldigom_auth_refresh';
+/** Quanto esperar pela trava antes de seguir sem ela. */
+const TRAVA_ESPERA_MAX_MS = 5_000;
 
+/**
+ * localStorage, não sessionStorage: a sessão é do navegador, não da aba. Com
+ * sessionStorage cada aba nascia deslogada e, pior, cada uma renovava o próprio
+ * refresh token enquanto o cookie era um só — a aba que chegasse atrasada no
+ * servidor caía na detecção de reuso, que revoga todas as sessões do usuário.
+ */
 function getStoredAccessToken(): string | null {
   try {
-    return sessionStorage.getItem(ACCESS_KEY);
+    return window.localStorage.getItem(ACCESS_KEY);
   } catch {
     return null;
   }
@@ -22,10 +32,15 @@ function getStoredAccessToken(): string | null {
 
 function getStoredRefreshToken(): string | null {
   try {
-    return sessionStorage.getItem(REFRESH_KEY);
+    return window.localStorage.getItem(REFRESH_KEY);
   } catch {
     return null;
   }
+}
+
+/** Mudança de sessão vinda de outra aba (evento `storage`) — para quem escuta. */
+export function isAuthStorageKey(key: string | null): boolean {
+  return key === null || key === ACCESS_KEY || key === REFRESH_KEY;
 }
 
 /**
@@ -35,8 +50,8 @@ function getStoredRefreshToken(): string | null {
  */
 export function setAuthTokens(accessToken: string, refreshToken: string): void {
   try {
-    sessionStorage.setItem(ACCESS_KEY, accessToken);
-    sessionStorage.setItem(REFRESH_KEY, refreshToken);
+    window.localStorage.setItem(ACCESS_KEY, accessToken);
+    window.localStorage.setItem(REFRESH_KEY, refreshToken);
   } catch {
     /* sessão só em memória: o Bearer desta aba continua valendo */
   }
@@ -44,11 +59,33 @@ export function setAuthTokens(accessToken: string, refreshToken: string): void {
 
 export function clearAuthTokens(): void {
   try {
-    sessionStorage.removeItem(ACCESS_KEY);
-    sessionStorage.removeItem(REFRESH_KEY);
+    window.localStorage.removeItem(ACCESS_KEY);
+    window.localStorage.removeItem(REFRESH_KEY);
   } catch {
     /* nada a limpar se nem dá para escrever */
   }
+}
+
+/**
+ * Uma aba de cada vez na renovação. Navegador sem Web Locks (Safari < 15.4)
+ * segue sem trava — o comportamento de antes, não pior.
+ *
+ * Com prazo: no iOS o WebKit congela abas em segundo plano, e uma aba congelada
+ * segurando a trava deixaria as outras esperando para sempre. Passado o prazo,
+ * a renovação segue sem a trava. Abortar depois de concedida não faz nada, pela
+ * própria especificação, então o prazo só age enquanto se espera.
+ */
+function comTravaEntreAbas<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+  if (!locks?.request) return fn();
+  const controlador = new AbortController();
+  const prazo = setTimeout(() => controlador.abort(), TRAVA_ESPERA_MAX_MS);
+  return (locks.request(TRAVA_RENOVACAO, { signal: controlador.signal }, fn) as Promise<T>)
+    .catch((err: unknown) => {
+      if (err instanceof DOMException && err.name === 'AbortError') return fn();
+      throw err;
+    })
+    .finally(() => clearTimeout(prazo));
 }
 
 function authHeaders(): Record<string, string> {
@@ -91,9 +128,13 @@ export async function exchangeAuthCode(code: string): Promise<boolean> {
 /** Rotates refresh token and issues new access token. Returns true if session renewed. */
 export async function refreshSession(): Promise<boolean> {
   if (refreshInFlight) return refreshInFlight;
-  refreshInFlight = (async () => {
+  const tokenAntesDaTrava = getStoredRefreshToken();
+  refreshInFlight = comTravaEntreAbas(async () => {
     try {
       const refreshToken = getStoredRefreshToken();
+      // Enquanto esperávamos a vez, outra aba renovou e guardou o par novo: usar
+      // o token velho agora seria reuso aos olhos do servidor.
+      if (refreshToken && refreshToken !== tokenAntesDaTrava) return true;
       const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -115,7 +156,7 @@ export async function refreshSession(): Promise<boolean> {
     } finally {
       refreshInFlight = null;
     }
-  })();
+  });
   return refreshInFlight;
 }
 
@@ -342,6 +383,8 @@ export async function updateMaterial(materialId: string, updates: {
   type?: string;
   url?: string | null;
   is_reviewed?: boolean;
+  /** Move o material para outro louvor; a resposta continua sendo o louvor de origem. */
+  praise_id?: string;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,

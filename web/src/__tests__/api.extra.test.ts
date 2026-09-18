@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   createPraise,
   updatePraise,
@@ -140,6 +140,13 @@ describe('API Service — escritas de louvor e material', () => {
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/materials/mat1'),
       expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ is_reviewed: true }) })
+    );
+
+    mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
+    await updateMaterial('mat1', { praise_id: 'p2' });
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/materials/mat1'),
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ praise_id: 'p2' }) })
     );
 
     mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
@@ -408,6 +415,164 @@ describe('API Service — sessão', () => {
     // Uma corrida só dispara um fetch de /auth/refresh — a segunda chamada
     // reaproveita a mesma promessa em vez de duplicar a requisição.
     expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('API Service — sessão compartilhada entre abas', () => {
+  type TravaFalsa = {
+    request: (
+      nome: string,
+      opcoesOuCb: { signal?: AbortSignal } | (() => Promise<unknown>),
+      talvezCb?: () => Promise<unknown>
+    ) => Promise<unknown>;
+  };
+  const navegador = navigator as Navigator & { locks?: TravaFalsa };
+  let travaOriginal: TravaFalsa | undefined;
+
+  /** navigator.locks não existe no jsdom: uma fila que atende um de cada vez basta
+   * para simular duas abas disputando a renovação. */
+  function instalarTravaFalsa() {
+    const fila: Array<() => void> = [];
+    let ocupada = false;
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: {
+        request: (
+          _nome: string,
+          opcoesOuCb: { signal?: AbortSignal } | (() => Promise<unknown>),
+          talvezCb?: () => Promise<unknown>
+        ) => {
+          const cb = typeof opcoesOuCb === 'function' ? opcoesOuCb : talvezCb!;
+          const signal = typeof opcoesOuCb === 'function' ? undefined : opcoesOuCb.signal;
+          const executar = async () => {
+            try {
+              return await cb();
+            } finally {
+              const proxima = fila.shift();
+              if (proxima) proxima();
+              else ocupada = false;
+            }
+          };
+          // Livre: entra já, de forma síncrona — como o navigator.locks real
+          // dispara o callback sem esperar um tick quando não há disputa.
+          if (!ocupada) {
+            ocupada = true;
+            return executar();
+          }
+          return new Promise<unknown>((resolve, reject) => {
+            const entrada = () => resolve(executar());
+            fila.push(entrada);
+            // Como no navegador: abortar enquanto espera rejeita com AbortError;
+            // abortar depois de concedida não faz nada.
+            signal?.addEventListener('abort', () => {
+              const i = fila.indexOf(entrada);
+              if (i === -1) return;
+              fila.splice(i, 1);
+              reject(new DOMException('Aborted', 'AbortError'));
+            });
+          });
+        },
+      } satisfies TravaFalsa,
+    });
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearAuthTokens();
+    sessionStorage.clear();
+    travaOriginal = navegador.locks;
+  });
+
+  afterEach(() => {
+    clearAuthTokens();
+    if (travaOriginal) {
+      Object.defineProperty(navigator, 'locks', { configurable: true, value: travaOriginal });
+    } else {
+      delete (navigator as { locks?: unknown }).locks;
+    }
+  });
+
+  it('a sessão sobrevive a uma aba nova (sessionStorage vazio)', async () => {
+    // Os tokens viviam em sessionStorage, que é por aba: abrir o coldigom numa
+    // aba nova, ou recarregar uma aba que estava deslogada, começava sem sessão.
+    setAuthTokens('access-1', 'refresh-1');
+    sessionStorage.clear();
+
+    mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ user: null }) });
+    await getMe();
+
+    const [, init] = mockFetch.mock.calls[0];
+    expect(init.headers).toEqual({ Authorization: 'Bearer access-1' });
+  });
+
+  it('refreshSession não renova de novo quando outra aba renovou enquanto esperava a trava', async () => {
+    // Duas abas com o mesmo refresh token: a segunda a chegar no servidor cai na
+    // detecção de reuso, que revoga TODAS as sessões do usuário — era o que
+    // derrubava o login em todas as abas. A renovação é serializada entre abas
+    // e, ao pegar a vez, a aba confere se o token ainda é o que ela viu.
+    instalarTravaFalsa();
+    setAuthTokens('access-1', 'refresh-1');
+
+    let liberarOutraAba!: () => void;
+    const outraAba = navegador.locks!.request('coldigom_auth_refresh', async () => {
+      await new Promise<void>((resolve) => { liberarOutraAba = resolve; });
+      setAuthTokens('access-2', 'refresh-2');
+    });
+
+    const nossa = refreshSession();
+    liberarOutraAba();
+    await outraAba;
+
+    expect(await nossa).toBe(true);
+    expect(mockFetch).not.toHaveBeenCalled();
+    // E a aba passa a usar o que a outra guardou.
+    mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ user: null }) });
+    await getMe();
+    const [, init] = mockFetch.mock.calls[0];
+    expect(init.headers).toEqual({ Authorization: 'Bearer access-2' });
+  });
+
+  it('trava presa (aba congelada no iOS) não trava a renovação: depois do prazo segue sem ela', async () => {
+    // No iOS o WebKit congela abas em segundo plano. Se uma aba congelar
+    // segurando a trava, as outras esperariam para sempre. Passado o prazo, a
+    // renovação segue sem a trava — o comportamento anterior, não pior.
+    vi.useFakeTimers();
+    try {
+      instalarTravaFalsa();
+      setAuthTokens('access-1', 'refresh-1');
+      // Aba congelada: pega a trava e nunca devolve.
+      void navegador.locks!.request('coldigom_auth_refresh', () => new Promise(() => {}));
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ accessToken: 'access-2', refreshToken: 'refresh-2' }),
+      });
+      const nossa = refreshSession();
+      await vi.advanceTimersByTimeAsync(4_999);
+      expect(mockFetch).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+
+      expect(await nossa).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('refreshSession renova normalmente quando é a primeira a pegar a trava', async () => {
+    instalarTravaFalsa();
+    setAuthTokens('access-1', 'refresh-1');
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ accessToken: 'access-2', refreshToken: 'refresh-2' }),
+    });
+
+    expect(await refreshSession()).toBe(true);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toContain('/auth/refresh');
+    expect(JSON.parse(init.body)).toEqual({ refreshToken: 'refresh-1' });
   });
 });
 

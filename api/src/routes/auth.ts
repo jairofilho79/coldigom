@@ -1,6 +1,7 @@
 import {
   buildGoogleAuthorizeRedirect,
   buildLogoutCookies,
+  buildSessionCookies,
   clearAllAuthCookieHeaders,
   consumeAuthExchangeCode,
   getCookie,
@@ -199,6 +200,16 @@ export function registerAuthRoutes(app: App): void {
 
     const result = await consumeAuthExchangeCode(c.env.DB, body.code);
     if (!result) return c.json({ error: 'Invalid or expired code' }, 401);
+
+    // Também em cookie: a SPA guarda o par no localStorage, mas no Safari o ITP
+    // apaga storage de script após 7 dias sem interação com o site. O cookie
+    // HttpOnly não entra nessa regra e antes só nascia na primeira renovação.
+    buildSessionCookies({
+      requestUrl: new URL(c.req.url),
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      cookieSameSite: getAuthCookieSameSite(c),
+    }).forEach(v => c.header('Set-Cookie', v, { append: true }));
 
     return c.json({
       accessToken: result.accessToken,

@@ -189,6 +189,7 @@ export function PraiseDetailPage() {
   const [savingProgressText, setSavingProgressText] = useState<string | null>(null);
   const [driveJobErro, setDriveJobErro] = useState<string | null>(null);
   const [mergeAviso, setMergeAviso] = useState<string | null>(null);
+  const [moveAviso, setMoveAviso] = useState<{ id: string; rotulo: string } | null>(null);
   const [rascunhoAviso, setRascunhoAviso] = useState<string | null>(null);
   const driveScanAbortRef = useRef<AbortController | null>(null);
   const drivePanelRef = useRef<HTMLDivElement | null>(null);
@@ -427,7 +428,11 @@ export function PraiseDetailPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const auth = params.get('auth');
-    if (!auth) return;
+    // Só os valores do Drive são desta página. Os do login (`exchange`, `success`,
+    // `error`) são do AuthProvider, que lê o window.location no próprio efeito —
+    // e efeitos rodam de filho para pai, então apagar `auth` aqui deixava o
+    // código de troca sem dono: "Entrar com o Google" só funcionava na HomePage.
+    if (auth !== 'drive_connected' && auth !== 'drive_error') return;
 
     if (auth === 'drive_connected') {
       setDriveConnected(true);
@@ -919,6 +924,22 @@ export function PraiseDetailPage() {
     }
   };
 
+  const handleMaterialMove = async (materialId: string, destino: PraiseDetail) => {
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      await executarEscrita(() => updateMaterial(materialId, { praise_id: destino.id }));
+      setMoveAviso({
+        id: destino.id,
+        rotulo: destino.number ? `${destino.number} — ${destino.name}` : destino.name,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao mover material');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
   const handleConvertMaterialToMp3 = async (m: Material) => {
     if (!m.r2_key || !id) return;
     setSavingMaterials(true);
@@ -952,6 +973,7 @@ export function PraiseDetailPage() {
         saving: savingMaterials,
         onUpdateKind: handleMaterialKindChange,
         onDelete: handleMaterialDelete,
+        onMove: handleMaterialMove,
         onConvertToMp3: handleConvertMaterialToMp3,
       }
     : undefined;
@@ -1268,6 +1290,13 @@ export function PraiseDetailPage() {
       {mergeAviso ? (
         <div className="detail-aviso" role="status">
           {mergeAviso}
+        </div>
+      ) : null}
+
+      {moveAviso ? (
+        <div className="detail-aviso" role="status">
+          Movido para «{moveAviso.rotulo}».{' '}
+          <Link to={`/praise/${moveAviso.id}`}>Abrir louvor de destino</Link>
         </div>
       ) : null}
 
@@ -2204,6 +2233,7 @@ export function PraiseDetailPage() {
                         saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
                         onDelete={handleMaterialDelete}
+                        onMove={handleMaterialMove}
                       />
                     ) : (
                       <span className="pdf-viewer-title">{title}</span>
@@ -2321,6 +2351,7 @@ export function PraiseDetailPage() {
                         saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
                         onDelete={handleMaterialDelete}
+                        onMove={handleMaterialMove}
                       />
                     ) : null}
                   </div>

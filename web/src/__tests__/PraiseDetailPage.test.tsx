@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PraiseDetailPage } from '../pages/PraiseDetailPage';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import type { PraiseDetail } from '../types';
 
@@ -37,6 +37,7 @@ vi.mock('../services/api', async (importOriginal) => {
     deleteMaterial: vi.fn(),
     bulkUploadMaterials: vi.fn(),
     logout: vi.fn().mockResolvedValue(undefined),
+    exchangeAuthCode: vi.fn().mockResolvedValue(true),
     getDriveStatus: vi.fn().mockResolvedValue({ connected: false }),
     getDriveConnectUrl: vi.fn((returnTo: string) => `http://localhost:8787/api/drive/connect?return_to=${encodeURIComponent(returnTo)}`),
     startDriveScan: vi.fn(),
@@ -72,6 +73,7 @@ import {
   updateMaterial,
   getMaterialKinds,
   getDriveStatus,
+  exchangeAuthCode,
   startDriveScan,
   startDriveImport,
   downloadDriveFileBlob,
@@ -824,6 +826,47 @@ describe('PraiseDetailPage Component', () => {
       }
     });
 
+    it('mover material mostra o destino, grava praise_id e avisa com link', async () => {
+      const destinoId = '9f1e2d3c-0000-4000-8000-000000000002';
+      (getPraise as ReturnType<typeof vi.fn>).mockImplementation(async (id: string) => {
+        if (id === destinoId) {
+          return {
+            ...mockPraiseDetail,
+            id: destinoId,
+            name: 'Outro Louvor',
+            number: '045',
+            tags: [{ id: 'tag3', name: 'GLTM', parent_id: null }],
+            materials: [],
+          };
+        }
+        return mockPraiseDetail;
+      });
+      (updateMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: mockPraiseDetail.materials.filter((m) => m.id !== 'mat1'),
+      });
+      renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+      const user = await enterEditMode();
+      await waitFor(() => {
+        expect(screen.getByText('Partituras')).toBeTruthy();
+      });
+
+      // O primeiro "Mover" da página é o do player de áudio (mat2); a partitura
+      // (mat1) vem depois.
+      const botoesMover = screen.getAllByRole('button', { name: 'Mover' });
+      await user.click(botoesMover[botoesMover.length - 1]);
+      await user.type(screen.getByLabelText('ID do louvor de destino'), destinoId);
+      expect(await screen.findByText('045 — Outro Louvor')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Confirmar mover' }));
+
+      await waitFor(() => {
+        expect(updateMaterial).toHaveBeenCalledWith('mat1', { praise_id: destinoId });
+      });
+      const aviso = (await screen.findByText(/Movido para/)).closest('[role="status"]') as HTMLElement;
+      expect(aviso).toHaveTextContent('Movido para «045 — Outro Louvor»');
+      expect(within(aviso).getByRole('link')).toHaveAttribute('href', `/praise/${destinoId}`);
+    });
+
     it('salvar manda o token de versão que a tela carregou', async () => {
       // Sem token, duas pessoas editando o mesmo louvor: a última a salvar vence
       // em silêncio, e o trabalho da primeira some sem aviso. O editor de cifras
@@ -1247,6 +1290,41 @@ describe('Status e conexão do Google Drive', () => {
       expect(screen.queryByRole('button', { name: 'Conectar Google Drive' })).toBeNull();
     });
     expect(window.location.search).toBe('');
+  });
+
+  it('volta do login do Google (auth=exchange&code=...) troca o código e limpa a URL', async () => {
+    // "Entrar com o Google" na tela de detalhe voltava para /praise/:id?auth=exchange&code=…
+    // e nada acontecia: o efeito desta página apagava `auth` da URL antes de o
+    // AuthProvider lê-la (efeitos rodam de filho para pai), então o código de
+    // troca nunca era consumido — só a HomePage, que não mexe na query, logava.
+    // BrowserRouter de propósito: o bug é a página reescrever o window.location
+    // que o AuthProvider lê, e o MemoryRouter não toca no window.
+    window.history.replaceState(
+      {},
+      '',
+      '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8?auth=exchange&code=cod-123'
+    );
+    try {
+      render(
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/praise/:id" element={<PraiseDetailPage />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      );
+
+      await screen.findByText('Grande Deus');
+      await waitFor(() => {
+        expect(exchangeAuthCode).toHaveBeenCalledWith('cod-123');
+      });
+      await waitFor(() => {
+        expect(window.location.search).toBe('');
+      });
+    } finally {
+      window.history.replaceState({}, '', '/');
+    }
   });
 
   it('auth=drive_error na URL mostra erro de conexão com o Drive', async () => {

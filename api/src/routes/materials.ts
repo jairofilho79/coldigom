@@ -304,6 +304,21 @@ export function registerMaterialsRoutes(app: App): void {
       bindings.push(body.is_reviewed ? (actor?.email ?? actor?.name ?? actor?.sub ?? null) : null);
     }
 
+    // Mover o material para outro louvor. O r2_key não depende do louvor (o
+    // merge já move linhas com o mesmo UPDATE), então aqui é só a FK. Não
+    // mexemos em merged_from_praise_id: aquele campo significa "veio de um merge
+    // que apagou a origem"; num movimento a origem continua viva.
+    let destinoId: string | undefined;
+    if ('praise_id' in body) {
+      const valor = typeof body.praise_id === 'string' ? body.praise_id.trim() : '';
+      if (valor.length === 0) {
+        return c.json({ error: "Field 'praise_id' must be a non-empty string" }, 400);
+      }
+      destinoId = valor;
+      sets.push(`praise_id = ?`);
+      bindings.push(valor);
+    }
+
     if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
 
     try {
@@ -311,6 +326,16 @@ export function registerMaterialsRoutes(app: App): void {
         .bind(materialId)
         .first<Pick<MaterialRow, 'praise_id' | 'type' | 'r2_key'>>();
       if (!row?.praise_id) return c.json({ error: 'Material not found' }, 404);
+
+      if (destinoId !== undefined) {
+        if (destinoId === row.praise_id) {
+          return c.json({ error: 'O material já está neste louvor' }, 400);
+        }
+        const destino = await c.env.DB.prepare(`SELECT id FROM praises WHERE id = ?`)
+          .bind(destinoId)
+          .first<{ id: string }>();
+        if (!destino) return c.json({ error: 'Louvor de destino não encontrado' }, 404);
+      }
 
       // `SET url = ?, r2_key = NULL` sumia com o ponteiro do banco e NÃO apagava
       // o objeto: o .chord ficava órfão no R2 e sem volta. Entre apagar o objeto

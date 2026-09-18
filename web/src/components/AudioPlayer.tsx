@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MaterialInlineAdmin } from './MaterialInlineAdmin';
-import type { Material } from '../types';
+import type { Material, PraiseDetail } from '../types';
 import type { SelectOption } from './selectTypes';
 
 import { isConvertibleAudio } from '../lib/audioConverter';
@@ -36,6 +36,7 @@ type Props = {
     saving: boolean;
     onUpdateKind: (materialId: string, kind: string) => Promise<void>;
     onDelete: (materialId: string) => Promise<void>;
+    onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
     onConvertToMp3?: (material: Material) => Promise<void>;
   };
 };
@@ -183,6 +184,7 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
             saving={admin.saving}
             onUpdateKind={admin.onUpdateKind}
             onDelete={admin.onDelete}
+            onMove={admin.onMove}
           />
         ) : (
           <span className="audio-player-track-name">{trackName}</span>
@@ -319,6 +321,7 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
                       saving={admin.saving}
                       onUpdateKind={admin.onUpdateKind}
                       onDelete={admin.onDelete}
+                      onMove={admin.onMove}
                     />
                   ) : null}
                   {m.r2_key && (

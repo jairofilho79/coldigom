@@ -364,16 +364,40 @@ CREATE INDEX idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id);
 Sem FK (padrão da casa); a integridade é do `apply`. Um material do coldigom
 pode ter várias `pdf_id` (duplicatas internas do PLPCG — 56 casos medidos).
 
-### 8.2 Endpoints
+### 8.2 Endpoints *(Fase D, 17/09)*
 
-- `GET /api/plpcg/resolve/:short_id` → `{praise_id, material_id, url}` (302
-  opcional). É o que faz `plpcg.com/?s=…` e listas salvas no coldigui
-  continuarem vivos.
-- `GET /api/plpcg/manifest` → o **mesmo JSON** do `louvores-manifest.json`,
-  gerado do coldigom: `pdfId` preservado quando há crosswalk (as chaves de
-  cache do cliente sobrevivem), `pdf` apontando para o R2 do coldigom. Permite
-  apontar o plpcjf e o coldigui para o coldigom **sem mudar o formato** —
-  a transição não depende de release de app.
+Três rotas públicas em `api/src/routes/plpcg.ts` (sem sessão, como
+`/api/plpcg/praises`; o CORS já cobre `*plpcg.com` e `plpcjf.org`):
+
+- `GET /api/plpcg/manifest` → **array JSON no formato do
+  `louvores-manifest.json`**, uma entrada por linha de `plpcg_crosswalk`
+  (JOIN interno com `praise_materials` e `praises`: material apagado no app
+  some do manifest em vez de apontar 404):
+
+  | chave | de onde vem |
+  |---|---|
+  | `pdfId`, `groupId`, `shortId` | os do PLPCG (`plpcg_crosswalk`) — chaves de cache e `?s=` sobrevivem |
+  | `nome`, `numero` | `praises.name`, `praises.number` (`''` sem número) |
+  | `classificacao` | rótulos das tags do praise (`pai · filha`, como no catálogo), separados por `, ` |
+  | `categoria` | as cinco do PLPCG a partir do kind (D10 ao contrário): `Chord Chart` → `Cifra`, `Chord Chart I/II` → `Cifra nível I/II`, `CIAs Gestures` → `Gestos em Gravura`, **qualquer outro** → `Partitura` |
+  | `pdf` | URL absoluta na origem da API: `<origem>/<r2_key>` (`assets/praises/<praise_id>/<material_id>.pdf`) |
+  | `praiseId`, `materialId` | extras, para o cliente casar com `/api/plpcg/catalog` sem decodificar nada |
+
+  `ETag: "<sha256 do corpo>"`, `Cache-Control: public, max-age=300`;
+  `If-None-Match` igual → `304`. Ordem: `praises.number, praises.name, pdf_id`.
+- `GET /api/plpcg/manifest/checksum` → o mesmo hex em `text/plain`
+  (`204` com `If-None-Match` igual) — o contrato do `/api/catalog/checksum`
+  do Worker `plpcg-catalog`, para o coldigui trocar de fonte mudando só a
+  URL base.
+- `GET /api/plpcg/resolve/:shortId` → `200 {pdf_id, praise_id, material_id,
+  url}`; `?redirect=1` → `302 Location: <url>`; o id é normalizado (trim,
+  minúsculas) e dá `400` fora de `^[0-9a-f]{1,16}$`; `404` sem linha no
+  crosswalk ou material apagado. É o que faz `plpcg.com/?s=…` continuar vivo.
+
+O que **não** está no manifest: as `pdf_id` decididas como `nao_levar`/
+`descartar` (198) e as pendentes de Revisão 2 — por decisão do dono não
+existem no coldigom. Os materiais do coldigom sem crosswalk continuam vindo
+só por `/api/plpcg/catalog`.
 
 ### 8.3 Desligamento (fora deste repo, mas é o critério de pronto)
 
@@ -381,8 +405,9 @@ pode ter várias `pdf_id` (duplicatas internas do PLPCG — 56 casos medidos).
    desligado; short links via `resolve`.
 2. plpcjf: idem, ou congelado.
 3. plpcg-admin: publicação de manifest desativada; D1 `plpcg-catalog` vira
-   somente leitura (última exportação guardada em
-   `gabaritos/plpcg_crosswalk/plpcg_catalog_final.sql`).
+   somente leitura (última exportação guardada por `python3 -m core.plpcg --guardar-final` em
+   `gabaritos/plpcg_crosswalk/plpcg_catalog_final.sql`, com data e checksum
+   no cabeçalho — rodar de novo no dia do congelamento).
 
 ## 9. Fases e portões
 
@@ -391,7 +416,7 @@ pode ter várias `pdf_id` (duplicatas internas do PLPCG — 56 casos medidos).
 | **A — arnês** | `core/plpcg.py`, `detectors/plpcg_crosswalk.py` com testes de fixture (uma entrada por faixa, páginas compartilhadas, grupo com 2 praises, `nome~`), `findings.jsonl` da rodada 1, migração 019 aplicada | tabela do §2.3 reproduzida (± ajustes de regra) |
 | **B — site + gabarito** *(feita 17/09)* | `revisao/` com botões (§6), `decisoes.jsonl` com 1240 decisões, Revisão 2 e 3 fechadas; a medição contra decisões reais substituiu o gabarito cego | 1040/1045 entradas não-alta decididas (5 em Revisão 2) |
 | **C — aplicação** | `apply` com as quatro ações do §7 lendo `decisoes.jsonl`; `--execute` dos `link` (alta), depois `adicionar`/`substituir`, depois `criar` | `plpcg_crosswalk` cobre 100 % das `pdf_id`; undo testado numa corrida real e desfeita |
-| **D — destino** | endpoints `resolve`/`manifest`, coldigui apontado | coldigui em modo único por uma semana sem "não encontrado" |
+| **D — destino** *(API feita 17/09)* | `GET /api/plpcg/manifest`, `/manifest/checksum`, `/resolve/:shortId` (§8.2); `schema.sql` com a 019; exportação final via `--guardar-final` | coldigui apontado e em modo único por uma semana sem "não encontrado" (fora deste repo, §8.3) |
 
 Dentro de C a ordem é: primeiro `link_plpcg` (não destrutivo: alta + `link`
 do site) → snapshot novo → `import_plpcg_material` / `replace` dos
@@ -428,8 +453,9 @@ Fase 1: `out/` é git-ignored e já morreu com um worktree; nada fica só lá).
   PLPCG na exportação final, e toda `praise_material_id` existe.
 - Zero entradas em `decisoes.jsonl` sem aplicação correspondente no
   `apply_log`.
-- `GET /api/plpcg/manifest` devolve tantas entradas quanto o manifest do PLPCG
-  e o coldigui roda em modo único.
+- `GET /api/plpcg/manifest` devolve uma entrada por linha de `plpcg_crosswalk`
+  (= `louvores` do PLPCG menos as `pdf_id` decididas como não levar) e o
+  coldigui roda em modo único.
 - `gabaritos/plpcg_crosswalk/` tem: exportação final do PLPCG, decisões, gabarito
   cego com métrica, `execucao/` de cada `run_id`.
 

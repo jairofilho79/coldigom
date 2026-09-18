@@ -111,6 +111,26 @@ undo com `erros_r2` fica `ok:true`: apague as chaves listadas à mão com
 executa cada arquivo .sql como um batch atômico do D1 — é o que a retomada
 assume (chunk que falhou não escreveu nada).
 
+**Fase D — destino** (spec §8.2; código em `api/src/routes/plpcg.ts`, fora
+deste arnês): o coldigom serve o que o plpcg.com servia.
+
+```bash
+API=https://coldigom-api.jairofilho79.workers.dev
+curl -s $API/api/plpcg/manifest | python3 -c 'import json,sys; m=json.load(sys.stdin); print(len(m), m[0])'
+curl -s $API/api/plpcg/manifest/checksum            # o mesmo hex do ETag do manifest
+curl -s $API/api/plpcg/resolve/0453                  # {pdf_id, praise_id, material_id, url}
+curl -sI "$API/api/plpcg/resolve/0453?redirect=1"    # 302 para o PDF
+python3 -m core.plpcg --guardar-final                # exportação final do PLPCG → gabaritos/plpcg_crosswalk/plpcg_catalog_final.sql
+```
+
+O manifest tem uma entrada por linha de `plpcg_crosswalk` com `pdfId`,
+`groupId` e `shortId` do PLPCG e `pdf` apontando para o coldigom; conferir
+`len(m)` contra `SELECT COUNT(*) FROM plpcg_crosswalk` (4429 em 17/09) é o
+teste de fumaça depois do deploy. `--guardar-final` junta os dumps de
+`out/plpcg/dumps` (baixa antes, salvo `--pular-download`) num `.sql` único
+com data e checksum no cabeçalho — rodar de novo no dia em que o
+plpcg-admin parar de publicar (§8.3).
+
 `core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
 (cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de
 `dev/plpcjf/assets` e, o que não está lá, de `plpcg.com`. Ambos sobrescrevíveis

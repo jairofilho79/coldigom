@@ -10,7 +10,7 @@ Spec: `coldigui/docs/superpowers/specs/2026-09-17-contribuicoes-comunidade-desig
 | `GET` | `/api/admin/contributions/:id/files/:fileId` | admin | Só `scan_status = limpa`; `nosniff` + `CSP: sandbox` |
 | `PATCH` | `/api/admin/contributions/:id` | admin + Origin | `{ status: em_analise\|aceita\|recusada\|aplicada, decision_note }` |
 
-Setup (uma vez): `npx wrangler queues create contrib-scan`; `npx wrangler secret put VIRUSTOTAL_API_KEY`; `npx wrangler secret put SAFE_BROWSING_API_KEY`; `PLPCG_AUTH_URL` no bloco `[vars]` de `api/wrangler.toml`; migration `020_contributions.sql`; **lifecycle rule** no bucket `coldigom-assets` apagando o prefixo `quarantine/` após 30 dias (dashboard → R2 → bucket → Settings → Object lifecycle rules). Cron `0 3 * * *` reenfileira `recebida` > 6 h e bloqueia > 24 h.
+Setup (uma vez): `npx wrangler queues create contrib-scan`; `npx wrangler secret put VIRUSTOTAL_API_KEY`; `npx wrangler secret put SAFE_BROWSING_API_KEY`; `PLPCG_AUTH_URL` no bloco `[vars]` de `api/wrangler.toml`; migration `021_contributions.sql`; **lifecycle rule** no bucket `coldigom-assets` apagando o prefixo `quarantine/` após 30 dias (dashboard → R2 → bucket → Settings → Object lifecycle rules). Cron `0 3 * * *` reenfileira `recebida` > 6 h e bloqueia > 24 h.
 
 Cada arquivo aceita no upload tem no máximo 32 MiB, até 5 arquivos por envio; o corpo inteiro do `multipart/form-data` respeita o teto de **96 MiB** imposto pelo nosso próprio `MAX_REQUEST_BYTES` (`routes/contributions.ts`) — a borda do Cloudflare (planos Free/Pro) já corta em 100 MB antes disso; 96 MiB só existe para responder `413` com um erro nosso, cedo, em vez de deixar o edge cortar a conexão sem explicação nenhuma pro app.
 
@@ -18,7 +18,7 @@ Cada arquivo aceita no upload tem no máximo 32 MiB, até 5 arquivos por envio; 
 
 ### Ordem de deploy (spec §10)
 
-1. `wrangler d1 execute coldigom --remote --file=migrations/020_contributions.sql`
+1. `wrangler d1 execute coldigom --remote --file=migrations/021_contributions.sql`
 2. `npx wrangler queues create contrib-scan`
 3. `npx wrangler secret put VIRUSTOTAL_API_KEY` e `SAFE_BROWSING_API_KEY`; `PLPCG_AUTH_URL` em `[vars]`
 4. Lifecycle rule `quarantine/` → 30 dias no bucket `coldigom-assets`

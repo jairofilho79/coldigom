@@ -4,7 +4,7 @@
 -- e o admin (em_analise|aceita|recusada|aplicada). O usuário só insere.
 -- Arquivos ficam em quarantine/ no R2 até `scan_status = limpa`.
 --
--- Aplicar: cd api && npx wrangler d1 execute coldigom --remote --file=migrations/020_contributions.sql
+-- Aplicar: cd api && npx wrangler d1 execute coldigom --remote --file=migrations/021_contributions.sql
 
 CREATE TABLE IF NOT EXISTS contributions (
   id                  TEXT PRIMARY KEY,          -- uuid

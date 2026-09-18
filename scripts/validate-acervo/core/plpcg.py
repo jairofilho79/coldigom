@@ -10,9 +10,11 @@ import sys
 import urllib.parse
 import urllib.request
 from collections import defaultdict
+from datetime import datetime, timezone
 
 from core.paths import (
     HASHES_DB,
+    PKG,
     PLPCG_ADMIN_WORKER,
     PLPCG_BAIXADOS,
     PLPCG_DB,
@@ -25,6 +27,7 @@ from core.paths import (
 
 DB_NAME = "plpcg-catalog"
 TABELAS = ("louvores", "catalog_meta")
+EXPORTACAO_FINAL = os.path.join(PKG, "gabaritos", "plpcg_crosswalk", "plpcg_catalog_final.sql")
 
 LADO_PLPCG = "plpcg"
 LADO_COLDIGOM = "coldigom"
@@ -217,6 +220,34 @@ def montar_db(dumps_dir: str, db: str = PLPCG_DB) -> sqlite3.Connection:
     return conn
 
 
+def guardar_exportacao_final(dumps_dir: str, destino: str, quando: str | None = None) -> dict[str, str]:
+    """Junta os dumps (louvores + catalog_meta) num único .sql — a exportação
+    final do D1 plpcg-catalog que o spec §8.3 manda guardar em gabaritos/
+    quando o catálogo congela. O cabeçalho diz de quando é e contra qual
+    checksum. Devolve o catalog_meta lido do dump, mais 'louvores' = contagem."""
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    partes_sql: list[str] = []
+    for t in TABELAS:
+        with open(os.path.join(dumps_dir, f"{t}.sql"), encoding="utf-8") as f:
+            sql = f.read()
+        conn.executescript(sql)
+        partes_sql.append(f"-- {t}.sql\n{sql.rstrip()}\n")
+    m = meta(conn)
+    n = conn.execute("SELECT COUNT(*) FROM louvores").fetchone()[0]
+    conn.close()
+
+    quando = quando or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cabecalho = (
+        f"-- exportação final do D1 plpcg-catalog em {quando}: {n} louvores, "
+        f"checksum {m.get('checksum', '?')}, short_id_next {m.get('short_id_next', '?')}\n"
+    )
+    os.makedirs(os.path.dirname(destino) or ".", exist_ok=True)
+    with open(destino, "w", encoding="utf-8") as f:
+        f.write(cabecalho + "\n" + "\n".join(partes_sql))
+    return {"louvores": str(n), **m}
+
+
 def meta(conn: sqlite3.Connection) -> dict[str, str]:
     """catalog_meta: short_id_next, checksum, row_count. O checksum vai na
     evidência de cada finding — é como se sabe contra qual catálogo a rodada
@@ -242,6 +273,9 @@ def main(argv=None) -> int:
                     help="reusa os dumps já baixados em out/plpcg/dumps")
     ap.add_argument("--sem-rede", action="store_true",
                     help="não baixa de plpcg.com o que falta em plpcjf/assets")
+    ap.add_argument("--guardar-final", nargs="?", const=EXPORTACAO_FINAL, metavar="DESTINO",
+                    help="grava a exportação final do catálogo (louvores + catalog_meta) num .sql "
+                         f"único e para; padrão {EXPORTACAO_FINAL}")
     args = ap.parse_args(argv)
 
     ensure_out()
@@ -249,6 +283,12 @@ def main(argv=None) -> int:
     if not args.pular_download:
         print("baixando o D1 plpcg-catalog:")
         exportar_d1(dumps, remote=not args.local)
+
+    if args.guardar_final:
+        info = guardar_exportacao_final(dumps, args.guardar_final)
+        print(f"exportação final: {args.guardar_final}\n  {info['louvores']} louvores, "
+              f"checksum {info.get('checksum', '?')}, short_id_next {info.get('short_id_next', '?')}")
+        return 0
 
     print("montando plpcg.sqlite...")
     conn = montar_db(dumps)

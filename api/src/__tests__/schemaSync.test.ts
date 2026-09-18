@@ -60,4 +60,25 @@ describe('schema.sql acompanha as migrações', () => {
       expect(schema).toContain(c);
     }
   });
+
+  it('019: a tabela plpcg_crosswalk e os dois índices estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '019_plpcg_crosswalk.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS plpcg_crosswalk (',
+      'CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_short ON plpcg_crosswalk(short_id)',
+      'CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id)',
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+    const colunas = ['pdf_id TEXT PRIMARY KEY', 'short_id TEXT NOT NULL', 'group_id TEXT NOT NULL',
+      'praise_id TEXT NOT NULL', 'praise_material_id TEXT NOT NULL', 'evidencia TEXT NOT NULL',
+      'confianca TEXT NOT NULL', 'decidido_por TEXT NOT NULL', 'run_id TEXT NOT NULL',
+      "created_at TEXT NOT NULL DEFAULT (datetime('now'))"];
+    for (const c of colunas) {
+      expect(mig).toContain(c);
+      expect(schema).toContain(c);
+    }
+  });
 });

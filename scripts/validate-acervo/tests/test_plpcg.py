@@ -180,3 +180,57 @@ def test_montar_db_le_os_dumps_e_decodifica_o_caminho(tmp_path):
     # montar de novo substitui, não acumula
     conn2 = montar_db(str(dumps), str(tmp_path / "plpcg.sqlite"))
     assert len(entradas(conn2)) == 1
+
+
+def test_guardar_exportacao_final_junta_os_dumps_com_cabecalho(tmp_path):
+    from core.plpcg import guardar_exportacao_final
+    import sqlite3
+
+    dumps = tmp_path / "dumps"
+    dumps.mkdir()
+    (dumps / "louvores.sql").write_text(
+        "PRAGMA defer_foreign_keys=TRUE;\n"
+        "CREATE TABLE louvores (pdf_id TEXT PRIMARY KEY, nome TEXT);\n"
+        "INSERT INTO louvores VALUES ('a','x');\n"
+        "INSERT INTO louvores VALUES ('b','y');\n",
+        encoding="utf-8",
+    )
+    (dumps / "catalog_meta.sql").write_text(
+        "CREATE TABLE catalog_meta (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);\n"
+        "INSERT INTO catalog_meta VALUES ('checksum','abc'),('short_id_next','0100'),('row_count','2');\n",
+        encoding="utf-8",
+    )
+    destino = tmp_path / "gabaritos" / "plpcg_catalog_final.sql"
+
+    info = guardar_exportacao_final(str(dumps), str(destino), quando="2026-09-17T00:00:00Z")
+
+    texto = destino.read_text(encoding="utf-8")
+    assert texto.startswith(
+        "-- exportação final do D1 plpcg-catalog em 2026-09-17T00:00:00Z: "
+        "2 louvores, checksum abc, short_id_next 0100\n"
+    )
+    assert "-- louvores.sql\n" in texto and "-- catalog_meta.sql\n" in texto
+    assert "INSERT INTO louvores VALUES ('b','y');" in texto
+    assert info == {"louvores": "2", "checksum": "abc", "short_id_next": "0100", "row_count": "2"}
+    # o arquivo se basta: executá-lo reconstrói o catálogo
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(texto)
+    assert conn.execute("SELECT COUNT(*) FROM louvores").fetchone()[0] == 2
+    assert conn.execute("SELECT value FROM catalog_meta WHERE key='checksum'").fetchone()[0] == "abc"
+
+
+def test_guardar_exportacao_final_data_de_hoje_quando_nao_informada(tmp_path):
+    from core.plpcg import guardar_exportacao_final
+
+    dumps = tmp_path / "dumps"
+    dumps.mkdir()
+    (dumps / "louvores.sql").write_text("CREATE TABLE louvores (pdf_id TEXT PRIMARY KEY);\n", encoding="utf-8")
+    (dumps / "catalog_meta.sql").write_text("CREATE TABLE catalog_meta (key TEXT, value TEXT);\n", encoding="utf-8")
+    destino = tmp_path / "final.sql"
+
+    info = guardar_exportacao_final(str(dumps), str(destino))
+
+    primeira = destino.read_text(encoding="utf-8").splitlines()[0]
+    assert primeira.startswith("-- exportação final do D1 plpcg-catalog em 20")
+    assert primeira.endswith("Z: 0 louvores, checksum ?, short_id_next ?")
+    assert info == {"louvores": "0"}

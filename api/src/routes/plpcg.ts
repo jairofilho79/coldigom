@@ -1,5 +1,6 @@
 import type { App } from '../env';
 import { buildPlpcgManifest } from '../plpcgManifest';
+import { normalizarShortId, resolvePlpcgShortId } from '../plpcgResolve';
 
 /**
  * Destino da migração PLPCG (spec docs/superpowers/specs/2026-09-15-migracao-plpcg-design.md §8.2):
@@ -47,6 +48,28 @@ export function registerPlpcgRoutes(app: App): void {
     } catch (error) {
       console.error('Error building PLPCG manifest checksum:', error);
       return c.json({ error: 'Failed to build manifest' }, 500);
+    }
+  });
+
+  // GET /api/plpcg/resolve/:shortId — o ?s= dos links antigos; ?redirect=1 manda direto para o PDF
+  app.get('/api/plpcg/resolve/:shortId', async (c) => {
+    const shortId = normalizarShortId(c.req.param('shortId'));
+    if (!shortId) {
+      return c.json({ error: 'short_id inválido: hex minúsculo, ex. 0453' }, 400);
+    }
+    try {
+      const r = await resolvePlpcgShortId(c.env.DB, shortId, new URL(c.req.url).origin);
+      if (!r) {
+        return c.json({ error: 'short_id sem material no coldigom' }, 404);
+      }
+      c.header('Cache-Control', 'public, max-age=300');
+      if (c.req.query('redirect') === '1') {
+        return c.redirect(r.url, 302);
+      }
+      return c.json(r);
+    } catch (error) {
+      console.error('Error resolving PLPCG short_id:', error);
+      return c.json({ error: 'Failed to resolve' }, 500);
     }
   });
 }

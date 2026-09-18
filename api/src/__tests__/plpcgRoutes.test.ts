@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { app } from '../index';
 import { sha256Hex } from '../etag';
+import { RESOLVE_SQL, normalizarShortId } from '../plpcgResolve';
 
 const LINHA = {
   pdf_id: 'TG91dm9yZXMgQ29sZXTDom5lYSBDSUFzLzAwMSAtIE1ldSBEZXVzLCBtZXUgcGFpL0NpZnJhIEkucGRm',
@@ -135,5 +136,80 @@ describe('GET /api/plpcg/manifest/checksum', () => {
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'Failed to build manifest' });
     spy.mockRestore();
+  });
+});
+
+describe('GET /api/plpcg/resolve/:shortId', () => {
+  const RESOLVIDO = { pdf_id: LINHA.pdf_id, praise_id: 'p1', material_id: 'm1', r2_key: 'assets/praises/p1/m1.pdf' };
+
+  it('200 com praise, material e a URL absoluta do PDF; consulta em minúsculas', async () => {
+    const { db, binds } = fakeDb({ resolve: RESOLVIDO });
+    const res = await app.request('/api/plpcg/resolve/04A3', {}, { DB: db });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('public, max-age=300');
+    expect(await res.json()).toEqual({
+      pdf_id: LINHA.pdf_id,
+      praise_id: 'p1',
+      material_id: 'm1',
+      url: 'http://localhost/assets/praises/p1/m1.pdf',
+    });
+    expect(binds).toEqual([['04a3']]);
+  });
+
+  it('?redirect=1 → 302 para o PDF', async () => {
+    const { db } = fakeDb({ resolve: RESOLVIDO });
+    const res = await app.request('/api/plpcg/resolve/0453?redirect=1', {}, { DB: db });
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe('http://localhost/assets/praises/p1/m1.pdf');
+    expect(res.headers.get('cache-control')).toBe('public, max-age=300');
+  });
+
+  it('short_id que não é hex → 400 sem tocar no D1', async () => {
+    const { db, binds } = fakeDb({ resolve: RESOLVIDO });
+    for (const ruim of ['zz', '04-53', '0123456789abcdef0', '%20']) {
+      const res = await app.request(`/api/plpcg/resolve/${ruim}`, {}, { DB: db });
+      expect(res.status, ruim).toBe(400);
+      expect(await res.json()).toEqual({ error: 'short_id inválido: hex minúsculo, ex. 0453' });
+    }
+    expect(binds).toEqual([]);
+  });
+
+  it('sem linha no crosswalk → 404', async () => {
+    const { db } = fakeDb({ resolve: null });
+    const res = await app.request('/api/plpcg/resolve/ffff', {}, { DB: db });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: 'short_id sem material no coldigom' });
+    expect(res.headers.get('cache-control')).toBeNull();
+  });
+
+  it('CORS para o plpcg.com', async () => {
+    const { db } = fakeDb({ resolve: RESOLVIDO });
+    const res = await app.request('/api/plpcg/resolve/0453', { headers: { origin: 'https://plpcg.com' } }, { DB: db, WEB_ORIGIN });
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://plpcg.com');
+  });
+
+  it('D1 fora do ar → 500', async () => {
+    const { db } = fakeDb({ falha: new Error('boom') });
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await app.request('/api/plpcg/resolve/0453', {}, { DB: db });
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: 'Failed to resolve' });
+    spy.mockRestore();
+  });
+});
+
+describe('plpcgResolve — unidades', () => {
+  it('normalizarShortId: trim, minúsculas, só hex até 16', () => {
+    expect(normalizarShortId(' 04A3 ')).toBe('04a3');
+    expect(normalizarShortId('0000')).toBe('0000');
+    expect(normalizarShortId('10000')).toBe('10000');
+    expect(normalizarShortId('')).toBeNull();
+    expect(normalizarShortId('g1')).toBeNull();
+    expect(normalizarShortId('0123456789abcdef0')).toBeNull();
+    // JOIN interno: material apagado no app = 404, não uma URL para um 404.
+    expect(RESOLVE_SQL).toMatch(/JOIN praise_materials pm ON pm\.id = cw\.praise_material_id/);
+    expect(RESOLVE_SQL).toMatch(/WHERE cw\.short_id = \?/);
+    expect(RESOLVE_SQL).toMatch(/LIMIT 1/);
   });
 });

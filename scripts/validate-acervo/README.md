@@ -36,37 +36,6 @@ python3 -m core.apply --from out/fila/aprovados.jsonl --faixa alta --execute  # 
 python3 -m core.queue --marcar-aplicados out/apply_log.jsonl
 ```
 
-### Migração PLPCG (spec 2026-09-15-migracao-plpcg-design)
-
-```bash
-python3 -m core.plpcg                       # exporta o D1 plpcg-catalog, baixa o que falta, hasheia os dois lados
-python3 -m core.snapshot                    # o acervo do coldigom, fresco
-python3 -m detectors.plpcg_crosswalk        # Fase A — um finding por entrada do PLPCG + um por louvor só de lá
-```
-
-`core.plpcg` precisa do `wrangler` logado e do repo irmão `dev/plpcg-admin`
-(cwd `worker/`, onde vive o binding do `plpcg-catalog`); os PDFs vêm de
-`dev/plpcjf/assets` e, o que não está lá, de `plpcg.com`. Ambos sobrescrevíveis
-por `PLPCG_ADMIN_WORKER` e `PLPCJF_ASSETS`. O hash é incremental em
-`out/hashes.sqlite` — arquivo trocado no disco com o mesmo caminho não é
-recalculado; apague a linha para forçar.
-
-A **faixa do cruzamento** (§5.1 do spec) vive em `evidence["faixa"]`; o
-`confidence` do finding é o contrato do arnês, pelo mapa:
-
-| faixa | confidence | action | quem decide |
-|---|---|---|---|
-| alta | alta | `link_plpcg` | o apply (depois do gabarito cego, Fase B) |
-| media | media | `link_plpcg` | o site local |
-| faltante | alta | `import_plpcg_material` | o apply (D4) |
-| ambiguo | baixa | `link_plpcg` | o site local |
-| sem_louvor (entrada) | media | `import_plpcg_material` | o site, ou o grupo abaixo |
-| sem_louvor (grupo inteiro, `target_type = plpcg_grupo`) | alta | `create_praise_plpcg` | o apply (D4), depois da pré-visualização no site |
-
-Nenhuma dessas ações escreve ainda: o `apply` as recusa nominalmente
-("chega com a Fase C da migração PLPCG"). A tabela `plpcg_crosswalk`
-(migração 019) já existe no D1, vazia.
-
 **A ordem dos três passos é o portão de promoção (spec §5.2), não estilo.**
 Simular, medir com o gabarito preenchido, e só então aplicar. `core.gold`
 sai com código != 0 tanto quando a faixa alta erra quanto quando não há
@@ -87,9 +56,7 @@ Testes: `python3 -m pytest tests/ -v`
 | `core/apply.py` | a única porta de escrita. Simula por padrão |
 | `core/gold.py` | sorteio, formulário cego, precisão por faixa |
 | `core/queue.py` | a fila de revisão: empurra findings para o D1, puxa os aprovados como faixa alta, marca os aplicados |
-| `core/plpcg.py` | o PLPCG como fonte: exportação do D1 `plpcg-catalog`, `pdf_id` ↔ caminho, download, cache de sha256 dos dois lados |
 | `detectors/youtube_merge.py` | Fase 1 — louvores cujo único material é do YouTube |
-| `detectors/plpcg_crosswalk.py` | Fase A da migração — louvor por número/slug/classe, hash e caminho só dentro do louvor, faixas e candidatos |
 
 ## As regras que não são óbvias no código
 

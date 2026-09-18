@@ -296,3 +296,22 @@ CREATE TABLE IF NOT EXISTS gesture_usage (
   FOREIGN KEY (material_id) REFERENCES praise_materials(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_gesture_usage_gesture ON gesture_usage(gesture_id);
+
+-- Crosswalk PLPCG → coldigom (migração 019; spec docs/superpowers/specs/2026-09-15-migracao-plpcg-design.md §8.1).
+-- Uma linha por pdf_id do PLPCG apontando o material do coldigom que o substitui.
+-- Sem FK, como o resto: quem escreve é scripts/validate-acervo/core/plpcg_apply.py;
+-- quem lê é GET /api/plpcg/manifest e /api/plpcg/resolve/:shortId.
+CREATE TABLE IF NOT EXISTS plpcg_crosswalk (
+  pdf_id             TEXT PRIMARY KEY,                       -- base64 urlsafe do caminho do PDF no PLPCG
+  short_id           TEXT NOT NULL,                          -- o ?s= dos links antigos
+  group_id           TEXT NOT NULL,                          -- 'NNN:slug' | 'avulso:slug' — o louvor no PLPCG
+  praise_id          TEXT NOT NULL,
+  praise_material_id TEXT NOT NULL,
+  evidencia          TEXT NOT NULL,                          -- 'num+slug+hash+path' | 'site:é este' …
+  confianca          TEXT NOT NULL,                          -- alta | media | humano
+  decidido_por       TEXT NOT NULL,                          -- detector | jairo
+  run_id             TEXT NOT NULL,                          -- o run do apply que escreveu (undo)
+  created_at         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_short ON plpcg_crosswalk(short_id);
+CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id);

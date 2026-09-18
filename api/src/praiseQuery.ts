@@ -17,6 +17,9 @@ export interface PraiseResult {
   group_id: string | null;
   /** Token de versão da tela: volta no PATCH como `if_updated_at`. */
   updated_at?: string | null;
+  is_reviewed: number;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
   tag_ids: string | null;
 }
 

@@ -1,4 +1,5 @@
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import type { AuthUser } from '../auth';
 import { PraiseZipTooLargeError, buildPraiseZipStream } from '../praiseZip';
 import {
   erroDeCategoriaDesconhecida,
@@ -80,6 +81,7 @@ export function registerPraisesRoutes(app: App): void {
       const query = `
         SELECT
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
+          p.is_reviewed, p.reviewed_at, p.reviewed_by,
           GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
           GROUP_CONCAT(DISTINCT ${TAG_LABEL_SQL}) as tag_names
         FROM praises p
@@ -283,7 +285,7 @@ export function registerPraisesRoutes(app: App): void {
       const praiseQuery = `
         SELECT 
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
-          p.updated_at,
+          p.updated_at, p.is_reviewed, p.reviewed_at, p.reviewed_by,
           GROUP_CONCAT(pt.tag_id) as tag_ids
         FROM praises p
         LEFT JOIN praise_tags pt ON p.id = pt.praise_id
@@ -518,7 +520,7 @@ export function registerPraisesRoutes(app: App): void {
 
     const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
     const sets: string[] = [];
-    const bindings: (string | null)[] = [];
+    const bindings: (string | number | null)[] = [];
 
     for (const key of updatable) {
       if (!(key in body)) continue;
@@ -546,6 +548,22 @@ export function registerPraisesRoutes(app: App): void {
       }
       sets.push(`${key} = ?`);
       bindings.push(val);
+    }
+
+    // Marca de revisão do praise (022): boolean, fora de `updatable` porque
+    // aqueles são strings. Mesma regra do PATCH de materiais — quem marcou e
+    // quando andam junto com a marca; desmarcar zera os três.
+    if ('is_reviewed' in body) {
+      if (typeof body.is_reviewed !== 'boolean') {
+        return c.json({ error: "Field 'is_reviewed' must be a boolean" }, 400);
+      }
+      const actor = (c.get('user') as AuthUser | undefined) ?? undefined;
+      sets.push('is_reviewed = ?');
+      bindings.push(body.is_reviewed ? 1 : 0);
+      sets.push('reviewed_at = ?');
+      bindings.push(body.is_reviewed ? new Date().toISOString() : null);
+      sets.push('reviewed_by = ?');
+      bindings.push(body.is_reviewed ? (actor?.email ?? actor?.name ?? actor?.sub ?? null) : null);
     }
 
     if (sets.length === 0) {

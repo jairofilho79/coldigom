@@ -1,6 +1,11 @@
 import type { App } from '../env';
 import { buildPlpcgManifest } from '../plpcgManifest';
-import { normalizarShortId, resolvePlpcgShortId } from '../plpcgResolve';
+import {
+  normalizarShortId,
+  parseCrosswalkBody,
+  resolvePlpcgCrosswalk,
+  resolvePlpcgShortId,
+} from '../plpcgResolve';
 
 /**
  * Destino da migração PLPCG (spec docs/superpowers/specs/2026-09-15-migracao-plpcg-design.md §8.2):
@@ -70,6 +75,25 @@ export function registerPlpcgRoutes(app: App): void {
     } catch (error) {
       console.error('Error resolving PLPCG short_id:', error);
       return c.json({ error: 'Failed to resolve' }, 500);
+    }
+  });
+
+  // POST /api/plpcg/crosswalk — lote de pdf_id legados → praise, material e URL atuais.
+  // Público como o /resolve (o CORS é o middleware de index.ts); POST só porque
+  // 500 ids não cabem numa URL. Nada de cache: o normalizador do app pergunta
+  // uma vez por id, e a resposta muda com merge/move.
+  app.post('/api/plpcg/crosswalk', async (c) => {
+    const parsed = parseCrosswalkBody(await c.req.json().catch(() => null));
+    if (!parsed.ok) {
+      return c.json({ error: parsed.error }, 400);
+    }
+    try {
+      const items = await resolvePlpcgCrosswalk(c.env.DB, parsed.pdfIds, new URL(c.req.url).origin);
+      c.header('Cache-Control', 'no-store');
+      return c.json({ items });
+    } catch (error) {
+      console.error('Error resolving PLPCG crosswalk:', error);
+      return c.json({ error: 'Failed to resolve crosswalk' }, 500);
     }
   });
 }

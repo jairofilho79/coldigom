@@ -393,6 +393,11 @@ Três rotas públicas em `api/src/routes/plpcg.ts` (sem sessão, como
   url}`; `?redirect=1` → `302 Location: <url>`; o id é normalizado (trim,
   minúsculas) e dá `400` fora de `^[0-9a-f]{1,16}$`; `404` sem linha no
   crosswalk ou material apagado. É o que faz `plpcg.com/?s=…` continuar vivo.
+- `POST /api/plpcg/crosswalk` *(23/09, spec coldigui `2026-09-23-fim-fonte-plpcg` §7.2)* → corpo
+  `{"pdfIds": [string, …]}` (1 a 500; repetidos contam uma vez) → `200 {"items": {"<pdfId>": {praiseId,
+  materialId, url}}}`. Desconhecidos e materiais apagados ficam de fora. `praiseId` é o dono **atual** do
+  material e `url` sai do `r2_key` real (acerta fundidos e movidos). `400` fora do contrato;
+  `Cache-Control: no-store`. É o que o app usa para normalizar, uma vez, os ids legados que guardou.
 
 **`praises.short_id` (migração 023, 23/09 — spec coldigui `2026-09-23-fim-fonte-plpcg` §7.1).** Id curto do
 *louvor* (não do material, como o `shortId` do manifest): hex minúsculo `printf('%03x', n)`, único, imutável,

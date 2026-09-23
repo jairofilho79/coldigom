@@ -21,12 +21,13 @@ export default defineConfig({
       // Contribuições, rotas admin (2026-09-17): 77.51 / 73.16 / 79.8 / 79.97
       // Contribuições admin, fix de revisão (2026-09-17): 77.64 / 73.19 / 80.04 / 80.12
       // Contribuições, onda final de revisão (2026-09-17): 78.58 / 73.87 / 80.93 / 81.04
+      // short_id + crosswalk (2026-09-23): 79.9 / 75.33 / 82.4 / 82.27
       thresholds: {
-        // Onda final: medido 78.58 / 73.87 / 80.93 / 81.04
-        statements: 78,
-        branches: 73,
-        functions: 80,
-        lines: 81,
+        // short_id + crosswalk: medido 79.9 / 75.33 / 82.4 / 82.27
+        statements: 79,
+        branches: 75,
+        functions: 82,
+        lines: 82,
       },
     },
   },

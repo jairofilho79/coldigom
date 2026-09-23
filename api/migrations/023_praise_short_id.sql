@@ -46,8 +46,10 @@ FROM (
 ) AS r
 WHERE praises.id = r.id AND praises.short_id IS NULL;
 
-INSERT OR IGNORE INTO app_meta (key, value)
-SELECT 'short_id_next', COUNT(*) FROM praises;
+INSERT INTO app_meta (key, value)
+SELECT 'short_id_next', COUNT(*) FROM praises
+WHERE true
+ON CONFLICT(key) DO UPDATE SET value = excluded.value;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_praises_short_id ON praises(short_id);
 

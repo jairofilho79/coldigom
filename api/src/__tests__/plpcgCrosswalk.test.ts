@@ -109,6 +109,7 @@ describe('POST /api/plpcg/crosswalk', () => {
       post({ pdfIds: [PDF_CONHECIDO] }, { origin: 'https://v2.plpcg.com' }),
       env,
     );
+    expect(res.status).toBe(200);
     expect(res.headers.get('access-control-allow-origin')).toBe('https://v2.plpcg.com');
 
     const preflight = await app.request(

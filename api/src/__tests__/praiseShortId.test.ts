@@ -107,6 +107,23 @@ describe('migração 023 — backfill', () => {
     expect(achados(sqlite, 'f')).toEqual(['f']);
     expect(achados(sqlite, 'letra')).toEqual(['a', 'b', 'c']);
   });
+
+  it('app_meta já existia com short_id_next=0 (ex.: schema.sql rodado antes): a 023 corrige o contador para COUNT(*)', () => {
+    const sqlite = new DatabaseSync(':memory:');
+    sqlite.exec(PRE_023);
+    sqlite.exec(
+      "CREATE TABLE app_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL); INSERT INTO app_meta (key, value) VALUES ('short_id_next', 0);",
+    );
+    const ins = sqlite.prepare('INSERT INTO praises (id, name) VALUES (?, ?)');
+    ins.run('a', 'A');
+    ins.run('b', 'B');
+    ins.run('c', 'C');
+    sqlite.exec(MIGRACAO);
+    expect(shortIds(sqlite)).toEqual({ a: '000', b: '001', c: '002' });
+    expect(contador(sqlite)).toBe(3);
+    inserir(sqlite, 'd');
+    expect(shortIds(sqlite).d).toBe('003');
+  });
 });
 
 describe('praises.short_id — atribuição e invariantes (schema.sql)', () => {

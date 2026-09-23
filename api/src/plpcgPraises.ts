@@ -420,7 +420,8 @@ export async function buildPlpcgCatalog(
   const praises = ((praisesResult.results ?? []) as CatalogPraiseRow[]).map((row) => {
     const praise: Record<string, unknown> = {
       id: row.id,
-      // Sem short_id (D1 ainda sem a migração 023) a chave some, em vez de ir `null`.
+      // short_id nulo (praise fora do gatilho) a chave some, em vez de ir `null`;
+      // a coluna em si é obrigatória (migração 023 antes do deploy).
       ...(row.short_id ? { shortId: row.short_id } : {}),
       number: row.number ?? '',
       name: row.name,

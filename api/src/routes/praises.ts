@@ -304,7 +304,7 @@ export function registerPraisesRoutes(app: App): void {
       const praiseQuery = `
         SELECT 
           p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
-          p.updated_at,
+          p.short_id, p.updated_at,
           GROUP_CONCAT(pt.tag_id) as tag_ids
         FROM praises p
         LEFT JOIN praise_tags pt ON p.id = pt.praise_id

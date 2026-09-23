@@ -394,6 +394,12 @@ Três rotas públicas em `api/src/routes/plpcg.ts` (sem sessão, como
   minúsculas) e dá `400` fora de `^[0-9a-f]{1,16}$`; `404` sem linha no
   crosswalk ou material apagado. É o que faz `plpcg.com/?s=…` continuar vivo.
 
+**`praises.short_id` (migração 023, 23/09 — spec coldigui `2026-09-23-fim-fonte-plpcg` §7.1).** Id curto do
+*louvor* (não do material, como o `shortId` do manifest): hex minúsculo `printf('%03x', n)`, único, imutável,
+nunca reutilizado, atribuído por gatilho em todo INSERT de `praises`. Sai como `shortId` em cada praise de
+`/api/plpcg/catalog` (omitido se nulo) e como `short_id` em `GET /api/praises/:id` e nos itens de
+`/api/plpcg/praises`.
+
 O que **não** está no manifest: as `pdf_id` decididas como `nao_levar`/
 `descartar` (198) e as pendentes de Revisão 2 — por decisão do dono não
 existem no coldigom. Os materiais do coldigom sem crosswalk continuam vindo

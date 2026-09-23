@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS praises (
     category TEXT,                 -- Categoria
     lyrics TEXT,                   -- Letra completa
     group_id TEXT,                 -- Shared id for same song / different arrangements
+    short_id TEXT,                 -- Id curto do louvor (migração 023): hex, único, imutável, atribuído pelo gatilho
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -239,7 +240,9 @@ CREATE TRIGGER IF NOT EXISTS praises_ad AFTER DELETE ON praises BEGIN
     INSERT INTO praises_fts(praises_fts, rowid, name, lyrics) VALUES('delete', old.rowid, old.name, old.lyrics);
 END;
 
-CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE ON praises BEGIN
+-- Só as colunas indexadas: o UPDATE do gatilho de short_id (migração 023) roda
+-- antes do praises_ai e não pode mandar ao FTS um 'delete' de linha não indexada.
+CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE OF name, lyrics ON praises BEGIN
     INSERT INTO praises_fts(praises_fts, rowid, name, lyrics) VALUES('delete', old.rowid, old.name, old.lyrics);
     INSERT INTO praises_fts(rowid, name, lyrics) VALUES (new.rowid, new.name, new.lyrics);
 END;
@@ -315,3 +318,44 @@ CREATE TABLE IF NOT EXISTS plpcg_crosswalk (
 );
 CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_short ON plpcg_crosswalk(short_id);
 CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id);
+
+-- short_id do praise (migração 023; spec coldigui 2026-09-23-fim-fonte-plpcg §7.1).
+-- A coluna está no CREATE TABLE praises acima. O contador começa em 0 num D1 novo;
+-- quem atribui é o gatilho praises_short_id_ai, em todo INSERT, por qualquer porta.
+CREATE TABLE IF NOT EXISTS app_meta (
+  key   TEXT PRIMARY KEY,
+  value INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO app_meta (key, value) VALUES ('short_id_next', 0);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_praises_short_id ON praises(short_id);
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_ai AFTER INSERT ON praises
+WHEN NEW.short_id IS NULL
+BEGIN
+  UPDATE praises
+  SET short_id = (SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next')
+  WHERE id = NEW.id;
+  UPDATE app_meta SET value = value + 1 WHERE key = 'short_id_next';
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_bi BEFORE INSERT ON praises
+WHEN NEW.short_id IS NOT NULL AND (
+  NEW.short_id GLOB '*[^0-9a-f]*'
+  OR length(NEW.short_id) < 3
+  OR (length(NEW.short_id) > 3 AND substr(NEW.short_id, 1, 1) = '0')
+  OR length(NEW.short_id) > length((SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next'))
+  OR (
+    length(NEW.short_id) = length((SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next'))
+    AND NEW.short_id >= (SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next')
+  )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'praises.short_id: só um valor já emitido pode ser reposto');
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_bu BEFORE UPDATE OF short_id ON praises
+WHEN OLD.short_id IS NOT NULL AND NEW.short_id IS NOT OLD.short_id
+BEGIN
+  SELECT RAISE(ABORT, 'praises.short_id é imutável');
+END;

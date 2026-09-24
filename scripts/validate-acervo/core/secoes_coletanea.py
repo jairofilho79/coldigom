@@ -329,3 +329,98 @@ def _escrever_relatorio(pasta: str, texto: str) -> str:
     with open(caminho, "w", encoding="utf-8") as f:
         f.write(texto)
     return caminho
+
+
+# --- execução --------------------------------------------------------------------
+
+def conferir_raizes(plano: Plano, tags: list[dict]) -> None:
+    """As raízes de produção são as do snapshot? Todo o SQL usa esses ids."""
+    problemas = []
+    for nome, tid in plano.raizes.items():
+        prod = [t["id"] for t in tags if t["name"] == nome and t["parent_id"] is None]
+        if prod != [tid]:
+            problemas.append(f"a raiz {nome!r} em produção ({prod}) não é a do snapshot ({tid})")
+    if problemas:
+        raise Trava(problemas)
+
+
+def _ligacoes_producao(tag_ids: list[str], remote: bool) -> set:
+    lista = ", ".join(sql_str(t) for t in tag_ids)
+    return {(r["praise_id"], r["tag_id"]) for r in query(
+        f"SELECT praise_id, tag_id FROM praise_tags WHERE tag_id IN ({lista})", remote=remote)}
+
+
+def executar(plano: Plano, conn: sqlite3.Connection, execute: bool, run_id: str,
+             log_path: str = LOG_PADRAO, out_dir: str | None = None, execucao_dir: str | None = None,
+             remote: bool = True, novo_id=lambda: str(uuid.uuid4())) -> dict:
+    pasta = os.path.join(out_dir or OUT_PADRAO, run_id)
+    col = plano.raizes[mapa.RAIZ_COLETANEA]
+    resumo = {"run_id": run_id, "executado": execute, "pasta": pasta,
+              "ligar": sum(1 for lig in plano.ligacoes if lig.inserir),
+              "desligar_raiz": sum(1 for lig in plano.ligacoes if lig.remover_raiz),
+              "subtags_novas": 0, "statements": 0, "divergencias": len(divergencias(plano)),
+              "criadas": 0, "removidas": 0, "atrasadas": {"ligar": [], "desligar_raiz": []}, "falhou": False}
+
+    if not execute:
+        # Portão do ensaio: sem rede, sem credencial. As subtags vêm do snapshot.
+        tags = [dict(r) for r in conn.execute("SELECT id, name, parent_id FROM tags")]
+        ids, novas = resolver_subtags(plano, tags, novo_id)
+        stmts = sql_plano(plano, ids, novas)
+        write_sql_chunks(stmts, os.path.join(pasta, "sql"), prefix="ensaio", per_file=LOTE_SQL)
+        resumo["relatorio"] = _escrever_relatorio(pasta, relatorio(plano, conn, run_id, novas))
+        resumo.update(subtags_novas=len(novas), statements=len(stmts))
+        return resumo
+
+    # Produção manda sobre o snapshot no que o SQL referencia por id: as raízes
+    # e as subtags (uma subtag criada pelo admin depois do snapshot é reaproveitada).
+    tags_prod = query("SELECT id, name, parent_id FROM tags", remote=remote)
+    conferir_raizes(plano, tags_prod)
+    ids, novas = resolver_subtags(plano, tags_prod, novo_id)
+    stmts = sql_plano(plano, ids, novas)
+    alvo = sorted({col, *ids.values()})
+    antes = _ligacoes_producao(alvo, remote)
+    ligar = sorted({(lig.praise_id, ids[(lig.pai, lig.subtag)]) for lig in plano.ligacoes if lig.inserir})
+    desligar = sorted({(lig.praise_id, col) for lig in plano.ligacoes if lig.remover_raiz})
+    # O que o undo pode tocar: só ligações que não existiam antes (para apagar)
+    # e só ligações com a raiz que existiam antes (para repor).
+    base = {"run_id": run_id, "raiz_coletanea": col, "subtags_novas": novas,
+            "ligar": [list(x) for x in ligar if x not in antes],
+            "desligar_raiz": [list(x) for x in desligar if x in antes]}
+    resumo.update(subtags_novas=len(novas), statements=len(stmts))
+    resumo["relatorio"] = _escrever_relatorio(pasta, relatorio(plano, conn, run_id, novas))
+
+    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
+    log = open(log_path, "a", encoding="utf-8")
+
+    def gravar(linha: dict) -> None:
+        log.write(json.dumps(dict(linha, ts=time.time()), ensure_ascii=False) + "\n")
+        log.flush()
+
+    try:
+        gravar(dict(base, estado="pendente", escreveu=False))
+        arquivos = write_sql_chunks(stmts, os.path.join(pasta, "sql"), prefix="lote", per_file=LOTE_SQL)
+        # A partir daqui SQL pode chegar a produção: a linha vai para o disco
+        # ANTES do wrangler, para um processo morto no meio ser desfazível.
+        gravar(dict(base, estado="escrevendo", escreveu=True))
+        try:
+            run_sql_files(arquivos, remote=remote)
+            depois = _ligacoes_producao(alvo, remote)
+        except Exception as erro:
+            gravar(dict(base, estado="falhou", escreveu=True, ok=False, erro=_erro_texto(erro)))
+            resumo["falhou"] = True
+            return resumo
+        # §7: o wrangler sai 0 mesmo quando a guarda barra — quem diz o que
+        # pegou é a releitura de produção.
+        atras_ligar = sorted(p for p, t in ligar if (p, t) not in depois)
+        atras_desligar = sorted(p for p, t in desligar if (p, t) in depois)
+        ok = not atras_ligar and not atras_desligar
+        resumo["criadas"] = sum(1 for x in base["ligar"] if tuple(x) in depois)
+        resumo["removidas"] = sum(1 for x in base["desligar_raiz"] if tuple(x) not in depois)
+        resumo["atrasadas"] = {"ligar": atras_ligar, "desligar_raiz": atras_desligar}
+        resumo["falhou"] = not ok
+        gravar(dict(base, estado="ok" if ok else "guarda_barrou", escreveu=True, ok=ok,
+                    criadas=resumo["criadas"], removidas=resumo["removidas"], atrasadas=resumo["atrasadas"]))
+        return resumo
+    finally:
+        log.close()
+        copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)

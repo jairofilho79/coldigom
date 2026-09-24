@@ -372,3 +372,118 @@ def test_relatorio_tem_as_secoes_do_ensaio(mundo, monkeypatch):
     assert "| `2b309bf1-50a0-48fc-8607-8ccce0031500` | 11e | — | Tu és Maravilhoso | GLTM | Avulsos · GLTM | liga |" in texto
     assert "## Entram na Coletânea pela subtag (2; spec: 2)" in texto
     assert "| `e1` | 060 | Tudo está pronto | Louvor |" in texto
+
+
+# --- execução -----------------------------------------------------------------------
+
+@pytest.fixture
+def d1(mundo, monkeypatch):
+    """query e run_sql_files contra o sqlite de "produção". Cada arquivo é um
+    batch atômico, como no wrangler. Nada toca rede nem credencial."""
+    prod = mundo["prod"]
+    chamadas = {"query": [], "sql": []}
+    falhar = {"sql_no_arquivo": None, "erro": None}
+
+    def query(sql, remote=True):
+        chamadas["query"].append(sql)
+        cur = prod.execute(sql)
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def run_sql_files(arquivos, remote=True):
+        for i, caminho in enumerate(arquivos):
+            if falhar["sql_no_arquivo"] == i:
+                raise falhar["erro"] or RuntimeError("wrangler caiu")
+            chamadas["sql"].append(caminho)
+            with open(caminho, encoding="utf-8") as f:
+                _aplicar(prod, f.read().splitlines())
+
+    monkeypatch.setattr(sc, "query", query)
+    monkeypatch.setattr(sc, "run_sql_files", run_sql_files)
+    return {"chamadas": chamadas, "falhar": falhar}
+
+
+def _kw(mundo):
+    t = mundo["tmp"]
+    return dict(log_path=str(t / "log.jsonl"), out_dir=str(t / "out"), execucao_dir=str(t / "exec"))
+
+
+def _log(mundo):
+    return [json.loads(x) for x in open(mundo["tmp"] / "log.jsonl", encoding="utf-8") if x.strip()]
+
+
+def test_ensaio_nao_toca_producao_e_grava_sql_e_relatorio(mundo, d1):
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], False, "run-e", novo_id=_ids_fixos(), **_kw(mundo))
+    assert d1["chamadas"] == {"query": [], "sql": []}
+    assert not (mundo["tmp"] / "log.jsonl").exists()
+    assert os.path.exists(r["relatorio"]) and r["relatorio"].endswith("run-e/relatorio.md")
+    assert (r["ligar"], r["desligar_raiz"], r["subtags_novas"]) == (14, 11, 14)
+    assert r["statements"] == 14 + 14 + 11
+    assert os.listdir(mundo["tmp"] / "out" / "run-e" / "sql") == ["ensaio_000.sql"]
+
+
+def test_execute_migra_loga_e_copia_para_gabaritos(mundo, d1):
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], True, "run-1", novo_id=_ids_fixos(), **_kw(mundo))
+    assert r["falhou"] is False and (r["criadas"], r["removidas"]) == (14, 11)
+    assert r["atrasadas"] == {"ligar": [], "desligar_raiz": []}
+    assert mundo["prod"].execute("SELECT COUNT(*) FROM praise_tags WHERE tag_id = 't-col'").fetchone()[0] == 0
+    linhas = _log(mundo)
+    assert [x["estado"] for x in linhas] == ["pendente", "escrevendo", "ok"]
+    assert [x["escreveu"] for x in linhas] == [False, True, True]
+    assert len(linhas[-1]["ligar"]) == 14 and len(linhas[-1]["desligar_raiz"]) == 11
+    assert len(linhas[-1]["subtags_novas"]) == 14
+    assert (mundo["tmp"] / "exec" / "run-1.jsonl").read_text(encoding="utf-8").count("\n") == 3
+
+
+def test_execute_guarda_barrou_lista_quem_ficou_para_tras(mundo, d1):
+    mundo["prod"].execute("UPDATE praises SET category = 'Louvor' WHERE id = 'c1'")
+    mundo["prod"].commit()
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], True, "run-g", novo_id=_ids_fixos(), **_kw(mundo))
+    assert r["falhou"] is True
+    assert r["atrasadas"] == {"ligar": ["c1"], "desligar_raiz": ["c1"]}
+    fim = _log(mundo)[-1]
+    assert (fim["estado"], fim["ok"]) == ("guarda_barrou", False)
+
+
+def test_execute_usa_subtag_criada_em_producao_depois_do_snapshot(mundo, d1):
+    mundo["prod"].execute("INSERT INTO tags VALUES ('t-clamor-admin', 'Clamor', 't-col')")
+    mundo["prod"].commit()
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], True, "run-p", novo_id=_ids_fixos(), **_kw(mundo))
+    assert r["falhou"] is False and r["subtags_novas"] == 13
+    assert ("c1", "t-clamor-admin") in _ligacoes(mundo["prod"])
+    assert "Clamor" not in {s["name"] for s in _log(mundo)[-1]["subtags_novas"]}
+
+
+def test_execute_nao_reclama_ligacao_que_ja_existia_em_producao(mundo, d1):
+    mundo["prod"].execute("INSERT INTO tags VALUES ('t-clamor', 'Clamor', 't-col')")
+    mundo["prod"].execute("INSERT INTO praise_tags VALUES ('c1', 't-clamor')")
+    mundo["prod"].commit()
+    plano = sc.montar_plano(mundo["snap"])
+    sc.executar(plano, mundo["snap"], True, "run-j", novo_id=_ids_fixos(), **_kw(mundo))
+    assert ["c1", "t-clamor"] not in _log(mundo)[-1]["ligar"]     # o undo não vai apagá-la
+
+
+def test_execute_falha_do_wrangler_fica_desfazivel(mundo, d1):
+    d1["falhar"]["sql_no_arquivo"] = 0
+    d1["falhar"]["erro"] = subprocess.CalledProcessError(1, ["wrangler"], stderr="D1_ERROR: boom")
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], True, "run-f", novo_id=_ids_fixos(), **_kw(mundo))
+    assert r["falhou"] is True
+    fim = _log(mundo)[-1]
+    assert (fim["estado"], fim["escreveu"], fim["ok"]) == ("falhou", True, False)
+    assert "D1_ERROR: boom" in fim["erro"]
+
+
+def test_execute_raiz_trocada_em_producao_trava_sem_log(mundo, d1):
+    prod = mundo["prod"]
+    prod.execute("UPDATE tags SET name = 'Coletânea antiga' WHERE id = 't-col'")
+    prod.execute("INSERT INTO tags VALUES ('t-col-2', 'Coletânea', NULL)")
+    prod.commit()
+    plano = sc.montar_plano(mundo["snap"])
+    with pytest.raises(sc.Trava, match="Coletânea"):
+        sc.executar(plano, mundo["snap"], True, "run-r", novo_id=_ids_fixos(), **_kw(mundo))
+    assert d1["chamadas"]["sql"] == [] and not (mundo["tmp"] / "log.jsonl").exists()

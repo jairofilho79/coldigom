@@ -446,6 +446,10 @@ def test_execute_guarda_barrou_lista_quem_ficou_para_tras(mundo, d1):
     assert r["atrasadas"] == {"ligar": ["c1"], "desligar_raiz": ["c1"]}
     fim = _log(mundo)[-1]
     assert (fim["estado"], fim["ok"]) == ("guarda_barrou", False)
+    # A ligação que a guarda barrou não pode ficar na lista do log: um --undo
+    # rodado sobre esse run não pode apagar uma ligação que um run mais novo
+    # crie depois (spec §5.2 — o undo só apaga o que ESTE run criou).
+    assert ["c1", "novo-01"] not in fim["ligar"]
 
 
 def test_execute_usa_subtag_criada_em_producao_depois_do_snapshot(mundo, d1):
@@ -487,3 +491,29 @@ def test_execute_raiz_trocada_em_producao_trava_sem_log(mundo, d1):
     with pytest.raises(sc.Trava, match="Coletânea"):
         sc.executar(plano, mundo["snap"], True, "run-r", novo_id=_ids_fixos(), **_kw(mundo))
     assert d1["chamadas"]["sql"] == [] and not (mundo["tmp"] / "log.jsonl").exists()
+
+
+def test_execute_grava_escrevendo_no_log_antes_do_wrangler(mundo, monkeypatch):
+    """A linha "escrevendo" (escreveu=True) tem que estar no disco ANTES do
+    wrangler rodar: um processo morto no meio do run_sql_files precisa achar
+    essa linha para o undo saber que a escrita pode ter chegado."""
+    prod = mundo["prod"]
+    viu = {"escrevendo_no_disco": False}
+
+    def query(sql, remote=True):
+        cur = prod.execute(sql)
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def run_sql_files(arquivos, remote=True):
+        linhas = _log(mundo)
+        viu["escrevendo_no_disco"] = bool(linhas) and (linhas[-1]["estado"], linhas[-1]["escreveu"]) == ("escrevendo", True)
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                _aplicar(prod, f.read().splitlines())
+
+    monkeypatch.setattr(sc, "query", query)
+    monkeypatch.setattr(sc, "run_sql_files", run_sql_files)
+    plano = sc.montar_plano(mundo["snap"])
+    sc.executar(plano, mundo["snap"], True, "run-ordem", novo_id=_ids_fixos(), **_kw(mundo))
+    assert viu["escrevendo_no_disco"] is True

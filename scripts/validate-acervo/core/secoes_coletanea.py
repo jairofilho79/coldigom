@@ -404,13 +404,37 @@ def executar(plano: Plano, conn: sqlite3.Connection, execute: bool, run_id: str,
         gravar(dict(base, estado="escrevendo", escreveu=True))
         try:
             run_sql_files(arquivos, remote=remote)
+        except Exception as erro:
+            texto = _erro_texto(erro)
+            # Melhor esforço: mesmo com o wrangler tendo caído, tenta saber o
+            # que já chegou a produção (pode ter sido um lote parcial). Se a
+            # releitura também falhar, o erro original do wrangler é o que
+            # importa — não deixa a segunda falha escondê-lo.
+            try:
+                depois_parcial = _ligacoes_producao(alvo, remote)
+                resumo["criadas"] = sum(1 for x in base["ligar"] if tuple(x) in depois_parcial)
+                resumo["removidas"] = sum(1 for x in base["desligar_raiz"] if tuple(x) not in depois_parcial)
+            except Exception:
+                pass
+            gravar(dict(base, estado="falhou", escreveu=True, ok=False, erro=texto))
+            resumo["falhou"] = True
+            resumo["erro"] = texto
+            return resumo
+
+        # §7: o wrangler sai 0 mesmo quando a guarda barra — quem diz o que
+        # pegou é a releitura de produção. Try separado do run_sql_files: se o
+        # SQL chegou (wrangler não levantou) e só a releitura falhar, é um
+        # problema diferente — o run pode ter migrado tudo, só não dá para
+        # confirmar agora.
+        try:
             depois = _ligacoes_producao(alvo, remote)
         except Exception as erro:
-            gravar(dict(base, estado="falhou", escreveu=True, ok=False, erro=_erro_texto(erro)))
+            texto = _erro_texto(erro)
+            gravar(dict(base, estado="releitura_falhou", escreveu=True, ok=False, erro=texto))
             resumo["falhou"] = True
+            resumo["erro"] = texto
             return resumo
-        # §7: o wrangler sai 0 mesmo quando a guarda barra — quem diz o que
-        # pegou é a releitura de produção.
+
         atras_ligar = sorted(p for p, t in ligar if (p, t) not in depois)
         atras_desligar = sorted(p for p, t in desligar if (p, t) in depois)
         ok = not atras_ligar and not atras_desligar
@@ -418,7 +442,12 @@ def executar(plano: Plano, conn: sqlite3.Connection, execute: bool, run_id: str,
         resumo["removidas"] = sum(1 for x in base["desligar_raiz"] if tuple(x) not in depois)
         resumo["atrasadas"] = {"ligar": atras_ligar, "desligar_raiz": atras_desligar}
         resumo["falhou"] = not ok
+        # A lista do log fica só com o que de fato pegou (spec §5.2): o undo
+        # de um run mais velho não pode apagar ligação que um run mais novo
+        # criou depois, nem repor a raiz de quem a guarda já tirou daqui.
         gravar(dict(base, estado="ok" if ok else "guarda_barrou", escreveu=True, ok=ok,
+                    ligar=[x for x in base["ligar"] if tuple(x) in depois],
+                    desligar_raiz=[x for x in base["desligar_raiz"] if tuple(x) not in depois],
                     criadas=resumo["criadas"], removidas=resumo["removidas"], atrasadas=resumo["atrasadas"]))
         return resumo
     finally:

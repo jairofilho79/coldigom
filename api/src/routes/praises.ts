@@ -20,7 +20,6 @@ import {
   buildWhereClause,
   isFtsError,
   resolveTagFilterGroups,
-  tagHasChildren,
   type PraiseResult,
   type SortField,
   type TagRow,
@@ -497,9 +496,6 @@ export function registerPraisesRoutes(app: App): void {
       for (const tagId of tagIds) {
         const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
         if (!tag) return c.json({ error: 'Tag not found' }, 400);
-        if (await tagHasChildren(c.env.DB, tagId)) {
-          return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
-        }
 
         await c.env.DB.prepare(
           'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
@@ -675,9 +671,6 @@ export function registerPraisesRoutes(app: App): void {
 
       const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
       if (!tag) return c.json({ error: 'Tag not found' }, 404);
-      if (await tagHasChildren(c.env.DB, tagId)) {
-        return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
-      }
 
       await c.env.DB.prepare(
         'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
@@ -817,35 +810,12 @@ export function registerPraisesRoutes(app: App): void {
       const source = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(sourceId).first();
       if (!source) return c.json({ error: 'Source praise not found' }, 404);
 
-      // A lista que chega é a união das tags dos dois louvores, então as tags
-      // que o keeper JÁ tinha voltam aqui. Uma delas virar tag pai (alguém criou
-      // uma subtag depois) não é tentativa nova de associar tag pai: é dado
-      // preexistente, e recusar matava toda mesclagem daquele louvor. Tag pai
-      // vinda só do louvor fonte continua barrada — aí a associação é nova.
-      const jaNoKeeper = new Set(
-        (
-          (
-            await c.env.DB.prepare('SELECT tag_id FROM praise_tags WHERE praise_id = ?')
-              .bind(keeperId)
-              .all<{ tag_id: string }>()
-          ).results ?? []
-        ).map((linha) => linha.tag_id)
-      );
-
+      // Tag pai (raiz com subtags) é aceita: ligada direto, quer dizer «sem
+      // subtag específica» (spec seções da Coletânea, §3.2). Só tag que não
+      // existe barra o merge, antes de qualquer escrita.
       for (const tagId of tagIds) {
         const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
         if (!tag) return c.json({ error: 'Tag not found' }, 400);
-        if (jaNoKeeper.has(tagId)) continue;
-        if (await tagHasChildren(c.env.DB, tagId)) {
-          // Sem o nome não havia como saber qual das tags do lote era a culpada.
-          const nome = await c.env.DB.prepare('SELECT name FROM tags WHERE id = ?')
-            .bind(tagId)
-            .first<{ name: string }>();
-          return c.json(
-            { error: `Cannot attach a parent tag; use a subtag: ${nome?.name ?? tagId}` },
-            400
-          );
-        }
       }
 
       for (const materialId of materialIdsToImport) {

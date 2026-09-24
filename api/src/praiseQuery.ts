@@ -78,11 +78,6 @@ export function isFtsError(error: unknown): boolean {
   return /praises_fts|fts5|\bMATCH\b/i.test(msg);
 }
 
-export async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {
-  const row = await db.prepare('SELECT id FROM tags WHERE parent_id = ? LIMIT 1').bind(tagId).first();
-  return Boolean(row);
-}
-
 export const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;
 export type SortField = typeof VALID_SORT_FIELDS[number];
 

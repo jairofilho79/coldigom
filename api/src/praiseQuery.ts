@@ -32,8 +32,11 @@ export type TagRow = {
 export const TAG_LABEL_SQL = `CASE WHEN tp.name IS NOT NULL THEN tp.name || ' · ' || t.name ELSE t.name END`;
 
 /**
- * Para cada tag pedida, o grupo de tags que o filtro deve considerar: as
- * subtags dela, ou ela mesma quando não tem subtag.
+ * Para cada tag pedida, o grupo de tags que o filtro deve considerar: ela
+ * mesma e as subtags dela. Filtrar pelo pai traz os louvores ligados ao pai e
+ * aos filhos — a mesma semântica de `catalogTagMatches` no app. Antes o pai era
+ * TROCADO pelos filhos, e filtrar por PES ignorava os louvores ligados direto à
+ * raiz (spec seções da Coletânea, F6 / §3.1).
  *
  * Uma consulta só. Era uma por tag, em série — filtrar por cinco tags custava
  * cinco viagens ao D1 antes da consulta principal.
@@ -59,7 +62,7 @@ export async function resolveTagFilterGroups(
 
   // A ordem dos grupos acompanha a ordem das tags pedidas: cada grupo vira uma
   // condição AND separada, e trocar a ordem trocaria o significado do filtro.
-  return tagIds.map((id) => byParent.get(id) ?? [id]);
+  return tagIds.map((id) => [id, ...(byParent.get(id) ?? [])]);
 }
 
 /**
@@ -73,11 +76,6 @@ export async function resolveTagFilterGroups(
 export function isFtsError(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
   return /praises_fts|fts5|\bMATCH\b/i.test(msg);
-}
-
-export async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {
-  const row = await db.prepare('SELECT id FROM tags WHERE parent_id = ? LIMIT 1').bind(tagId).first();
-  return Boolean(row);
 }
 
 export const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;

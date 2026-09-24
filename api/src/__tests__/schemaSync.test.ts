@@ -81,4 +81,23 @@ describe('schema.sql acompanha as migrações', () => {
       expect(schema).toContain(c);
     }
   });
+
+  it('023: short_id, índice único, app_meta, gatilhos de short_id e o praises_au novo estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '023_praise_short_id.sql'), 'utf8'));
+    expect(mig).toContain('ALTER TABLE praises ADD COLUMN short_id TEXT');
+    expect(schema).toMatch(/CREATE TABLE IF NOT EXISTS praises \([^;]* short_id TEXT,/);
+    expect(schema).toContain("INSERT OR IGNORE INTO app_meta (key, value) VALUES ('short_id_next', 0)");
+    const gatilhos = mig.match(/CREATE TRIGGER IF NOT EXISTS praises_(?:au|short_id_\w+) .*? END;/g) ?? [];
+    expect(gatilhos).toHaveLength(4);
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS app_meta ( key TEXT PRIMARY KEY, value INTEGER NOT NULL );',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_praises_short_id ON praises(short_id);',
+      'CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE OF name, lyrics ON praises BEGIN',
+      ...gatilhos,
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+  });
 });

@@ -517,3 +517,142 @@ def test_execute_grava_escrevendo_no_log_antes_do_wrangler(mundo, monkeypatch):
     plano = sc.montar_plano(mundo["snap"])
     sc.executar(plano, mundo["snap"], True, "run-ordem", novo_id=_ids_fixos(), **_kw(mundo))
     assert viu["escrevendo_no_disco"] is True
+
+
+# --- undo -----------------------------------------------------------------------------
+
+def _executar(mundo, run_id="run-1"):
+    plano = sc.montar_plano(mundo["snap"])
+    return sc.executar(plano, mundo["snap"], True, run_id, novo_id=_ids_fixos(), **_kw(mundo))
+
+
+def _desfazer(mundo, run_id="run-1", execute=True):
+    k = _kw(mundo)
+    return sc.desfazer(run_id, k["log_path"], execute, out_dir=k["out_dir"], execucao_dir=k["execucao_dir"])
+
+
+def test_undo_simulado_nao_escreve(mundo, d1):
+    _executar(mundo)
+    d1["chamadas"]["sql"].clear()
+    r = _desfazer(mundo, execute=False)
+    assert r["statements"] == 11 + 14 + 14 and d1["chamadas"]["sql"] == []
+    assert _log(mundo)[-1]["estado"] == "ok"                 # o ensaio do undo não grava no log
+
+
+def test_undo_volta_ao_estado_de_antes(mundo, d1):
+    antes = (_ligacoes(mundo["prod"]), _tags(mundo["prod"]))
+    _executar(mundo)
+    r = _desfazer(mundo)
+    assert r["falhou"] is False
+    assert (_ligacoes(mundo["prod"]), _tags(mundo["prod"])) == antes
+    fim = _log(mundo)[-1]
+    assert (fim["estado"], fim["ok"]) == ("desfeito", True)
+    assert _desfazer(mundo)["motivo"] == "já desfeito"
+
+
+def test_undo_nao_apaga_subtag_que_ganhou_ligacao_nova(mundo, d1):
+    _executar(mundo)
+    clamor = mundo["prod"].execute("SELECT id FROM tags WHERE name = 'Clamor'").fetchone()[0]
+    mundo["prod"].execute("INSERT INTO praise_tags VALUES ('v1', ?)", (clamor,))   # o admin ligou depois
+    mundo["prod"].commit()
+    _desfazer(mundo)
+    assert mundo["prod"].execute("SELECT COUNT(*) FROM tags WHERE id = ?", (clamor,)).fetchone()[0] == 1
+    assert ("v1", clamor) in _ligacoes(mundo["prod"])
+    assert mundo["prod"].execute("SELECT COUNT(*) FROM tags WHERE name = 'Louvor'").fetchone()[0] == 0
+    assert ("c1", "t-col") in _ligacoes(mundo["prod"])
+
+
+def test_undo_nao_apaga_ligacao_que_ja_existia(mundo, d1):
+    for conn in (mundo["snap"], mundo["prod"]):
+        conn.execute("INSERT INTO tags VALUES ('t-clamor', 'Clamor', 't-col')")
+        conn.execute("INSERT INTO praise_tags VALUES ('c1', 't-clamor')")
+        conn.commit()
+    _executar(mundo)
+    _desfazer(mundo)
+    assert {("c1", "t-clamor"), ("c1", "t-col")} <= _ligacoes(mundo["prod"])
+    assert mundo["prod"].execute("SELECT COUNT(*) FROM tags WHERE id = 't-clamor'").fetchone()[0] == 1
+
+
+def test_undo_de_run_que_caiu_no_meio(mundo, d1, monkeypatch):
+    monkeypatch.setattr(sc, "LOTE_SQL", 10)                  # 39 statements, 4 arquivos
+    d1["falhar"]["sql_no_arquivo"] = 2                        # os 2 primeiros entram, o 3º cai
+    antes = (_ligacoes(mundo["prod"]), _tags(mundo["prod"]))
+    r = _executar(mundo)
+    assert r["falhou"] is True and len(d1["chamadas"]["sql"]) == 2
+    d1["falhar"]["sql_no_arquivo"] = None
+    assert _desfazer(mundo)["falhou"] is False
+    assert (_ligacoes(mundo["prod"]), _tags(mundo["prod"])) == antes
+
+
+def test_undo_que_falhou_pode_ser_repetido(mundo, d1):
+    _executar(mundo)
+    d1["falhar"]["sql_no_arquivo"] = 0
+    assert _desfazer(mundo)["falhou"] is True
+    assert (_log(mundo)[-1]["estado"], _log(mundo)[-1]["ok"]) == ("desfeito", False)
+    d1["falhar"]["sql_no_arquivo"] = None
+    r = _desfazer(mundo)
+    assert r["falhou"] is False and r["statements"] == 39
+
+
+def test_undo_de_run_que_nao_escreveu(mundo, d1):
+    with open(mundo["tmp"] / "log.jsonl", "w", encoding="utf-8") as f:
+        f.write(json.dumps({"run_id": "run-z", "estado": "pendente", "escreveu": False,
+                            "ligar": [], "desligar_raiz": [], "subtags_novas": []}) + "\n")
+        f.write('{"run_id": "run-z", "estado": "escre')      # linha truncada por um processo morto
+    r = _desfazer(mundo, run_id="run-z")
+    assert r["motivo"].startswith("nada a desfazer") and d1["chamadas"]["sql"] == []
+
+
+def test_undo_de_releitura_falhou_usa_a_lista_cheia(mundo, monkeypatch):
+    """A releitura pode falhar depois de um wrangler que gravou tudo (§7): o
+    estado releitura_falhou grava as listas CHEIAS de candidatos (como
+    "escrevendo"/"falhou"), não as observadas. O undo tem que usar essa
+    última linha inteira, não uma "escrevendo" mais antiga."""
+    prod = mundo["prod"]
+    chamadas = {"n": 0}
+
+    def query(sql, remote=True):
+        chamadas["n"] += 1
+        if chamadas["n"] == 3:                                # 1: tags_prod, 2: "antes", 3: "depois" (a releitura)
+            raise RuntimeError("timeout na releitura")
+        cur = prod.execute(sql)
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def run_sql_files(arquivos, remote=True):
+        for caminho in arquivos:
+            with open(caminho, encoding="utf-8") as f:
+                _aplicar(prod, f.read().splitlines())
+
+    monkeypatch.setattr(sc, "query", query)
+    monkeypatch.setattr(sc, "run_sql_files", run_sql_files)
+    antes = (_ligacoes(mundo["prod"]), _tags(mundo["prod"]))
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], True, "run-rl", novo_id=_ids_fixos(), **_kw(mundo))
+    assert r["falhou"] is True
+    fim = _log(mundo)[-1]
+    assert fim["estado"] == "releitura_falhou" and fim["escreveu"] is True
+    assert len(fim["ligar"]) == 14 and len(fim["desligar_raiz"]) == 11    # listas cheias, não filtradas
+
+    r2 = _desfazer(mundo, run_id="run-rl")
+    assert r2["falhou"] is False and r2["statements"] == 11 + 14 + 14
+    assert (_ligacoes(mundo["prod"]), _tags(mundo["prod"])) == antes
+
+
+def test_undo_guarda_barrou_nao_remove_ligacao_barrada_que_foi_criada_depois(mundo, d1):
+    """A linha final de um run barrado pela guarda já vem com `ligar` filtrado
+    pelo que de fato pegou (fix do Task 5). O undo tem que usar essa lista
+    filtrada, e não a lista cheia de candidatos de "escrevendo": senão ele
+    apagaria uma ligação igual criada depois por outro caminho."""
+    mundo["prod"].execute("UPDATE praises SET category = 'Louvor' WHERE id = 'c1'")
+    mundo["prod"].commit()
+    plano = sc.montar_plano(mundo["snap"])
+    sc.executar(plano, mundo["snap"], True, "run-g2", novo_id=_ids_fixos(), **_kw(mundo))
+    fim = _log(mundo)[-1]
+    assert (fim["estado"], fim["ok"]) == ("guarda_barrou", False)
+    assert ["c1", "novo-01"] not in fim["ligar"]                # a guarda barrou essa ligação
+    mundo["prod"].execute("INSERT INTO praise_tags VALUES ('c1', 'novo-01')")   # criada depois, por outro caminho
+    mundo["prod"].commit()
+    r = _desfazer(mundo, run_id="run-g2")
+    assert r["falhou"] is False
+    assert ("c1", "novo-01") in _ligacoes(mundo["prod"])        # o undo não mexe no que este run não criou

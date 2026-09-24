@@ -453,3 +453,88 @@ def executar(plano: Plano, conn: sqlite3.Connection, execute: bool, run_id: str,
     finally:
         log.close()
         copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+
+
+# --- undo ------------------------------------------------------------------------
+
+def _ler_log(log_path: str) -> list[dict]:
+    """Linha truncada (processo morto no meio do write) é pulada: o --undo é a
+    ferramenta de emergência e não pode morrer justo depois de um crash."""
+    if not os.path.exists(log_path):
+        return []
+    linhas = []
+    with open(log_path, encoding="utf-8") as f:
+        for linha in f:
+            linha = linha.strip()
+            if not linha:
+                continue
+            try:
+                linhas.append(json.loads(linha))
+            except json.JSONDecodeError:
+                continue
+    return linhas
+
+
+def sql_undo(linha: dict) -> list[str]:
+    """Repõe a raiz, tira as ligações criadas, apaga as subtags criadas que
+    ficaram sem ligação (§5.2). Nessa ordem: um arquivo que falha no meio
+    deixa o praise com a raiz E a subtag, nunca sem nenhuma das duas."""
+    stmts = []
+    for p, t in linha["desligar_raiz"]:
+        stmts.append(f"INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) SELECT {sql_str(p)}, {sql_str(t)} "
+                     f"WHERE EXISTS (SELECT 1 FROM praises WHERE id = {sql_str(p)}) "
+                     f"AND EXISTS (SELECT 1 FROM tags WHERE id = {sql_str(t)});")
+    for p, t in linha["ligar"]:
+        stmts.append(f"DELETE FROM praise_tags WHERE praise_id = {sql_str(p)} AND tag_id = {sql_str(t)};")
+    for s in linha["subtags_novas"]:
+        i = sql_str(s["id"])
+        stmts.append(f"DELETE FROM tags WHERE id = {i} "
+                     f"AND NOT EXISTS (SELECT 1 FROM praise_tags WHERE tag_id = {i}) "
+                     f"AND NOT EXISTS (SELECT 1 FROM tags WHERE parent_id = {i});")
+    return stmts
+
+
+def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
+             out_dir: str | None = None, execucao_dir: str | None = None) -> dict:
+    """Simula por padrão, como o core.apply. A última linha do run que
+    escreveu é a que vale; um undo com ok:true fecha o run."""
+    alvo = None
+    desfeito = False
+    for r in _ler_log(log_path):
+        if r.get("run_id") != run_id:
+            continue
+        if r.get("estado") == "desfeito":
+            desfeito = desfeito or bool(r.get("ok"))
+            continue
+        if r.get("escreveu"):
+            alvo = r
+    resumo = {"run_id": run_id, "executado": execute, "statements": 0, "falhou": False, "motivo": ""}
+    if alvo is None:
+        resumo["motivo"] = "nada a desfazer: o run não chegou a escrever"
+        return resumo
+    if desfeito:
+        resumo["motivo"] = "já desfeito"
+        return resumo
+    stmts = sql_undo(alvo)
+    resumo["statements"] = len(stmts)
+    if not execute:
+        for s in stmts[:10]:
+            print("   ", s)
+        return resumo
+
+    carimbo = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    arquivos = write_sql_chunks(stmts, os.path.join(out_dir or OUT_PADRAO, run_id, f"undo-{carimbo}"),
+                                prefix="undo", per_file=LOTE_SQL)
+    saida = {"run_id": run_id, "estado": "desfeito", "statements": len(stmts)}
+    try:
+        run_sql_files(arquivos, remote=remote)
+        saida["ok"] = True
+    except Exception as erro:
+        saida["ok"] = False
+        saida["erro"] = _erro_texto(erro)
+        resumo["falhou"] = True
+    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
+    with open(log_path, "a", encoding="utf-8") as log:
+        log.write(json.dumps(dict(saida, ts=time.time()), ensure_ascii=False) + "\n")
+    copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+    return resumo

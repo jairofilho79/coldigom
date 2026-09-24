@@ -40,7 +40,6 @@ export function HomePage() {
             tags: filters.tags,
             rhythm: filters.rhythm,
             tonality: filters.tonality,
-            category: filters.category,
             materialKinds: filters.materialKinds,
             numberMin: filters.numberMin,
             numberMax: filters.numberMax,
@@ -66,7 +65,7 @@ export function HomePage() {
       cancelado = true;
       controle.abort();
     };
-  }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.category, filters.materialKinds, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
+  }, [filters.query, filters.page, filters.tags, filters.rhythm, filters.tonality, filters.materialKinds, filters.numberMin, filters.numberMax, filters.sort, filters.order]);
 
   // Rótulos do que está aplicado, para o estado vazio explicar o porquê em vez
   // de repetir "tente ajustar seus filtros" sem dizer quais. Coleções e tipos
@@ -75,7 +74,6 @@ export function HomePage() {
   const filtrosAplicados = [
     ...filters.rhythm.map((v) => `Ritmo: ${v}`),
     ...filters.tonality.map((v) => `Tom: ${v}`),
-    ...filters.category.map((v) => `Categoria: ${v}`),
     filters.tags.length > 0 ? `${filters.tags.length} coleção(ões)` : null,
     filters.materialKinds.length > 0 ? `${filters.materialKinds.length} tipo(s) de material` : null,
     filters.numberMin !== undefined ? `número a partir de ${filters.numberMin}` : null,

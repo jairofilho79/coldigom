@@ -119,7 +119,8 @@ export interface TagWithCount extends Tag {
 export interface FilterOptions {
   rhythms: string[];
   tonalities: string[];
-  categories: string[];
+  /** A API ainda devolve até a fase 3 do spec das seções da Coletânea; o admin ignora. */
+  categories?: string[];
   tags: TagWithCount[];
 }
 

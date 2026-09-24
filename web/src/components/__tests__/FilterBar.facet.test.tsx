@@ -31,12 +31,12 @@ async function montar(inicial = '/') {
 describe('FilterBar — opções conscientes do filtro', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('manda os filtros aplicados ao pedir as opções', async () => {
+  it('manda os filtros aplicados ao pedir as opções — e não o ?category= de link antigo', async () => {
     await montar('/?category=Louvor&rhythm=Valsa');
 
-    expect(getFilterOptions).toHaveBeenCalledWith(
-      expect.objectContaining({ category: ['Louvor'], rhythm: ['Valsa'] })
-    );
+    const pedido = vi.mocked(getFilterOptions).mock.calls[0][0]!;
+    expect(pedido).toMatchObject({ rhythm: ['Valsa'] });
+    expect(Object.keys(pedido)).not.toContain('category');
   });
 
   it('refaz a consulta quando um filtro muda', async () => {
@@ -44,11 +44,11 @@ describe('FilterBar — opções conscientes do filtro', () => {
     await montar('/');
     expect(getFilterOptions).toHaveBeenCalledTimes(1);
 
-    await usuario.click(screen.getByRole('button', { name: /categoria/i }));
-    await usuario.click(screen.getByRole('checkbox', { name: 'Louvor' }));
+    await usuario.click(screen.getByRole('button', { name: /^ritmo/i }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Valsa' }));
 
     await waitFor(() => expect(getFilterOptions).toHaveBeenCalledTimes(2));
-    expect(vi.mocked(getFilterOptions).mock.calls[1][0]).toMatchObject({ category: ['Louvor'] });
+    expect(vi.mocked(getFilterOptions).mock.calls[1][0]).toMatchObject({ rhythm: ['Valsa'] });
   });
 
   it('a barra não some enquanto as opções são refeitas', async () => {
@@ -57,8 +57,8 @@ describe('FilterBar — opções conscientes do filtro', () => {
     const usuario = userEvent.setup();
     await montar('/');
 
-    await usuario.click(screen.getByRole('button', { name: /categoria/i }));
-    await usuario.click(screen.getByRole('checkbox', { name: 'Louvor' }));
+    await usuario.click(screen.getByRole('button', { name: /^ritmo/i }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Valsa' }));
 
     expect(screen.getByText('Coleções')).toBeTruthy();
     expect(screen.queryByRole('status')).toBeNull();

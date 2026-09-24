@@ -307,3 +307,68 @@ def test_reaproveita_subtag_existente(mundo):
     _aplicar(mundo["prod"], stmts)
     assert ("c1", "t-clamor") in _ligacoes(mundo["prod"])
     assert mundo["prod"].execute("SELECT COUNT(*) FROM tags WHERE name = 'Clamor'").fetchone()[0] == 1
+
+
+# --- relatório ---------------------------------------------------------------------
+
+def _esperado_da_fixture(monkeypatch):
+    depois = {nome: 0 for nome in mapa.ESPERADO_DEPOIS}
+    depois.update({"Clamor": 3, "Morte Ressurreição e Salvação": 2, "Santificação e Derramamento do Espírito Santo": 1,
+                   "Louvor": 1, "Dedicação": 2, "Crianças e Adolescentes": 1, "Volta de Jesus e Eternidade": 3})
+    monkeypatch.setattr(mapa, "ESPERADO_DEPOIS", depois)
+    monkeypatch.setattr(mapa, "ESPERADO_TOTAL", 13)
+    monkeypatch.setattr(mapa, "ESPERADO_RAIZ_REMOVIDAS", 11)
+    monkeypatch.setattr(mapa, "ENTRAM_NA_COLETANEA", (("", "Alvo Mais Que a Neve"), ("060", "Tudo está pronto")))
+
+
+def test_contagens_e_divergencias(mundo, monkeypatch):
+    _esperado_da_fixture(monkeypatch)
+    plano = sc.montar_plano(mundo["snap"])
+    n = sc.contagens(plano)
+    assert n[("Coletânea", "Clamor")] == 3 and n[("Avulsos", "GLTM")] == 1
+    assert sc.divergencias(plano) == []
+    monkeypatch.setattr(mapa, "ESPERADO_DEPOIS", dict(mapa.ESPERADO_DEPOIS, Clamor=4))
+    monkeypatch.setattr(mapa, "ESPERADO_RAIZ_REMOVIDAS", 1119)
+    assert sc.divergencias(plano) == [
+        "Coletânea · Clamor: 3 praises depois, a spec diz 4",
+        "ligações diretas com Coletânea removidas: 11, a spec diz 1119",
+    ]
+
+
+def test_divergencia_de_quem_entra_ignora_nfd_e_nomeia_a_diferenca(mundo, monkeypatch):
+    _esperado_da_fixture(monkeypatch)
+    snap = mundo["snap"]
+    snap.execute("UPDATE praises SET name = ? WHERE id = 'e1'", (unicodedata.normalize("NFD", "Tudo está pronto"),))
+    plano = sc.montar_plano(snap)
+    assert sc.divergencias(plano) == []
+    monkeypatch.setattr(mapa, "ENTRAM_NA_COLETANEA", (("", "Alvo Mais Que a Neve"), ("609", "Senhor")))
+    assert sc.divergencias(plano) == [
+        "entram na Coletânea: 2 praises (spec: 2); a mais: 060 Tudo está pronto; faltam: 609 Senhor"]
+
+
+def test_contagem_inclui_quem_ja_estava_na_subtag(mundo):
+    snap = mundo["snap"]
+    snap.execute("INSERT INTO tags VALUES ('t-clamor', 'Clamor', 't-col')")
+    snap.execute("INSERT INTO praise_tags VALUES ('v1', 't-clamor')")   # ligado à mão, sem categoria
+    snap.commit()
+    assert sc.contagens(sc.montar_plano(snap))[("Coletânea", "Clamor")] == 4
+
+
+def test_relatorio_tem_as_secoes_do_ensaio(mundo, monkeypatch):
+    _esperado_da_fixture(monkeypatch)
+    plano = sc.montar_plano(mundo["snap"])
+    _, novas = sc.resolver_subtags(plano, [dict(r) for r in mundo["snap"].execute("SELECT * FROM tags")], _ids_fixos())
+    texto = sc.relatorio(plano, mundo["snap"], "run-x", novas)
+    assert texto.startswith("# Seções da Coletânea — run-x")
+    assert "## Divergências da spec\n\nNenhuma." in texto
+    assert "| Coletânea · Clamor | nova | 3 | 3 | 3 |" in texto
+    assert "| Avulsos · GLTM | nova | 1 | 1 | 1 |" in texto
+    assert "| **Total Coletânea** | | | 13 | 13 |" in texto
+    assert "11 (spec: 11)." in texto
+    assert "Ligações novas: 6 pela categoria, 8 manuais." in texto
+    assert ("| `bbd5f528-1622-4346-a3d7-898223f7292b` | 68b | 566 | O Senhor é meu Pastor (Maranata, Jesus vem) | "
+            "Avulsos, Coletânea, Diversos · weider | Coletânea · Volta de Jesus e Eternidade | "
+            "liga; tira a raiz Coletânea |") in texto
+    assert "| `2b309bf1-50a0-48fc-8607-8ccce0031500` | 11e | — | Tu és Maravilhoso | GLTM | Avulsos · GLTM | liga |" in texto
+    assert "## Entram na Coletânea pela subtag (2; spec: 2)" in texto
+    assert "| `e1` | 060 | Tudo está pronto | Louvor |" in texto

@@ -229,3 +229,103 @@ def sql_plano(plano: Plano, ids: dict, novas: list[dict]) -> list[str]:
     stmts += [_sql_ligar(lig, ids[(lig.pai, lig.subtag)]) for lig in plano.ligacoes if lig.inserir]
     stmts += [_sql_desligar_raiz(lig, col, ids[(lig.pai, lig.subtag)]) for lig in plano.ligacoes if lig.remover_raiz]
     return stmts
+
+
+# --- relatório -------------------------------------------------------------------
+
+def contagens(plano: Plano) -> dict[tuple, int]:
+    """(pai, nome) -> praises ligados à subtag depois da migração."""
+    depois = {chave: set(ps) for chave, ps in plano.ja_ligados.items()}
+    for lig in plano.ligacoes:
+        depois[(lig.pai, lig.subtag)].add(lig.praise_id)
+    return {chave: len(ps) for chave, ps in depois.items()}
+
+
+def divergencias(plano: Plano) -> list[str]:
+    """O que não bate com os números da spec. Não aborta: o dono lê e decide."""
+    n = contagens(plano)
+    saida = []
+    for nome, esperado in mapa.ESPERADO_DEPOIS.items():
+        obtido = n[(mapa.RAIZ_COLETANEA, nome)]
+        if obtido != esperado:
+            saida.append(f"Coletânea · {nome}: {obtido} praises depois, a spec diz {esperado}")
+    total = sum(v for (pai, _), v in n.items() if pai == mapa.RAIZ_COLETANEA)
+    if total != mapa.ESPERADO_TOTAL:
+        saida.append(f"total da Coletânea: {total}, a spec diz {mapa.ESPERADO_TOTAL}")
+    gltm = n[(mapa.RAIZ_AVULSOS, "GLTM")]
+    if gltm != mapa.ESPERADO_AVULSOS_GLTM:
+        saida.append(f"Avulsos · GLTM: {gltm} praises depois, a spec diz {mapa.ESPERADO_AVULSOS_GLTM}")
+    removidas = sum(1 for lig in plano.ligacoes if lig.remover_raiz)
+    if removidas != mapa.ESPERADO_RAIZ_REMOVIDAS:
+        saida.append(f"ligações diretas com Coletânea removidas: {removidas}, a spec diz {mapa.ESPERADO_RAIZ_REMOVIDAS}")
+    # Nome de praise no D1 pode estar em NFD (medido no snapshot de 17/09);
+    # a spec está em NFC. A comparação é só do relatório, não do mapeamento.
+    entram = _nfc_pares((e["number"], e["name"]) for e in plano.entram_na_coletanea)
+    esperado = _nfc_pares(mapa.ENTRAM_NA_COLETANEA)
+    if entram != esperado:
+        a_mais = [f"{n} {s}".strip() for n, s in entram if (n, s) not in esperado]
+        faltam = [f"{n} {s}".strip() for n, s in esperado if (n, s) not in entram]
+        saida.append(f"entram na Coletânea: {len(entram)} praises (spec: {len(esperado)}); "
+                     f"a mais: {', '.join(a_mais) or '—'}; faltam: {', '.join(faltam) or '—'}")
+    return saida
+
+
+def _nfc_pares(pares) -> list[tuple[str, str]]:
+    return sorted((n, unicodedata.normalize("NFC", s)) for n, s in pares)
+
+
+def relatorio(plano: Plano, conn: sqlite3.Connection, run_id: str, novas: list[dict]) -> str:
+    """O relatório do ensaio (§5.1.6), em markdown."""
+    n = contagens(plano)
+    rot = rotulos(conn)
+    nome_da_raiz = {v: k for k, v in plano.raizes.items()}
+    novas_chaves = {(nome_da_raiz[s["parent_id"]], s["name"]) for s in novas}
+    por_id = {lig.praise_id: lig for lig in plano.ligacoes}
+    div = divergencias(plano)
+
+    linhas = [f"# Seções da Coletânea — {run_id}", "",
+              "Relatório gerado a partir do snapshot. `category` não é alterada (§5.1.5).", "",
+              "## Divergências da spec", ""]
+    linhas += [f"- {d}" for d in div] or ["Nenhuma."]
+    linhas += ["", "## Subtags (§2.1)", "",
+               "| Subtag | Situação | Ligações novas | Praises depois | Spec |",
+               "|---|---|---:|---:|---:|"]
+    for pai, nome in mapa.SUBTAGS:
+        chave = (pai, nome)
+        novas_lig = sum(1 for lig in plano.ligacoes if (lig.pai, lig.subtag) == chave and lig.inserir)
+        esperado = mapa.ESPERADO_DEPOIS[nome] if pai == mapa.RAIZ_COLETANEA else mapa.ESPERADO_AVULSOS_GLTM
+        situacao = "nova" if chave in novas_chaves else "existente"
+        linhas.append(f"| {pai}{mapa.SEP_ROTULO}{nome} | {situacao} | {novas_lig} | {n[chave]} | {esperado} |")
+    total = sum(v for (pai, _), v in n.items() if pai == mapa.RAIZ_COLETANEA)
+    linhas.append(f"| **Total Coletânea** | | | {total} | {mapa.ESPERADO_TOTAL} |")
+
+    removidas = sum(1 for lig in plano.ligacoes if lig.remover_raiz)
+    por_origem = {o: sum(1 for lig in plano.ligacoes if lig.origem == o and lig.inserir) for o in ("categoria", "manual")}
+    linhas += ["", "## Ligações diretas com `Coletânea` removidas", "",
+               f"{removidas} (spec: {mapa.ESPERADO_RAIZ_REMOVIDAS}).", "",
+               f"Ligações novas: {por_origem['categoria']} pela categoria, {por_origem['manual']} manuais.", "",
+               "## Casos manuais (§2.3)", "",
+               "| id | shortId | Nº | Louvor | Tags no snapshot | Recebe | Ação |",
+               "|---|---|---|---|---|---|---|"]
+    for x in mapa.MANUAIS:
+        lig = por_id.get(x["id"])
+        tags = sorted(rot.get(r["tag_id"], r["tag_id"]) for r in conn.execute(
+            "SELECT tag_id FROM praise_tags WHERE praise_id = ?", (x["id"],)))
+        acao = ("liga" if lig.inserir else "já ligado") + ("; tira a raiz Coletânea" if lig.remover_raiz else "")
+        linhas.append(f"| `{x['id']}` | {x['short_id']} | {x['numero'] or '—'} | {x['nome']} | "
+                      f"{', '.join(tags)} | {x['pai']}{mapa.SEP_ROTULO}{x['subtag']} | {acao} |")
+
+    linhas += ["", f"## Entram na Coletânea pela subtag ({len(plano.entram_na_coletanea)}; "
+                   f"spec: {len(mapa.ENTRAM_NA_COLETANEA)})", "",
+               "| id | Nº | Louvor | Seção |", "|---|---|---|---|"]
+    for e in sorted(plano.entram_na_coletanea, key=lambda e: (e["number"], e["name"])):
+        linhas.append(f"| `{e['id']}` | {e['number'] or '—'} | {e['name']} | {e['subtag']} |")
+    return "\n".join(linhas) + "\n"
+
+
+def _escrever_relatorio(pasta: str, texto: str) -> str:
+    os.makedirs(pasta, exist_ok=True)
+    caminho = os.path.join(pasta, "relatorio.md")
+    with open(caminho, "w", encoding="utf-8") as f:
+        f.write(texto)
+    return caminho

@@ -614,7 +614,6 @@ export type MergePraisesInput = {
     author: string | null;
     rhythm: string | null;
     tonality: string | null;
-    category: string | null;
     lyrics: string | null;
   };
   tag_ids: string[];

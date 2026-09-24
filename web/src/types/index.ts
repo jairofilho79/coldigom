@@ -131,7 +131,6 @@ export const VALID_SORT_FIELDS = [
   'name',
   'rhythm',
   'tonality',
-  'category',
   'author',
   'created_at',
 ] as const;
@@ -155,7 +154,6 @@ export const SORT_OPTIONS: SortOption[] = [
   { field: 'name', label: 'Nome', ascending: { label: 'Nome (A-Z)', order: 'asc' }, descending: { label: 'Nome (Z-A)', order: 'desc' } },
   { field: 'rhythm', label: 'Ritmo', ascending: { label: 'Ritmo (A-Z)', order: 'asc' }, descending: { label: 'Ritmo (Z-A)', order: 'desc' } },
   { field: 'tonality', label: 'Tom', ascending: { label: 'Tom (A-Z)', order: 'asc' }, descending: { label: 'Tom (Z-A)', order: 'desc' } },
-  { field: 'category', label: 'Categoria', ascending: { label: 'Categoria (A-Z)', order: 'asc' }, descending: { label: 'Categoria (Z-A)', order: 'desc' } },
   { field: 'author', label: 'Autor', ascending: { label: 'Autor (A-Z)', order: 'asc' }, descending: { label: 'Autor (Z-A)', order: 'desc' } },
   { field: 'created_at', label: 'Cadastro', ascending: { label: 'Mais antigos', order: 'asc' }, descending: { label: 'Mais recentes', order: 'desc' } },
 ];

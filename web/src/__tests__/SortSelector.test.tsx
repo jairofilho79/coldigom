@@ -29,7 +29,7 @@ describe('SortSelector Component', () => {
     expect(screen.getByRole('option', { name: 'Nome' })).toBeTruthy();
     expect(screen.getByRole('option', { name: 'Ritmo' })).toBeTruthy();
     expect(screen.getByRole('option', { name: 'Tom' })).toBeTruthy();
-    expect(screen.getByRole('option', { name: 'Categoria' })).toBeTruthy();
+    expect(screen.queryByRole('option', { name: 'Categoria' })).toBeNull();
     expect(screen.getByRole('option', { name: 'Autor' })).toBeTruthy();
   });
 

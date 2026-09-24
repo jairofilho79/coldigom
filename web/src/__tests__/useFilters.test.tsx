@@ -79,6 +79,15 @@ describe('useFilters Hook', () => {
       expect(result.current.filters.sort).toBe('name');
       expect(result.current.filters.order).toBe('desc');
     });
+
+    it('?sort=category de link antigo cai na ordenação padrão', () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?sort=category&order=desc'),
+      });
+
+      expect(result.current.filters.sort).toBe('number');
+      expect(result.current.filters.order).toBe('desc');
+    });
   });
 
   describe('setFilters', () => {

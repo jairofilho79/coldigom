@@ -288,7 +288,6 @@ export type CreatePraiseInput = {
   author?: string | null;
   rhythm?: string | null;
   tonality?: string | null;
-  category?: string | null;
   lyrics?: string | null;
   tag_ids?: string[];
 };
@@ -307,7 +306,7 @@ export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetai
 
 export async function updatePraise(
   id: string,
-  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>,
+  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'lyrics'>>,
   /**
    * `updated_at` que a tela carregou. Vai como `if_updated_at`; se alguém gravou
    * no meio, o servidor responde 409 em vez de deixar a última escrita vencer em

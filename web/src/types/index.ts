@@ -7,7 +7,11 @@ export interface Praise {
   author: string;
   rhythm: string;
   tonality: string;
-  category: string;
+  /**
+   * Aposentado: as seções da Coletânea viraram subtags. A API ainda manda até a
+   * fase 3 do spec (depois, '' ou null); o admin não lê nem escreve.
+   */
+  category?: string | null;
   lyrics: string;
   group_id: string | null;
   tag_ids: string | null;

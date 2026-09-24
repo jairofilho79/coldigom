@@ -767,8 +767,14 @@ export function registerPraisesRoutes(app: App): void {
       lyrics: null,
     };
 
+    // Sem a chave `category`, a categoria do keeper fica como está (spec seções
+    // da Coletânea, §3.3): o admin parou de mandá-la. `null` continua
+    // significando «apagar» — ausente e nulo não são a mesma coisa.
+    const mexeNaCategoria = 'category' in metaObj;
+
     for (const key of updatable) {
       if (!(key in metaObj)) {
+        if (key === 'category') continue;
         return c.json({ error: `Field 'metadata.${key}' is required` }, 400);
       }
       const val = metaObj[key];
@@ -839,7 +845,9 @@ export function registerPraisesRoutes(app: App): void {
       // sem nenhuma tag.
       await c.env.DB.batch([
         c.env.DB.prepare(
-          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, category = ?, lyrics = ?,
+          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?,${
+            mexeNaCategoria ? ' category = ?,' : ''
+          } lyrics = ?,
            updated_at = datetime('now') WHERE id = ?`
         ).bind(
           metaValues.name,
@@ -847,7 +855,7 @@ export function registerPraisesRoutes(app: App): void {
           metaValues.author,
           metaValues.rhythm,
           metaValues.tonality,
-          metaValues.category,
+          ...(mexeNaCategoria ? [metaValues.category] : []),
           metaValues.lyrics,
           keeperId
         ),

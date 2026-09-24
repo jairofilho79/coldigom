@@ -138,7 +138,10 @@ def montar_plano(conn: sqlite3.Connection) -> Plano:
             if col not in tags and not (tags & filhos_col):
                 entram.append({"id": pid, "number": (p.get("number") or "").strip(),
                                "name": p["name"], "subtag": subtag})
-        elif col in tags:
+        elif col in tags and not (tags & filhos_col):
+            # Exceção: já tem uma subtag da Coletânea (ligada à mão ou por um
+            # --execute anterior). A raiz sem seção só é problema (b) quando
+            # o praise ficaria de fato sem nenhuma subtag — spec §5.1.2(b).
             problemas.append(f"(b) tem a raiz Coletânea e a category {p['category']!r} não dá seção: {_descricao(p)}")
 
     for x in mapa.MANUAIS:
@@ -350,6 +353,19 @@ def _ligacoes_producao(tag_ids: list[str], remote: bool) -> set:
         f"SELECT praise_id, tag_id FROM praise_tags WHERE tag_id IN ({lista})", remote=remote)}
 
 
+def _copiar_execucao_segura(run_id: str, log_path: str, execucao_dir: str) -> None:
+    """copiar_execucao (core.plpcg_apply) lê o log linha a linha com
+    json.loads e levanta numa linha truncada (processo morto no meio do
+    write). Isso roda DEPOIS da gravação em produção — não pode derrubar o
+    resumo nem a dica de undo que executar()/desfazer() já calcularam.
+    Best-effort: avisa em stderr e segue."""
+    try:
+        copiar_execucao(run_id, log_path, execucao_dir)
+    except Exception as erro:
+        print(f"aviso: falha ao copiar a execução de {run_id!r} para {execucao_dir!r}: "
+              f"{_erro_texto(erro)}", file=sys.stderr)
+
+
 def executar(plano: Plano, conn: sqlite3.Connection, execute: bool, run_id: str,
              log_path: str = LOG_PADRAO, out_dir: str | None = None, execucao_dir: str | None = None,
              remote: bool = True, novo_id=lambda: str(uuid.uuid4())) -> dict:
@@ -452,7 +468,7 @@ def executar(plano: Plano, conn: sqlite3.Connection, execute: bool, run_id: str,
         return resumo
     finally:
         log.close()
-        copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+        _copiar_execucao_segura(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
 
 
 # --- undo ------------------------------------------------------------------------
@@ -556,7 +572,7 @@ def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
         gravar(saida)
     finally:
         log.close()
-    copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
+    _copiar_execucao_segura(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
     return resumo
 
 

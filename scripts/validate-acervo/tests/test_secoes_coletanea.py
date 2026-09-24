@@ -158,6 +158,19 @@ def test_trava_b_raiz_coletanea_sem_secao(mundo):
     assert [p[:3] for p in e.value.problemas] == ["(b)"] and "a1" in e.value.problemas[0]
 
 
+def test_trava_b_exceto_quem_ja_tem_subtag_da_coletanea(mundo):
+    # spec §5.1.2(b): a trava é «algum praise com a raiz Coletânea ficar SEM
+    # subtag» — quem já tem uma subtag da Coletânea não fica sem nenhuma,
+    # mesmo com a raiz solta e sem seção mapeada.
+    snap = mundo["snap"]
+    snap.execute("INSERT INTO tags VALUES ('t-clamor', 'Clamor', 't-col')")
+    snap.execute("INSERT INTO praise_tags VALUES ('v1', 't-col')")       # raiz, category vazia (sem seção)
+    snap.execute("INSERT INTO praise_tags VALUES ('v1', 't-clamor')")    # já tem uma subtag da Coletânea
+    snap.commit()
+    plano = sc.montar_plano(snap)                                       # não trava
+    assert "v1" not in {lig.praise_id for lig in plano.ligacoes}        # exemptado: nenhuma ligação nova
+
+
 def test_trava_c_manual_ausente_ou_com_tags_diferentes(mundo):
     snap = mundo["snap"]
     snap.execute("DELETE FROM praises WHERE id = ?", (mapa.MANUAIS[0]["id"],))
@@ -471,6 +484,22 @@ def test_execute_nao_reclama_ligacao_que_ja_existia_em_producao(mundo, d1):
     assert ["c1", "t-clamor"] not in _log(mundo)[-1]["ligar"]     # o undo não vai apagá-la
 
 
+def test_execute_copiar_execucao_falha_nao_esconde_o_resumo(mundo, d1, capsys):
+    # copiar_execucao (core.plpcg_apply) lê o log inteiro com json.loads e
+    # levanta numa linha truncada de OUTRO run (processo morto no meio do
+    # write). Isso roda depois da gravação em produção — não pode derrubar o
+    # resumo nem a dica de undo que já foi calculada.
+    k = _kw(mundo)
+    os.makedirs(os.path.dirname(k["log_path"]), exist_ok=True)
+    with open(k["log_path"], "w", encoding="utf-8") as f:
+        f.write('{"run_id": "run-outro", "estado": "escre\n')     # linha truncada
+    plano = sc.montar_plano(mundo["snap"])
+    r = sc.executar(plano, mundo["snap"], True, "run-1", novo_id=_ids_fixos(), **k)
+    assert r["falhou"] is False and (r["criadas"], r["removidas"]) == (14, 11)
+    err = capsys.readouterr().err
+    assert "aviso" in err and "run-1" in err
+
+
 def test_execute_falha_do_wrangler_fica_desfazivel(mundo, d1):
     d1["falhar"]["sql_no_arquivo"] = 0
     d1["falhar"]["erro"] = subprocess.CalledProcessError(1, ["wrangler"], stderr="D1_ERROR: boom")
@@ -637,6 +666,16 @@ def test_undo_de_releitura_falhou_usa_a_lista_cheia(mundo, monkeypatch):
     r2 = _desfazer(mundo, run_id="run-rl")
     assert r2["falhou"] is False and r2["statements"] == 11 + 14 + 14
     assert (_ligacoes(mundo["prod"]), _tags(mundo["prod"])) == antes
+
+
+def test_desfazer_copiar_execucao_falha_nao_esconde_o_resumo(mundo, d1, capsys):
+    _executar(mundo)
+    with open(mundo["tmp"] / "log.jsonl", "a", encoding="utf-8") as f:
+        f.write('{"run_id": "run-outro", "estado": "escre\n')     # linha truncada de outro run
+    r = _desfazer(mundo)
+    assert r["falhou"] is False
+    err = capsys.readouterr().err
+    assert "aviso" in err and "run-1" in err
 
 
 def test_desfazer_grava_desfazendo_no_log_antes_do_wrangler(mundo, d1, monkeypatch):

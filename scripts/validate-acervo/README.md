@@ -214,6 +214,14 @@ aceita ligar um praise a uma tag pai (plano 1 desta spec — fim da trava
 `--execute` em si fala com o D1 por SQL, não pela API; mas rodar antes do
 deploy 1 deixa a raiz `Coletânea` (que passa a ter filhos) recusada pela API
 em qualquer escrita futura que precise religá-la, até o deploy acontecer.
+Tem um efeito mais imediato, e é o motivo de esperar: até o deploy 1,
+`resolveTagFilterGroups` troca uma tag pai só pelos filhos dela (F6/§3.1),
+não pai + filhos. Depois do `--execute`, `Avulsos` e `Coletânea` passam a
+ter filhos (as subtags); um filtro por `Avulsos` no admin ou em
+`/api/plpcg/praises` voltaria só o 1 praise de `Avulsos · GLTM` em vez de
+~881, e um filtro por `Coletânea` voltaria só quem está ligado direto à raiz
+(o esperado é 0 depois da migração) em vez das ~1123 subtags. O deploy 1
+corrige o resolver antes disso acontecer.
 
 Testes: `python3 -m pytest tests/ -v`
 

@@ -274,9 +274,9 @@ export async function listPlpcgPraises(
 // GET /api/plpcg/catalog — dump compacto do catálogo inteiro para o app PLPCG.
 //
 // O app guarda tudo em Isar e revalida por ETag: `If-None-Match` igual → 304
-// sem corpo. O ETag é o hash de `{kinds, praises}` (sem `generatedAt`, que
-// mudaria a cada chamada). Materiais vão só como `{id, kind, type}` — o
-// `r2_key` segue `assets/praises/<praiseId>/<materialId>.<type>` (mesmo
+// sem corpo. O ETag é o hash de `{kinds, kindClasses, praises}` (sem
+// `generatedAt`, que mudaria a cada chamada). Materiais vão só como
+// `{id, kind, type}` — o `r2_key` segue `assets/praises/<praiseId>/<materialId>.<type>` (mesmo
 // padrão gravado por driveImport.ts e pelo bulk-upload em routes/praises.ts:
 // a extensão É o `type`, sem mapa de alias) e o app o reconstrói; quando o
 // `r2_key` gravado foge do padrão — inclusive `youtube`, que nunca tem objeto
@@ -315,6 +315,24 @@ type CatalogMaterialRow = {
 };
 
 type CatalogTagRow = { praise_id: string; label: string };
+
+type CatalogKindTaxonomyRow = {
+  id: string;
+  class_id: string | null;
+  parent_id: string | null;
+  sort_order: number | null;
+};
+
+type CatalogKindClassRow = { id: string; label: string };
+
+/** Item de `kinds` no dump: chaves de taxonomia só quando preenchidas (spec filtro-materiais §3.2). */
+export type PlpcgCatalogKind = {
+  id: string;
+  name: string;
+  class?: string;
+  parent?: string;
+  order?: number;
+};
 
 /**
  * Tipos cujo r2_key segue o padrão de upload — extensão = o próprio `type`
@@ -387,6 +405,19 @@ export async function buildPlpcgCatalog(
     .all();
   const kindLabels = await loadMaterialKindLabels(db);
 
+  // Classe, família e ordem (migração 024). O Worker exige a migração aplicada
+  // antes do deploy: sem as colunas esta consulta falha e o dump vira 500.
+  const taxonomyResult = await db
+    .prepare(`SELECT id, class_id, parent_id, sort_order FROM material_kinds`)
+    .all();
+  const classesResult = await db
+    .prepare(`SELECT id, label FROM material_kind_classes ORDER BY sort_order`)
+    .all();
+  const taxonomy = new Map<string, CatalogKindTaxonomyRow>();
+  for (const row of (taxonomyResult.results ?? []) as CatalogKindTaxonomyRow[]) {
+    taxonomy.set(row.id, row);
+  }
+
   const materialsByPraise = new Map<string, PlpcgCatalogMaterial[]>();
   const kindIds = new Set<string>();
   for (const row of (materialsResult.results ?? []) as CatalogMaterialRow[]) {
@@ -413,9 +444,27 @@ export async function buildPlpcgCatalog(
     tagsByPraise.set(row.praise_id, list);
   }
 
-  const kinds = [...kindIds]
-    .map((id) => ({ id, name: labelFor(kindLabels, id) }))
+  // Um pai sem material entra quando um filho tem: sem ele o app não monta a família.
+  for (const id of [...kindIds]) {
+    const parent = taxonomy.get(id)?.parent_id;
+    if (parent) kindIds.add(parent);
+  }
+
+  const kinds: PlpcgCatalogKind[] = [...kindIds]
+    .map((id) => {
+      const kind: PlpcgCatalogKind = { id, name: labelFor(kindLabels, id) };
+      const row = taxonomy.get(id);
+      if (row?.class_id) kind.class = row.class_id;
+      if (row?.parent_id) kind.parent = row.parent_id;
+      if (row?.sort_order != null) kind.order = row.sort_order;
+      return kind;
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const usedClasses = new Set(kinds.map((k) => k.class).filter((c): c is string => !!c));
+  const kindClasses = ((classesResult.results ?? []) as CatalogKindClassRow[])
+    .filter((c) => usedClasses.has(c.id))
+    .map(({ id, label }) => ({ id, label }));
 
   const praises = ((praisesResult.results ?? []) as CatalogPraiseRow[]).map((row) => {
     const praise: Record<string, unknown> = {
@@ -438,7 +487,7 @@ export async function buildPlpcgCatalog(
     return praise;
   });
 
-  const etag = `"${await sha256Hex32(JSON.stringify({ kinds, praises }))}"`;
+  const etag = `"${await sha256Hex32(JSON.stringify({ kinds, kindClasses, praises }))}"`;
   const headers: Record<string, string> = {
     ETag: etag,
     'Cache-Control': 'public, max-age=300',
@@ -450,6 +499,6 @@ export async function buildPlpcgCatalog(
     return { status: 304, headers, body: '' };
   }
 
-  const body = JSON.stringify({ generatedAt: new Date().toISOString(), kinds, praises });
+  const body = JSON.stringify({ generatedAt: new Date().toISOString(), kindClasses, kinds, praises });
   return { status: 200, headers, body };
 }

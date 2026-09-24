@@ -60,12 +60,38 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_root_name ON tags(name) WHERE parent_
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_child_name ON tags(parent_id, name) WHERE parent_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_tags_parent_id ON tags(parent_id);
 
+-- Table: material_kind_classes
+-- Classes do filtro «Materiais» do app (migração 024): Metais, Banda…
+CREATE TABLE IF NOT EXISTS material_kind_classes (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    sort_order INTEGER NOT NULL UNIQUE
+);
+
+INSERT OR IGNORE INTO material_kind_classes (id, label, sort_order) VALUES
+    ('regencia', 'Regência e geral', 10),
+    ('letra', 'Letra e projeção', 20),
+    ('vozes', 'Vozes', 30),
+    ('madeiras', 'Madeiras', 40),
+    ('metais', 'Metais', 50),
+    ('percussao', 'Percussão', 60),
+    ('banda', 'Banda', 70),
+    ('cordas', 'Cordas', 80),
+    ('audio', 'Áudio e acompanhamento', 90),
+    ('midi', 'MIDI de ensaio', 100);
+
 -- Table: material_kinds
 -- Lookup table for material types (Audio, Score, MIDI, Lyrics, Chord Chart, Vozes, Instrumentos, etc.)
+-- class_id/parent_id/sort_order (migração 024): classe, família de um nível (pai raiz,
+-- mesma classe) e ordem de grade dentro da classe.
 CREATE TABLE IF NOT EXISTS material_kinds (
     id TEXT PRIMARY KEY,           -- UUID
-    name TEXT NOT NULL UNIQUE      -- Canonical kind name (ingestion source language)
+    name TEXT NOT NULL UNIQUE,     -- Canonical kind name (ingestion source language)
+    class_id TEXT REFERENCES material_kind_classes(id) ON DELETE SET NULL,
+    parent_id TEXT REFERENCES material_kinds(id) ON DELETE RESTRICT,
+    sort_order INTEGER
 );
+CREATE INDEX IF NOT EXISTS idx_material_kinds_parent_id ON material_kinds(parent_id);
 
 -- Display labels per locale (pt-BR first; SSOT for UI strings)
 CREATE TABLE IF NOT EXISTS material_kind_translations (

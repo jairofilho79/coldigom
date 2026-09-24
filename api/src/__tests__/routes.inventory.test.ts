@@ -55,6 +55,7 @@ const ROTAS_ESPERADAS = [
   'GET /api/plpcg/manifest',
   'GET /api/plpcg/manifest/checksum',
   'GET /api/plpcg/resolve/:shortId',
+  'POST /api/plpcg/crosswalk',
   'GET /api/materials/kinds',
   'PUT /api/materials/:materialId/content',
   'PUT /api/materials/:materialId/content',

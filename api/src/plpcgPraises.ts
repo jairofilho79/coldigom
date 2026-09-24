@@ -60,6 +60,7 @@ type ListRow = {
   tonality: string | null;
   category: string | null;
   group_id: string | null;
+  short_id: string | null;
   tag_ids: string | null;
   tag_names: string | null;
   has_lyrics: number;
@@ -159,7 +160,7 @@ export async function listPlpcgPraises(
 
       const listSql = `
       SELECT
-        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.group_id,
+        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.group_id, p.short_id,
         CASE WHEN p.lyrics IS NOT NULL AND TRIM(p.lyrics) != '' THEN 1 ELSE 0 END AS has_lyrics,
         GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
         GROUP_CONCAT(DISTINCT ${deps.tagLabelSql}) as tag_names
@@ -294,6 +295,7 @@ export type PlpcgCatalogMaterial = {
 
 type CatalogPraiseRow = {
   id: string;
+  short_id?: string | null;
   name: string;
   number: string | null;
   author: string | null;
@@ -362,7 +364,7 @@ export async function buildPlpcgCatalog(
 ): Promise<PlpcgCatalogResult> {
   const praisesResult = await db
     .prepare(
-      `SELECT p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics
+      `SELECT p.id, p.short_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics
        FROM praises p
        ORDER BY p.number, p.name, p.id`
     )
@@ -418,6 +420,9 @@ export async function buildPlpcgCatalog(
   const praises = ((praisesResult.results ?? []) as CatalogPraiseRow[]).map((row) => {
     const praise: Record<string, unknown> = {
       id: row.id,
+      // short_id nulo (praise fora do gatilho) a chave some, em vez de ir `null`;
+      // a coluna em si é obrigatória (migração 023 antes do deploy).
+      ...(row.short_id ? { shortId: row.short_id } : {}),
       number: row.number ?? '',
       name: row.name,
       author: row.author ?? '',

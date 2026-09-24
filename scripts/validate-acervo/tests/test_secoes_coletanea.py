@@ -639,6 +639,50 @@ def test_undo_de_releitura_falhou_usa_a_lista_cheia(mundo, monkeypatch):
     assert (_ligacoes(mundo["prod"]), _tags(mundo["prod"])) == antes
 
 
+def test_desfazer_grava_desfazendo_no_log_antes_do_wrangler(mundo, d1, monkeypatch):
+    """"desfazendo" (escreveu=True) tem que estar no disco ANTES do wrangler
+    rodar, como "escrevendo" em executar: um --undo morto no meio precisa
+    dessa linha para não sumir sem rastro."""
+    _executar(mundo)
+    viu = {"desfazendo_no_disco": False}
+    original = sc.run_sql_files    # a do fixture d1, que aplica no sqlite de "produção"
+
+    def run_sql_files(arquivos, remote=True):
+        linhas = _log(mundo)
+        viu["desfazendo_no_disco"] = bool(linhas) and (linhas[-1]["estado"], linhas[-1]["escreveu"]) == ("desfazendo", True)
+        return original(arquivos, remote=remote)
+
+    monkeypatch.setattr(sc, "run_sql_files", run_sql_files)
+    _desfazer(mundo)
+    assert viu["desfazendo_no_disco"] is True
+
+
+def test_desfazer_retry_depois_de_desfazendo_sem_desfeito(mundo, d1):
+    """Um "desfazendo" sem "desfeito" atrás (o processo morreu entre as duas
+    escritas) não pode contar como "já desfeito", nem virar o alvo do undo
+    (não tem ligar/desligar_raiz/subtags_novas) — o retry usa a última linha
+    de verdade do run (a "ok"/"guarda_barrou"/... de executar)."""
+    antes = (_ligacoes(mundo["prod"]), _tags(mundo["prod"]))
+    _executar(mundo)
+    with open(mundo["tmp"] / "log.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps({"run_id": "run-1", "estado": "desfazendo", "escreveu": True,
+                            "statements": 39, "ts": 0}) + "\n")
+    r = _desfazer(mundo)
+    assert r["falhou"] is False and r["statements"] == 39
+    assert (_ligacoes(mundo["prod"]), _tags(mundo["prod"])) == antes
+    fim = _log(mundo)[-1]
+    assert (fim["estado"], fim["ok"]) == ("desfeito", True)
+
+
+def test_desfazer_run_desconhecido_tem_motivo_proprio(mundo, d1):
+    _executar(mundo, run_id="run-1")
+    d1["chamadas"]["sql"].clear()
+    r = _desfazer(mundo, run_id="run-999")
+    assert r["motivo"] == "run não encontrado no log" and d1["chamadas"]["sql"] == []
+    r2 = _desfazer(mundo, run_id="run-1")            # o run que existe continua desfazível
+    assert r2["falhou"] is False
+
+
 def test_undo_guarda_barrou_nao_remove_ligacao_barrada_que_foi_criada_depois(mundo, d1):
     """A linha final de um run barrado pela guarda já vem com `ligar` filtrado
     pelo que de fato pegou (fix do Task 5). O undo tem que usar essa lista

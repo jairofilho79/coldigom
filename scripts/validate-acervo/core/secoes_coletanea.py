@@ -499,18 +499,26 @@ def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
     """Simula por padrão, como o core.apply. A última linha do run que
     escreveu é a que vale; um undo com ok:true fecha o run."""
     alvo = None
+    visto = False
     desfeito = False
     for r in _ler_log(log_path):
         if r.get("run_id") != run_id:
             continue
-        if r.get("estado") == "desfeito":
+        visto = True
+        estado = r.get("estado")
+        if estado == "desfeito":
             desfeito = desfeito or bool(r.get("ok"))
+            continue
+        if estado == "desfazendo":
+            # Rastro de um --undo anterior morto no meio: conta como "visto",
+            # mas não vira alvo (não tem ligar/desligar_raiz/subtags_novas) nem
+            # fecha o run como "já desfeito" — só "desfeito" ok:true fecha.
             continue
         if r.get("escreveu"):
             alvo = r
     resumo = {"run_id": run_id, "executado": execute, "statements": 0, "falhou": False, "motivo": ""}
     if alvo is None:
-        resumo["motivo"] = "nada a desfazer: o run não chegou a escrever"
+        resumo["motivo"] = "run não encontrado no log" if not visto else "nada a desfazer: o run não chegou a escrever"
         return resumo
     if desfeito:
         resumo["motivo"] = "já desfeito"
@@ -525,16 +533,28 @@ def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
     carimbo = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     arquivos = write_sql_chunks(stmts, os.path.join(out_dir or OUT_PADRAO, run_id, f"undo-{carimbo}"),
                                 prefix="undo", per_file=LOTE_SQL)
-    saida = {"run_id": run_id, "estado": "desfeito", "statements": len(stmts)}
-    try:
-        run_sql_files(arquivos, remote=remote)
-        saida["ok"] = True
-    except Exception as erro:
-        saida["ok"] = False
-        saida["erro"] = _erro_texto(erro)
-        resumo["falhou"] = True
+
     os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
-    with open(log_path, "a", encoding="utf-8") as log:
-        log.write(json.dumps(dict(saida, ts=time.time()), ensure_ascii=False) + "\n")
+    log = open(log_path, "a", encoding="utf-8")
+
+    def gravar(linha: dict) -> None:
+        log.write(json.dumps(dict(linha, ts=time.time()), ensure_ascii=False) + "\n")
+        log.flush()
+
+    try:
+        # "desfazendo" (escreveu=True) vai para o disco ANTES do wrangler, como
+        # em executar: um --undo morto no meio deixa rastro de que pode ter
+        # escrito, e não conta como "já desfeito" (só "desfeito" ok:true conta).
+        gravar({"run_id": run_id, "estado": "desfazendo", "escreveu": True, "statements": len(stmts)})
+        try:
+            run_sql_files(arquivos, remote=remote)
+            saida = {"run_id": run_id, "estado": "desfeito", "statements": len(stmts), "ok": True}
+        except Exception as erro:
+            saida = {"run_id": run_id, "estado": "desfeito", "statements": len(stmts), "ok": False,
+                     "erro": _erro_texto(erro)}
+            resumo["falhou"] = True
+        gravar(saida)
+    finally:
+        log.close()
     copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
     return resumo

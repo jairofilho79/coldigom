@@ -558,3 +558,80 @@ def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
         log.close()
     copiar_execucao(run_id, log_path, execucao_dir or EXECUCAO_PADRAO)
     return resumo
+
+
+# --- CLI -------------------------------------------------------------------------
+
+def snapshot_velho(log_path: str, snapshot: str) -> bool:
+    """Houve escrita deste comando (execução ou undo) depois do snapshot?
+    Então o snapshot não descreve mais produção: refaça antes do --execute."""
+    tirado = os.path.getmtime(snapshot)
+    return any((r.get("escreveu") or r.get("estado") == "desfeito") and r.get("ts", 0) >= tirado
+               for r in _ler_log(log_path))
+
+
+def _imprimir_trava(t: Trava) -> None:
+    print(f"ABORTADO — nada foi escrito. {len(t.problemas)} problema(s):", file=sys.stderr)
+    for p in t.problemas:
+        print(f"  {p}", file=sys.stderr)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("--snapshot", default=SNAPSHOT_DB)
+    ap.add_argument("--execute", action="store_true", help="grava em produção (o padrão é o ensaio)")
+    ap.add_argument("--undo", metavar="RUN_ID")
+    ap.add_argument("--log", default=LOG_PADRAO)
+    ap.add_argument("--out-dir", default=OUT_PADRAO)
+    ap.add_argument("--execucao-dir", default=EXECUCAO_PADRAO)
+    ap.add_argument("--local", action="store_true", help="wrangler --local (D1 local)")
+    a = ap.parse_args(argv)
+    remote = not a.local
+
+    if a.undo:
+        r = desfazer(a.undo, a.log, a.execute, remote=remote, out_dir=a.out_dir, execucao_dir=a.execucao_dir)
+        modo = "EXECUTADO" if a.execute else "simulado"
+        print(f"undo {a.undo} ({modo}): {r['statements']} statements"
+              + (f" — {r['motivo']}" if r["motivo"] else ""))
+        return 1 if r["falhou"] else 0
+
+    if not os.path.exists(a.snapshot):
+        print(f"sem snapshot: {a.snapshot} (rode python3 -m core.snapshot)", file=sys.stderr)
+        return 1
+    if a.execute and snapshot_velho(a.log, a.snapshot):
+        print("RECUSADO: houve escrita deste comando depois do snapshot. "
+              "Rode python3 -m core.snapshot e o ensaio de novo.", file=sys.stderr)
+        return 2
+
+    conn = conectar(a.snapshot)
+    sufixo = "secoes_coletanea" if a.execute else "secoes_coletanea-ensaio"
+    run_id = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ") + f"-{sufixo}"
+    try:
+        plano = montar_plano(conn)
+        r = executar(plano, conn, a.execute, run_id, a.log, a.out_dir, a.execucao_dir, remote=remote)
+    except Trava as t:
+        _imprimir_trava(t)
+        return 2
+
+    modo = "EXECUTADO" if a.execute else "ensaio (nada foi escrito)"
+    print(f"{modo} {run_id}: ligar {r['ligar']} · desligar raiz {r['desligar_raiz']} · "
+          f"subtags novas {r['subtags_novas']} · statements {r['statements']}")
+    print(f"divergências da spec: {r['divergencias']}")
+    print(f"relatório: {r['relatorio']}")
+    if a.execute:
+        atras = r["atrasadas"]
+        print(f"criadas {r['criadas']} · removidas {r['removidas']} · "
+              f"atrasadas: ligar {len(atras['ligar'])}, desligar raiz {len(atras['desligar_raiz'])}")
+        for pid in (atras["ligar"] + atras["desligar_raiz"])[:30]:
+            print(f"  ficou para trás: {pid}")
+        if r.get("erro"):
+            # Só existe quando o wrangler ou a releitura levantaram exceção
+            # (estado "falhou"/"releitura_falhou"): o dono precisa do texto
+            # do D1 para decidir se roda de novo ou pede socorro.
+            print(f"erro: {r['erro']}", file=sys.stderr)
+        print(f"log: {a.log}\nundo: python3 -m core.secoes_coletanea --undo {run_id} --execute")
+    return 1 if r["falhou"] else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -700,3 +700,73 @@ def test_undo_guarda_barrou_nao_remove_ligacao_barrada_que_foi_criada_depois(mun
     r = _desfazer(mundo, run_id="run-g2")
     assert r["falhou"] is False
     assert ("c1", "novo-01") in _ligacoes(mundo["prod"])        # o undo não mexe no que este run não criou
+
+
+# --- CLI ------------------------------------------------------------------------------
+
+def _argv(mundo, *extra):
+    k = _kw(mundo)
+    return ["--snapshot", str(mundo["tmp"] / "snap.sqlite"), "--log", k["log_path"],
+            "--out-dir", k["out_dir"], "--execucao-dir", k["execucao_dir"], *extra]
+
+
+def test_main_ensaio(mundo, d1, capsys):
+    rc = sc.main(_argv(mundo))
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "ensaio (nada foi escrito)" in out and "ligar 14 · desligar raiz 11 · subtags novas 14" in out
+    assert "relatório: " in out and d1["chamadas"] == {"query": [], "sql": []}
+
+
+def test_main_trava_sai_2_sem_escrever(mundo, d1, capsys):
+    mundo["snap"].execute("UPDATE praises SET category = 'Dm' WHERE id = 'v1'")
+    mundo["snap"].commit()
+    rc = sc.main(_argv(mundo, "--execute"))
+    err = capsys.readouterr().err
+    assert rc == 2 and "ABORTADO — nada foi escrito" in err and "'Dm'" in err
+    assert d1["chamadas"] == {"query": [], "sql": []} and not (mundo["tmp"] / "log.jsonl").exists()
+
+
+def test_main_execute_e_undo(mundo, d1, capsys):
+    assert sc.main(_argv(mundo, "--execute")) == 0
+    out = capsys.readouterr().out
+    run_id = out.split("EXECUTADO ")[1].split(":")[0]
+    assert run_id.endswith("-secoes_coletanea") and f"--undo {run_id} --execute" in out
+    assert sc.main(_argv(mundo, "--undo", run_id)) == 0                     # simula
+    assert "simulado" in capsys.readouterr().out
+    assert sc.main(_argv(mundo, "--undo", run_id, "--execute")) == 0
+    assert mundo["prod"].execute("SELECT COUNT(*) FROM praise_tags WHERE tag_id = 't-col'").fetchone()[0] == 11
+
+
+def test_main_recusa_execute_com_snapshot_mais_velho_que_a_ultima_escrita(mundo, d1, capsys):
+    assert sc.main(_argv(mundo, "--execute")) == 0
+    passado = os.path.getmtime(mundo["tmp"] / "snap.sqlite") - 3600
+    os.utime(mundo["tmp"] / "snap.sqlite", (passado, passado))
+    rc = sc.main(_argv(mundo, "--execute"))
+    assert rc == 2 and "core.snapshot" in capsys.readouterr().err
+
+
+def test_main_sem_snapshot(mundo, capsys):
+    rc = sc.main(["--snapshot", str(mundo["tmp"] / "nao-existe.sqlite")])
+    assert rc == 1 and "sem snapshot" in capsys.readouterr().err
+
+
+def test_snapshot_velho_considera_desfazendo_como_escrita(mundo):
+    # "desfazendo" (escreveu=True) é gravado ANTES do wrangler rodar (ver
+    # `desfazer`): um --undo morto bem no meio deixa só essa linha no log, e
+    # ela tem que bastar para recusar um --execute com o snapshot antigo.
+    log_path = str(mundo["tmp"] / "log.jsonl")
+    snap_path = str(mundo["tmp"] / "snap.sqlite")
+    tirado = os.path.getmtime(snap_path)
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write(json.dumps({"run_id": "run-x", "estado": "desfazendo", "escreveu": True,
+                            "statements": 3, "ts": tirado + 1}) + "\n")
+    assert sc.snapshot_velho(log_path, snap_path) is True
+
+
+def test_main_execute_imprime_erro_quando_o_wrangler_falha(mundo, d1, capsys):
+    d1["falhar"]["sql_no_arquivo"] = 0
+    d1["falhar"]["erro"] = subprocess.CalledProcessError(1, ["wrangler"], stderr="D1_ERROR: boom")
+    rc = sc.main(_argv(mundo, "--execute"))
+    err = capsys.readouterr().err
+    assert rc == 1 and "D1_ERROR: boom" in err

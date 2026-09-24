@@ -208,3 +208,102 @@ def test_raiz_ausente_trava(mundo):
     mundo["snap"].execute("UPDATE tags SET name = 'Coletanea' WHERE id = 't-col'")
     with pytest.raises(sc.Trava, match="Coletânea"):
         sc.montar_plano(mundo["snap"])
+
+
+# --- SQL ---------------------------------------------------------------------------
+
+def _ids_fixos():
+    n = iter(range(1, 100))
+    return lambda: f"novo-{next(n):02d}"
+
+
+def _aplicar(conn, stmts):
+    """Um batch atômico, como o wrangler executa cada arquivo."""
+    try:
+        conn.executescript("BEGIN;\n" + "\n".join(stmts) + "\nCOMMIT;")
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+
+
+def _sql(mundo, tags_de=None):
+    plano = sc.montar_plano(mundo["snap"])
+    tags = [dict(r) for r in (tags_de or mundo["snap"]).execute("SELECT id, name, parent_id FROM tags")]
+    ids, novas = sc.resolver_subtags(plano, tags, _ids_fixos())
+    return plano, ids, novas, sc.sql_plano(plano, ids, novas)
+
+
+def test_sql_cria_liga_e_depois_desliga(mundo):
+    plano, ids, novas, stmts = _sql(mundo)
+    assert len(novas) == 14 and ids[("Avulsos", "GLTM")] == "novo-14"
+    tipos = [s.split(" (")[0].split(" SELECT")[0] for s in stmts]
+    n_lig = sum(1 for lig in plano.ligacoes if lig.inserir)
+    n_des = sum(1 for lig in plano.ligacoes if lig.remover_raiz)
+    assert tipos == (["INSERT INTO tags"] * 14 + ["INSERT OR IGNORE INTO praise_tags"] * n_lig
+                     + [s for s in tipos if s.startswith("DELETE")])
+    assert sum(1 for s in stmts if s.startswith("DELETE FROM praise_tags")) == n_des
+    assert stmts[0] == "INSERT INTO tags (id, name, parent_id) VALUES ('novo-01', 'Clamor', 't-col');"
+
+
+def test_sql_em_producao_faz_a_migracao(mundo):
+    prod = mundo["prod"]
+    _, ids, _, stmts = _sql(mundo)
+    _aplicar(prod, stmts)
+    rot = sc.rotulos(prod)
+    assert _rotulos_de(prod, "c1") == {"Coletânea · Clamor"}
+    assert _rotulos_de(prod, "c3") == {"Coletânea · Morte Ressurreição e Salvação", "Avulsos"}
+    assert _rotulos_de(prod, "e2") == {"Coletânea · Dedicação", "Avulsos"}
+    assert _rotulos_de(prod, "a1") == {"Avulsos"} and _rotulos_de(prod, "v1") == set()
+    assert _rotulos_de(prod, mapa.MANUAIS[-1]["id"]) == {"GLTM", "Avulsos · GLTM"}      # a raiz GLTM fica
+    assert _rotulos_de(prod, mapa.MANUAIS[6]["id"]) == {
+        "Avulsos", "Diversos · weider", "Coletânea · Volta de Jesus e Eternidade"}
+    diretas = prod.execute("SELECT COUNT(*) FROM praise_tags WHERE tag_id = 't-col'").fetchone()[0]
+    assert diretas == 0 and rot["t-col"] == "Coletânea"
+
+
+def test_guarda_category_mudou_depois_do_snapshot(mundo):
+    prod = mundo["prod"]
+    prod.execute("UPDATE praises SET category = 'Louvor' WHERE id = 'c1'")
+    prod.commit()
+    _, _, _, stmts = _sql(mundo)
+    _aplicar(prod, stmts)
+    assert _rotulos_de(prod, "c1") == {"Coletânea"}      # não ligou E não saiu da Coletânea
+
+
+def test_guarda_manual_com_tags_mudadas(mundo):
+    prod = mundo["prod"]
+    x = mapa.MANUAIS[0]
+    prod.execute("INSERT INTO praise_tags VALUES (?, 't-pes')", (x["id"],))
+    prod.commit()
+    _, _, _, stmts = _sql(mundo)
+    _aplicar(prod, stmts)
+    assert _rotulos_de(prod, x["id"]) == {"Coletânea", "PES"}
+
+
+def test_guarda_praise_apagado_nao_derruba_o_lote(mundo):
+    prod = mundo["prod"]
+    prod.execute("DELETE FROM praises WHERE id = 'c2'")
+    prod.commit()
+    _, _, _, stmts = _sql(mundo)
+    _aplicar(prod, stmts)                                  # sem IntegrityError de FK
+    assert _rotulos_de(prod, "c1") == {"Coletânea · Clamor"}
+
+
+def test_delete_da_raiz_exige_a_subtag_ligada(mundo):
+    prod = mundo["prod"]
+    _, _, novas, stmts = _sql(mundo)
+    so_tags_e_deletes = [s for s in stmts if not s.startswith("INSERT OR IGNORE")]
+    _aplicar(prod, so_tags_e_deletes)
+    assert prod.execute("SELECT COUNT(*) FROM praise_tags WHERE tag_id = 't-col'").fetchone()[0] == 11
+
+
+def test_reaproveita_subtag_existente(mundo):
+    for conn in (mundo["snap"], mundo["prod"]):
+        conn.execute("INSERT INTO tags VALUES ('t-clamor', 'Clamor', 't-col')")
+        conn.commit()
+    _, ids, novas, stmts = _sql(mundo)
+    assert ids[("Coletânea", "Clamor")] == "t-clamor" and len(novas) == 13
+    assert not any("'Clamor'" in s for s in stmts if s.startswith("INSERT INTO tags"))
+    _aplicar(mundo["prod"], stmts)
+    assert ("c1", "t-clamor") in _ligacoes(mundo["prod"])
+    assert mundo["prod"].execute("SELECT COUNT(*) FROM tags WHERE name = 'Clamor'").fetchone()[0] == 1

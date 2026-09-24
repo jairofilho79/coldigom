@@ -168,3 +168,64 @@ def montar_plano(conn: sqlite3.Connection) -> Plano:
         raise Trava(problemas)
     return Plano(raizes=raizes, subtags=subtags, ligacoes=ligacoes,
                  ja_ligados=ja_ligados, entram_na_coletanea=entram)
+
+
+# --- SQL -------------------------------------------------------------------------
+
+def resolver_subtags(plano: Plano, tags: list[dict], novo_id=lambda: str(uuid.uuid4())) -> tuple[dict, list[dict]]:
+    """(pai, nome) -> id de cada uma das 14 subtags, e as que faltam criar.
+
+    `tags` é a tabela inteira: a do snapshot no ensaio, a de produção no
+    --execute. Subtag de mesmo nome sob o mesmo pai é reaproveitada (§5.1.3)."""
+    existentes = {(t["parent_id"], t["name"]): t["id"] for t in tags if t["parent_id"] is not None}
+    ids: dict[tuple, str] = {}
+    novas: list[dict] = []
+    for pai, nome in mapa.SUBTAGS:
+        pai_id = plano.raizes[pai]
+        tid = existentes.get((pai_id, nome))
+        if tid is None:
+            tid = novo_id()
+            novas.append({"id": tid, "name": nome, "parent_id": pai_id})
+        ids[(pai, nome)] = tid
+    return ids, novas
+
+
+def _sql_criar_subtag(s: dict) -> str:
+    return (f"INSERT INTO tags (id, name, parent_id) VALUES "
+            f"({sql_str(s['id'])}, {sql_str(s['name'])}, {sql_str(s['parent_id'])});")
+
+
+def _sql_ligar(lig: Ligacao, tag_id: str) -> str:
+    """INSERT guardado: só liga se o praise ainda está como no snapshot.
+
+    Categoria: a mesma do snapshot (`IS` compara NULL também). Manual: além
+    disso, exatamente o mesmo conjunto de tags. SELECT ... WHERE em vez de
+    VALUES também evita a FK: praise apagado depois do snapshot vira no-op em
+    vez de derrubar o arquivo inteiro."""
+    p = sql_str(lig.praise_id)
+    cond = [f"EXISTS (SELECT 1 FROM praises WHERE id = {p} AND category IS {sql_str(lig.category)})"]
+    if lig.origem == "manual":
+        n = len(lig.tags_snapshot)
+        lista = ", ".join(sql_str(t) for t in lig.tags_snapshot)
+        cond.append(f"(SELECT COUNT(*) FROM praise_tags WHERE praise_id = {p}) = {n}")
+        cond.append(f"(SELECT COUNT(*) FROM praise_tags WHERE praise_id = {p} AND tag_id IN ({lista})) = {n}")
+    return (f"INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) SELECT {p}, {sql_str(tag_id)} "
+            f"WHERE {' AND '.join(cond)};")
+
+
+def _sql_desligar_raiz(lig: Ligacao, raiz_id: str, tag_id: str) -> str:
+    """DELETE da raiz Coletânea só quando a subtag já está ligada: se o INSERT
+    foi barrado pela guarda, o praise não sai da Coletânea."""
+    p = sql_str(lig.praise_id)
+    return (f"DELETE FROM praise_tags WHERE praise_id = {p} AND tag_id = {sql_str(raiz_id)} "
+            f"AND EXISTS (SELECT 1 FROM praise_tags WHERE praise_id = {p} AND tag_id = {sql_str(tag_id)});")
+
+
+def sql_plano(plano: Plano, ids: dict, novas: list[dict]) -> list[str]:
+    """Ordem fixa: cria subtags, liga, desliga a raiz. Um arquivo que falha
+    no meio não deixa praise sem Coletânea: o DELETE exige a subtag ligada."""
+    col = plano.raizes[mapa.RAIZ_COLETANEA]
+    stmts = [_sql_criar_subtag(s) for s in novas]
+    stmts += [_sql_ligar(lig, ids[(lig.pai, lig.subtag)]) for lig in plano.ligacoes if lig.inserir]
+    stmts += [_sql_desligar_raiz(lig, col, ids[(lig.pai, lig.subtag)]) for lig in plano.ligacoes if lig.remover_raiz]
+    return stmts

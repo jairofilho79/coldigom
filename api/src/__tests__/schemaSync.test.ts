@@ -100,4 +100,20 @@ describe('schema.sql acompanha as migrações', () => {
       expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
     }
   });
+
+  it('024: tabela material_kind_classes, colunas e índices no material_kinds estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '024_material_kind_classes.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS material_kind_classes (',
+      'sort_order INTEGER NOT NULL UNIQUE',
+      'REFERENCES material_kind_classes(id) ON DELETE SET NULL',
+      'REFERENCES material_kinds(id) ON DELETE RESTRICT',
+      'CREATE INDEX IF NOT EXISTS idx_material_kinds_parent_id ON material_kinds(parent_id)',
+      "('metais', 'Metais', 50)",
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+  });
 });

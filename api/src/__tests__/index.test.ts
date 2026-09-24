@@ -863,8 +863,12 @@ describe('API Routes', () => {
       praises?: unknown[];
       materials?: unknown[];
       tags?: unknown[];
+      kindTaxonomy?: unknown[];
+      kindClasses?: unknown[];
     } = {}) {
       const results = (query: string) => {
+        if (query.includes('FROM material_kind_classes')) return { results: options.kindClasses ?? [] };
+        if (query.includes('parent_id, sort_order FROM material_kinds')) return { results: options.kindTaxonomy ?? [] };
         if (query.includes('COALESCE(t.label')) return { results: mockMaterialKindLabels };
         if (query.includes('FROM praise_materials')) return { results: options.materials ?? mockMaterials };
         if (query.includes('FROM praise_tags')) return { results: options.tags ?? [] };
@@ -1026,6 +1030,101 @@ describe('API Routes', () => {
       expect(res.status).toBe(500);
       const json = await res.json();
       expect(json.error).toBe('Failed to build catalog');
+    });
+
+    describe('taxonomia dos kinds (spec filtro-materiais §3.2)', () => {
+      const praiseId = () => mockPraises[0].id;
+      const material = (id: string, kind: string) => ({
+        id,
+        praise_id: praiseId(),
+        type: 'pdf',
+        material_kind: kind,
+        url: null,
+        r2_key: `assets/praises/${praiseId()}/${id}.pdf`,
+      });
+      const classes = [
+        { id: 'metais', label: 'Metais' },
+        { id: 'banda', label: 'Banda' },
+        { id: 'cordas', label: 'Cordas' },
+      ];
+      const taxonomia = [
+        { id: 'sax', class_id: 'metais', parent_id: null, sort_order: 30 },
+        { id: 'sax-alto', class_id: 'metais', parent_id: 'sax', sort_order: 50 },
+        { id: 'cifra', class_id: 'banda', parent_id: null, sort_order: 10 },
+        { id: 'novo', class_id: null, parent_id: null, sort_order: null },
+      ];
+
+      async function dump(env: unknown) {
+        const res = await app.request('/api/plpcg/catalog', {}, env as never);
+        return { res, json: await res.json() };
+      }
+
+      it('manda class/parent/order nos kinds e omite as chaves nulas', async () => {
+        const { json } = await dump({
+          DB: catalogMockDB({
+            materials: [material('m1', 'sax'), material('m2', 'sax-alto'), material('m3', 'novo')],
+            kindTaxonomy: taxonomia,
+            kindClasses: classes,
+          }),
+          ASSETS: createMockR2(),
+        });
+        const porId = Object.fromEntries(json.kinds.map((k: { id: string }) => [k.id, k]));
+        expect(porId['sax']).toEqual({ id: 'sax', name: expect.any(String), class: 'metais', order: 30 });
+        expect(porId['sax-alto']).toEqual({
+          id: 'sax-alto',
+          name: expect.any(String),
+          class: 'metais',
+          parent: 'sax',
+          order: 50,
+        });
+        expect(porId['novo']).toEqual({ id: 'novo', name: expect.any(String) });
+      });
+
+      it('kindClasses vem na ordem e só com classes usadas no dump', async () => {
+        const { json } = await dump({
+          DB: catalogMockDB({
+            materials: [material('m1', 'sax'), material('m2', 'cifra')],
+            kindTaxonomy: taxonomia,
+            kindClasses: classes,
+          }),
+          ASSETS: createMockR2(),
+        });
+        expect(json.kindClasses).toEqual([
+          { id: 'metais', label: 'Metais' },
+          { id: 'banda', label: 'Banda' },
+        ]);
+      });
+
+      it('um pai sem material entra em kinds quando um filho tem material', async () => {
+        const { json } = await dump({
+          DB: catalogMockDB({
+            materials: [material('m2', 'sax-alto')],
+            kindTaxonomy: taxonomia,
+            kindClasses: classes,
+          }),
+          ASSETS: createMockR2(),
+        });
+        expect(json.kinds.map((k: { id: string }) => k.id).sort()).toEqual(['sax', 'sax-alto']);
+      });
+
+      it('sem taxonomia (tabela vazia) o dump sai como antes, com kindClasses vazio', async () => {
+        const { json } = await dump({ DB: catalogMockDB(), ASSETS: createMockR2() });
+        expect(json.kindClasses).toEqual([]);
+        for (const k of json.kinds) expect(Object.keys(k).sort()).toEqual(['id', 'name']);
+      });
+
+      it('mesma taxonomia, mesmo ETag; mudar a classe de um kind muda o ETag', async () => {
+        const env = (tax: unknown[]) => ({
+          DB: catalogMockDB({ materials: [material('m1', 'sax')], kindTaxonomy: tax, kindClasses: classes }),
+          ASSETS: createMockR2(),
+        });
+        const a = (await dump(env(taxonomia))).res.headers.get('ETag');
+        const b = (await dump(env(taxonomia))).res.headers.get('ETag');
+        const outra = taxonomia.map((k) => (k.id === 'sax' ? { ...k, class_id: 'banda' } : k));
+        const c = (await dump(env(outra))).res.headers.get('ETag');
+        expect(a).toBe(b);
+        expect(c).not.toBe(a);
+      });
     });
   });
 

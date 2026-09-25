@@ -9,7 +9,6 @@ export type PlpcgListQuery = {
   tags?: string[];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -23,7 +22,6 @@ type WhereParams = {
   tagGroups?: string[][];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -58,7 +56,6 @@ type ListRow = {
   author: string | null;
   rhythm: string | null;
   tonality: string | null;
-  category: string | null;
   group_id: string | null;
   short_id: string | null;
   tag_ids: string | null;
@@ -88,9 +85,6 @@ export function parsePlpcgListQuery(c: {
   const tonality = c.req.query('tonality')
     ? c.req.query('tonality')!.split(',').filter(Boolean)
     : undefined;
-  const category = c.req.query('category')
-    ? c.req.query('category')!.split(',').filter(Boolean)
-    : undefined;
   const materialKinds = c.req.query('materialKinds')
     ? c.req.query('materialKinds')!.split(',').filter(Boolean)
     : undefined;
@@ -107,7 +101,6 @@ export function parsePlpcgListQuery(c: {
       tags,
       rhythm,
       tonality,
-      category,
       materialKinds,
       numberMin,
       numberMax,
@@ -145,7 +138,6 @@ export async function listPlpcgPraises(
         tagGroups,
         rhythm: query.rhythm,
         tonality: query.tonality,
-        category: query.category,
         materialKinds: query.materialKinds,
         numberMin: query.numberMin,
         numberMax: query.numberMax,
@@ -160,7 +152,7 @@ export async function listPlpcgPraises(
 
       const listSql = `
       SELECT
-        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.group_id, p.short_id,
+        p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.group_id, p.short_id,
         CASE WHEN p.lyrics IS NOT NULL AND TRIM(p.lyrics) != '' THEN 1 ELSE 0 END AS has_lyrics,
         GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
         GROUP_CONCAT(DISTINCT ${deps.tagLabelSql}) as tag_names
@@ -301,7 +293,6 @@ type CatalogPraiseRow = {
   author: string | null;
   rhythm: string | null;
   tonality: string | null;
-  category: string | null;
   lyrics: string | null;
 };
 
@@ -382,7 +373,7 @@ export async function buildPlpcgCatalog(
 ): Promise<PlpcgCatalogResult> {
   const praisesResult = await db
     .prepare(
-      `SELECT p.id, p.short_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics
+      `SELECT p.id, p.short_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics
        FROM praises p
        ORDER BY p.number, p.name, p.id`
     )
@@ -477,7 +468,6 @@ export async function buildPlpcgCatalog(
       author: row.author ?? '',
       rhythm: row.rhythm ?? '',
       tonality: row.tonality ?? '',
-      category: row.category ?? '',
       tags: tagsByPraise.get(row.id) ?? [],
     };
     if (typeof row.lyrics === 'string' && row.lyrics.trim().length > 0) {

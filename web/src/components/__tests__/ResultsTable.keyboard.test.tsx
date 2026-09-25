@@ -14,7 +14,6 @@ function louvor(id: string, nome: string, grupo: string | null): Praise {
     author: '',
     rhythm: '',
     tonality: '',
-    category: '',
     lyrics: '',
     group_id: grupo,
     tag_ids: null,

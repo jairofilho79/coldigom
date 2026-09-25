@@ -14,7 +14,6 @@ const mockPraises = [
     author: 'Autor 1',
     rhythm: 'Avulsos',
     tonality: 'C',
-    category: 'Louvor',
     lyrics: 'Letra do louvor 1',
     tag_ids: 'tag1,tag2',
   },
@@ -25,7 +24,6 @@ const mockPraises = [
     author: 'Autor 2',
     rhythm: 'Coletânea',
     tonality: 'G',
-    category: 'Adoração',
     lyrics: 'Letra do louvor 2',
     tag_ids: 'tag1',
   },
@@ -158,8 +156,7 @@ function createStatefulMockD1() {
               author: args[3],
               rhythm: args[4],
               tonality: args[5],
-              category: args[6],
-              lyrics: args[7],
+              lyrics: args[6],
             });
           }
           if (query.includes('INSERT OR IGNORE INTO praise_tags')) {
@@ -629,7 +626,7 @@ describe('API Routes', () => {
       expect(json.data).toHaveLength(1);
     });
 
-    it('should handle category filter', async () => {
+    it('ignores the removed category filter (migração 025)', async () => {
       const mockDB = createMockD1({
         all: { results: [mockPraises[1]] },
         first: { total: 1 },
@@ -645,6 +642,9 @@ describe('API Routes', () => {
       
       const json = await res.json();
       expect(json.data).toHaveLength(1);
+      const sqls = mockDB.prepare.mock.calls.map(([sql]) => sql as string);
+      expect(sqls.length).toBeGreaterThan(0);
+      for (const sql of sqls) expect(sql).not.toContain('category');
     });
 
     it('should handle number range filter', async () => {
@@ -714,7 +714,6 @@ describe('API Routes', () => {
       author: mockPraises[0].author,
       rhythm: mockPraises[0].rhythm,
       tonality: mockPraises[0].tonality,
-      category: mockPraises[0].category,
       group_id: null,
       tag_ids: 'tag1',
       tag_names: 'Coletânea',
@@ -1165,9 +1164,6 @@ describe('API Routes', () => {
           if (query.includes('DISTINCT tonality')) {
             return responder([{ tonality: 'C' }, { tonality: 'G' }]);
           }
-          if (query.includes('DISTINCT category')) {
-            return responder([{ category: 'Louvor' }, { category: 'Adoração' }]);
-          }
           if (query.includes('FROM tags')) {
             return responder(mockTags.map(t => ({ ...t, count: 1 })));
           }
@@ -1185,7 +1181,7 @@ describe('API Routes', () => {
       const json = await res.json();
       expect(json.rhythms).toContain('Avulsos');
       expect(json.tonalities).toContain('C');
-      expect(json.categories).toContain('Louvor');
+      expect(json).not.toHaveProperty('categories');
       expect(json.tags).toHaveLength(3);
     });
 
@@ -2009,7 +2005,6 @@ describe('API Routes', () => {
           author: 'Autor X',
           rhythm: 'Marcha',
           tonality: 'C',
-          category: 'Adoração',
           lyrics: 'Letra nova',
           tag_ids: ['tag1', 'tag2'],
         }),
@@ -2231,7 +2226,7 @@ describe('API Routes', () => {
           bind: vi.fn((...args: unknown[]) => ({
             run: vi.fn(async () => {
               if (query.includes('UPDATE praises SET')) {
-                const id = args[7] as string;
+                const id = args[6] as string;
                 const p = praises.get(id);
                 if (p) {
                   praises.set(id, {
@@ -2241,8 +2236,7 @@ describe('API Routes', () => {
                     author: args[2],
                     rhythm: args[3],
                     tonality: args[4],
-                    category: args[5],
-                    lyrics: args[6],
+                    lyrics: args[5],
                   });
                 }
               }
@@ -2350,7 +2344,6 @@ describe('API Routes', () => {
         author: 'Autor mesclado',
         rhythm: 'Avulsos',
         tonality: 'C',
-        category: 'Louvor',
         lyrics: 'Letra escolhida',
       },
       tag_ids: ['tag1', 'tag2'],
@@ -2532,7 +2525,6 @@ describe('buildWhereClause', () => {
     tagGroups?: string[][];
     rhythm?: string[];
     tonality?: string[];
-    category?: string[];
     materialKinds?: string[];
     numberMin?: number;
     numberMax?: number;
@@ -2541,9 +2533,9 @@ describe('buildWhereClause', () => {
     const bindings: (string | number)[] = [];
 
     if (params.search) {
-      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ?)`);
+      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.id LIKE ?)`);
       const pattern = `%${params.search}%`;
-      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
     }
 
     if (params.tagGroups && params.tagGroups.length > 0) {
@@ -2561,11 +2553,6 @@ describe('buildWhereClause', () => {
     if (params.tonality && params.tonality.length > 0) {
       conditions.push(`p.tonality IN (${params.tonality.map(() => '?').join(',')})`);
       bindings.push(...params.tonality);
-    }
-
-    if (params.category && params.category.length > 0) {
-      conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
-      bindings.push(...params.category);
     }
 
     if (params.materialKinds && params.materialKinds.length > 0) {
@@ -2606,7 +2593,7 @@ describe('buildWhereClause', () => {
     expect(result.clause).toContain('p.lyrics LIKE ?');
     expect(result.clause).toContain('p.author LIKE ?');
     expect(result.clause).toContain('p.id LIKE ?');
-    expect(result.bindings).toEqual(['%test%', '%test%', '%test%', '%test%', '%test%', '%test%', '%test%']);
+    expect(result.bindings).toEqual(['%test%', '%test%', '%test%', '%test%', '%test%', '%test%']);
   });
 
   it('should include id in search bindings for uuid', () => {
@@ -2646,12 +2633,6 @@ describe('buildWhereClause', () => {
     expect(result.bindings).toEqual(['C', 'G']);
   });
 
-  it('should build category clause correctly', () => {
-    const result = buildWhereClause({ category: ['Louvor'] });
-    expect(result.clause).toContain('p.category IN (?)');
-    expect(result.bindings).toEqual(['Louvor']);
-  });
-
   it('should build materialKinds clause correctly', () => {
     const result = buildWhereClause({ materialKinds: ['kind1', 'kind2'] });
     expect(result.clause).toContain('praise_materials pm');
@@ -2686,7 +2667,7 @@ describe('buildWhereClause', () => {
     expect(result.clause).toContain('p.rhythm IN (?)');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) >= ?');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) <= ?');
-    expect(result.bindings).toHaveLength(11);
+    expect(result.bindings).toHaveLength(10);
   });
 });
 

@@ -93,7 +93,6 @@ const mockPraiseDetail: PraiseDetail = {
   author: 'Autor 1',
   rhythm: 'Avulsos',
   tonality: 'C',
-  category: 'Louvor',
   lyrics: 'Esta é a letra do louvor',
   group_id: null,
   tag_ids: 'tag1,tag2',
@@ -560,7 +559,7 @@ describe('PraiseDetailPage Component', () => {
         'coldigom_rascunho_louvor',
         JSON.stringify({
           rota: '/praise/new',
-          edit: { name: 'Louvor Novo', number: '42', author: '', rhythm: '', tonality: '', category: '', lyrics: '' },
+          edit: { name: 'Louvor Novo', number: '42', author: '', rhythm: '', tonality: '', lyrics: '' },
           pendingTagIds: [],
           driveUrl: 'https://drive.google.com/drive/folders/abc',
         })
@@ -2626,7 +2625,6 @@ describe('Campos e rótulos com dados incompletos', () => {
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
     };
     (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseEsparso);
     const user = userEvent.setup();

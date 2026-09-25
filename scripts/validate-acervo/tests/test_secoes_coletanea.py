@@ -809,3 +809,16 @@ def test_main_execute_imprime_erro_quando_o_wrangler_falha(mundo, d1, capsys):
     rc = sc.main(_argv(mundo, "--execute"))
     err = capsys.readouterr().err
     assert rc == 1 and "D1_ERROR: boom" in err
+
+
+def test_desfazer_aceita_sql_undo_proprio(tmp_path, monkeypatch):
+    log = tmp_path / "log.jsonl"
+    log.write_text(json.dumps({"run_id": "r1", "estado": "ok", "escreveu": True, "x": ["a"]}) + "\n",
+                   encoding="utf-8")
+    rodados = []
+    monkeypatch.setattr(sc, "run_sql_files", lambda arquivos, remote=True: rodados.extend(arquivos))
+    r = sc.desfazer("r1", str(log), execute=True, out_dir=str(tmp_path / "out"),
+                    execucao_dir=str(tmp_path / "exec"),
+                    sql_undo_fn=lambda linha: [f"SELECT '{v}';" for v in linha["x"]])
+    assert r["statements"] == 1 and not r["falhou"]
+    assert open(rodados[0], encoding="utf-8").read() == "SELECT 'a';\n"

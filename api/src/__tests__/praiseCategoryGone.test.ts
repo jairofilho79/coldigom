@@ -213,6 +213,16 @@ describe('merge ignora metadata.category', () => {
     expect(((await res.json()) as { error: string }).error).toBe("Field 'metadata.lyrics' is required");
     expect(sqlite.prepare("SELECT id FROM praises WHERE id = 'p2'").get()).toBeTruthy();
   });
+
+  it('os outros campos continuam tendo de ser string (ou null)', async () => {
+    const { sqlite, env } = ambiente();
+    const antes = sqlite.prepare("SELECT name, author FROM praises WHERE id = 'p1'").get();
+    const res = await mesclar(env, { ...META, author: 7 });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toBe("Field 'metadata.author' must be a string");
+    expect(sqlite.prepare("SELECT name, author FROM praises WHERE id = 'p1'").get()).toEqual(antes);
+    expect(sqlite.prepare("SELECT id FROM praises WHERE id = 'p2'").get()).toBeTruthy();
+  });
 });
 
 describe('antes da 025: o mesmo código com a coluna ainda no banco', () => {

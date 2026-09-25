@@ -58,7 +58,6 @@ const mockPraiseDetail: PraiseDetail = {
   author: null,
   rhythm: null,
   tonality: null,
-  category: null,
   lyrics: null,
   group_id: null,
   tag_ids: '',

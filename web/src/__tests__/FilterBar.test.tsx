@@ -34,7 +34,6 @@ describe('FilterBar Component', () => {
   const mockFilterOptions: FilterOptions = {
     rhythms: ['Avulsos', 'Coletânea'],
     tonalities: ['C', 'G', 'D'],
-    categories: ['Louvor', 'Adoração'],
     tags: [
       { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
       { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
@@ -200,7 +199,7 @@ describe('o que a barra realmente entrega ao serviço', () => {
     // no network. Os testes daqui mockam o serviço, então nada disso aparecia —
     // o mock aceita null de bom grado. Verificar o TIPO do que sai é o que pega.
     (getFilterOptions as ReturnType<typeof vi.fn>).mockResolvedValue({
-      rhythms: [], tonalities: [], categories: [], tags: [],
+      rhythms: [], tonalities: [], tags: [],
     });
     (getMaterialKinds as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 

@@ -20,7 +20,6 @@ async function montar(inicial = '/') {
   vi.mocked(getFilterOptions).mockResolvedValue({
     rhythms: ['Valsa', 'Marcha'],
     tonalities: ['C'],
-    categories: ['Louvor', 'Adoração'],
     tags: [],
   });
   vi.mocked(getMaterialKinds).mockResolvedValue([]);

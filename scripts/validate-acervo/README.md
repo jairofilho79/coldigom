@@ -171,6 +171,9 @@ rodada que alimenta um gabarito ou uma `execucao/`.
 
 ### Seções da Coletânea viram subtags (spec 2026-09-24-secoes-coletanea-subtags-design §5)
 
+> **Histórico.** A coluna `praises.category` saiu do schema na migração 025. Estes comandos (e os `--undo`
+> deles) só rodam num D1 anterior à 025; os valores antigos estão nos logs em `gabaritos/secoes_coletanea/execucao/`.
+
 ```bash
 python3 -m core.snapshot --assets2 /dev/null/sem-arvore   # D1 fresco; este comando não precisa da árvore
 python3 -m core.secoes_coletanea                          # ensaio: travas, relatório, SQL — nada é escrito
@@ -226,6 +229,9 @@ corrige o resolver antes disso acontecer.
 Testes: `python3 -m pytest tests/ -v`
 
 ### Fase 3: `praises.category` vira NULL (`core.secoes_coletanea_categoria`)
+
+> **Histórico.** A coluna `praises.category` saiu do schema na migração 025. Estes comandos (e os `--undo`
+> deles) só rodam num D1 anterior à 025; os valores antigos estão nos logs em `gabaritos/secoes_coletanea/execucao/`.
 
 Só depois do passo 4 da spec (admin web e app publicados e homologados sem a Categoria) — spec 2026-09-24-secoes-coletanea-subtags-design §6, item 5.
 

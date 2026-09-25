@@ -13,7 +13,6 @@ export type PraiseRow = {
   author: string;
   rhythm: string;
   tonality: string;
-  category: string;
   lyrics: string;
   tag_ids: string | null;
 };
@@ -107,7 +106,6 @@ export function buildMetadataYaml(
     praise_author: praise.author || undefined,
     praise_rhythm: praise.rhythm || undefined,
     praise_tonality: praise.tonality || undefined,
-    praise_category: praise.category || undefined,
     praise_lyrics: praise.lyrics || undefined,
     praise_tags: tagIds,
     praise_materials: materials.map((m) => {
@@ -139,7 +137,7 @@ export async function fetchPraiseForZip(
 ): Promise<{ praise: PraiseRow; tagIds: string[]; materials: MaterialRow[] } | null> {
   const praiseQuery = `
     SELECT 
-      p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics,
+      p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics,
       GROUP_CONCAT(pt.tag_id) as tag_ids
     FROM praises p
     LEFT JOIN praise_tags pt ON p.id = pt.praise_id

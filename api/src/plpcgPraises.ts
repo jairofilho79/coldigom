@@ -1,5 +1,7 @@
 import { parseListNumbers } from './queryParams';
 import { labelFor, loadMaterialKindLabels } from './materialKindLabels';
+import { buildLyricsExcerpt } from './lyricsExcerpt';
+import { extractYouTubeVideoId, parseNumericSearch } from './praiseQuery';
 
 export type PlpcgListQuery = {
   search: string;
@@ -115,7 +117,9 @@ export async function listPlpcgPraises(
   query: PlpcgListQuery,
   deps: PlpcgListDeps
 ): Promise<{
-  data: Array<Omit<ListRow, 'has_lyrics'> & { materials: SlimMaterial[] }>;
+  data: Array<
+    Omit<ListRow, 'has_lyrics'> & { materials: SlimMaterial[]; lyrics_excerpt: string | null }
+  >;
   pagination: { page: number; limit: number; total: number; totalPages: number };
 }> {
   const sort = deps.validSortFields.includes(query.sortParam!)
@@ -169,6 +173,38 @@ export async function listPlpcgPraises(
 
       const result = await db.prepare(listSql).bind(...bindings).all();
       const rows = (result.results ?? []) as ListRow[];
+
+      const isTextSearch =
+        Boolean(query.search) &&
+        !parseNumericSearch(query.search) &&
+        !extractYouTubeVideoId(query.search);
+      const excerptByPraiseId = new Map<string, string>();
+      if (isTextSearch) {
+        try {
+          const lyricsCandidateIds = rows.filter((r) => r.has_lyrics === 1).map((r) => r.id);
+          if (lyricsCandidateIds.length > 0) {
+            const placeholders = lyricsCandidateIds.map(() => '?').join(',');
+            const lyricsResult = await db
+              .prepare(`SELECT id, lyrics FROM praises WHERE id IN (${placeholders})`)
+              .bind(...lyricsCandidateIds)
+              .all();
+            for (const lyricsRow of (lyricsResult.results ?? []) as {
+              id: string;
+              lyrics: string | null;
+            }[]) {
+              const excerpt = buildLyricsExcerpt(lyricsRow.lyrics ?? '', query.search);
+              if (excerpt) excerptByPraiseId.set(lyricsRow.id, excerpt);
+            }
+          }
+        } catch (excerptError) {
+          console.warn(
+            JSON.stringify({
+              msg: 'api.plpcg.praises.lyrics_excerpt_failed',
+              error: excerptError instanceof Error ? excerptError.message : String(excerptError),
+            })
+          );
+        }
+      }
 
       let countQuery: string;
       let countBindings: (string | number)[] = [...whereBindings];
@@ -231,7 +267,7 @@ export async function listPlpcgPraises(
             material_kind_name: 'Letra',
           });
         }
-        return { ...row, materials };
+        return { ...row, materials, lyrics_excerpt: excerptByPraiseId.get(row.id) ?? null };
       });
 
       return {

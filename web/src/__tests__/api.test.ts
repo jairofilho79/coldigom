@@ -204,16 +204,17 @@ describe('API Service', () => {
       await expect(searchPraises()).rejects.toThrow('Server error');
     });
 
-    it('should include category parameters', async () => {
+    it('não manda category, mesmo que um chamador antigo passe', async () => {
+      // O filtro «Categoria» foi aposentado (seções da Coletânea viraram subtags).
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
 
-      await searchPraises({ category: ['Louvor', 'Adoração'] });
+      await searchPraises({ category: ['Louvor', 'Adoração'] } as never);
 
       const url = new URL(mockFetch.mock.calls[0][0] as string);
-      expect(url.searchParams.get('category')).toBe('Louvor,Adoração');
+      expect(url.searchParams.has('category')).toBe(false);
     });
 
     it('should include tonality parameters', async () => {
@@ -286,6 +287,19 @@ describe('API Service', () => {
       );
       expect(result.rhythms).toEqual(['Avulsos', 'Coletânea']);
       expect(result.tags).toHaveLength(2);
+    });
+
+    it('não manda category ao pedir as opções', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockFilterOptions),
+      });
+
+      await getFilterOptions({ category: ['Louvor'], rhythm: ['Valsa'] } as never);
+
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      expect(url.searchParams.has('category')).toBe(false);
+      expect(url.searchParams.get('rhythm')).toBe('Valsa');
     });
 
     it('should throw error when response is not ok', async () => {

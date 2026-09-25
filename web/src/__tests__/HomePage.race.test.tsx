@@ -11,7 +11,7 @@ vi.mock('../services/api', async (importOriginal) => {
   return {
     ...actual,
     searchPraises: vi.fn(),
-    getFilterOptions: vi.fn().mockResolvedValue({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+    getFilterOptions: vi.fn().mockResolvedValue({ rhythms: [], tonalities: [], tags: [] }),
     getMaterialKinds: vi.fn().mockResolvedValue([]),
     getMe: vi.fn().mockResolvedValue(null),
     refreshSession: vi.fn().mockResolvedValue(false),
@@ -23,7 +23,6 @@ const FILTROS_BASE = {
   tags: [] as string[],
   rhythm: [] as string[],
   tonality: [] as string[],
-  category: [] as string[],
   materialKinds: [] as string[],
   numberMin: undefined,
   numberMax: undefined,

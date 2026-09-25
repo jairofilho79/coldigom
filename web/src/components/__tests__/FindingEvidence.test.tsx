@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { FindingEvidence } from '../FindingEvidence';
 import type { ValidationFinding } from '../../types';
 
@@ -41,6 +41,21 @@ describe('FindingEvidence', () => {
     expect(screen.getByText('letra de p-fonte')).toBeInTheDocument();
     expect(screen.getByText('letra de p-k1')).toBeInTheDocument();
     expect(getPraise).toHaveBeenCalledTimes(2);
+  });
+
+  it('merge_praise: não mostra a categoria, mesmo que a API ainda a mande', async () => {
+    vi.mocked(getPraise).mockImplementation(async (id: string) => ({
+      id, name: id === 'p-fonte' ? 'Medo tens' : 'Medo tens que o tentador', number: '',
+      author: '', rhythm: '', tonality: '', category: 'Consolo e Encorajamento', lyrics: '',
+      group_id: null, tag_ids: null, tag_names: 'Coletânea · Consolo e Encorajamento', materials: [],
+    }) as never);
+    render(<FindingEvidence finding={BASE} />);
+
+    // As duas colunas carregadas: a seção aparece como subtag, uma vez em cada.
+    await waitFor(() =>
+      expect(screen.getAllByText('Coletânea · Consolo e Encorajamento')).toHaveLength(2)
+    );
+    expect(screen.queryAllByText('Consolo e Encorajamento')).toHaveLength(0);
   });
 
   it('evidência que veio como string crua é mostrada como está', () => {

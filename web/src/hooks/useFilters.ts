@@ -7,7 +7,6 @@ export interface FilterState {
   tags: string[];
   rhythm: string[];
   tonality: string[];
-  category: string[];
   materialKinds: string[];
   numberMin?: number;
   numberMax?: number;
@@ -62,7 +61,6 @@ export function useFilters() {
     tags: lerLista(searchParams, 'tags'),
     rhythm: lerLista(searchParams, 'rhythm'),
     tonality: lerLista(searchParams, 'tonality'),
-    category: lerLista(searchParams, 'category'),
     materialKinds: lerLista(searchParams, 'materialKinds'),
     numberMin: lerInteiro(searchParams, 'numberMin'),
     numberMax: lerInteiro(searchParams, 'numberMax'),
@@ -80,7 +78,6 @@ export function useFilters() {
           'tags' in updates ||
           'rhythm' in updates ||
           'tonality' in updates ||
-          'category' in updates ||
           'materialKinds' in updates ||
           'numberMin' in updates ||
           'numberMax' in updates ||
@@ -107,10 +104,10 @@ export function useFilters() {
         if (updates.tonality && updates.tonality.length > 0) newParams.set('tonality', updates.tonality.join(','));
         else newParams.delete('tonality');
       }
-      if ('category' in updates) {
-        if (updates.category && updates.category.length > 0) newParams.set('category', updates.category.join(','));
-        else newParams.delete('category');
-      }
+      // `?category=` era o filtro «Categoria», aposentado (as seções da
+      // Coletânea viraram subtags). Link antigo não quebra: a leitura ignora o
+      // valor e a primeira escrita o tira da URL.
+      newParams.delete('category');
       if ('materialKinds' in updates) {
         if (updates.materialKinds && updates.materialKinds.length > 0) {
           newParams.set('materialKinds', updates.materialKinds.join(','));
@@ -157,7 +154,6 @@ export function useFilters() {
     filters.tags.length +
     filters.rhythm.length +
     filters.tonality.length +
-    filters.category.length +
     filters.materialKinds.length +
     (filters.numberMin !== undefined ? 1 : 0) +
     (filters.numberMax !== undefined ? 1 : 0);

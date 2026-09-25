@@ -169,6 +169,60 @@ veredito nenhum para medir — gabarito em branco não é gabarito zerado.
 Cada rodada commita `resumo.md`; `findings.jsonl` (~7 MB) só entra no git na
 rodada que alimenta um gabarito ou uma `execucao/`.
 
+### Seções da Coletânea viram subtags (spec 2026-09-24-secoes-coletanea-subtags-design §5)
+
+```bash
+python3 -m core.snapshot --assets2 /dev/null/sem-arvore   # D1 fresco; este comando não precisa da árvore
+python3 -m core.secoes_coletanea                          # ensaio: travas, relatório, SQL — nada é escrito
+python3 -m core.secoes_coletanea --execute                # grava (só depois do deploy da API, spec §6)
+python3 -m core.secoes_coletanea --undo <run_id>          # simula o undo
+python3 -m core.secoes_coletanea --undo <run_id> --execute
+```
+
+O ensaio grava `out/secoes_coletanea/<run_id>/relatorio.md` (contagem por
+subtag contra a spec, os casos manuais, quem entra na Coletânea, ligações
+diretas com a raiz removidas) e o SQL em `sql/`. As travas (a) valor de
+`category` fora do mapeamento, (b) raiz `Coletânea` sem seção e (c) caso
+manual ausente ou com outras tags abortam com código 2 antes de qualquer
+escrita e listam todos os problemas de uma vez.
+
+`--execute` relê as tags de produção (as raízes têm que ser as do snapshot;
+subtag criada depois do snapshot é reaproveitada), guarda quais ligações já
+existiam, roda os lotes e relê as ligações. O `INSERT` só pega se a
+`category` (e, nos manuais, o conjunto de tags) ainda for a do snapshot, e o
+`DELETE` da raiz só pega com a subtag já ligada — quem a guarda barrou sai
+como "ficou para trás" (código 1): refaça o snapshot e rode de novo. O
+`--execute` é recusado se o snapshot for mais velho que a última escrita
+deste comando. Log em `out/secoes_coletanea_log.jsonl`; a cópia do run vai
+para `gabaritos/secoes_coletanea/execucao/<run_id>.jsonl` (git).
+
+O undo repõe a raiz `Coletânea`, tira só as ligações que não existiam antes
+do run e apaga as subtags criadas só se ficaram sem nenhuma ligação.
+`category` nunca é alterada por este comando.
+
+**Nunca reaplique à mão um chunk `.sql` gerado por um ensaio ou por um
+`--execute` anterior.** O chunk que cria as subtags tem um `INSERT INTO
+tags`; produção já tem essas subtags depois do primeiro `--execute`, e o
+`INSERT` esbarra no índice único `idx_tags_child_name` e aborta o arquivo
+inteiro (é um batch atômico do D1). Quem precisa migrar o que ficou para
+trás roda um ensaio novo — ele relê produção e usa as subtags já criadas
+(§5.1.3) — em vez de reusar SQL antigo.
+
+**Ordem do deploy (spec §6):** o passo 1, o deploy da API do coldigom que
+aceita ligar um praise a uma tag pai (plano 1 desta spec — fim da trava
+«parent tag», §3.2), vem antes do `--execute` deste script (passo 3). O
+`--execute` em si fala com o D1 por SQL, não pela API; mas rodar antes do
+deploy 1 deixa a raiz `Coletânea` (que passa a ter filhos) recusada pela API
+em qualquer escrita futura que precise religá-la, até o deploy acontecer.
+Tem um efeito mais imediato, e é o motivo de esperar: até o deploy 1,
+`resolveTagFilterGroups` troca uma tag pai só pelos filhos dela (F6/§3.1),
+não pai + filhos. Depois do `--execute`, `Avulsos` e `Coletânea` passam a
+ter filhos (as subtags); um filtro por `Avulsos` no admin ou em
+`/api/plpcg/praises` voltaria só o 1 praise de `Avulsos · GLTM` em vez de
+~881, e um filtro por `Coletânea` voltaria só quem está ligado direto à raiz
+(o esperado é 0 depois da migração) em vez das ~1123 subtags. O deploy 1
+corrige o resolver antes disso acontecer.
+
 Testes: `python3 -m pytest tests/ -v`
 
 ## Arquivos
@@ -190,6 +244,8 @@ Testes: `python3 -m pytest tests/ -v`
 | `revisao/serve.py` + `revisao/index.html` | o site local de revisão da migração PLPCG — findings por louvor, PDFs lado a lado, `POST /decide` |
 | `revisao/decisoes.py` · `revisao/migrar_anotacoes.py` | tipos de decisão, validação, `decisoes.jsonl`; migração única das anotações da rodada 1 |
 | `core/plpcg_apply.py` | Fase C: decisões → link/importar/substituir/criar no D1 + R2, simulação, log, undo |
+| `core/secoes_coletanea_mapa.py` | as constantes da spec das seções da Coletânea (§2.1–2.3), copiadas byte a byte, e `classificar()` |
+| `core/secoes_coletanea.py` | seções da Coletânea → subtags: travas, SQL guardado, relatório do ensaio, execução, log, undo |
 | `gabaritos/plpcg_crosswalk/decisoes.jsonl` | as decisões do dono, append-only, última por `pdf_id` vence — é o que o `apply` da Fase C vai ler |
 
 ## As regras que não são óbvias no código

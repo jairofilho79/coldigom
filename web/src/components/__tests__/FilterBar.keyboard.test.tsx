@@ -38,10 +38,10 @@ describe('FilterBar — teclado nos dropdowns', () => {
     const usuario = userEvent.setup();
     await montar();
 
-    const gatilho = screen.getByRole('button', { name: /categoria/i });
+    const gatilho = screen.getByRole('button', { name: /^ritmo/i });
     await usuario.click(gatilho);
 
-    const caixa = screen.getByRole('checkbox', { name: 'Louvor' });
+    const caixa = screen.getByRole('checkbox', { name: 'Valsa' });
     expect(caixa.getAttribute('tabindex')).not.toBe('-1');
 
     caixa.focus();
@@ -53,12 +53,12 @@ describe('FilterBar — teclado nos dropdowns', () => {
     const usuario = userEvent.setup();
     await montar();
 
-    const gatilho = screen.getByRole('button', { name: /categoria/i });
+    const gatilho = screen.getByRole('button', { name: /^ritmo/i });
     await usuario.click(gatilho);
-    expect(screen.getByRole('checkbox', { name: 'Louvor' })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Valsa' })).toBeTruthy();
 
     await usuario.keyboard('{Escape}');
-    expect(screen.queryByRole('checkbox', { name: 'Louvor' })).toBeNull();
+    expect(screen.queryByRole('checkbox', { name: 'Valsa' })).toBeNull();
     expect(document.activeElement).toBe(gatilho);
   });
 
@@ -66,7 +66,7 @@ describe('FilterBar — teclado nos dropdowns', () => {
     const usuario = userEvent.setup();
     await montar();
 
-    await usuario.click(screen.getByRole('button', { name: /categoria/i }));
-    expect(screen.getByRole('group', { name: /categoria/i })).toBeTruthy();
+    await usuario.click(screen.getByRole('button', { name: /^ritmo/i }));
+    expect(screen.getByRole('group', { name: /ritmo/i })).toBeTruthy();
   });
 });

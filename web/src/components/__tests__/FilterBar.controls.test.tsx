@@ -100,23 +100,29 @@ describe('FilterBar — filtros ativos visíveis', () => {
     // Antes só havia um contador numérico no gatilho do dropdown: não dava
     // para ver o que estava aplicado nem remover um filtro sem reabrir o menu
     // certo e caçar a opção marcada.
-    await montar('/?category=Louvor&rhythm=Valsa&numberMin=10');
+    await montar('/?rhythm=Valsa&numberMin=10');
 
     const ativos = screen.getByRole('group', { name: /filtros aplicados/i });
     expect(ativos).toBeTruthy();
-    expect(screen.getByRole('button', { name: /remover filtro categoria: louvor/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /remover filtro ritmo: valsa/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /remover filtro número a partir de 10/i })).toBeTruthy();
   });
 
+  it('?category= de link antigo não vira marca de filtro', async () => {
+    await montar('/?category=Louvor');
+
+    expect(screen.queryByRole('group', { name: /filtros aplicados/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /remover filtro categoria/i })).toBeNull();
+  });
+
   it('remover uma marca tira só aquele filtro', async () => {
     const usuario = userEvent.setup();
-    await montar('/?category=Louvor&rhythm=Valsa');
+    await montar('/?rhythm=Valsa&tonality=G');
 
-    await usuario.click(screen.getByRole('button', { name: /remover filtro categoria: louvor/i }));
+    await usuario.click(screen.getByRole('button', { name: /remover filtro ritmo: valsa/i }));
 
-    expect(espelho.url).not.toContain('category');
-    expect(espelho.url).toContain('rhythm=Valsa');
+    expect(espelho.url).not.toContain('rhythm');
+    expect(espelho.url).toContain('tonality=G');
   });
 
   it('sem filtro aplicado, não mostra a área de filtros ativos', async () => {

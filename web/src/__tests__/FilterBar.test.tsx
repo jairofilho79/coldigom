@@ -16,7 +16,6 @@ vi.mock('../hooks/useFilters', () => ({
       tags: [],
       rhythm: [],
       tonality: [],
-      category: [],
       materialKinds: [],
       sort: 'number',
       order: 'asc',
@@ -114,14 +113,18 @@ describe('FilterBar Component', () => {
     expect(screen.getByRole('button', { name: /^Tom/ })).toBeTruthy();
   });
 
-  it('should render category dropdown', async () => {
+  it('não oferece o filtro Categoria, mesmo com a API ainda mandando categories', async () => {
+    // A categoria foi aposentada: as seções da Coletânea são subtags e aparecem
+    // nos chips de Coleções. A API segue mandando `categories` até a fase 3 do
+    // spec (o mock acima também manda), e a barra ignora.
     render(
       <MemoryRouter>
         <FilterBar />
       </MemoryRouter>
     );
 
-    expect((await screen.findAllByText('Categoria'))[0]).toBeTruthy();
+    await screen.findByText('Coleções');
+    expect(screen.queryByRole('button', { name: /^categoria/i })).toBeNull();
   });
 
   it('should open Materiais dropdown when clicked', async () => {

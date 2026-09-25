@@ -227,7 +227,7 @@ Testes: `python3 -m pytest tests/ -v`
 
 ### Fase 3: `praises.category` vira NULL (`core.secoes_coletanea_categoria`)
 
-Só depois da homologação das subtags (spec 2026-09-24-secoes-coletanea-subtags-design §6, item 5).
+Só depois do passo 4 da spec (admin web e app publicados e homologados sem a Categoria) — spec 2026-09-24-secoes-coletanea-subtags-design §6, item 5.
 
     python3 -m core.snapshot --assets2 /dev/null/sem-arvore
     python3 -m core.secoes_coletanea_categoria                  # ensaio: out/secoes_coletanea_categoria/<run>/relatorio.md

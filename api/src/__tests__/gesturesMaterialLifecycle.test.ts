@@ -136,3 +136,31 @@ describe('DELETE /api/materials/:materialId — limpa gesture_usage e ocorrênci
     expect(sqls[3]).toMatch(/UPDATE gesture_dictionary_meta SET version = version \+ 1/);
   });
 });
+
+describe('POST /api/praises/:id/materials — type chord', () => {
+  it('nasce com r2_key .chord e guarda o PDF de origem', async () => {
+    const ctx = ambiente();
+    const res = await app.request('/api/praises/praise-1/materials', {
+      method: 'POST', headers: await cabecalhos(),
+      body: JSON.stringify({ material_kind: 'k1', type: 'chord', source_material_id: 'pdf-1' }),
+    }, ctx.env);
+    expect(res.status).toBe(200);
+    const insert = ctx.escritas.find((e) => e.sql.includes('INSERT INTO praise_materials'));
+    const [id, praiseId, , type, r2Key, , source] = insert!.args as string[];
+    expect(type).toBe('chord');
+    // sem r2_key o PUT de conteúdo recusa a gravação com 400
+    expect(r2Key).toBe(`assets/praises/${praiseId}/${id}.chord`);
+    expect(source).toBe('pdf-1');
+    expect(ctx.assets.put).not.toHaveBeenCalled();
+  });
+
+  it('recusa PDF de origem de outro louvor', async () => {
+    const outro = ambiente({ fonte: { id: 'pdf-x', praise_id: 'praise-2' } });
+    const res = await app.request('/api/praises/praise-1/materials', {
+      method: 'POST', headers: await cabecalhos(),
+      body: JSON.stringify({ material_kind: 'k1', type: 'chord', source_material_id: 'pdf-x' }),
+    }, outro.env);
+    expect(res.status).toBe(400);
+    expect(outro.escritas.find((e) => e.sql.includes('INSERT'))).toBeUndefined();
+  });
+});

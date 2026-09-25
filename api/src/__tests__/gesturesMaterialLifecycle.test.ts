@@ -164,3 +164,30 @@ describe('POST /api/praises/:id/materials — type chord', () => {
     expect(outro.escritas.find((e) => e.sql.includes('INSERT'))).toBeUndefined();
   });
 });
+
+describe('POST /api/praises/:id/materials — token de upload', () => {
+  it('o token de upload cria o material, como já grava o conteúdo dele', async () => {
+    const TOKEN = 'token-de-upload';
+    const ctx = ambiente();
+    const env = { ...(ctx.env as Record<string, unknown>), COLDIGOM_UPLOAD_TOKEN: TOKEN } as never;
+    const res = await app.request('/api/praises/praise-1/materials', {
+      method: 'POST',
+      headers: { origin: ORIGEM, 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` },
+      body: JSON.stringify({ material_kind: 'k1', type: 'chord', source_material_id: 'pdf-1' }),
+    }, env);
+    expect(res.status).toBe(200);
+    const insert = ctx.escritas.find((e) => e.sql.includes('INSERT INTO praise_materials'));
+    expect((insert!.args as string[])[3]).toBe('chord');
+  });
+
+  it('sem token nenhum continua barrado', async () => {
+    const ctx = ambiente();
+    const res = await app.request('/api/praises/praise-1/materials', {
+      method: 'POST',
+      headers: { origin: ORIGEM, 'content-type': 'application/json' },
+      body: JSON.stringify({ material_kind: 'k1', type: 'chord' }),
+    }, ctx.env);
+    expect(res.status).toBeGreaterThanOrEqual(401);
+    expect(ctx.escritas.find((e) => e.sql.includes('INSERT'))).toBeUndefined();
+  });
+});

@@ -8,7 +8,7 @@ import {
 } from '../materialKindLabels';
 import { buildPlpcgCatalog, listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
-import { requireAuth } from '../middleware';
+import { requireAuth, requireUploadOrAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { storageKeyFor } from '../storageKeys';
@@ -909,7 +909,12 @@ export function registerPraisesRoutes(app: App): void {
   });
 
   // POST /api/praises/:id/materials - Create a material (admin, JSON)
-  app.post('/api/praises/:id/materials', requireAuth, async (c) => {
+  // O token de upload já pode GRAVAR o conteúdo de qualquer material `chord`
+  // (`PUT /api/materials/:id/content`). Criar a linha vazia é menos poder do que
+  // sobrescrever o que está lá, e é o que faltava para quem roda sem sessão —
+  // o review-app e o agente de cifras — poder criar o material gêmeo de um PDF.
+  // Quem vem com JWT de sessão continua passando pelo mesmo `requireAuth`.
+  app.post('/api/praises/:id/materials', requireUploadOrAuth, async (c) => {
     const praiseId = c.req.param('id');
     const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);

@@ -39,14 +39,14 @@ interface PraiseMaterial {
   url?: string;
 }
 
-interface Metadata {
+// praise_category de ZIPs antigos é ignorado: as seções da Coletânea são subtags (fase 3).
+export interface Metadata {
   praise_id: string;
   praise_name: string;
   praise_number?: string;
   praise_author?: string;
   praise_rhythm?: string;
   praise_tonality?: string;
-  praise_category?: string;
   praise_lyrics?: string;
   praise_tags?: string[];
   praise_materiais?: PraiseMaterial[];
@@ -167,6 +167,18 @@ async function uploadToR2(filePath: string, storageKey: string): Promise<{ succe
   }
 }
 
+export function praiseInsertSql(metadata: Metadata): string {
+  return `INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics) VALUES (${[
+    escapeSql(metadata.praise_id),
+    escapeSql(metadata.praise_name),
+    escapeSql(metadata.praise_number ?? null),
+    escapeSql(metadata.praise_author ?? null),
+    escapeSql(metadata.praise_rhythm ?? null),
+    escapeSql(metadata.praise_tonality ?? null),
+    escapeSql(metadata.praise_lyrics ?? null),
+  ].join(', ')});`;
+}
+
 function processPraiseDirectory(praiseDir: string): void {
   const metadataPath = path.join(praiseDir, 'metadata.yml');
   if (!fs.existsSync(metadataPath)) return;
@@ -176,18 +188,7 @@ function processPraiseDirectory(praiseDir: string): void {
 
   report.praisesProcessed++;
 
-  sqlStatements.push(
-    `INSERT INTO praises (id, name, number, author, rhythm, tonality, category, lyrics) VALUES (${[
-      escapeSql(metadata.praise_id),
-      escapeSql(metadata.praise_name),
-      escapeSql(metadata.praise_number ?? null),
-      escapeSql(metadata.praise_author ?? null),
-      escapeSql(metadata.praise_rhythm ?? null),
-      escapeSql(metadata.praise_tonality ?? null),
-      escapeSql(metadata.praise_category ?? null),
-      escapeSql(metadata.praise_lyrics ?? null),
-    ].join(', ')});`
-  );
+  sqlStatements.push(praiseInsertSql(metadata));
 
   if (metadata.praise_tags?.length) {
     for (const tagId of metadata.praise_tags) {

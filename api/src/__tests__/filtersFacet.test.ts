@@ -9,7 +9,6 @@ function dbEspiao(linhas: Record<string, unknown[]> = {}) {
     if (sql.includes('FROM tags')) return linhas.tags ?? [];
     if (sql.includes('rhythm')) return linhas.rhythms ?? [];
     if (sql.includes('tonality')) return linhas.tonalities ?? [];
-    if (sql.includes('category')) return linhas.categories ?? [];
     return [];
   };
   const db = {
@@ -43,47 +42,44 @@ describe('GET /api/praises/filters — opções conscientes do filtro', () => {
     const { res } = await pedirFiltros('/api/praises/filters', {
       rhythms: [{ rhythm: 'Valsa' }],
       tonalities: [{ tonality: 'C' }],
-      categories: [{ category: 'Louvor' }],
       tags: [{ id: 't1', name: 'Coletânea', parent_id: null, count: 3 }],
     });
     expect(res.status).toBe(200);
     const corpo = (await res.json()) as {
       rhythms: string[];
       tonalities: string[];
-      categories: string[];
       tags: { id: string; count: number }[];
     };
     expect(corpo.rhythms).toEqual(['Valsa']);
     expect(corpo.tonalities).toEqual(['C']);
-    expect(corpo.categories).toEqual(['Louvor']);
+    expect(corpo).not.toHaveProperty('categories');
     expect(corpo.tags[0].count).toBe(3);
   });
 
   it('restringe as opções pelos filtros aplicados', async () => {
-    // As opções eram globais: a tela oferecia um ritmo que, combinado com a
-    // categoria já escolhida, dava zero resultados.
-    const { chamadas } = await pedirFiltros('/api/praises/filters?category=Louvor');
-    expect(sqlDe(chamadas, 'rhythm')).toContain('p.category IN');
-    expect(sqlDe(chamadas, 'tonality')).toContain('p.category IN');
+    // As opções eram globais: a tela oferecia um ritmo que, combinado com o
+    // tom já escolhido, dava zero resultados.
+    const { chamadas } = await pedirFiltros('/api/praises/filters?tonality=C');
+    expect(sqlDe(chamadas, 'rhythm')).toContain('p.tonality IN');
   });
 
   it('cada dimensão ignora o próprio filtro ao contar', async () => {
     // Senão escolher "Valsa" apagaria os outros ritmos da lista e não haveria
     // como trocar para "Marcha" sem limpar o filtro antes.
-    const { chamadas } = await pedirFiltros('/api/praises/filters?rhythm=Valsa&category=Louvor');
+    const { chamadas } = await pedirFiltros('/api/praises/filters?rhythm=Valsa&tonality=C');
     const sqlRitmo = sqlDe(chamadas, 'rhythm');
     expect(sqlRitmo).not.toContain('p.rhythm IN');
-    expect(sqlRitmo).toContain('p.category IN');
-    // e a dimensão de categoria ignora a própria, mas respeita o ritmo
-    const sqlCategoria = sqlDe(chamadas, 'category');
-    expect(sqlCategoria).toContain('p.rhythm IN');
-    expect(sqlCategoria).not.toContain('p.category IN');
+    expect(sqlRitmo).toContain('p.tonality IN');
+    // e a dimensão de tom ignora a própria, mas respeita o ritmo
+    const sqlTom = sqlDe(chamadas, 'tonality');
+    expect(sqlTom).toContain('p.rhythm IN');
+    expect(sqlTom).not.toContain('p.tonality IN');
   });
 
   it('a contagem das tags respeita os demais filtros', async () => {
-    const { chamadas } = await pedirFiltros('/api/praises/filters?category=Louvor');
+    const { chamadas } = await pedirFiltros('/api/praises/filters?rhythm=Valsa');
     const sqlTags = chamadas.find((c) => c.sql.includes('FROM tags'))?.sql ?? '';
-    expect(sqlTags).toContain('p.category IN');
+    expect(sqlTags).toContain('p.rhythm IN');
   });
 
   it('recusa parâmetro numérico inválido, como a listagem', async () => {

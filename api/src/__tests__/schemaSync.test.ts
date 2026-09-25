@@ -116,4 +116,14 @@ describe('schema.sql acompanha as migrações', () => {
       expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
     }
   });
+
+  it('025: praises sem category e sem idx_praises_category no schema.sql', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '025_drop_praise_category.sql'), 'utf8'));
+    expect(mig).toContain('DROP INDEX IF EXISTS idx_praises_category;');
+    expect(mig).toContain('ALTER TABLE praises DROP COLUMN category;');
+    expect(schema).not.toContain('idx_praises_category');
+    const praises = schema.slice(schema.indexOf('CREATE TABLE IF NOT EXISTS praises ('));
+    expect(praises.slice(0, praises.indexOf(');'))).not.toMatch(/\bcategory\b/);
+  });
 });

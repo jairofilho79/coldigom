@@ -1,3 +1,4 @@
+-- Cópia congelada do schema.sql antes da migração 025 (DROP COLUMN praises.category). Não editar.
 -- Schema for coldigom D1 Database
 -- Based on PRD requirements
 
@@ -10,6 +11,7 @@ CREATE TABLE IF NOT EXISTS praises (
     author TEXT,                   -- Autor/Tradutor
     rhythm TEXT,                   -- Ritmo
     tonality TEXT,                 -- Tom
+    category TEXT,                 -- Categoria
     lyrics TEXT,                   -- Letra completa
     group_id TEXT,                 -- Shared id for same song / different arrangements
     short_id TEXT,                 -- Id curto do louvor (migração 023): hex, único, imutável, atribuído pelo gatilho
@@ -112,10 +114,11 @@ CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);
 CREATE INDEX IF NOT EXISTS idx_praises_number ON praises(number);
 CREATE INDEX IF NOT EXISTS idx_praises_group_id ON praises(group_id);
--- Filtros e a tela de opções: /api/praises/filters faz dois SELECT DISTINCT
+-- Filtros e a tela de opções: /api/praises/filters faz três SELECT DISTINCT
 -- sobre estas colunas a cada carregamento, e eram varreduras completas.
 CREATE INDEX IF NOT EXISTS idx_praises_rhythm ON praises(rhythm);
 CREATE INDEX IF NOT EXISTS idx_praises_tonality ON praises(tonality);
+CREATE INDEX IF NOT EXISTS idx_praises_category ON praises(category);
 
 -- Auth: rotating refresh tokens (opaque value hashed at rest; access JWT is short-lived in cookie)
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (

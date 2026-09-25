@@ -84,7 +84,7 @@ describe('short_id nas leituras', () => {
   });
 
   it('catálogo: sem short_id a chave some, e o ETag muda quando ele chega', async () => {
-    const semShortId = { id: 'p1', short_id: null, name: 'A', number: '1', author: null, rhythm: null, tonality: null, category: null, lyrics: null };
+    const semShortId = { id: 'p1', short_id: null, name: 'A', number: '1', author: null, rhythm: null, tonality: null, lyrics: null };
     const fake = (linha: object) =>
       ({
         prepare: (sql: string) => ({
@@ -130,7 +130,7 @@ describe('short_id nas escritas da API', () => {
       '/api/praises/keeper/merge',
       await escrita('POST', {
         source_praise_id: 'fonte',
-        metadata: { name: 'Keeper', number: '001', author: null, rhythm: null, tonality: null, category: null, lyrics: null },
+        metadata: { name: 'Keeper', number: '001', author: null, rhythm: null, tonality: null, lyrics: null },
         tag_ids: [],
         material_ids_to_import: [],
       }),

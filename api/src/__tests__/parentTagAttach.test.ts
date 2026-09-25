@@ -102,7 +102,7 @@ describe('tag pai — ligação aceita', () => {
       '/api/praises/keeper/merge',
       await escrita('POST', {
         source_praise_id: 'fonte',
-        metadata: { name: 'Keeper', number: '001', author: null, rhythm: null, tonality: null, category: null, lyrics: null },
+        metadata: { name: 'Keeper', number: '001', author: null, rhythm: null, tonality: null, lyrics: null },
         tag_ids: ['clamor', 'avulsos'],
         material_ids_to_import: [],
       }),
@@ -128,7 +128,7 @@ describe('tag pai — ligação aceita', () => {
       '/api/praises/p1/merge',
       await escrita('POST', {
         source_praise_id: 'fonte',
-        metadata: { name: 'P1', number: '001', author: null, rhythm: null, tonality: null, category: null, lyrics: null },
+        metadata: { name: 'P1', number: '001', author: null, rhythm: null, tonality: null, lyrics: null },
         tag_ids: ['nao-existe'],
         material_ids_to_import: [],
       }),

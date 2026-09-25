@@ -41,7 +41,6 @@ export function registerPraisesRoutes(app: App): void {
     const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
     const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
     const tonality = c.req.query('tonality') ? c.req.query('tonality')!.split(',').filter(Boolean) : undefined;
-    const category = c.req.query('category') ? c.req.query('category')!.split(',').filter(Boolean) : undefined;
     const materialKinds = c.req.query('materialKinds')
       ? c.req.query('materialKinds')!.split(',').filter(Boolean)
       : undefined;
@@ -63,7 +62,6 @@ export function registerPraisesRoutes(app: App): void {
         tagGroups,
         rhythm,
         tonality,
-        category,
         materialKinds,
         numberMin,
         numberMax,
@@ -78,7 +76,7 @@ export function registerPraisesRoutes(app: App): void {
 
       const query = `
         SELECT
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
+          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics, p.group_id,
           GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
           GROUP_CONCAT(DISTINCT ${TAG_LABEL_SQL}) as tag_names
         FROM praises p
@@ -179,8 +177,8 @@ export function registerPraisesRoutes(app: App): void {
 
   // GET /api/praises/filters - Get filter options
   app.get('/api/praises/filters', async (c) => {
-    // As opções eram globais: a tela oferecia um ritmo que, combinado com a
-    // categoria já escolhida, dava zero resultados. Agora cada dimensão é
+    // As opções eram globais: a tela oferecia um ritmo que, combinado com o
+    // tom já escolhido, dava zero resultados. Agora cada dimensão é
     // contada sob os DEMAIS filtros — ignorando o próprio, senão escolher
     // "Valsa" apagaria os outros ritmos da lista e não haveria como trocar
     // para "Marcha" sem limpar o filtro antes.
@@ -202,7 +200,6 @@ export function registerPraisesRoutes(app: App): void {
           tagGroups: dimensao === 'tags' ? undefined : gruposDeTags,
           rhythm: dimensao === 'rhythm' ? undefined : filtros.rhythm,
           tonality: dimensao === 'tonality' ? undefined : filtros.tonality,
-          category: dimensao === 'category' ? undefined : filtros.category,
           materialKinds: filtros.materialKinds,
           numberMin: filtros.numberMin,
           numberMax: filtros.numberMax,
@@ -210,7 +207,7 @@ export function registerPraisesRoutes(app: App): void {
         return { clause, bindings };
       };
 
-      const valoresDe = (coluna: 'rhythm' | 'tonality' | 'category') => {
+      const valoresDe = (coluna: 'rhythm' | 'tonality') => {
         const { clause, bindings } = exceto(coluna);
         const prefixo = clause ? `${clause} AND ` : 'WHERE ';
         const sql = `SELECT DISTINCT ${coluna} FROM praises p ${prefixo}p.${coluna} IS NOT NULL AND p.${coluna} != '' ORDER BY ${coluna}`;
@@ -240,10 +237,9 @@ export function registerPraisesRoutes(app: App): void {
         return c.env.DB.prepare(sql).bind(...bindings).all();
       };
 
-      const [rhythmsResult, tonalitiesResult, categoriesResult, tagsResult] = await Promise.all([
+      const [rhythmsResult, tonalitiesResult, tagsResult] = await Promise.all([
         valoresDe('rhythm'),
         valoresDe('tonality'),
-        valoresDe('category'),
         tagsComContagem(),
       ]);
 
@@ -253,7 +249,6 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({
         rhythms: (rhythmsResult.results as { rhythm: string }[]).map((r) => r.rhythm),
         tonalities: (tonalitiesResult.results as { tonality: string }[]).map((r) => r.tonality),
-        categories: (categoriesResult.results as { category: string }[]).map((r) => r.category),
         tags: tagRows.map((t) => ({
           id: t.id,
           name: t.name,
@@ -302,7 +297,7 @@ export function registerPraisesRoutes(app: App): void {
       // Fetch praise with tags
       const praiseQuery = `
         SELECT 
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
+          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics, p.group_id,
           p.short_id, p.updated_at,
           GROUP_CONCAT(pt.tag_id) as tag_ids
         FROM praises p
@@ -445,13 +440,12 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: "Field 'name' is required" }, 400);
     }
 
-    const optionalFields = ['number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+    const optionalFields = ['number', 'author', 'rhythm', 'tonality', 'lyrics'] as const;
     const fieldValues: Record<(typeof optionalFields)[number], string | null> = {
       number: null,
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
       lyrics: null,
     };
 
@@ -480,8 +474,8 @@ export function registerPraisesRoutes(app: App): void {
 
     try {
       await c.env.DB.prepare(
-        `INSERT INTO praises (id, name, number, author, rhythm, tonality, category, lyrics)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         id,
         name.trim(),
@@ -489,7 +483,6 @@ export function registerPraisesRoutes(app: App): void {
         fieldValues.author,
         fieldValues.rhythm,
         fieldValues.tonality,
-        fieldValues.category,
         fieldValues.lyrics
       ).run();
 
@@ -533,7 +526,7 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: "Field 'if_updated_at' must be a non-empty string" }, 400);
     }
 
-    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'lyrics'] as const;
     const sets: string[] = [];
     const bindings: (string | null)[] = [];
 
@@ -756,25 +749,20 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     const metaObj = metadata as Record<string, unknown>;
-    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'lyrics'] as const;
     const metaValues: Record<(typeof updatable)[number], string | null> = {
       name: null,
       number: null,
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
       lyrics: null,
     };
 
-    // Sem a chave `category`, a categoria do keeper fica como está (spec seções
-    // da Coletânea, §3.3): o admin parou de mandá-la. `null` continua
-    // significando «apagar» — ausente e nulo não são a mesma coisa.
-    const mexeNaCategoria = 'category' in metaObj;
+    // A categoria do louvor saiu do schema (migração 025): a chave em `metadata`, se vier, é ignorada.
 
     for (const key of updatable) {
       if (!(key in metaObj)) {
-        if (key === 'category') continue;
         return c.json({ error: `Field 'metadata.${key}' is required` }, 400);
       }
       const val = metaObj[key];
@@ -845,9 +833,7 @@ export function registerPraisesRoutes(app: App): void {
       // sem nenhuma tag.
       await c.env.DB.batch([
         c.env.DB.prepare(
-          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?,${
-            mexeNaCategoria ? ' category = ?,' : ''
-          } lyrics = ?,
+          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, lyrics = ?,
            updated_at = datetime('now') WHERE id = ?`
         ).bind(
           metaValues.name,
@@ -855,7 +841,6 @@ export function registerPraisesRoutes(app: App): void {
           metaValues.author,
           metaValues.rhythm,
           metaValues.tonality,
-          ...(mexeNaCategoria ? [metaValues.category] : []),
           metaValues.lyrics,
           keeperId
         ),

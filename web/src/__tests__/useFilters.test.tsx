@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFilters } from '../hooks/useFilters';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import React from 'react';
 
 // Wrapper for testing hooks that use useSearchParams
@@ -30,7 +30,7 @@ describe('useFilters Hook', () => {
       expect(result.current.filters.tags).toEqual([]);
       expect(result.current.filters.rhythm).toEqual([]);
       expect(result.current.filters.tonality).toEqual([]);
-      expect(result.current.filters.category).toEqual([]);
+      expect(result.current.filters).not.toHaveProperty('category');
       expect(result.current.filters.numberMin).toBeUndefined();
       expect(result.current.filters.numberMax).toBeUndefined();
       expect(result.current.filters.sort).toBe('number');
@@ -77,6 +77,15 @@ describe('useFilters Hook', () => {
       });
 
       expect(result.current.filters.sort).toBe('name');
+      expect(result.current.filters.order).toBe('desc');
+    });
+
+    it('?sort=category de link antigo cai na ordenação padrão', () => {
+      const { result } = renderHook(() => useFilters(), {
+        wrapper: createWrapper('/?sort=category&order=desc'),
+      });
+
+      expect(result.current.filters.sort).toBe('number');
       expect(result.current.filters.order).toBe('desc');
     });
   });
@@ -229,12 +238,12 @@ describe('useFilters Hook', () => {
       expect(result.current.activeFilterCount).toBe(3);
     });
 
-    it('should count rhythm, tonality, category filters', () => {
+    it('conta ritmo e tom; ?category= de link antigo não conta', () => {
       const { result } = renderHook(() => useFilters(), {
         wrapper: createWrapper('/?rhythm=Avulsos&tonality=C&category=Louvor'),
       });
 
-      expect(result.current.activeFilterCount).toBe(3);
+      expect(result.current.activeFilterCount).toBe(2);
     });
 
     it('should count number range as 2 filters', () => {
@@ -294,14 +303,24 @@ describe('useFilters Hook', () => {
       expect(result.current.filters.tonality).toEqual([]);
     });
 
-    it('clears category param when empty array', async () => {
-      const { result } = renderHook(() => useFilters(), {
-        wrapper: createWrapper('/?category=Louvor'),
-      });
+    it('?category= de link antigo é ignorado e sai da URL na próxima escrita', async () => {
+      // O filtro «Categoria» foi aposentado: as seções da Coletânea viraram
+      // subtags. Link antigo não quebra; o valor só não filtra nada e não fica
+      // sendo copiado adiante.
+      const { result } = renderHook(
+        () => ({ hook: useFilters(), location: useLocation() }),
+        { wrapper: createWrapper('/?category=Louvor&rhythm=Valsa') }
+      );
+      expect(result.current.hook.filters).not.toHaveProperty('category');
+
       await act(async () => {
-        result.current.setFilters({ category: [] });
+        result.current.hook.setFilters({ query: 'x' });
       });
-      expect(result.current.filters.category).toEqual([]);
+
+      const params = new URLSearchParams(result.current.location.search);
+      expect(params.has('category')).toBe(false);
+      expect(params.get('rhythm')).toBe('Valsa');
+      expect(params.get('q')).toBe('x');
     });
 
     it('sets and clears numberMin', async () => {

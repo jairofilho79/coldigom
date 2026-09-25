@@ -30,7 +30,6 @@ vi.mock('../hooks/useFilters', () => ({
       tags: [],
       rhythm: [],
       tonality: [],
-      category: [],
       materialKinds: [],
       numberMin: undefined,
       numberMax: undefined,
@@ -194,11 +193,12 @@ describe('HomePage Component', () => {
         tags: [],
         rhythm: [],
         tonality: [],
-        category: [],
         materialKinds: [],
         sort: 'number',
         order: 'asc',
       });
+      // A categoria foi aposentada: a chave não pode nem ir vazia.
+      expect(Object.keys(vi.mocked(searchPraises).mock.calls[0][0]!)).not.toContain('category');
     });
   });
 

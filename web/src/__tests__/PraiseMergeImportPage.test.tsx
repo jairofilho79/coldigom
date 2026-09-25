@@ -159,15 +159,24 @@ describe('PraiseMergeImportPage', () => {
     expect(corpo.material_ids_to_import).toEqual(['mat-src']);
     expect([...corpo.tag_ids].sort()).toEqual(['tag1', 'tag2']);
     // sem escolha explícita do usuário, vence o louvor que permanece
+    // Sem `category`: a chave ausente faz a API não mexer na categoria (§3.3).
     expect(corpo.metadata).toEqual({
       name: 'Grande Deus',
       number: '001',
       author: 'Autor A',
       rhythm: 'Avulsos',
       tonality: 'C',
-      category: 'Louvor',
       lyrics: 'Letra A',
     });
+  });
+
+  it('a seção de metadados não tem mais a linha Categoria', async () => {
+    // keeper e fonte ainda trazem categorias diferentes (Louvor × Adoração),
+    // como a API manda até a fase 3; antes isso virava uma linha de conflito.
+    renderMergeImport();
+    await esperarCarregar();
+
+    expect(within(secao('Metadados')).queryByText('Categoria')).toBeNull();
   });
 
   it('escolher "Usar (mesclado)" num campo manda o valor do outro louvor', async () => {
@@ -274,40 +283,42 @@ describe('PraiseMergeImportPage', () => {
     expect(await screen.findByText('mesclado: Grande Deus Dup')).toBeTruthy();
   });
 
-  it('tag de agrupamento vinda do louvor fonte é apontada e trava a finalização', async () => {
-    // O servidor recusa anexar tag com filhos que o louvor ainda não tinha —
-    // mesclar não pode ser a porta dos fundos para espalhar tag pai. Sem esse
-    // aviso, o usuário só descobre no último clique, com um 400 que não diz
-    // qual tag é a culpada. «Avulsos» vem só do louvor fonte.
+  it('tag raiz com subtags vinda do louvor fonte é aceita sem aviso (§3.2)', async () => {
+    // A API deixou de recusar a ligação com tag que tem filhos: a raiz ligada
+    // direto quer dizer «sem subtag específica». A trava antiga bloquearia toda
+    // mesclagem com `Avulsos` depois de ela ganhar `GLTM`.
     const user = userEvent.setup();
     vi.mocked(getTags).mockResolvedValue([
       ...CATALOGO,
       { id: 'tag2a', name: '2026', parent_id: 'tag2' },
     ]);
+    (getPraise as ReturnType<typeof vi.fn>).mockImplementation(async (id: string) => {
+      if (id === keeperId) return keeper;
+      if (id === sourceId) {
+        return { ...source, tags: [...source.tags, { id: 'tag2a', name: '2026', parent_id: 'tag2' }] };
+      }
+      throw new Error('not found');
+    });
 
     renderMergeImport();
     await esperarCarregar();
+    // O rótulo «pai · filho» da subtag sem parent_name só sai com o catálogo
+    // carregado: daqui em diante, a trava antiga já teria aparecido.
+    expect(await screen.findByText('Avulsos · 2026')).toBeTruthy();
 
-    const aviso = await screen.findByText(/agrupa subtags/i);
-    expect(aviso.textContent).toMatch(/Avulsos/);
-    expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeDisabled();
-
-    const tags = secao('Tags');
-    await user.click(within(tags).getByRole('checkbox', { name: /Avulsos/ }));
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeEnabled()
-    );
+    expect(screen.queryByText(/agrupa subtags/i)).toBeNull();
+    expect(screen.queryByText('agrupamento')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Finalizar mesclagem' })).toBeEnabled();
 
     await user.click(screen.getByRole('button', { name: 'Finalizar mesclagem' }));
     await waitFor(() => expect(mergePraises).toHaveBeenCalled());
-    expect(vi.mocked(mergePraises).mock.calls[0][1].tag_ids).toEqual(['tag1']);
+    expect([...vi.mocked(mergePraises).mock.calls[0][1].tag_ids].sort()).toEqual(['tag1', 'tag2', 'tag2a']);
   });
 
-  it('tag de agrupamento que o louvor que sobrevive já tinha não trava nada', async () => {
-    // O servidor a aceita: ela não é associação nova. Travar aqui impediria uma
-    // mesclagem que funciona, e obrigaria o usuário a abrir mão de uma tag que
-    // já era dele.
+  it('tag raiz com subtags que o louvor que sobrevive já tinha é aceita (§3.2)', async () => {
+    // Sem trava nenhuma, uma tag raiz que já era do keeper é aceita como
+    // qualquer outra tag — este teste fica como prova de que esse caso, que já
+    // passava antes por uma exceção só dele, continua passando sem exceção.
     const user = userEvent.setup();
     vi.mocked(getTags).mockResolvedValue([
       ...CATALOGO,

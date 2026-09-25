@@ -203,7 +203,6 @@ export interface SearchParams {
   tags?: string[];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -224,7 +223,6 @@ export async function searchPraises(
   if (params.tags && params.tags.length > 0) urlParams.set('tags', params.tags.join(','));
   if (params.rhythm && params.rhythm.length > 0) urlParams.set('rhythm', params.rhythm.join(','));
   if (params.tonality && params.tonality.length > 0) urlParams.set('tonality', params.tonality.join(','));
-  if (params.category && params.category.length > 0) urlParams.set('category', params.category.join(','));
   if (params.materialKinds && params.materialKinds.length > 0) {
     urlParams.set('materialKinds', params.materialKinds.join(','));
   }
@@ -260,7 +258,6 @@ export async function getFilterOptions(params: SearchParams = {}): Promise<Filte
   if (params.tags?.length) urlParams.set('tags', params.tags.join(','));
   if (params.rhythm?.length) urlParams.set('rhythm', params.rhythm.join(','));
   if (params.tonality?.length) urlParams.set('tonality', params.tonality.join(','));
-  if (params.category?.length) urlParams.set('category', params.category.join(','));
   if (params.materialKinds?.length) urlParams.set('materialKinds', params.materialKinds.join(','));
   // Ver a nota em searchPraises: `null` chega aqui pela serialização da
   // FilterBar, e `null !== undefined` deixava o `.toString()` explodir.
@@ -291,7 +288,6 @@ export type CreatePraiseInput = {
   author?: string | null;
   rhythm?: string | null;
   tonality?: string | null;
-  category?: string | null;
   lyrics?: string | null;
   tag_ids?: string[];
 };
@@ -310,7 +306,7 @@ export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetai
 
 export async function updatePraise(
   id: string,
-  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>,
+  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'lyrics'>>,
   /**
    * `updated_at` que a tela carregou. Vai como `if_updated_at`; se alguém gravou
    * no meio, o servidor responde 409 em vez de deixar a última escrita vencer em
@@ -618,7 +614,6 @@ export type MergePraisesInput = {
     author: string | null;
     rhythm: string | null;
     tonality: string | null;
-    category: string | null;
     lyrics: string | null;
   };
   tag_ids: string[];

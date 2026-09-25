@@ -91,7 +91,6 @@ function camposDe(p: PraiseDetail) {
     author: p.author || '',
     rhythm: p.rhythm || '',
     tonality: p.tonality || '',
-    category: p.category || '',
     lyrics: p.lyrics || '',
   };
 }
@@ -108,7 +107,7 @@ type Rascunho = {
 /**
  * Autorizar o Drive é navegação de página inteira: o componente remonta do zero
  * na volta, e tudo que estava digitado — nome, número, autor, ritmo, tom,
- * categoria, letra, tags escolhidas e o próprio link colado — voltava em branco.
+ * letra, tags escolhidas e o próprio link colado — voltava em branco.
  *
  * Acesso tolerante ao armazenamento: bloqueado, degrada em vez de derrubar a
  * árvore inteira (mesma lição do S5). Arquivos locais não são recuperáveis por
@@ -207,7 +206,6 @@ export function PraiseDetailPage() {
     author: '',
     rhythm: '',
     tonality: '',
-    category: '',
     lyrics: '',
   });
   const [newSubtagParentId, setNewSubtagParentId] = useState('');
@@ -846,12 +844,12 @@ export function PraiseDetailPage() {
     if (!isCreate) return praise?.tags || [];
     return catalogTags.filter((t) => pendingTagIds.includes(t.id));
   }, [isCreate, praise?.tags, catalogTags, pendingTagIds]);
-  const availableTags = useMemo(() => {
-    const childParentIds = new Set(
-      catalogTags.filter((t) => t.parent_id).map((t) => t.parent_id as string)
-    );
-    return catalogTags.filter((t) => !assignedTagIds.has(t.id) && !childParentIds.has(t.id));
-  }, [catalogTags, assignedTagIds]);
+  // Tag raiz com subtags também é oferecida: ligar direto à raiz quer dizer «sem
+  // subtag específica», e a API deixou de recusar (spec das seções da Coletânea, §3.2).
+  const availableTags = useMemo(
+    () => catalogTags.filter((t) => !assignedTagIds.has(t.id)),
+    [catalogTags, assignedTagIds]
+  );
   const rootTags = useMemo(
     () => catalogTags.filter((t) => !t.parent_id),
     [catalogTags]
@@ -1059,7 +1057,6 @@ export function PraiseDetailPage() {
             author: edit.author || null,
             rhythm: edit.rhythm || null,
             tonality: edit.tonality || null,
-            category: edit.category || null,
             lyrics: edit.lyrics || null,
             tag_ids: pendingTagIds,
           });
@@ -1176,7 +1173,6 @@ export function PraiseDetailPage() {
               author: edit.author,
               rhythm: edit.rhythm,
               tonality: edit.tonality,
-              category: edit.category,
             },
             praise?.updated_at
           )
@@ -1407,10 +1403,6 @@ export function PraiseDetailPage() {
               <span className="edit-field-label">Tom</span>
               <input value={edit.tonality} onChange={(e) => setEdit(s => ({ ...s, tonality: e.target.value }))} />
             </label>
-            <label className="edit-field">
-              <span className="edit-field-label">Categoria</span>
-              <input value={edit.category} onChange={(e) => setEdit(s => ({ ...s, category: e.target.value }))} />
-            </label>
 
             {!isCreate ? (
               <div className="edit-actions">
@@ -1477,12 +1469,6 @@ export function PraiseDetailPage() {
             <div className="detail-meta-item">
               <span className="label">Tom</span>
               <span className="value">{praise.tonality}</span>
-            </div>
-            )}
-            {praise.category && (
-            <div className="detail-meta-item">
-              <span className="label">Categoria</span>
-              <span className="value">{praise.category}</span>
             </div>
             )}
           </div>
@@ -1559,7 +1545,7 @@ export function PraiseDetailPage() {
                 </button>
               </div>
             ) : (
-              displayTags.length === 0 && catalogTags.length > 0
+              catalogTags.length > 0
                 ? <span className="detail-tags-hint muted">Todas as tags do catálogo já estão associadas.</span>
                 : null
             )}

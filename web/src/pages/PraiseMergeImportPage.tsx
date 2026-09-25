@@ -12,7 +12,7 @@ import {
 import { SearchableSelect } from '../components/SearchableSelect';
 import type { PraiseDetail, MaterialKind, Tag } from '../types';
 
-type MetaField = 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics';
+type MetaField = 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'lyrics';
 
 const META_FIELDS: { key: MetaField; label: string; multiline?: boolean }[] = [
   { key: 'name', label: 'Nome' },
@@ -20,7 +20,6 @@ const META_FIELDS: { key: MetaField; label: string; multiline?: boolean }[] = [
   { key: 'author', label: 'Autor' },
   { key: 'rhythm', label: 'Ritmo' },
   { key: 'tonality', label: 'Tom' },
-  { key: 'category', label: 'Categoria' },
   { key: 'lyrics', label: 'Letra', multiline: true },
 ];
 
@@ -59,10 +58,9 @@ export function PraiseMergeImportPage() {
   const [materialBusy, setMaterialBusy] = useState(false);
   const [catalogTags, setCatalogTags] = useState<Tag[]>([]);
 
-  // O catálogo inteiro é o único jeito de saber, no cliente, que uma tag tem
-  // filhos: o louvor traz `parent_id` da própria tag, não a lista de subtags.
-  // Falhar aqui não pode travar a mesclagem — sem catálogo a tela só perde o
-  // aviso e volta a ser o que era.
+  // O catálogo dá o nome do pai das subtags que chegam sem `parent_name`, para a
+  // lista mostrar «Pai · Filho». Falhar aqui não pode travar a mesclagem — sem
+  // catálogo a lista só mostra o nome curto.
   useEffect(() => {
     let cancelado = false;
     getTags()
@@ -122,37 +120,6 @@ export function PraiseMergeImportPage() {
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [keeper, source]);
 
-  /** Ids de tags que agrupam subtags — o servidor recusa anexar qualquer uma. */
-  const tagIdsDeAgrupamento = useMemo(
-    () => new Set(catalogTags.filter((t) => t.parent_id).map((t) => t.parent_id as string)),
-    [catalogTags]
-  );
-
-  /** Tags que o louvor que sobrevive já tem: o servidor não as trata como associação nova. */
-  const tagIdsDoKeeper = useMemo(
-    () => new Set((keeper?.tags ?? []).map((t) => t.id)),
-    [keeper?.tags]
-  );
-
-  // Basta alguém criar uma subtag de «Coral» para toda mesclagem envolvendo
-  // esse louvor passar a morrer com um 400 no último clique, sem dizer qual
-  // tag é a culpada. Aqui a culpada aparece antes, com nome.
-  //
-  // Só bloqueia a tag de agrupamento que viria do louvor FONTE: o servidor
-  // aceita a que o keeper já tinha, porque ela não é associação nova — mesclar
-  // não pode ser a porta dos fundos para espalhar tag pai, mas também não pode
-  // impedir o louvor de continuar com a tag que já era dele.
-  const tagsQueBloqueiam = useMemo(
-    () =>
-      allTags.filter(
-        (t) =>
-          selectedTagIds.has(t.id) &&
-          tagIdsDeAgrupamento.has(t.id) &&
-          !tagIdsDoKeeper.has(t.id)
-      ),
-    [allTags, selectedTagIds, tagIdsDeAgrupamento, tagIdsDoKeeper]
-  );
-
   const resolvedMetadata = useMemo(() => {
     if (!keeper || !source) return null;
     const out: MergePraisesInput['metadata'] = {
@@ -161,7 +128,6 @@ export function PraiseMergeImportPage() {
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
       lyrics: null,
     };
     for (const { key } of META_FIELDS) {
@@ -324,38 +290,25 @@ export function PraiseMergeImportPage() {
           As marcadas passam a ser exatamente as tags do louvor mesclado.
         </p>
         <div className="merge-tags-list">
-          {allTags.map((tag) => {
-            const agrupamento = tagIdsDeAgrupamento.has(tag.id);
-            return (
-              <label key={tag.id} className="merge-tag-check">
-                <input
-                  type="checkbox"
-                  checked={selectedTagIds.has(tag.id)}
-                  onChange={(e) => {
-                    setSelectedTagIds((prev) => {
-                      const next = new Set(prev);
-                      if (e.target.checked) next.add(tag.id);
-                      else next.delete(tag.id);
-                      return next;
-                    });
-                  }}
-                />
-                {tagLabel(tag, catalogTags)}
-                {agrupamento ? <span className="pill">agrupamento</span> : null}
-              </label>
-            );
-          })}
+          {allTags.map((tag) => (
+            <label key={tag.id} className="merge-tag-check">
+              <input
+                type="checkbox"
+                checked={selectedTagIds.has(tag.id)}
+                onChange={(e) => {
+                  setSelectedTagIds((prev) => {
+                    const next = new Set(prev);
+                    if (e.target.checked) next.add(tag.id);
+                    else next.delete(tag.id);
+                    return next;
+                  });
+                }}
+              />
+              {tagLabel(tag, catalogTags)}
+            </label>
+          ))}
           {allTags.length === 0 ? <p className="lyrics-empty">Nenhuma tag nos dois louvores.</p> : null}
         </div>
-        {tagsQueBloqueiam.length > 0 ? (
-          <div className="error-state" style={{ marginTop: '0.75rem' }}>
-            <div className="error-state-desc">
-              {tagsQueBloqueiam.length === 1
-                ? `A tag «${tagsQueBloqueiam[0].name}» agrupa subtags e não pode ser anexada: desmarque-a, ou marque uma subtag dela.`
-                : `As tags «${tagsQueBloqueiam.map((t) => t.name).join('», «')}» agrupam subtags e não podem ser anexadas: desmarque-as, ou marque subtags delas.`}
-            </div>
-          </div>
-        ) : null}
       </section>
 
       <section className="detail-section">
@@ -499,7 +452,7 @@ export function PraiseMergeImportPage() {
         <button
           type="button"
           className="auth-btn"
-          disabled={saving || !resolvedMetadata?.name || tagsQueBloqueiam.length > 0}
+          disabled={saving || !resolvedMetadata?.name}
           onClick={() => void handleFinalize()}
         >
           {saving ? 'Finalizando…' : 'Finalizar mesclagem'}

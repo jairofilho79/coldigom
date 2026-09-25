@@ -179,7 +179,7 @@ describe('API Service — escritas de louvor e material', () => {
     mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
     await mergePraises('p1', {
       source_praise_id: 'p2',
-      metadata: { name: 'X', number: null, author: null, rhythm: null, tonality: null, category: null, lyrics: null },
+      metadata: { name: 'X', number: null, author: null, rhythm: null, tonality: null, lyrics: null },
       tag_ids: [],
       material_ids_to_import: [],
     });

@@ -180,7 +180,20 @@ describe('PraiseDetailPage Component', () => {
     expect(screen.getByText('Autor 1')).toBeTruthy();
     expect(screen.getAllByText('Avulsos').length).toBeGreaterThan(0);
     expect(screen.getByText('C')).toBeTruthy();
-    expect(screen.getByText('Louvor')).toBeTruthy();
+  });
+
+  it('a ficha do louvor não mostra a categoria, mesmo que a API ainda a mande', async () => {
+    // A seção da Coletânea virou subtag e aparece nas tags; `category` só
+    // continua na resposta da API até a fase 3 do spec.
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+
+    const { container } = renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await screen.findByText('Grande Deus');
+
+    const meta = container.querySelector('.detail-meta-row') as HTMLElement;
+    expect(meta).toBeTruthy();
+    expect(within(meta).queryByText('Categoria')).toBeNull();
+    expect(within(meta).queryByText('Louvor')).toBeNull();
   });
 
   it('should show download zip link without login', async () => {
@@ -397,6 +410,7 @@ describe('PraiseDetailPage Component', () => {
           })
         );
       });
+      expect(Object.keys(vi.mocked(createPraise).mock.calls[0][0])).not.toContain('category');
     });
 
     it('aponta o arquivo que a API recusaria e trava o envio até resolver', async () => {
@@ -1217,9 +1231,12 @@ describe('acessibilidade do formulário e dos materiais', () => {
     });
     await user.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
 
-    for (const rotulo of ['Nome', 'Número', 'Autor', 'Ritmo', 'Tom', 'Categoria']) {
+    for (const rotulo of ['Nome', 'Número', 'Autor', 'Ritmo', 'Tom']) {
       expect(screen.getAllByLabelText(rotulo).length).toBeGreaterThan(0);
     }
+    // «Categoria» ainda nomeia o seletor (um botão) da categoria do MATERIAL em
+    // «Adicionar material»; o campo de texto da categoria do louvor saiu.
+    expect(screen.queryByRole('textbox', { name: 'Categoria' })).toBeNull();
   });
 
   it('a página tem um landmark principal', async () => {
@@ -2221,7 +2238,7 @@ describe('Edição dos demais campos de metadados', () => {
     (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
   });
 
-  it('edita número, autor, ritmo, tom e categoria e salva tudo junto', async () => {
+  it('edita número, autor, ritmo e tom e salva tudo junto, sem categoria', async () => {
     (updatePraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
     const user = userEvent.setup();
     renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
@@ -2236,12 +2253,6 @@ describe('Edição dos demais campos de metadados', () => {
     await user.type(screen.getByLabelText('Ritmo'), 'Coletânea');
     await user.clear(screen.getByLabelText('Tom'));
     await user.type(screen.getByLabelText('Tom'), 'D');
-    // "Categoria" também nomeia o seletor de categoria do painel "Adicionar
-    // material", que aparece junto em modo edição — o campo de metadado é o
-    // primeiro elemento com esse nome acessível.
-    const campoCategoria = screen.getAllByLabelText('Categoria')[0];
-    await user.clear(campoCategoria);
-    await user.type(campoCategoria, 'Adoração');
 
     await user.click(screen.getAllByRole('button', { name: 'Salvar' })[0]);
 
@@ -2253,11 +2264,13 @@ describe('Edição dos demais campos de metadados', () => {
           author: 'Outro Autor',
           rhythm: 'Coletânea',
           tonality: 'D',
-          category: 'Adoração',
         }),
         undefined
       );
     });
+    // O PATCH não pode reescrever a categoria que o script de dados preserva
+    // até a fase 3: a chave não vai, nem vazia.
+    expect(Object.keys(vi.mocked(updatePraise).mock.calls[0][1])).not.toContain('category');
   });
 });
 
@@ -2296,16 +2309,14 @@ describe('Tags: hint de catálogo esgotado e adição de tag existente', () => {
     ]);
   });
 
-  it('avisa quando não há tag disponível para adicionar', async () => {
-    // availableTags só fica vazio com displayTags também vazio quando toda tag
-    // do catálogo é "pai" de outra dentro dele — aqui, um par se referenciando
-    // mutuamente, só para forçar esse canto defensivo da tela.
+  it('avisa quando todas as tags do catálogo já estão no louvor', async () => {
+    // Antes o aviso exigia também que o louvor não tivesse tag nenhuma — só
+    // alcançável com um catálogo em que toda tag era pai de outra. Com as tags
+    // raiz oferecidas (§3.2 do spec), o caso real é este: o louvor já tem todas.
     (getTags as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: 'a', name: 'A', parent_id: 'b' },
-      { id: 'b', name: 'B', parent_id: 'a' },
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag2', name: 'Avulsos', parent_id: null },
     ]);
-    const praiseSemTags: PraiseDetail = { ...mockPraiseDetail, tags: [], tag_ids: '' };
-    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseSemTags);
     const user = userEvent.setup();
     renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy());
@@ -2314,6 +2325,37 @@ describe('Tags: hint de catálogo esgotado e adição de tag existente', () => {
     expect(
       await screen.findByText('Todas as tags do catálogo já estão associadas.')
     ).toBeTruthy();
+    expect(screen.queryByLabelText('Adicionar tag')).toBeNull();
+  });
+
+  it('oferece a tag raiz que tem subtags, além das subtags (§3.2)', async () => {
+    // A trava «Cannot attach a parent tag» saiu da API: ligar direto à raiz
+    // quer dizer «sem subtag específica». Antes a raiz com filhos sumia do
+    // seletor, e `Avulsos` deixaria de poder ser marcada depois de ganhar `GLTM`.
+    (getTags as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag1a', name: 'Clamor', parent_id: 'tag1' },
+      { id: 'tag3', name: 'GLTM', parent_id: null },
+    ]);
+    const praiseSemTags: PraiseDetail = { ...mockPraiseDetail, tags: [], tag_ids: '' };
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseSemTags);
+    (addPraiseTag as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...praiseSemTags,
+      tags: [{ id: 'tag1', name: 'Coletânea', parent_id: null }],
+    });
+    const user = userEvent.setup();
+    renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy());
+    await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+    await user.click(await screen.findByLabelText('Adicionar tag'));
+    expect(screen.getByRole('option', { name: 'Coletânea · Clamor' })).toBeTruthy();
+    await user.click(screen.getByRole('option', { name: 'Coletânea' }));
+    await user.click(screen.getByRole('button', { name: 'Adicionar' }));
+
+    await waitFor(() => {
+      expect(addPraiseTag).toHaveBeenCalledWith('1b2b33ab-4dff-4014-8582-dcb9a92efbc8', 'tag1');
+    });
   });
 
   it('associa uma tag já existente do catálogo ao louvor', async () => {
@@ -2596,7 +2638,6 @@ describe('Campos e rótulos com dados incompletos', () => {
     expect((screen.getByLabelText('Autor') as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText('Ritmo') as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText('Tom') as HTMLInputElement).value).toBe('');
-    expect((screen.getAllByLabelText('Categoria')[0] as HTMLInputElement).value).toBe('');
   });
 
   it('subtag sem parent_name resolve o nome do pai pelo catálogo', async () => {

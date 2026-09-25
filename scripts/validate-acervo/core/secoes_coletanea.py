@@ -511,9 +511,13 @@ def sql_undo(linha: dict) -> list[str]:
 
 
 def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
-             out_dir: str | None = None, execucao_dir: str | None = None) -> dict:
+             out_dir: str | None = None, execucao_dir: str | None = None,
+             sql_undo_fn=sql_undo) -> dict:
     """Simula por padrão, como o core.apply. A última linha do run que
-    escreveu é a que vale; um undo com ok:true fecha o run."""
+    escreveu é a que vale; um undo com ok:true fecha o run.
+
+    `sql_undo_fn` monta o SQL a partir da última linha `escreveu` do run — o
+    `core.secoes_coletanea_categoria` passa o seu."""
     alvo = None
     visto = False
     desfeito = False
@@ -539,7 +543,7 @@ def desfazer(run_id: str, log_path: str, execute: bool, remote: bool = True,
     if desfeito:
         resumo["motivo"] = "já desfeito"
         return resumo
-    stmts = sql_undo(alvo)
+    stmts = sql_undo_fn(alvo)
     resumo["statements"] = len(stmts)
     if not execute:
         for s in stmts[:10]:

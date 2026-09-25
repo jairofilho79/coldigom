@@ -225,6 +225,19 @@ corrige o resolver antes disso acontecer.
 
 Testes: `python3 -m pytest tests/ -v`
 
+### Fase 3: `praises.category` vira NULL (`core.secoes_coletanea_categoria`)
+
+Só depois da homologação das subtags (spec 2026-09-24-secoes-coletanea-subtags-design §6, item 5).
+
+    python3 -m core.snapshot --assets2 /dev/null/sem-arvore
+    python3 -m core.secoes_coletanea_categoria                  # ensaio: out/secoes_coletanea_categoria/<run>/relatorio.md
+    python3 -m core.secoes_coletanea_categoria --execute        # dono; lê a produção na hora
+    python3 -m core.secoes_coletanea_categoria --undo <run_id> --execute
+
+Cada UPDATE é guardado pelo valor lido: quem teve a categoria editada no meio fica «atrasado» e não é
+zerado. O log guarda `[id, valor antigo]` do que zerou; o undo só repõe onde a categoria ainda está NULL.
+`updated_at` não muda. A coluna continua no schema.
+
 ## Arquivos
 
 | arquivo | papel |

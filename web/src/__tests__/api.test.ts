@@ -25,7 +25,6 @@ describe('API Service', () => {
         author: 'Autor 1',
         rhythm: 'Avulsos',
         tonality: 'C',
-        category: 'Louvor',
         lyrics: 'Letra do louvor 1',
         group_id: null,
         tag_ids: 'tag1,tag2',
@@ -38,7 +37,6 @@ describe('API Service', () => {
         author: 'Autor 2',
         rhythm: 'Coletânea',
         tonality: 'G',
-        category: 'Adoração',
         lyrics: 'Letra do louvor 2',
         group_id: null,
         tag_ids: 'tag1',
@@ -266,7 +264,6 @@ describe('API Service', () => {
     const mockFilterOptions: FilterOptions = {
       rhythms: ['Avulsos', 'Coletânea'],
       tonalities: ['C', 'G'],
-      categories: ['Louvor', 'Adoração'],
       tags: [
         { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
         { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
@@ -321,7 +318,6 @@ describe('API Service', () => {
       author: 'Autor 1',
       rhythm: 'Avulsos',
       tonality: 'C',
-      category: 'Louvor',
       lyrics: 'Letra do louvor 1',
       group_id: null,
       tag_ids: 'tag1,tag2',
@@ -446,7 +442,7 @@ describe('API Service', () => {
       // carregar os filtros" sem nada no console e sem nada no network.
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+        json: async () => ({ rhythms: [], tonalities: [], tags: [] }),
       });
 
       await expect(
@@ -464,7 +460,7 @@ describe('API Service', () => {
     it('continua mandando a faixa quando ela existe de verdade', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+        json: async () => ({ rhythms: [], tonalities: [], tags: [] }),
       });
 
       await getFilterOptions({ numberMin: 10, numberMax: 20 });

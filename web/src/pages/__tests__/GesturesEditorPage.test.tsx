@@ -14,7 +14,7 @@ const FIXTURES = resolve(__dirname, '..', '..', '..', '..', 'api', 'src', 'gestu
 const EXEMPLO = readFileSync(resolve(FIXTURES, 'valido-exemplo.json'), 'utf8');
 
 const praise = {
-  id: 'p1', name: 'Quero viver pra sempre com Jesus', number: '182', author: '', rhythm: '', tonality: '', category: '', lyrics: '',
+  id: 'p1', name: 'Quero viver pra sempre com Jesus', number: '182', author: '', rhythm: '', tonality: '', lyrics: '',
   group_id: null, tag_ids: null, tag_names: null, tags: [], group_members: [],
   materials: [
     { id: 'g1', praise_id: 'p1', material_kind: 'k1', material_kind_name: 'Gestos', type: 'gestures', r2_key: 'assets/praises/p1/g1.gestures', file_path_legacy: '', source_material_id: 'pdf1', is_reviewed: false },

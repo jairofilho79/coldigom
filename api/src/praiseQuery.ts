@@ -12,7 +12,6 @@ export interface PraiseResult {
   author: string;
   rhythm: string;
   tonality: string;
-  category: string;
   lyrics: string;
   group_id: string | null;
   /** Id curto do louvor (migração 023) — hex minúsculo, imutável; o link `?p=` do app PLPCG. */
@@ -78,10 +77,10 @@ export function isFtsError(error: unknown): boolean {
   return /praises_fts|fts5|\bMATCH\b/i.test(msg);
 }
 
-export const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;
+export const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'author', 'created_at'] as const;
 export type SortField = typeof VALID_SORT_FIELDS[number];
 
-export const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality', 'category'];
+export const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality'];
 
 /** Secondary sort: NULL/empty values always last, regardless of ASC/DESC. */
 export function buildSecondaryOrder(sort: SortField, order: 'ASC' | 'DESC'): string {
@@ -247,7 +246,6 @@ const LIKE_TEXT_FIELDS = [
   'author',
   'rhythm',
   'tonality',
-  'category',
   'id',
   'number',
 ] as const;
@@ -258,7 +256,6 @@ export function buildWhereClause(params: {
   tagGroups?: string[][];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -326,11 +323,6 @@ export function buildWhereClause(params: {
   if (params.tonality && params.tonality.length > 0) {
     conditions.push(`p.tonality IN (${params.tonality.map(() => '?').join(',')})`);
     bindings.push(...params.tonality);
-  }
-
-  if (params.category && params.category.length > 0) {
-    conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
-    bindings.push(...params.category);
   }
 
   if (params.materialKinds && params.materialKinds.length > 0) {

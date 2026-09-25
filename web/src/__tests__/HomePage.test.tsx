@@ -65,7 +65,6 @@ describe('HomePage Component', () => {
       author: 'Autor 1',
       rhythm: 'Avulsos',
       tonality: 'C',
-      category: 'Louvor',
       lyrics: 'Letra do louvor 1',
       group_id: null,
       tag_ids: 'tag1,tag2',
@@ -78,7 +77,6 @@ describe('HomePage Component', () => {
       author: 'Autor 2',
       rhythm: 'Coletânea',
       tonality: 'G',
-      category: 'Adoração',
       lyrics: 'Letra do louvor 2',
       group_id: null,
       tag_ids: 'tag1',
@@ -102,7 +100,6 @@ describe('HomePage Component', () => {
     (getFilterOptions as ReturnType<typeof vi.fn>).mockResolvedValue({
       rhythms: ['Avulsos', 'Coletânea'],
       tonalities: ['C', 'G'],
-      categories: ['Louvor', 'Adoração'],
       tags: [
         { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
         { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },

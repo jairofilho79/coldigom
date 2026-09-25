@@ -17,7 +17,6 @@ const praise = {
   author: 'Let.: W. C. Martin',
   rhythm: 'Básico',
   tonality: 'G',
-  category: '',
   lyrics: '',
   group_id: null,
   tag_ids: null,

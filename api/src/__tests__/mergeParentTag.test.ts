@@ -78,7 +78,6 @@ async function mesclar(tagIds: string[], tagsDoKeeper: string[]) {
           author: null,
           rhythm: null,
           tonality: null,
-          category: null,
           lyrics: null,
         },
         tag_ids: tagIds,

@@ -21,7 +21,7 @@ beforeEach(() => vi.mocked(getPraise).mockReset());
 
 describe('FindingEvidence', () => {
   it('genérico: um par por chave, url vira link', async () => {
-    vi.mocked(getPraise).mockResolvedValue({ id: 'x', name: 'x', number: '', author: '', rhythm: '', tonality: '', category: '', lyrics: '', group_id: null, tag_ids: null, tag_names: null, materials: [] } as never);
+    vi.mocked(getPraise).mockResolvedValue({ id: 'x', name: 'x', number: '', author: '', rhythm: '', tonality: '', lyrics: '', group_id: null, tag_ids: null, tag_names: null, materials: [] } as never);
     render(<FindingEvidence finding={{ ...BASE, action: 'set_praise_field', proposed_value: null }} />);
     expect(screen.getByText('letra')).toBeInTheDocument();
     expect(screen.getByText('true')).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe('FindingEvidence', () => {
   it('merge_praise: busca fonte e keeper e mostra os dois lado a lado', async () => {
     vi.mocked(getPraise).mockImplementation(async (id: string) => ({
       id, name: id === 'p-fonte' ? 'Medo tens' : 'Medo tens que o tentador', number: id === 'p-k1' ? '306' : '',
-      author: '', rhythm: '', tonality: '', category: '', lyrics: `letra de ${id}`, group_id: null, tag_ids: null,
+      author: '', rhythm: '', tonality: '', lyrics: `letra de ${id}`, group_id: null, tag_ids: null,
       tag_names: id === 'p-k1' ? 'Coletânea' : 'Avulsos', materials: [],
     }) as never);
     render(<FindingEvidence finding={BASE} />);

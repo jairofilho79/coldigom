@@ -2113,25 +2113,34 @@ describe('API Routes', () => {
     });
   });
 
-  describe('POST /api/praises/:id/tags leaf-only', () => {
+  describe('POST /api/praises/:id/tags — tag pai', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
       AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
-    it('rejects attaching a parent that has children', async () => {
+    it('accepts attaching a parent that has children', async () => {
+      // Era recusado ('Cannot attach a parent tag; use a subtag'). Desde as
+      // seções da Coletânea (spec 2026-09-24 §3.2) a raiz ligada direto vale:
+      // quer dizer «sem subtag específica».
       const tags = [
         ...mockTags,
         { id: 'child1', name: '4.2026', parent_id: 'tag1' },
       ];
+      const inseridas: unknown[][] = [];
       const mockDB = {
         prepare: vi.fn((query: string) => ({
           bind: vi.fn((...args: unknown[]) => ({
-            run: vi.fn(),
+            run: vi.fn(async () => {
+              if (query.includes('INSERT OR IGNORE INTO praise_tags')) inseridas.push(args);
+            }),
             first: vi.fn(async () => {
               if (query.includes('SELECT id FROM praises')) {
                 return { id: mockPraises[0].id };
+              }
+              if (query.includes('FROM praises p') && query.includes('WHERE p.id')) {
+                return { ...mockPraises[0], tag_ids: 'tag1' };
               }
               if (query.includes('FROM tags WHERE parent_id')) {
                 return tags.find((t) => t.parent_id === args[0]) ?? null;
@@ -2151,9 +2160,8 @@ describe('API Routes', () => {
         await authRequestInit({ tag_id: 'tag1' }),
         { DB: mockDB, ASSETS: createMockR2(), ...envBase }
       );
-      expect(res.status).toBe(400);
-      const json = await res.json();
-      expect(json.error).toContain('subtag');
+      expect(res.status).toBe(200);
+      expect(inseridas).toEqual([[mockPraises[0].id, 'tag1']]);
     });
   });
 

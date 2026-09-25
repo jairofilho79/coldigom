@@ -96,7 +96,7 @@ async function mesclar(tagIds: string[], tagsDoKeeper: string[]) {
   return { res, lotes };
 }
 
-describe('merge — tag pai preexistente', () => {
+describe('merge — tag pai', () => {
   it('não aborta por causa de tag pai que o keeper já tinha', async () => {
     // O cliente manda a união das tags dos dois louvores, inclusive as que o
     // keeper já tinha. Criar uma subtag transformava uma tag preexistente em
@@ -107,21 +107,23 @@ describe('merge — tag pai preexistente', () => {
     expect(lotes).toHaveLength(1);
   });
 
-  it('continua recusando tag pai que ainda não estava no keeper', async () => {
-    // Vinda só do louvor fonte, é associação NOVA de tag pai: o merge não pode
-    // ser a porta dos fundos para espalhar tag pai em louvor que não tinha.
+  it('aceita tag pai que ainda não estava no keeper', async () => {
+    // Era recusada. Desde as seções da Coletânea (spec 2026-09-24 §3.2), a
+    // raiz ligada direto é legítima: quer dizer «sem subtag específica».
     const { res, lotes } = await mesclar(['coral'], ['avulsos']);
 
-    expect(res.status).toBe(400);
-    expect(lotes).toHaveLength(0);
+    expect(res.status).toBe(200);
+    expect(lotes).toHaveLength(1);
+    expect(lotes[0]).toContain('INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)');
   });
 
-  it('diz qual tag é a culpada', async () => {
-    // 'Cannot attach a parent tag' sem nome nenhum não dava para agir.
-    const { res } = await mesclar(['avulsos', 'coral'], ['avulsos']);
+  it('tag inexistente continua barrando, antes de qualquer escrita', async () => {
+    const { res, lotes } = await mesclar(['avulsos', 'nao-existe'], ['avulsos']);
     const corpo = (await res.json()) as { error?: string };
 
-    expect(corpo.error).toContain('Coral');
+    expect(res.status).toBe(400);
+    expect(corpo.error).toBe('Tag not found');
+    expect(lotes).toHaveLength(0);
   });
 
   it('deixa passar subtag como sempre', async () => {

@@ -17,9 +17,7 @@ INSERT OR REPLACE INTO material_kind_translations (material_kind_id, locale, lab
 INSERT INTO tags (id, name) VALUES ('1c6139f0-536a-496a-9f86-6b281321acbd', 'Coletânea');
 INSERT INTO tags (id, name) VALUES ('dca5af40-3d5e-4e8d-a4b0-56b3b558e304', 'Avulsos');
 INSERT INTO tags (id, name) VALUES ('e49cea68-b261-42a8-9ea4-fae45f337597', 'CIAs');
-INSERT INTO tags (id, name) VALUES ('aac881e1-228c-44cb-9fe9-b5feb5da4444', 'GLTM');
 INSERT INTO tags (id, name) VALUES ('26f42a63-0eac-4e1d-9096-973bfe8d193a', 'PES');
-INSERT INTO tags (id, name) VALUES ('59db85f8-4c2b-4da5-80c7-c9b770922199', 'Migrados');
 INSERT INTO tags (id, name) VALUES ('8c473fcc-77d2-4a25-b364-787341f39608', 'Diversos');
 INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics) VALUES ('c18fb284-b8a9-471c-8a80-369b04c41b55', 'Aleluia', '001', 'Heitor P. de Oliveira', 'Marcha', 'Sol Maior', 'Senhor, eu Te amo com todo o meu coração
 E Te adoro com toda a minha alma

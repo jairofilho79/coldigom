@@ -33,9 +33,7 @@ const tags = [
   { id: generateUUID(), name: 'Coletânea' },
   { id: generateUUID(), name: 'Avulsos' },
   { id: generateUUID(), name: 'CIAs' },
-  { id: generateUUID(), name: 'GLTM' },
   { id: generateUUID(), name: 'PES' },
-  { id: generateUUID(), name: 'Migrados' },
   { id: generateUUID(), name: 'Diversos' },
 ];
 

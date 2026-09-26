@@ -8,7 +8,7 @@ import {
 } from '../materialKindLabels';
 import { buildPlpcgCatalog, listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
-import { requireAuth } from '../middleware';
+import { requireAuth, requireUploadOrAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { storageKeyFor } from '../storageKeys';
@@ -909,7 +909,12 @@ export function registerPraisesRoutes(app: App): void {
   });
 
   // POST /api/praises/:id/materials - Create a material (admin, JSON)
-  app.post('/api/praises/:id/materials', requireAuth, async (c) => {
+  // O token de upload já pode GRAVAR o conteúdo de qualquer material `chord`
+  // (`PUT /api/materials/:id/content`). Criar a linha vazia é menos poder do que
+  // sobrescrever o que está lá, e é o que faltava para quem roda sem sessão —
+  // o review-app e o agente de cifras — poder criar o material gêmeo de um PDF.
+  // Quem vem com JWT de sessão continua passando pelo mesmo `requireAuth`.
+  app.post('/api/praises/:id/materials', requireUploadOrAuth, async (c) => {
     const praiseId = c.req.param('id');
     const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
@@ -952,13 +957,16 @@ export function registerPraisesRoutes(app: App): void {
       .first();
     if (!louvor) return c.json({ error: 'Praise not found' }, 404);
 
-    // Gestos: a linha nasce com a chave padrão do R2 e SEM objeto — o editor lê
-    // o 404 do asset como "documento novo". A origem (o PDF de gestos) é
-    // opcional e precisa ser do mesmo louvor, senão o link "Abrir PDF" apontaria
-    // para o material de outro.
+    // Gestos e cifra: a linha nasce com a chave padrão do R2 e SEM objeto — quem
+    // for editar lê o 404 do asset como "documento novo", e é o PUT de conteúdo
+    // que grava o objeto (ele recusa material sem `r2_key`). A origem é opcional
+    // e precisa ser do mesmo louvor, senão o link apontaria para o material de
+    // outro: nos gestos é o PDF de gestos; na cifra é o PDF do hinário de que
+    // ela foi tirada, que é como todo material `chord` do acervo já está ligado.
     const ehGestos = type === 'gestures';
+    const temConteudoProprio = ehGestos || type === 'chord';
     const sourceMaterialId =
-      ehGestos && typeof body.source_material_id === 'string' && body.source_material_id.trim()
+      temConteudoProprio && typeof body.source_material_id === 'string' && body.source_material_id.trim()
         ? body.source_material_id.trim()
         : null;
     if (sourceMaterialId) {
@@ -980,7 +988,7 @@ export function registerPraisesRoutes(app: App): void {
         praiseId,
         material_kind,
         type,
-        ehGestos ? `assets/praises/${praiseId}/${id}.gestures` : null,
+        temConteudoProprio ? `assets/praises/${praiseId}/${id}.${ehGestos ? 'gestures' : 'chord'}` : null,
         '',
         sourceMaterialId,
         null,

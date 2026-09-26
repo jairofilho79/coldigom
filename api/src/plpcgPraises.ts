@@ -324,6 +324,7 @@ export type PlpcgCatalogMaterial = {
 type CatalogPraiseRow = {
   id: string;
   short_id?: string | null;
+  group_id?: string | null;
   name: string;
   number: string | null;
   author: string | null;
@@ -409,7 +410,7 @@ export async function buildPlpcgCatalog(
 ): Promise<PlpcgCatalogResult> {
   const praisesResult = await db
     .prepare(
-      `SELECT p.id, p.short_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics
+      `SELECT p.id, p.short_id, p.group_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics
        FROM praises p
        ORDER BY p.number, p.name, p.id`
     )
@@ -499,6 +500,9 @@ export async function buildPlpcgCatalog(
       // short_id nulo (praise fora do gatilho) a chave some, em vez de ir `null`;
       // a coluna em si é obrigatória (migração 023 antes do deploy).
       ...(row.short_id ? { shortId: row.short_id } : {}),
+      // group_id é chave opaca (id do praise âncora); sem grupo a chave some,
+      // no molde do shortId — o app junta os membros (spec coldigui §3.1).
+      ...(row.group_id && row.group_id.trim() ? { groupId: row.group_id } : {}),
       number: row.number ?? '',
       name: row.name,
       author: row.author ?? '',

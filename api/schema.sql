@@ -383,3 +383,38 @@ WHEN OLD.short_id IS NOT NULL AND NEW.short_id IS NOT OLD.short_id
 BEGIN
   SELECT RAISE(ABORT, 'praises.short_id é imutável');
 END;
+
+-- Planos do Assistente de Acervo (migração 030). Ver migrations/030_collaboration_plans.sql.
+CREATE TABLE IF NOT EXISTS collaboration_plans (
+  id               TEXT PRIMARY KEY,
+  contribution_id  TEXT NOT NULL REFERENCES contributions(id) ON DELETE CASCADE,
+  version          INTEGER NOT NULL DEFAULT 1,
+  model_name       TEXT NOT NULL,
+  summary          TEXT NOT NULL,
+  todos            TEXT NOT NULL,
+  plan_json        TEXT NOT NULL,
+  plan_hash        TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'pending_approval',
+  decided_at       TEXT,
+  decided_by       TEXT,
+  decision_note    TEXT,
+  created_at       TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_colab_plans_colab ON collaboration_plans(contribution_id);
+CREATE INDEX IF NOT EXISTS idx_colab_plans_status ON collaboration_plans(status);
+
+CREATE TABLE IF NOT EXISTS collaboration_task_executions (
+  id               TEXT PRIMARY KEY,
+  plan_id          TEXT NOT NULL REFERENCES collaboration_plans(id) ON DELETE CASCADE,
+  task_id          TEXT NOT NULL,
+  operation        TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'pending',
+  idempotency_key  TEXT NOT NULL UNIQUE,
+  resolved_params  TEXT NOT NULL,
+  result_data      TEXT,
+  error_message    TEXT,
+  executed_at      TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_exec_plan ON collaboration_task_executions(plan_id);

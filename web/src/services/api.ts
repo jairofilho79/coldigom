@@ -1,4 +1,4 @@
-import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding } from '../types';
+import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding, AdminContribution, ContributionListParams, CollaborationPlan } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
 import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
 import type { GestureDictionary, GestureEntry } from '../lib/gestures/dictionary';
@@ -880,4 +880,100 @@ export function getAssetUrl(r2Key: string): string {
   const key = r2Key.replace(/^\//, '');
   return API_BASE_URL ? `${API_BASE_URL}/${key}` : `/${key}`;
 }
+
+// ---------- Contribuições & Assistente de Acervo (IA / MCP) ----------
+
+export async function listAdminContributions(
+  params: ContributionListParams = {}
+): Promise<{ data: AdminContribution[]; pagination: PaginationInfo }> {
+  const urlParams = new URLSearchParams();
+  if (params.status) urlParams.set('status', params.status);
+  if (params.kind) urlParams.set('kind', params.kind);
+  if (params.praise) urlParams.set('praise', params.praise);
+  if (params.page) urlParams.set('page', params.page.toString());
+
+  const response = await fetchJson<ApiResponse<AdminContribution[]>>(
+    `${API_BASE_URL}/api/admin/contributions?${urlParams}`
+  );
+  return {
+    data: response.data,
+    pagination: response.pagination!,
+  };
+}
+
+export async function getAdminContribution(id: string): Promise<AdminContribution> {
+  const response = await fetchJson<ApiResponse<AdminContribution>>(
+    `${API_BASE_URL}/api/admin/contributions/${id}`
+  );
+  return response.data;
+}
+
+export async function generateAdminContributionPlan(
+  id: string
+): Promise<{ ok: boolean; planId: string; plan: CollaborationPlan }> {
+  return fetchJson<{ ok: boolean; planId: string; plan: CollaborationPlan }>(
+    `${API_BASE_URL}/api/admin/contributions/${id}/plan`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    }
+  );
+}
+
+export async function approveAdminContributionPlan(
+  id: string,
+  opts: { planId?: string; planHash?: string; decisionNote?: string } = {}
+): Promise<{ ok: boolean; message: string; executed_tasks: number }> {
+  return fetchJson<{ ok: boolean; message: string; executed_tasks: number }>(
+    `${API_BASE_URL}/api/admin/contributions/${id}/approve`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        plan_id: opts.planId,
+        plan_hash: opts.planHash,
+        decision_note: opts.decisionNote,
+      }),
+    }
+  );
+}
+
+export async function patchAdminContribution(
+  id: string,
+  status: 'pendente' | 'em_analise' | 'aceita' | 'recusada' | 'aplicada',
+  decisionNote?: string
+): Promise<{ ok: boolean }> {
+  return fetchJson<{ ok: boolean }>(
+    `${API_BASE_URL}/api/admin/contributions/${id}`,
+    {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        status,
+        decision_note: decisionNote,
+      }),
+    }
+  );
+}
+
+export async function fetchAdminContributionFile(
+  contributionId: string,
+  fileId: string
+): Promise<{ blob: Blob; contentType: string; filename: string }> {
+  const headers = { ...authHeaders() };
+  const res = await fetch(
+    `${API_BASE_URL}/api/admin/contributions/${contributionId}/files/${fileId}`,
+    { credentials: 'include', headers }
+  );
+  if (!res.ok) {
+    throw new Error('Não foi possível carregar o arquivo ou arquivo em quarentena');
+  }
+  const contentType = res.headers.get('content-type') || 'application/octet-stream';
+  const disposition = res.headers.get('content-disposition') || '';
+  const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="([^"]+)"/);
+  const filename = match ? decodeURIComponent(match[1] || match[2]) : 'anexo';
+  const blob = await res.blob();
+  return { blob, contentType, filename };
+}
+
 

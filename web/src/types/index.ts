@@ -154,3 +154,6 @@ export const SORT_OPTIONS: SortOption[] = [
   { field: 'author', label: 'Autor', ascending: { label: 'Autor (A-Z)', order: 'asc' }, descending: { label: 'Autor (Z-A)', order: 'desc' } },
   { field: 'created_at', label: 'Cadastro', ascending: { label: 'Mais antigos', order: 'asc' }, descending: { label: 'Mais recentes', order: 'desc' } },
 ];
+
+export * from './contributions';
+

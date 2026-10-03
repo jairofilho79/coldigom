@@ -8,6 +8,8 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+node_modules
+api/node_modules
 .npm
 
 # Build outputs

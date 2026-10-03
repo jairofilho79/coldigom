@@ -17,9 +17,17 @@ function parseJson(s: string | null): unknown {
   }
 }
 
-/** Visão do admin: tudo, com os JSONs abertos. */
-function toAdminJson(row: ContributionRow, files: unknown[]) {
-  return { ...row, fields: parseJson(row.fields), links: parseJson(row.links), device: parseJson(row.device), scan_report: parseJson(row.scan_report), files };
+/** Visão do admin: tudo, com os JSONs abertos e plano da IA quando houver. */
+function toAdminJson(row: ContributionRow, files: unknown[], plan: unknown = null) {
+  return {
+    ...row,
+    fields: parseJson(row.fields),
+    links: parseJson(row.links),
+    device: parseJson(row.device),
+    scan_report: parseJson(row.scan_report),
+    files,
+    plan,
+  };
 }
 
 /**
@@ -85,7 +93,96 @@ export function registerContributionsAdminRoutes(app: App) {
   app.get('/api/admin/contributions/:id', requireAuth, async (c) => {
     const row = await getContribution(c.env.DB, c.req.param('id') as string);
     if (!row) return c.json({ error: 'not_found' }, 404);
-    return c.json({ data: toAdminJson(row, await listFiles(c.env.DB, row.id)) });
+    const files = await listFiles(c.env.DB, row.id);
+
+    const planRow = await c.env.DB
+      .prepare(`SELECT * FROM collaboration_plans WHERE contribution_id = ? ORDER BY version DESC LIMIT 1`)
+      .bind(row.id)
+      .first<{ todos: string; plan_json: string; [k: string]: unknown }>();
+
+    let plan: Record<string, unknown> | null = null;
+    if (planRow) {
+      plan = {
+        ...planRow,
+        todos: parseJson(planRow.todos),
+        plan_json: parseJson(planRow.plan_json),
+      };
+    }
+
+    return c.json({ data: toAdminJson(row, files, plan) });
+  });
+
+  // POST /api/admin/contributions/:id/plan - Gera plano de TODOs com IA
+  app.post('/api/admin/contributions/:id/plan', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const row = await getContribution(c.env.DB, id);
+    if (!row) return c.json({ error: 'not_found' }, 404);
+
+    const { planContribution } = await import('../agent/planner');
+    const planId = await planContribution(c.env, id);
+
+    const planRow = await c.env.DB
+      .prepare(`SELECT * FROM collaboration_plans WHERE id = ?`)
+      .bind(planId)
+      .first<{ todos: string; plan_json: string; [k: string]: unknown }>();
+
+    let plan: Record<string, unknown> | null = null;
+    if (planRow) {
+      plan = {
+        ...planRow,
+        todos: parseJson(planRow.todos),
+        plan_json: parseJson(planRow.plan_json),
+      };
+    }
+
+    return c.json({ ok: true, planId, plan });
+  });
+
+  // POST /api/admin/contributions/:id/approve - Aprova plano e executa deterministicamente no Cloudflare
+  app.post('/api/admin/contributions/:id/approve', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const user = c.get('user');
+    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+
+    const planId = (body.plan_id as string) || undefined;
+    const planHash = (body.plan_hash as string) || undefined;
+    const decisionNote = typeof body.decision_note === 'string' ? body.decision_note.trim() : undefined;
+
+    let planStmt = `SELECT * FROM collaboration_plans WHERE contribution_id = ?`;
+    const bindings: string[] = [id];
+    if (planId) {
+      planStmt += ` AND id = ?`;
+      bindings.push(planId);
+    } else {
+      planStmt += ` ORDER BY version DESC LIMIT 1`;
+    }
+
+    const plan = await c.env.DB.prepare(planStmt).bind(...bindings).first<{ id: string; plan_hash: string }>();
+    if (!plan) return c.json({ error: 'plan_not_found', message: 'Nenhum plano encontrado para aprovar' }, 404);
+
+    if (planHash && plan.plan_hash !== planHash) {
+      return c.json({ error: 'stale_plan', message: 'O plano foi modificado e precisa de nova aprovação' }, 409);
+    }
+
+    if (decisionNote) {
+      await c.env.DB
+        .prepare(`UPDATE contributions SET decision_note = ? WHERE id = ?`)
+        .bind(decisionNote, id)
+        .run();
+    }
+
+    const { executePlan } = await import('../agent/executor');
+    const result = await executePlan(c.env, plan.id, user.email || 'admin');
+
+    if (!result.ok) {
+      return c.json({ error: 'execution_failed', errors: result.errors }, 500);
+    }
+
+    return c.json({
+      ok: true,
+      message: 'Plano aprovado e executado com sucesso',
+      executed_tasks: result.executedCount,
+    });
   });
 
   app.get('/api/admin/contributions/:id/files/:fileId', requireAuth, async (c) => {

@@ -99,6 +99,8 @@ export function HomePage() {
           </div>
           <div className="brand-header-auth">
             <AuthControl>
+              <Link to="/contribuicoes" className="auth-btn">Colaborações</Link>
+              <Link to="/validacao" className="auth-btn">Validação</Link>
               <Link to="/praise/new" className="auth-btn">Novo louvor</Link>
             </AuthControl>
           </div>

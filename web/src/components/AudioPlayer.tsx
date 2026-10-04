@@ -31,6 +31,7 @@ function readStoredVolume(): number {
 type Props = {
   materials: Material[];
   getAssetUrl: (key: string) => string;
+  highlightMaterialId?: string;
   admin?: {
     materialKindOptions: SelectOption[];
     saving: boolean;
@@ -41,19 +42,26 @@ type Props = {
   };
 };
 
-export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
+export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wasPlayingRef = useRef(false);
 
-  // A faixa é identificada pelo id, não pela posição: a lista encolhe embaixo
-  // do player quando o usuário remove um material, e um índice guardado apontava
-  // para o vazio (player inteiro sumia) ou para a faixa errada (trocava sozinho).
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(highlightMaterialId || null);
+  const [prevHighlight, setPrevHighlight] = useState<string | undefined>(highlightMaterialId);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(readStoredVolume);
   const [isMuted, setIsMuted] = useState(false);
+
+  if (highlightMaterialId !== prevHighlight) {
+    setPrevHighlight(highlightMaterialId);
+    if (highlightMaterialId && materials.some((m) => m.id === highlightMaterialId)) {
+      setSelectedId(highlightMaterialId);
+    }
+  }
+
+  const currentId = selectedId ?? highlightMaterialId ?? null;
 
   // Se a faixa escolhida saiu da lista, cai na primeira em vez de sumir.
   const current = materials.find(m => m.id === currentId) ?? materials[0];
@@ -150,7 +158,7 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
     (materialId: string) => {
       if (materialId === current?.id) return;
       wasPlayingRef.current = isPlaying;
-      setCurrentId(materialId);
+      setSelectedId(materialId);
       // Zerar o relógio é consequência do gesto, não sincronia com sistema
       // externo: num efeito isso virava render em cascata a cada troca de faixa.
       setCurrentTime(0);
@@ -161,8 +169,13 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
 
   if (!current) return null;
 
+  const isCardHighlighted = current.id === highlightMaterialId;
+
   return (
-    <div className="audio-player-card">
+    <div
+      id={`material-${current.id}`}
+      className={`audio-player-card${isCardHighlighted ? ' material-highlight-target' : ''}`}
+    >
       <audio
         ref={audioRef}
         className="audio-player-element"
@@ -283,11 +296,13 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
         <ul className="audio-track-list" aria-label="Faixas de áudio">
           {materials.map(m => {
             const isActive = m.id === current.id;
+            const isHighlighted = m.id === highlightMaterialId;
             const name = m.material_kind_name || 'Áudio';
             return (
               <li
                 key={m.id}
-                className={`audio-track-item${isActive ? ' is-active' : ''}`}
+                id={`material-${m.id}`}
+                className={`audio-track-item${isActive ? ' is-active' : ''}${isHighlighted ? ' material-highlight-target' : ''}`}
               >
                 <div className="audio-track-item-main">
                   <button

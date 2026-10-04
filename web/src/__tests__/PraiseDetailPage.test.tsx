@@ -3546,5 +3546,63 @@ describe('Mais mensagens de erro sem instância de Error', () => {
 
     expect(await screen.findByText('Falha ao salvar metadados')).toBeTruthy();
   });
+
+  it('exibe destaque no material e card de contexto da colaboração quando indicado na URL', async () => {
+    const scrollIntoViewMock = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+
+    const mockContrib = {
+      id: 'c-test-1',
+      title: 'Remover PDF duplicado',
+      body: 'Este PDF está repetido e com tom errado',
+      user_name: 'Colaborador Teste',
+      user_email: 'colab@test.com',
+      target_praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+      target_material_id: 'mat1',
+      kind: 'wrong_info',
+      subkind: 'wrong_material',
+      fields: { motivo: 'duplicata' },
+      status: 'pendente' as const,
+      scan_status: 'limpa',
+      created_at: '2026-10-04',
+      updated_at: '2026-10-04',
+      files: [],
+    };
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            search: '?materialId=mat1&contributionId=c-test-1',
+            state: { contribution: mockContrib },
+          },
+        ]}
+      >
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // Deve exibir o card de contexto da colaboração
+    expect(await screen.findByText('Remover PDF duplicado')).toBeTruthy();
+    expect(screen.getByText('Este PDF está repetido e com tom errado')).toBeTruthy();
+    expect(screen.getByText(/Colaborador Teste/)).toBeTruthy();
+
+    // Deve colocar a classe de destaque no material alvo
+    const highlightedMat = document.getElementById('material-mat1');
+    expect(highlightedMat).toBeTruthy();
+    expect(highlightedMat?.classList.contains('material-highlight-target')).toBe(true);
+
+    // Deve ter chamado o scrollIntoView
+    await waitFor(() => {
+      expect(scrollIntoViewMock).toHaveBeenCalled();
+    });
+  });
 });
+
 

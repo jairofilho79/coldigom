@@ -326,6 +326,15 @@ export function ContributionsQueuePage() {
             const isPlanning = planningId === c.id;
             const isExecuting = executingId === c.id;
 
+            const targetMatId =
+              c.target_material_id ||
+              (c.fields?.materialId as string) ||
+              (c.fields?.material_id as string) ||
+              '';
+            const praiseTargetUrl = c.target_praise_id
+              ? `/praise/${c.target_praise_id}${targetMatId ? `?materialId=${encodeURIComponent(targetMatId)}&` : '?'}contributionId=${encodeURIComponent(c.id)}`
+              : null;
+
             return (
               <article key={c.id} className={`cq-card cq-card--${c.status}`}>
                 {/* Cabeçalho do Card */}
@@ -367,15 +376,17 @@ export function ContributionsQueuePage() {
                     <span className="cq-author">
                       De: <strong>{c.user_name || c.user_email}</strong>
                     </span>
-                    {c.target_praise_id && (
+                    {praiseTargetUrl && (
                       <span className="cq-target-praise">
                         Louvor alvo:
                         <Link
-                          to={`/praise/${c.target_praise_id}`}
+                          to={praiseTargetUrl}
+                          state={{ contribution: c }}
                           onClick={(e) => e.stopPropagation()}
-                          className="cq-link"
+                          className="cq-link cq-link--goto"
+                          title="Abrir este louvor com foco no material indicado"
                         >
-                          {c.target_praise_id.slice(0, 8)} ↗
+                          {targetMatId ? `${c.target_praise_id!.slice(0, 8)} (Material) 🎯 ↗` : `${c.target_praise_id!.slice(0, 8)} ↗`}
                         </Link>
                       </span>
                     )}
@@ -392,6 +403,26 @@ export function ContributionsQueuePage() {
                 {/* Conteúdo expandido */}
                 {isExpanded && (
                   <div className="cq-card-body">
+                    {praiseTargetUrl && (
+                      <div className="cq-direct-action-banner">
+                        <div className="cq-direct-action-info">
+                          <span className="cq-direct-action-badge">🎯 Localizar no Acervo</span>
+                          <span className="cq-direct-action-desc">
+                            {targetMatId
+                              ? 'Abrir a página do louvor com rolagem direta e destaque no material indicado para conferir e remover.'
+                              : 'Abrir a página do louvor para conferência e edição dos dados.'}
+                          </span>
+                        </div>
+                        <Link
+                          to={praiseTargetUrl}
+                          state={{ contribution: c }}
+                          className="cq-btn cq-btn--primary"
+                        >
+                          {targetMatId ? 'Ir para o material no louvor ↗' : 'Ir para o louvor ↗'}
+                        </Link>
+                      </div>
+                    )}
+
                     {/* Relato do Colaborador */}
                     <div className="cq-section">
                       <h3 className="cq-section-title">Descrição do Colaborador:</h3>

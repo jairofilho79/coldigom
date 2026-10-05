@@ -1582,11 +1582,10 @@ export function PraiseDetailPage() {
           {!authReady ? (
             <div className="auth-user muted">Verificando sessão…</div>
           ) : userName ? (
-            // Controle de sessão extraído para AuthControl; os botões de ação da página
-            // (Editar/Baixar em ZIP/Mesclar/Cancelar) não são parte dele e viajam como children,
-            // preservando a posição visual entre o nome e o "Sair". avatarSize preserva o
-            // tamanho original do avatar aqui (28px); onAfterLogout fecha o modo de edição
-            // ao sair, como o botão "Sair" original fazia.
+            // Controle de sessão gerenciado por AuthControl; os botões de ação da página
+            // (Editar/Baixar em ZIP/Mesclar/Cancelar) viajam como children e aparecem antes do botão
+            // de perfil, que fica no fim da linha. O avatarSize preserva o tamanho de 28px,
+            // e onAfterLogout fecha a edição ao sair pelo menu.
             <AuthControl
               avatarSize={28}
               onAfterLogout={() => {

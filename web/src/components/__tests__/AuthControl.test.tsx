@@ -28,37 +28,50 @@ describe('AuthControl', () => {
     expect(link).toHaveAttribute('href', expect.stringContaining('/auth'));
   });
 
-  it('logado vê o nome e o sair', () => {
+  it('logado vê o botão de perfil e o botão sair não fica solto na barra', () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     render(<AuthControl />);
-    expect(screen.getByText('Jairo')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sair/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /perfil de jairo/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sair/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /entrar/i })).not.toBeInTheDocument();
   });
 
-  it('mostra o prefixo quando ele é passado, com o nome em <strong>', () => {
+  it('ao clicar no botão de perfil, abre menu com informações e opção sair', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    render(<AuthControl />);
+    await userEvent.click(screen.getByRole('button', { name: /perfil de jairo/i }));
+
+    expect(screen.getByRole('menuitem', { name: 'Sair' })).toBeInTheDocument();
+    expect(screen.getByText('Jairo')).toBeInTheDocument();
+    expect(screen.getByText('j@x.com')).toBeInTheDocument();
+  });
+
+  it('mostra o prefixo quando ele é passado, com o nome em <strong> no menu', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     const { container } = render(<AuthControl prefixo="Logado como" />);
+    await userEvent.click(screen.getByRole('button', { name: /perfil de jairo/i }));
 
-    expect(container.querySelector('.auth-user')!.textContent).toBe('Logado como Jairo');
-    // `.auth-user strong` no global.css só existe porque o nome é o pedaço destacado.
-    expect(container.querySelector('.auth-user strong')!.textContent).toBe('Jairo');
+    expect(screen.getByText('Logado como')).toBeInTheDocument();
+    expect(container.querySelector('.auth-profile-menu-name strong')!.textContent).toBe('Jairo');
   });
 
-  it('sem prefixo, só o nome em texto simples — a HomePage nunca teve rótulo nem <strong>', () => {
+  it('sem prefixo, o menu só mostra o nome sem rótulo', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     const { container } = render(<AuthControl />);
+    await userEvent.click(screen.getByRole('button', { name: /perfil de jairo/i }));
 
-    expect(container.querySelector('.auth-user')!.textContent).toBe('Jairo');
+    expect(container.querySelector('.auth-profile-menu-name strong')!.textContent).toBe('Jairo');
     expect(screen.queryByText(/logado como/i)).toBeNull();
-    // O <strong> pertence ao prefixo: sem rótulo não há o que distinguir do nome, e
-    // acrescentá-lo aqui mudaria a aparência de uma tela que não pediu mudança.
-    expect(container.querySelector('.auth-user strong')).toBeNull();
+    expect(container.querySelector('.auth-profile-menu-prefix')).toBeNull();
   });
 
-  it('cai para o email quando não há nome', () => {
+  it('cai para o email quando não há nome', async () => {
     mockAuth({ email: 'j@x.com' });
     render(<AuthControl />);
+    const profileBtn = screen.getByRole('button', { name: /perfil de j@x.com/i });
+    expect(profileBtn).toBeInTheDocument();
+
+    await userEvent.click(profileBtn);
     expect(screen.getByText('j@x.com')).toBeInTheDocument();
   });
 
@@ -82,20 +95,60 @@ describe('AuthControl', () => {
     expect(avatar).toHaveAttribute('alt', '');
   });
 
-  it('não mostra avatar quando não há picture', () => {
+  it('mostra fallback quando não há picture', () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     const { container } = render(<AuthControl />);
     expect(container.querySelector('img.auth-avatar')).toBeNull();
+    const fallback = container.querySelector('.auth-avatar-fallback');
+    expect(fallback).not.toBeNull();
+    expect(fallback!.textContent).toBe('J');
   });
 
-  it('chama onAfterLogout depois que o logout resolve', async () => {
+  it('renderiza children antes do botão de perfil para mantê-lo no fim', () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const { container } = render(
+      <AuthControl>
+        <button type="button" className="auth-btn">Ação da Página</button>
+      </AuthControl>
+    );
+
+    const buttons = container.querySelectorAll('button');
+    expect(buttons[0].textContent).toBe('Ação da Página');
+    expect(buttons[1]).toHaveClass('auth-profile-btn');
+  });
+
+  it('chama onAfterLogout depois que o logout resolve ao sair pelo menu', async () => {
     const { logout } = mockAuth({ name: 'Jairo', email: 'j@x.com' });
     const onAfterLogout = vi.fn();
     render(<AuthControl onAfterLogout={onAfterLogout} />);
 
-    await userEvent.click(screen.getByRole('button', { name: /sair/i }));
+    await userEvent.click(screen.getByRole('button', { name: /perfil de jairo/i }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Sair' }));
 
     expect(logout).toHaveBeenCalled();
     expect(onAfterLogout).toHaveBeenCalled();
+  });
+
+  it('fecha o menu ao pressionar Escape ou clicar fora', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    render(
+      <div>
+        <div data-testid="fora">Fora</div>
+        <AuthControl />
+      </div>
+    );
+
+    const profileBtn = screen.getByRole('button', { name: /perfil de jairo/i });
+    await userEvent.click(profileBtn);
+    expect(screen.getByRole('menuitem', { name: 'Sair' })).toBeInTheDocument();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menuitem', { name: 'Sair' })).not.toBeInTheDocument();
+
+    await userEvent.click(profileBtn);
+    expect(screen.getByRole('menuitem', { name: 'Sair' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId('fora'));
+    expect(screen.queryByRole('menuitem', { name: 'Sair' })).not.toBeInTheDocument();
   });
 });

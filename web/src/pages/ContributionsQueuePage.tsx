@@ -59,6 +59,8 @@ export function ContributionsQueuePage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [planningId, setPlanningId] = useState<string | null>(null);
   const [executingId, setExecutingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
 
   const [viewingFile, setViewingFile] = useState<{
@@ -167,7 +169,30 @@ export function ContributionsQueuePage() {
     }
   };
 
+  const handleComplete = async (contrib: AdminContribution) => {
+    setCompletingId(contrib.id);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const note = decisionNotes[contrib.id];
+      await patchAdminContribution(contrib.id, 'aplicada', note);
+      setContributions((prev) =>
+        prev.map((c) =>
+          c.id === contrib.id
+            ? { ...c, status: 'aplicada', decision_note: note || c.decision_note }
+            : c
+        )
+      );
+      setSuccessMsg('Contribuição marcada como concluída.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao concluir contribuição');
+    } finally {
+      setCompletingId(null);
+    }
+  };
+
   const handleReject = async (contrib: AdminContribution) => {
+    setRejectingId(contrib.id);
     setError(null);
     setSuccessMsg(null);
     try {
@@ -183,6 +208,8 @@ export function ContributionsQueuePage() {
       setSuccessMsg('Contribuição marcada como recusada.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao rejeitar contribuição');
+    } finally {
+      setRejectingId(null);
     }
   };
 
@@ -325,6 +352,9 @@ export function ContributionsQueuePage() {
             const isExpanded = expandedIds.has(c.id);
             const isPlanning = planningId === c.id;
             const isExecuting = executingId === c.id;
+            const isCompleting = completingId === c.id;
+            const isRejecting = rejectingId === c.id;
+            const isBusy = isPlanning || isExecuting || isCompleting || isRejecting;
 
             const targetMatId =
               c.target_material_id ||
@@ -618,7 +648,7 @@ export function ContributionsQueuePage() {
                             <button
                               type="button"
                               className="cq-btn cq-btn--ai"
-                              disabled={isPlanning || isExecuting}
+                              disabled={isBusy}
                               onClick={() => handleGeneratePlan(c.id)}
                             >
                               {isPlanning ? (
@@ -639,7 +669,7 @@ export function ContributionsQueuePage() {
                             <button
                               type="button"
                               className="cq-btn cq-btn--approve"
-                              disabled={isExecuting || isPlanning}
+                              disabled={isBusy}
                               onClick={() => handleApprovePlan(c)}
                             >
                               {isExecuting ? (
@@ -653,21 +683,51 @@ export function ContributionsQueuePage() {
                             </button>
                           )}
 
+                          {/* Botão Concluir */}
+                          {c.status !== 'aplicada' && c.status !== 'recusada' && (
+                            <button
+                              type="button"
+                              className="cq-btn cq-btn--complete"
+                              disabled={isBusy}
+                              onClick={() => handleComplete(c)}
+                              title="Marcar como concluída (ação realizada manualmente)"
+                            >
+                              {isCompleting ? (
+                                <>
+                                  <span className="loading-spinner-mini" aria-hidden="true" />
+                                  Concluindo…
+                                </>
+                              ) : c.plan ? (
+                                '✓ Concluir (Manual)'
+                              ) : (
+                                '✓ Concluir'
+                              )}
+                            </button>
+                          )}
+
                           {/* Botão Rejeitar */}
                           {c.status !== 'aplicada' && c.status !== 'recusada' && (
                             <button
                               type="button"
                               className="cq-btn cq-btn--reject"
-                              disabled={isExecuting || isPlanning}
+                              disabled={isBusy}
                               onClick={() => handleReject(c)}
                             >
-                              ✕ Rejeitar
+                              {isRejecting ? (
+                                <>
+                                  <span className="loading-spinner-mini" aria-hidden="true" />
+                                  Rejeitando…
+                                </>
+                              ) : (
+                                '✕ Rejeitar'
+                              )}
                             </button>
                           )}
 
                           {c.status === 'aplicada' && (
                             <span className="cq-applied-tag">
-                              ✓ Executado no acervo {c.decided_at ? `em ${c.decided_at}` : ''}
+                              {c.plan?.status === 'applied' ? '✓ Executado no acervo' : '✓ Concluída no acervo'}{' '}
+                              {c.decided_at ? `em ${c.decided_at}` : ''}
                             </span>
                           )}
 

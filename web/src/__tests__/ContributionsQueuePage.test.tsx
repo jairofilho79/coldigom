@@ -227,6 +227,91 @@ describe('ContributionsQueuePage', () => {
     expect(await screen.findByText(/Contribuição marcada como recusada/i)).toBeInTheDocument();
   });
 
+  it('permite concluir a contribuição diretamente (feita manualmente)', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(patchAdminContribution).mockResolvedValue({ ok: true });
+
+    renderPage();
+
+    const completeBtn = await screen.findByRole('button', { name: /^✓ Concluir$/i });
+    await user.click(completeBtn);
+
+    await waitFor(() => {
+      expect(patchAdminContribution).toHaveBeenCalledWith('contrib-1', 'aplicada', undefined);
+    });
+    expect(await screen.findByText(/Contribuição marcada como concluída/i)).toBeInTheDocument();
+  });
+
+  it('permite concluir a contribuição com nota do curador', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(patchAdminContribution).mockResolvedValue({ ok: true });
+
+    renderPage();
+
+    const noteInput = await screen.findByPlaceholderText(/ex.: Aprovado conforme indicação do colaborador/i);
+    await user.type(noteInput, 'Alterado manualmente no louvor');
+
+    const completeBtn = screen.getByRole('button', { name: /^✓ Concluir$/i });
+    await user.click(completeBtn);
+
+    await waitFor(() => {
+      expect(patchAdminContribution).toHaveBeenCalledWith(
+        'contrib-1',
+        'aplicada',
+        'Alterado manualmente no louvor'
+      );
+    });
+    expect(await screen.findByText(/Contribuição marcada como concluída/i)).toBeInTheDocument();
+  });
+
+  it('permite concluir manualmente mesmo quando já existe plano de IA', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    const contribWithPlan = { ...MOCK_CONTRIB, plan: MOCK_PLAN };
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [contribWithPlan],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(patchAdminContribution).mockResolvedValue({ ok: true });
+
+    renderPage();
+
+    const completeManualBtn = await screen.findByRole('button', { name: /Concluir \(Manual\)/i });
+    await user.click(completeManualBtn);
+
+    await waitFor(() => {
+      expect(patchAdminContribution).toHaveBeenCalledWith('contrib-1', 'aplicada', undefined);
+    });
+    expect(await screen.findByText(/Contribuição marcada como concluída/i)).toBeInTheDocument();
+  });
+
+  it('exibe alerta de erro quando a conclusão falha', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(patchAdminContribution).mockRejectedValue(new Error('Erro no servidor ao concluir'));
+
+    renderPage();
+
+    const completeBtn = await screen.findByRole('button', { name: /^✓ Concluir$/i });
+    await user.click(completeBtn);
+
+    expect(await screen.findByText('Erro no servidor ao concluir')).toBeInTheDocument();
+  });
+
   it('permite visualizar anexos limpos em modal seguro', async () => {
     const user = userEvent.setup();
     vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });

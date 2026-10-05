@@ -4008,8 +4008,10 @@ button.linkish {
 .cq-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .cq-btn--ai { background: var(--bg-surface); border-color: var(--c-accent-500); color: var(--c-accent-300); }
 .cq-btn--ai:hover:not(:disabled) { background: var(--bg-surface-hover); }
-.cq-btn--approve { background: rgba(34, 197, 94, 0.15); border-color: var(--c-success); color: var(--c-success); }
-.cq-btn--approve:hover:not(:disabled) { background: rgba(34, 197, 94, 0.25); }
+.cq-btn--approve,
+.cq-btn--complete { background: rgba(34, 197, 94, 0.15); border-color: var(--c-success); color: var(--c-success); }
+.cq-btn--approve:hover:not(:disabled),
+.cq-btn--complete:hover:not(:disabled) { background: rgba(34, 197, 94, 0.25); }
 .cq-btn--reject { background: rgba(248, 113, 113, 0.15); border-color: var(--c-error); color: var(--c-error); }
 .cq-btn--reject:hover:not(:disabled) { background: rgba(248, 113, 113, 0.25); }
 .cq-btn--ghost { background: none; border-color: var(--border-default); color: var(--text-secondary); }

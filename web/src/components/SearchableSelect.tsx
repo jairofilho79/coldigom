@@ -147,6 +147,7 @@ export function SearchableSelect({
   const rootClass = [
     'app-select',
     compact ? 'app-select--compact' : '',
+    open ? 'is-open' : '',
     className ?? '',
   ]
     .filter(Boolean)

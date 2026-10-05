@@ -32,49 +32,51 @@ export function MaterialInlineAdmin({
 
   return (
     <div className="material-inline-admin">
-      {onToggleSelect ? (
-        <label className="material-bulk-select-label" title="Selecionar material">
-          <input
-            type="checkbox"
-            className="material-bulk-checkbox"
-            checked={Boolean(selected)}
+      <div className="material-inline-admin-controls">
+        {onToggleSelect ? (
+          <label className="material-bulk-select-label" title="Selecionar material">
+            <input
+              type="checkbox"
+              className="material-bulk-checkbox"
+              checked={Boolean(selected)}
+              disabled={saving}
+              onChange={(e) => onToggleSelect(e.target.checked)}
+              aria-label={`Selecionar ${material.material_kind_name || 'material'}`}
+            />
+          </label>
+        ) : null}
+        <SearchableSelect
+          compact
+          value={material.material_kind}
+          disabled={saving}
+          onChange={(material_kind) => onUpdateKind(material.id, material_kind)}
+          options={options}
+          aria-label="Categoria do material"
+        />
+        {material.merged_from_praise_id ? (
+          <span className="merge-material-badge" title={material.merged_from_praise_id}>
+            Mesclado{material.merged_from_praise_name ? `: ${material.merged_from_praise_name}` : ''}
+          </span>
+        ) : null}
+        {onMove && !movendo ? (
+          <button
+            type="button"
+            className="auth-btn material-inline-admin-remove"
             disabled={saving}
-            onChange={(e) => onToggleSelect(e.target.checked)}
-            aria-label={`Selecionar ${material.material_kind_name || 'material'}`}
-          />
-        </label>
-      ) : null}
-      <SearchableSelect
-        compact
-        value={material.material_kind}
-        disabled={saving}
-        onChange={(material_kind) => onUpdateKind(material.id, material_kind)}
-        options={options}
-        aria-label="Categoria do material"
-      />
-      {material.merged_from_praise_id ? (
-        <span className="merge-material-badge" title={material.merged_from_praise_id}>
-          Mesclado{material.merged_from_praise_name ? `: ${material.merged_from_praise_name}` : ''}
-        </span>
-      ) : null}
-      {onMove && !movendo ? (
+            onClick={() => setMovendo(true)}
+          >
+            Mover
+          </button>
+        ) : null}
         <button
           type="button"
           className="auth-btn material-inline-admin-remove"
           disabled={saving}
-          onClick={() => setMovendo(true)}
+          onClick={() => onDelete(material.id)}
         >
-          Mover
+          Remover
         </button>
-      ) : null}
-      <button
-        type="button"
-        className="auth-btn material-inline-admin-remove"
-        disabled={saving}
-        onClick={() => onDelete(material.id)}
-      >
-        Remover
-      </button>
+      </div>
       {onMove && movendo ? (
         <MoverMaterialForm
           praiseAtualId={material.praise_id}

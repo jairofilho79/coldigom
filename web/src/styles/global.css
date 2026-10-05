@@ -390,6 +390,10 @@
   width: 100%;
 }
 
+.app-select.is-open {
+  z-index: 50;
+}
+
 .app-select--compact {
   width: auto;
   min-width: 0;
@@ -489,6 +493,7 @@
   right: 0;
   z-index: 50;
   max-height: 280px;
+  max-width: calc(100vw - var(--space-8));
   overflow-y: auto;
   padding: var(--space-2);
   background: var(--bg-elevated);
@@ -1552,6 +1557,13 @@
   box-shadow: var(--shadow-sm);
 }
 
+.detail-section:focus-within,
+.detail-section:has([aria-expanded="true"]),
+.detail-section:has(.is-open) {
+  position: relative;
+  z-index: 20;
+}
+
 .detail-section-title {
   font-family: var(--font-display);
   font-size: var(--text-xl);
@@ -1814,17 +1826,36 @@
 
 .material-inline-admin {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.material-inline-admin-controls {
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--space-2);
   flex: 1;
   min-width: 0;
+  max-width: 100%;
+}
+
+.material-inline-admin-controls .app-select {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.material-inline-admin-controls .material-bulk-select-label {
+  margin-right: 0;
 }
 
 .material-inline-admin-remove {
   flex-shrink: 0;
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 /* Formulário de "Mover": ocupa a linha inteira abaixo dos botões do material. */
@@ -1867,6 +1898,16 @@
 .material-card-wrap {
   display: flex;
   flex-direction: column;
+}
+
+.yt-card-wrap:focus-within,
+.yt-card-wrap:has([aria-expanded="true"]),
+.yt-card-wrap:has(.is-open),
+.material-card-wrap:focus-within,
+.material-card-wrap:has([aria-expanded="true"]),
+.material-card-wrap:has(.is-open) {
+  position: relative;
+  z-index: 20;
 }
 
 .material-card-wrap .materials-placeholder--inline {
@@ -2542,6 +2583,12 @@ button.linkish {
   padding: var(--space-4);
 }
 
+.audio-player-card:focus-within,
+.audio-player-card:has([aria-expanded="true"]),
+.audio-player-card:has(.is-open) {
+  z-index: 30;
+}
+
 /* Do not use display:none — it can block playback in some browsers */
 .audio-player-element {
   position: absolute;
@@ -2556,12 +2603,19 @@ button.linkish {
 }
 
 .audio-player-header {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
+}
+
+.audio-player-header:focus-within,
+.audio-player-header:has([aria-expanded="true"]),
+.audio-player-header:has(.is-open) {
+  z-index: 25;
 }
 
 .audio-player-header .material-inline-admin {
@@ -2743,6 +2797,7 @@ button.linkish {
 }
 
 .audio-track-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -2750,10 +2805,28 @@ button.linkish {
   border-radius: var(--radius-md);
   background: var(--bg-inset);
   border: 1px solid var(--border-subtle);
-  overflow: hidden;
+  /* Sem overflow: hidden para que o menu flutuante do select não seja cortado */
   transition:
     border-color var(--duration-fast) var(--ease-out),
     background var(--duration-fast) var(--ease-out);
+}
+
+.audio-track-item:hover {
+  border-color: var(--border-default);
+  background: var(--bg-elevated);
+  z-index: 2;
+}
+
+.audio-track-item.is-active {
+  border-color: var(--border-accent);
+  background: rgba(201, 169, 110, 0.08);
+}
+
+.audio-track-item:focus-within,
+.audio-track-item:has([aria-expanded="true"]),
+.audio-track-item:has(.is-open),
+.audio-track-item:has(.app-select-menu) {
+  z-index: 40;
 }
 
 .audio-track-item-main {
@@ -2765,18 +2838,9 @@ button.linkish {
 
 .audio-track-item-main .material-inline-admin {
   flex: 1;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-2);
   align-self: center;
-}
-
-.audio-track-item:hover {
-  border-color: var(--border-default);
-  background: var(--bg-elevated);
-}
-
-.audio-track-item.is-active {
-  border-color: var(--border-accent);
-  background: rgba(201, 169, 110, 0.08);
+  min-width: 0;
 }
 
 .audio-track-select {
@@ -2793,7 +2857,17 @@ button.linkish {
   color: var(--text-secondary);
   font-family: var(--font-body);
   font-size: var(--text-sm);
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
   transition: color var(--duration-fast) var(--ease-out);
+}
+
+.audio-track-select--admin,
+.audio-track-item-main:has(.material-inline-admin) .audio-track-select {
+  flex: 0 0 44px;
+  width: 44px;
+  padding: 0;
+  justify-content: center;
 }
 
 .audio-track-select:hover {
@@ -2830,6 +2904,8 @@ button.linkish {
   border: none;
   border-left: 1px solid var(--border-subtle);
   text-decoration: none;
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
   transition:
     color var(--duration-fast) var(--ease-out),
     background var(--duration-fast) var(--ease-out);
@@ -3164,6 +3240,7 @@ button.linkish {
 
 .merge-material-badge {
   display: inline-block;
+  white-space: nowrap;
   padding: 0 var(--space-2);
   font-size: var(--text-xs);
   color: var(--c-accent-300);

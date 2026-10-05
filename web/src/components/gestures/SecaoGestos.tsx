@@ -10,13 +10,25 @@ type Props = {
   categorias: MaterialKind[];
   podeEditar: boolean;
   onAtualizar: (p: PraiseDetail) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (materialId: string, selected: boolean) => void;
+  onDeleteMaterial?: (materialId: string) => Promise<void>;
 };
 
 /**
  * A seção "Gestos CIAs" da tela do louvor. Componente próprio porque a
  * PraiseDetailPage já passa de 2.300 linhas; a página só importa e posiciona.
  */
-export function SecaoGestos({ praiseId, materiais, categorias, podeEditar, onAtualizar }: Props) {
+export function SecaoGestos({
+  praiseId,
+  materiais,
+  categorias,
+  podeEditar,
+  onAtualizar,
+  selectedIds,
+  onToggleSelect,
+  onDeleteMaterial,
+}: Props) {
   const gestos = materiais.filter((m) => m.type === 'gestures');
   const pdfs = materiais.filter((m) => m.type === 'pdf');
   const [aberto, setAberto] = useState(false);
@@ -56,7 +68,11 @@ export function SecaoGestos({ praiseId, materiais, categorias, podeEditar, onAtu
       {gestos.length > 0 ? (
         <div className="material-grid">
           {gestos.map((m) => (
-            <div key={m.id} className="material-card-wrap">
+            <div
+              key={m.id}
+              id={`material-${m.id}`}
+              className={`material-card-wrap${selectedIds?.has(m.id) ? ' is-selected' : ''}`}
+            >
               <Link to={`/praise/${praiseId}/gestos/${m.id}`} className={`material-link${m.has_content === false ? ' material-link--empty' : ''}`}>
                 <span className="material-link-icon">🤲</span>
                 <div>
@@ -67,6 +83,28 @@ export function SecaoGestos({ praiseId, materiais, categorias, podeEditar, onAtu
                   </div>
                 </div>
               </Link>
+              {podeEditar && onToggleSelect ? (
+                <div className="chord-inline-actions">
+                  <label className="material-bulk-select-label" title="Selecionar material">
+                    <input
+                      type="checkbox"
+                      className="material-bulk-checkbox"
+                      checked={Boolean(selectedIds?.has(m.id))}
+                      onChange={(e) => onToggleSelect(m.id, e.target.checked)}
+                      aria-label={`Selecionar ${m.material_kind_name || 'Gestos'}`}
+                    />
+                  </label>
+                  {onDeleteMaterial ? (
+                    <button
+                      type="button"
+                      className="auth-btn material-inline-admin-remove"
+                      onClick={() => void onDeleteMaterial(m.id)}
+                    >
+                      Remover
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           ))}
         </div>

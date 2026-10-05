@@ -12,7 +12,7 @@ import { requireAuth, requireUploadOrAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { storageKeyFor } from '../storageKeys';
-import type { MaterialRow } from '../praiseZip';
+import type { MaterialRow, PraiseRow } from '../praiseZip';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -905,6 +905,296 @@ export function registerPraisesRoutes(app: App): void {
     } catch (error) {
       console.error('Error re-fetching praise after removing tag:', error);
       return c.json({ ok: true });
+    }
+  });
+
+  // POST /api/praises/:id/duplicate - Duplicate praise with materials, tags and metadata (admin)
+  app.post('/api/praises/:id/duplicate', requireAuth, async (c) => {
+    const origId = c.req.param('id');
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+
+    try {
+      const orig = await c.env.DB.prepare('SELECT * FROM praises WHERE id = ?')
+        .bind(origId)
+        .first<PraiseRow & { group_id: string | null }>();
+      if (!orig) return c.json({ error: 'Praise not found' }, 404);
+
+      const newName = typeof body?.name === 'string' && body.name.trim()
+        ? body.name.trim()
+        : `${orig.name} (cópia)`;
+      const newPraiseId = crypto.randomUUID();
+
+      // Buscar tags do original
+      const tagsResult = await c.env.DB.prepare('SELECT tag_id FROM praise_tags WHERE praise_id = ?')
+        .bind(origId)
+        .all<{ tag_id: string }>();
+      const tagIds = (tagsResult.results ?? []).map((r) => r.tag_id);
+
+      // Buscar materiais do original
+      const matsResult = await c.env.DB.prepare('SELECT * FROM praise_materials WHERE praise_id = ?')
+        .bind(origId)
+        .all<MaterialRow & { is_reviewed?: number; reviewed_at?: string | null; reviewed_by?: string | null }>();
+      const originalMaterials = matsResult.results ?? [];
+
+      const idMap = new Map<string, string>();
+      for (const m of originalMaterials) {
+        idMap.set(m.id, crypto.randomUUID());
+      }
+
+      // Preparar cópia de assets no R2
+      const materialsToInsert: Array<{
+        id: string;
+        material_kind: string;
+        type: string;
+        r2_key: string | null;
+        file_path_legacy: string;
+        source_material_id: string | null;
+        merged_from_praise_id: string | null;
+        url: string | null;
+        is_reviewed: number;
+        reviewed_at: string | null;
+        reviewed_by: string | null;
+      }> = [];
+
+      for (const m of originalMaterials) {
+        const newMatId = idMap.get(m.id)!;
+        let newR2Key: string | null = null;
+        if (m.r2_key) {
+          const ext = m.r2_key.split('.').pop() || m.type;
+          newR2Key = `assets/praises/${newPraiseId}/${newMatId}.${ext}`;
+          try {
+            const oldStorageKey = storageKeyFor(m.r2_key);
+            const obj = await c.env.ASSETS.get(oldStorageKey);
+            if (obj) {
+              const newStorageKey = storageKeyFor(newR2Key);
+              await c.env.ASSETS.put(newStorageKey, obj.body, {
+                httpMetadata: obj.httpMetadata,
+                customMetadata: obj.customMetadata,
+              });
+            }
+          } catch (e) {
+            console.warn('Failed to copy R2 object during duplicate:', e);
+          }
+        }
+
+        const newSourceMatId = m.source_material_id && idMap.has(m.source_material_id)
+          ? idMap.get(m.source_material_id)!
+          : m.source_material_id;
+
+        materialsToInsert.push({
+          id: newMatId,
+          material_kind: m.material_kind,
+          type: m.type,
+          r2_key: newR2Key,
+          file_path_legacy: m.file_path_legacy || '',
+          source_material_id: newSourceMatId,
+          merged_from_praise_id: null,
+          url: m.url ?? null,
+          is_reviewed: m.is_reviewed ?? 0,
+          reviewed_at: m.reviewed_at ?? null,
+          reviewed_by: m.reviewed_by ?? null,
+        });
+      }
+
+      // Buscar gestos e vídeos para manter relacionamentos
+      const gestureUsagesToInsert: Array<{ material_id: string; gesture_id: string; count: number }> = [];
+      const gestureVideosToInsert: Array<{ gesture_id: string; material_id: string; seconds: number | null }> = [];
+
+      for (const m of originalMaterials) {
+        const newMatId = idMap.get(m.id)!;
+        if (m.type === 'gestures') {
+          const usages = await c.env.DB.prepare('SELECT gesture_id, count FROM gesture_usage WHERE material_id = ?')
+            .bind(m.id)
+            .all<{ gesture_id: string; count: number }>();
+          for (const u of usages.results ?? []) {
+            gestureUsagesToInsert.push({ material_id: newMatId, gesture_id: u.gesture_id, count: u.count });
+          }
+        } else if (m.type === 'youtube') {
+          const vids = await c.env.DB.prepare('SELECT gesture_id, seconds FROM gesture_video_occurrences WHERE material_id = ?')
+            .bind(m.id)
+            .all<{ gesture_id: string; seconds: number | null }>();
+          for (const v of vids.results ?? []) {
+            gestureVideosToInsert.push({ gesture_id: v.gesture_id, material_id: newMatId, seconds: v.seconds });
+          }
+        }
+      }
+
+      await c.env.DB.batch([
+        c.env.DB.prepare(
+          `INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics, group_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          newPraiseId,
+          newName,
+          orig.number,
+          orig.author,
+          orig.rhythm,
+          orig.tonality,
+          orig.lyrics,
+          orig.group_id
+        ),
+        ...tagIds.map((tid) =>
+          c.env.DB.prepare('INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)').bind(newPraiseId, tid)
+        ),
+        ...materialsToInsert.map((mat) =>
+          c.env.DB.prepare(
+            `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url, is_reviewed, reviewed_at, reviewed_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            mat.id,
+            newPraiseId,
+            mat.material_kind,
+            mat.type,
+            mat.r2_key,
+            mat.file_path_legacy,
+            mat.source_material_id,
+            mat.merged_from_praise_id,
+            mat.url,
+            mat.is_reviewed,
+            mat.reviewed_at,
+            mat.reviewed_by
+          )
+        ),
+        ...gestureUsagesToInsert.map((gu) =>
+          c.env.DB.prepare('INSERT OR IGNORE INTO gesture_usage (material_id, gesture_id, count) VALUES (?, ?, ?)')
+            .bind(gu.material_id, gu.gesture_id, gu.count)
+        ),
+        ...gestureVideosToInsert.map((gv) =>
+          c.env.DB.prepare('INSERT INTO gesture_video_occurrences (gesture_id, material_id, seconds) VALUES (?, ?, ?)')
+            .bind(gv.gesture_id, gv.material_id, gv.seconds)
+        ),
+      ]);
+
+      const res = await app.request(`/api/praises/${newPraiseId}`, { method: 'GET' }, c.env as Env);
+      const json = await res.json();
+      return c.json(json, 201);
+    } catch (error) {
+      console.error('Error duplicating praise:', error);
+      return c.json({ error: 'Failed to duplicate praise' }, 500);
+    }
+  });
+
+  // POST /api/praises/:id/materials/bulk-move - Move multiple materials to another praise (admin)
+  app.post('/api/praises/:id/materials/bulk-move', requireAuth, async (c) => {
+    const praiseId = c.req.param('id');
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+    const destinationPraiseId = typeof body.destination_praise_id === 'string' ? body.destination_praise_id.trim() : '';
+    if (!destinationPraiseId) {
+      return c.json({ error: "Field 'destination_praise_id' must be a non-empty string" }, 400);
+    }
+    if (destinationPraiseId === praiseId) {
+      return c.json({ error: 'O material já está neste louvor' }, 400);
+    }
+
+    if (!Array.isArray(body.material_ids) || body.material_ids.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+    const materialIds = body.material_ids.filter((m): m is string => typeof m === 'string' && m.trim().length > 0);
+    if (materialIds.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+
+    try {
+      const source = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(praiseId).first();
+      if (!source) return c.json({ error: 'Praise not found' }, 404);
+
+      const dest = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(destinationPraiseId).first();
+      if (!dest) return c.json({ error: 'Louvor de destino não encontrado' }, 404);
+
+      for (const matId of materialIds) {
+        const mat = await c.env.DB.prepare('SELECT id, praise_id FROM praise_materials WHERE id = ?')
+          .bind(matId)
+          .first<{ id: string; praise_id: string }>();
+        if (!mat) return c.json({ error: `Material not found: ${matId}` }, 404);
+        if (mat.praise_id !== praiseId) {
+          return c.json({ error: `Material ${matId} does not belong to source praise` }, 400);
+        }
+      }
+
+      await c.env.DB.batch(
+        materialIds.map((matId) =>
+          c.env.DB.prepare('UPDATE praise_materials SET praise_id = ? WHERE id = ? AND praise_id = ?')
+            .bind(destinationPraiseId, matId, praiseId)
+        )
+      );
+
+      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as Env);
+      const json = await res.json();
+      return c.json(json, res.status as ContentfulStatusCode);
+    } catch (error) {
+      console.error('Error bulk moving materials:', error);
+      return c.json({ error: 'Failed to move materials' }, 500);
+    }
+  });
+
+  // POST /api/praises/:id/materials/bulk-delete - Delete multiple materials (admin)
+  app.post('/api/praises/:id/materials/bulk-delete', requireAuth, async (c) => {
+    const praiseId = c.req.param('id');
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+    if (!Array.isArray(body.material_ids) || body.material_ids.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+    const materialIds = body.material_ids.filter((m): m is string => typeof m === 'string' && m.trim().length > 0);
+    if (materialIds.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+
+    try {
+      const praise = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(praiseId).first();
+      if (!praise) return c.json({ error: 'Praise not found' }, 404);
+
+      const rows: Array<{ id: string; r2_key: string | null }> = [];
+      let totalOccurrences = 0;
+
+      for (const matId of materialIds) {
+        const mat = await c.env.DB.prepare('SELECT id, praise_id, r2_key FROM praise_materials WHERE id = ?')
+          .bind(matId)
+          .first<{ id: string; praise_id: string; r2_key: string | null }>();
+        if (!mat) return c.json({ error: `Material not found: ${matId}` }, 404);
+        if (mat.praise_id !== praiseId) {
+          return c.json({ error: `Material ${matId} does not belong to praise` }, 400);
+        }
+        rows.push({ id: mat.id, r2_key: mat.r2_key });
+
+        const oc = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id = ?')
+          .bind(matId)
+          .first<{ n: number }>();
+        totalOccurrences += oc?.n ?? 0;
+      }
+
+      const stmts = [];
+      for (const r of rows) {
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_usage WHERE material_id = ?').bind(r.id));
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_video_occurrences WHERE material_id = ?').bind(r.id));
+        stmts.push(c.env.DB.prepare('DELETE FROM praise_materials WHERE id = ?').bind(r.id));
+      }
+      if (totalOccurrences > 0) {
+        stmts.push(c.env.DB.prepare('UPDATE gesture_dictionary_meta SET version = version + 1 WHERE id = 1').bind());
+      }
+
+      await c.env.DB.batch(stmts);
+
+      // Limpeza no R2
+      for (const r of rows) {
+        if (r.r2_key) {
+          try {
+            await c.env.ASSETS.delete(storageKeyFor(r.r2_key));
+          } catch (e) {
+            console.warn('Failed to delete R2 object:', e);
+          }
+        }
+      }
+
+      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as Env);
+      const json = await res.json();
+      return c.json(json, res.status as ContentfulStatusCode);
+    } catch (error) {
+      console.error('Error bulk deleting materials:', error);
+      return c.json({ error: 'Failed to delete materials' }, 500);
     }
   });
 

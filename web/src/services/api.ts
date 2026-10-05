@@ -304,6 +304,18 @@ export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetai
   return response.data;
 }
 
+export async function duplicatePraise(praiseId: string, name?: string): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/duplicate`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(name ? { name } : {}),
+    }
+  );
+  return response.data;
+}
+
 export async function updatePraise(
   id: string,
   updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'lyrics'>>,
@@ -420,6 +432,37 @@ export async function deleteMaterial(materialId: string): Promise<PraiseDetail> 
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,
     { method: 'DELETE' }
+  );
+  return response.data;
+}
+
+export async function bulkMoveMaterials(
+  praiseId: string,
+  materialIds: string[],
+  destinationPraiseId: string
+): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/materials/bulk-move`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ material_ids: materialIds, destination_praise_id: destinationPraiseId }),
+    }
+  );
+  return response.data;
+}
+
+export async function bulkDeleteMaterials(
+  praiseId: string,
+  materialIds: string[]
+): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/materials/bulk-delete`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ material_ids: materialIds }),
+    }
   );
   return response.data;
 }

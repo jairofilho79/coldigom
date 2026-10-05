@@ -13,6 +13,8 @@ type Props = {
   /** Sem isto o botão "Mover" não aparece. */
   onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
   buscarLouvor?: (id: string) => Promise<PraiseDetail>;
+  selected?: boolean;
+  onToggleSelect?: (selected: boolean) => void;
 };
 
 export function MaterialInlineAdmin({
@@ -23,11 +25,25 @@ export function MaterialInlineAdmin({
   onDelete,
   onMove,
   buscarLouvor,
+  selected,
+  onToggleSelect,
 }: Props) {
   const [movendo, setMovendo] = useState(false);
 
   return (
     <div className="material-inline-admin">
+      {onToggleSelect ? (
+        <label className="material-bulk-select-label" title="Selecionar material">
+          <input
+            type="checkbox"
+            className="material-bulk-checkbox"
+            checked={Boolean(selected)}
+            disabled={saving}
+            onChange={(e) => onToggleSelect(e.target.checked)}
+            aria-label={`Selecionar ${material.material_kind_name || 'material'}`}
+          />
+        </label>
+      ) : null}
       <SearchableSelect
         compact
         value={material.material_kind}

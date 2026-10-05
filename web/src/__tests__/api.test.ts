@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials, duplicatePraise, bulkMoveMaterials, bulkDeleteMaterials } from '../services/api';
 import { MAX_UPLOAD_ITEMS } from '../lib/uploadLimits';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
@@ -525,6 +525,90 @@ describe('API Service', () => {
         [MAX_UPLOAD_ITEMS, MAX_UPLOAD_ITEMS + 50],
         [MAX_UPLOAD_ITEMS + 50, MAX_UPLOAD_ITEMS + 50],
       ]);
+    });
+
+    it('quando o lote é vazio devolve o louvor atual', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p1' } }),
+      });
+
+      const res = await bulkUploadMaterials('p1', []);
+      expect(res).toEqual({ id: 'p1' });
+    });
+  });
+
+  describe('duplicatePraise', () => {
+    it('envia POST para /api/praises/:id/duplicate com nome', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p2', name: 'Cópia' } }),
+      });
+
+      const res = await duplicatePraise('p1', 'Cópia');
+      expect(res).toEqual({ id: 'p2', name: 'Cópia' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/duplicate'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ name: 'Cópia' }),
+        })
+      );
+    });
+
+    it('envia POST para /api/praises/:id/duplicate sem nome (body vazio)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p2', name: 'Cópia Padrão' } }),
+      });
+
+      const res = await duplicatePraise('p1');
+      expect(res).toEqual({ id: 'p2', name: 'Cópia Padrão' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/duplicate'),
+        expect.objectContaining({
+          method: 'POST',
+          body: '{}',
+        })
+      );
+    });
+  });
+
+  describe('bulkMoveMaterials', () => {
+    it('envia POST para /api/praises/:id/materials/bulk-move', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p1' } }),
+      });
+
+      const res = await bulkMoveMaterials('p1', ['m1', 'm2'], 'pDestino');
+      expect(res).toEqual({ id: 'p1' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/materials/bulk-move'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ material_ids: ['m1', 'm2'], destination_praise_id: 'pDestino' }),
+        })
+      );
+    });
+  });
+
+  describe('bulkDeleteMaterials', () => {
+    it('envia POST para /api/praises/:id/materials/bulk-delete', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p1' } }),
+      });
+
+      const res = await bulkDeleteMaterials('p1', ['m1', 'm2']);
+      expect(res).toEqual({ id: 'p1' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/materials/bulk-delete'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ material_ids: ['m1', 'm2'] }),
+        })
+      );
     });
   });
 

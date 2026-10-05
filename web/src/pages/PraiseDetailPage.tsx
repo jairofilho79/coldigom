@@ -1,10 +1,39 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, downloadDriveFileBlob, getImportJob, retryFailedImportItems, getAdminContribution, type ImportJobSummary } from '../services/api';
+import {
+  getPraise,
+  getAssetUrl,
+  getPraiseDownloadZipUrl,
+  createPraise,
+  duplicatePraise,
+  updatePraise,
+  groupPraise,
+  getMaterialKinds,
+  getTags,
+  createTag,
+  addPraiseTag,
+  removePraiseTag,
+  createMaterial,
+  updateMaterial,
+  deleteMaterial,
+  bulkMoveMaterials,
+  bulkDeleteMaterials,
+  bulkUploadMaterials,
+  getDriveStatus,
+  getDriveConnectUrl,
+  startDriveScan,
+  startDriveImport,
+  downloadDriveFileBlob,
+  getImportJob,
+  retryFailedImportItems,
+  getAdminContribution,
+  type ImportJobSummary,
+} from '../services/api';
 import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
+import { MoverMaterialForm } from '../components/MoverMaterialForm';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { INITIAL_BULK_SCAN, type BulkScanState } from '../components/bulkScanState';
 import { Select } from '../components/Select';
@@ -236,6 +265,9 @@ export function PraiseDetailPage() {
   const [isEditing, setIsEditing] = useState(isCreate);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [savingMetadata, setSavingMetadata] = useState(false);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
+  const [moverLoteAberto, setMoverLoteAberto] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const targetMaterialId = searchParams.get('materialId') || '';
@@ -1094,6 +1126,90 @@ export function PraiseDetailPage() {
     }
   };
 
+  const handleToggleSelectMaterial = (materialId: string, selected: boolean) => {
+    setSelectedMaterialIds((prev) => {
+      const next = new Set(prev);
+      if (selected) {
+        next.add(materialId);
+      } else {
+        next.delete(materialId);
+      }
+      return next;
+    });
+  };
+
+  const todosMateriais = praise?.materials ?? [];
+  const totalMateriais = todosMateriais.length;
+  const allSelected = totalMateriais > 0 && selectedMaterialIds.size === totalMateriais;
+
+  const handleSelectAllMaterials = () => {
+    if (allSelected) {
+      setSelectedMaterialIds(new Set());
+    } else {
+      setSelectedMaterialIds(new Set(todosMateriais.map((m) => m.id)));
+    }
+  };
+
+  const handleBulkMove = async (destino: PraiseDetail) => {
+    if (selectedMaterialIds.size === 0 || !praise) return;
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      const ids = Array.from(selectedMaterialIds);
+      await executarEscrita(() => bulkMoveMaterials(praise.id, ids, destino.id));
+      setMoveAviso({
+        id: destino.id,
+        rotulo: destino.number ? `${destino.number} — ${destino.name}` : destino.name,
+      });
+      setSelectedMaterialIds(new Set());
+      setMoverLoteAberto(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao mover materiais');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedMaterialIds.size === 0 || !praise) return;
+    const count = selectedMaterialIds.size;
+    const confirmMsg =
+      count === 1
+        ? '1 material selecionado será excluído permanentemente, junto com o arquivo guardado. Continuar?'
+        : `${count} materiais selecionados serão excluídos permanentemente, junto com os arquivos guardados. Continuar?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      const ids = Array.from(selectedMaterialIds);
+      await executarEscrita(() => bulkDeleteMaterials(praise.id, ids));
+      setSelectedMaterialIds(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao remover materiais');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
+  const handleDuplicatePraise = async () => {
+    if (!praise) return;
+    const nomePadrao = `${praise.name} (cópia)`;
+    const novoNome = window.prompt('Nome do louvor duplicado:', nomePadrao);
+    if (novoNome === null) return;
+
+    setDuplicating(true);
+    setError(null);
+    try {
+      const duplicado = await duplicatePraise(praise.id, novoNome.trim() || undefined);
+      navigate(`/praise/${duplicado.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao duplicar louvor');
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   const materialAdminProps = canEditMaterialsInline
     ? {
         materialKindOptions,
@@ -1102,6 +1218,8 @@ export function PraiseDetailPage() {
         onDelete: handleMaterialDelete,
         onMove: handleMaterialMove,
         onConvertToMp3: handleConvertMaterialToMp3,
+        selectedIds: selectedMaterialIds,
+        onToggleSelect: handleToggleSelectMaterial,
       }
     : undefined;
 
@@ -1380,6 +1498,10 @@ export function PraiseDetailPage() {
       // única vez no fetch: o valor abandonado ao fechar continuava lá, invisível, e
       // ia junto no próximo Salvar de qualquer outro campo.
       if (!editando && praise) setEdit(camposDe(praise));
+      if (editando) {
+        setSelectedMaterialIds(new Set());
+        setMoverLoteAberto(false);
+      }
       return !editando;
     });
   };
@@ -1467,7 +1589,11 @@ export function PraiseDetailPage() {
             // ao sair, como o botão "Sair" original fazia.
             <AuthControl
               avatarSize={28}
-              onAfterLogout={() => setIsEditing(false)}
+              onAfterLogout={() => {
+                setIsEditing(false);
+                setSelectedMaterialIds(new Set());
+                setMoverLoteAberto(false);
+              }}
               prefixo="Logado como"
             >
               {isCreate ? (
@@ -1482,6 +1608,14 @@ export function PraiseDetailPage() {
                     onClick={alternarEdicao}
                   >
                     {isEditing ? 'Fechar edição' : 'Editar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-btn"
+                    onClick={handleDuplicatePraise}
+                    disabled={duplicating}
+                  >
+                    {duplicating ? 'Duplicando…' : 'Duplicar'}
                   </button>
                   <a
                     className="auth-btn"
@@ -1857,6 +1991,58 @@ export function PraiseDetailPage() {
           )}
       </section>
 
+      {canEditMaterialsInline && totalMateriais > 0 ? (
+        <section className="materials-bulk-bar" aria-label="Ações em lote de materiais">
+          <div className="materials-bulk-bar-main">
+            <label className="materials-bulk-checkbox-label">
+              <input
+                type="checkbox"
+                className="material-bulk-checkbox"
+                checked={allSelected}
+                onChange={handleSelectAllMaterials}
+                aria-label={allSelected ? 'Desmarcar todos os materiais' : 'Selecionar todos os materiais'}
+              />
+              <span>Selecionar todos ({totalMateriais})</span>
+            </label>
+            <span className="materials-bulk-count">
+              {selectedMaterialIds.size} de {totalMateriais} selecionado{selectedMaterialIds.size === 1 ? '' : 's'}
+            </span>
+            <div className="materials-bulk-actions">
+              <button
+                type="button"
+                className="auth-btn"
+                disabled={selectedMaterialIds.size === 0 || savingMaterials}
+                onClick={() => setMoverLoteAberto((aberto) => !aberto)}
+              >
+                {moverLoteAberto ? 'Cancelar mover' : `Mover selecionados (${selectedMaterialIds.size})`}
+              </button>
+              <button
+                type="button"
+                className="auth-btn material-inline-admin-remove"
+                disabled={selectedMaterialIds.size === 0 || savingMaterials}
+                onClick={handleBulkDelete}
+              >
+                Remover selecionados ({selectedMaterialIds.size})
+              </button>
+            </div>
+          </div>
+          {moverLoteAberto ? (
+            <div className="materials-bulk-move-container">
+              <p className="materials-bulk-move-prompt">
+                Escolha o louvor de destino para {selectedMaterialIds.size}{' '}
+                {selectedMaterialIds.size === 1 ? 'material selecionado' : 'materiais selecionados'}:
+              </p>
+              <MoverMaterialForm
+                praiseAtualId={praise!.id}
+                busy={savingMaterials}
+                onCancel={() => setMoverLoteAberto(false)}
+                onConfirm={handleBulkMove}
+              />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {youtubeMaterials.length > 0 && (
         <section className="detail-section animate-fade-in-up">
           <h2 className="detail-section-title">
@@ -1872,7 +2058,7 @@ export function PraiseDetailPage() {
                 <div
                   key={m.id}
                   id={`material-${m.id}`}
-                  className={`yt-card-wrap${isTarget ? ' material-highlight-target' : ''}`}
+                  className={`yt-card-wrap${isTarget ? ' material-highlight-target' : ''}${selectedMaterialIds.has(m.id) ? ' is-selected' : ''}`}
                 >
                   {isTarget && contributionContext && !dismissContributionCallout && (
                     <ContributionCallout
@@ -1904,6 +2090,8 @@ export function PraiseDetailPage() {
                       onUpdateKind={handleMaterialKindChange}
                       onDelete={handleMaterialDelete}
                       onMove={handleMaterialMove}
+                      selected={selectedMaterialIds.has(m.id)}
+                      onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
                     />
                   ) : null}
                 </div>
@@ -2402,6 +2590,8 @@ export function PraiseDetailPage() {
                         onUpdateKind={handleMaterialKindChange}
                         onDelete={handleMaterialDelete}
                         onMove={handleMaterialMove}
+                        selected={selectedMaterialIds.has(m.id)}
+                        onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
                       />
                     ) : (
                       <span className="pdf-viewer-title">{title}</span>
@@ -2446,7 +2636,7 @@ export function PraiseDetailPage() {
                 <div
                   key={m.id}
                   id={`material-${m.id}`}
-                  className={`material-card-wrap${isTarget ? ' material-highlight-target' : ''}`}
+                  className={`material-card-wrap${isTarget ? ' material-highlight-target' : ''}${selectedMaterialIds.has(m.id) ? ' is-selected' : ''}`}
                 >
                   {isTarget && contributionContext && !dismissContributionCallout && (
                     <ContributionCallout
@@ -2469,6 +2659,16 @@ export function PraiseDetailPage() {
                   </Link>
                   {canEditMaterialsInline ? (
                     <div className="chord-inline-actions">
+                      <label className="material-bulk-select-label" title="Selecionar material">
+                        <input
+                          type="checkbox"
+                          className="material-bulk-checkbox"
+                          checked={Boolean(selectedMaterialIds.has(m.id))}
+                          disabled={savingMaterials}
+                          onChange={(e) => handleToggleSelectMaterial(m.id, e.target.checked)}
+                          aria-label={`Selecionar ${m.material_kind_name || 'Acordes'}`}
+                        />
+                      </label>
                       <div className="materials-placeholder materials-placeholder--inline">
                         Edição de categoria — em breve
                       </div>
@@ -2496,6 +2696,9 @@ export function PraiseDetailPage() {
           categorias={materialKinds}
           podeEditar={Boolean(userName) && !isCreate}
           onAtualizar={setPraise}
+          selectedIds={selectedMaterialIds}
+          onToggleSelect={handleToggleSelectMaterial}
+          onDeleteMaterial={handleMaterialDelete}
         />
       ) : null}
 
@@ -2515,7 +2718,7 @@ export function PraiseDetailPage() {
                   <div
                     key={m.id}
                     id={`material-${m.id}`}
-                    className={`material-card-wrap${isTarget ? ' material-highlight-target' : ''}`}
+                    className={`material-card-wrap${isTarget ? ' material-highlight-target' : ''}${selectedMaterialIds.has(m.id) ? ' is-selected' : ''}`}
                   >
                     {isTarget && contributionContext && !dismissContributionCallout && (
                       <ContributionCallout
@@ -2556,6 +2759,8 @@ export function PraiseDetailPage() {
                         onUpdateKind={handleMaterialKindChange}
                         onDelete={handleMaterialDelete}
                         onMove={handleMaterialMove}
+                        selected={selectedMaterialIds.has(m.id)}
+                        onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
                       />
                     ) : null}
                   </div>

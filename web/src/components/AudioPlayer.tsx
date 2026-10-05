@@ -39,6 +39,8 @@ type Props = {
     onDelete: (materialId: string) => Promise<void>;
     onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
     onConvertToMp3?: (material: Material) => Promise<void>;
+    selectedIds?: Set<string>;
+    onToggleSelect?: (materialId: string, selected: boolean) => void;
   };
 };
 
@@ -198,6 +200,12 @@ export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin
             onUpdateKind={admin.onUpdateKind}
             onDelete={admin.onDelete}
             onMove={admin.onMove}
+            selected={admin.selectedIds?.has(current?.id)}
+            onToggleSelect={
+              materials.length <= 1 && admin.onToggleSelect && current
+                ? (sel) => admin.onToggleSelect!(current.id, sel)
+                : undefined
+            }
           />
         ) : (
           <span className="audio-player-track-name">{trackName}</span>
@@ -337,6 +345,8 @@ export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin
                       onUpdateKind={admin.onUpdateKind}
                       onDelete={admin.onDelete}
                       onMove={admin.onMove}
+                      selected={admin.selectedIds?.has(m.id)}
+                      onToggleSelect={admin.onToggleSelect ? (sel) => admin.onToggleSelect!(m.id, sel) : undefined}
                     />
                   ) : null}
                   {m.r2_key && (

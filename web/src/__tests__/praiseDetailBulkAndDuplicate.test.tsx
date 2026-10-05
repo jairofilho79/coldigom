@@ -24,6 +24,7 @@ vi.mock('../services/api', async (importOriginal) => {
     ]),
     createPraise: vi.fn(),
     duplicatePraise: vi.fn(),
+    deletePraise: vi.fn(),
     updatePraise: vi.fn(),
     getTags: vi.fn().mockResolvedValue([
       { id: 'tag1', name: 'Coletânea', parent_id: null },
@@ -48,6 +49,7 @@ import {
   getPraise,
   getMe,
   duplicatePraise,
+  deletePraise,
   bulkMoveMaterials,
   bulkDeleteMaterials,
 } from '../services/api';
@@ -460,5 +462,73 @@ describe('Ações em lote de materiais e Duplicação de Louvor', () => {
 
     await user.click(screen.getByRole('button', { name: 'Fechar edição' }));
     expect(screen.queryByText('6 de 6 selecionados')).not.toBeInTheDocument();
+  });
+
+  describe('Remover louvor no modo de edição', () => {
+    it('não exibe o botão Remover louvor quando fora do modo de edição', async () => {
+      renderPage();
+      await screen.findByRole('heading', { name: 'Louvor Teste' });
+      expect(screen.queryByRole('button', { name: /remover louvor/i })).not.toBeInTheDocument();
+    });
+
+    it('exibe o botão Remover louvor quando entra no modo de edição', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(await screen.findByRole('button', { name: 'Editar' }));
+      expect(screen.getByRole('button', { name: /remover louvor/i })).toBeInTheDocument();
+    });
+
+    it('cancela a remoção se o usuário recusar a confirmação', async () => {
+      const user = userEvent.setup();
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+      renderPage();
+      await user.click(await screen.findByRole('button', { name: 'Editar' }));
+
+      const btnRemover = screen.getByRole('button', { name: /remover louvor/i });
+      await user.click(btnRemover);
+
+      expect(confirmar).toHaveBeenCalledTimes(1);
+      expect(confirmar.mock.calls[0][0]).toMatch(/«Louvor Teste» será excluído permanentemente/i);
+      expect(deletePraise).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: /remover louvor/i })).toBeInTheDocument();
+
+      confirmar.mockRestore();
+    });
+
+    it('remove o louvor e navega para / quando o usuário confirma', async () => {
+      const user = userEvent.setup();
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      (deletePraise as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+
+      renderPage();
+      await user.click(await screen.findByRole('button', { name: 'Editar' }));
+
+      const btnRemover = screen.getByRole('button', { name: /remover louvor/i });
+      await user.click(btnRemover);
+
+      expect(confirmar).toHaveBeenCalledTimes(1);
+      expect(deletePraise).toHaveBeenCalledWith('praise-100');
+      expect(await screen.findByText('Home')).toBeInTheDocument();
+
+      confirmar.mockRestore();
+    });
+
+    it('exibe mensagem de erro se a remoção falhar', async () => {
+      const user = userEvent.setup();
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      (deletePraise as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Falha ao excluir no banco'));
+
+      renderPage();
+      await user.click(await screen.findByRole('button', { name: 'Editar' }));
+
+      const btnRemover = screen.getByRole('button', { name: /remover louvor/i });
+      await user.click(btnRemover);
+
+      expect(await screen.findByText('Falha ao excluir no banco')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /remover louvor/i })).toBeInTheDocument();
+
+      confirmar.mockRestore();
+    });
   });
 });

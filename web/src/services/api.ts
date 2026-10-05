@@ -337,6 +337,16 @@ export async function updatePraise(
   return response.data;
 }
 
+export async function deletePraise(id: string): Promise<{ ok: boolean }> {
+  const response = await fetchJson<{ ok: boolean }>(
+    `${API_BASE_URL}/api/praises/${id}`,
+    {
+      method: 'DELETE',
+    }
+  );
+  return response;
+}
+
 export async function groupPraise(id: string, targetPraiseId: string): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${id}/group`,

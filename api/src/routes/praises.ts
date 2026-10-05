@@ -602,6 +602,56 @@ export function registerPraisesRoutes(app: App): void {
     }
   });
 
+  // DELETE /api/praises/:id - Delete a praise with its materials, tags, and R2 assets (admin)
+  app.delete('/api/praises/:id', requireAuth, async (c) => {
+    const id = c.req.param('id');
+    try {
+      const praise = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(id).first();
+      if (!praise) return c.json({ error: 'Praise not found' }, 404);
+
+      const materials = await c.env.DB.prepare(
+        'SELECT id, r2_key FROM praise_materials WHERE praise_id = ?'
+      ).bind(id).all();
+      const rows = (materials.results as Array<{ id: string; r2_key: string | null }>) ?? [];
+
+      let totalOccurrences = 0;
+      for (const mat of rows) {
+        const oc = await c.env.DB.prepare(
+          'SELECT COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id = ?'
+        ).bind(mat.id).first<{ n: number }>();
+        totalOccurrences += oc?.n ?? 0;
+      }
+
+      const stmts = [];
+      for (const mat of rows) {
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_usage WHERE material_id = ?').bind(mat.id));
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_video_occurrences WHERE material_id = ?').bind(mat.id));
+      }
+      stmts.push(c.env.DB.prepare('DELETE FROM praise_materials WHERE praise_id = ?').bind(id));
+      stmts.push(c.env.DB.prepare('DELETE FROM praise_tags WHERE praise_id = ?').bind(id));
+      stmts.push(c.env.DB.prepare('DELETE FROM praises WHERE id = ?').bind(id));
+      if (totalOccurrences > 0) {
+        stmts.push(c.env.DB.prepare('UPDATE gesture_dictionary_meta SET version = version + 1 WHERE id = 1').bind());
+      }
+
+      await c.env.DB.batch(stmts);
+
+      const uniqueR2Keys = [...new Set(rows.map((r) => r.r2_key).filter((k): k is string => Boolean(k)))];
+      for (const key of uniqueR2Keys) {
+        try {
+          await c.env.ASSETS.delete(storageKeyFor(key));
+        } catch (e) {
+          console.warn('Failed to delete R2 object:', e);
+        }
+      }
+
+      return c.json({ ok: true });
+    } catch (error) {
+      console.error('Error deleting praise:', error);
+      return c.json({ error: 'Failed to delete praise' }, 500);
+    }
+  });
+
   // POST /api/praises/:id/group - Link this praise into another's group (admin)
   app.post('/api/praises/:id/group', requireAuth, async (c) => {
     const id = c.req.param('id');

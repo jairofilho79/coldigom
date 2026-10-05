@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials, duplicatePraise, bulkMoveMaterials, bulkDeleteMaterials } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials, duplicatePraise, deletePraise, bulkMoveMaterials, bulkDeleteMaterials } from '../services/api';
 import { MAX_UPLOAD_ITEMS } from '../lib/uploadLimits';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
@@ -607,6 +607,24 @@ describe('API Service', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ material_ids: ['m1', 'm2'] }),
+        })
+      );
+    });
+  });
+
+  describe('deletePraise', () => {
+    it('envia DELETE para /api/praises/:id', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ok: true }),
+      });
+
+      const res = await deletePraise('p1');
+      expect(res).toEqual({ ok: true });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1'),
+        expect.objectContaining({
+          method: 'DELETE',
         })
       );
     });

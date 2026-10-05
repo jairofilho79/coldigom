@@ -40,6 +40,8 @@ const ROTAS_ESPERADAS = [
   'POST /api/praises',
   'PATCH /api/praises/:id',
   'PATCH /api/praises/:id',
+  'DELETE /api/praises/:id',
+  'DELETE /api/praises/:id',
   'POST /api/praises/:id/group',
   'POST /api/praises/:id/group',
   'POST /api/praises/:id/tags',

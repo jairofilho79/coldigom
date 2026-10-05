@@ -23,6 +23,7 @@ vi.mock('../services/api', async (importOriginal) => {
     ]),
     createPraise: vi.fn(),
     updatePraise: vi.fn(),
+    deletePraise: vi.fn(),
     getTags: vi.fn().mockResolvedValue([
       { id: 'tag1', name: 'Coletânea', parent_id: null },
       { id: 'tag2', name: 'Avulsos', parent_id: null },

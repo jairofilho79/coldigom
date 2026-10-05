@@ -7,6 +7,7 @@ import {
   getPraiseDownloadZipUrl,
   createPraise,
   duplicatePraise,
+  deletePraise,
   updatePraise,
   groupPraise,
   getMaterialKinds,
@@ -268,6 +269,7 @@ export function PraiseDetailPage() {
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
   const [moverLoteAberto, setMoverLoteAberto] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [deletingPraise, setDeletingPraise] = useState(false);
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const targetMaterialId = searchParams.get('materialId') || '';
@@ -1210,6 +1212,23 @@ export function PraiseDetailPage() {
     }
   };
 
+  const handleDeletePraise = async () => {
+    if (!praise || !id || isCreate) return;
+    const confirmMsg = `«${praise.name}» será excluído permanentemente, junto com todos os seus materiais. Continuar?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setDeletingPraise(true);
+    setError(null);
+    try {
+      await deletePraise(id);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao remover louvor');
+    } finally {
+      setDeletingPraise(false);
+    }
+  };
+
   const materialAdminProps = canEditMaterialsInline
     ? {
         materialKindOptions,
@@ -1681,8 +1700,16 @@ export function PraiseDetailPage() {
               <div className="edit-actions">
                 <button
                   type="button"
+                  className="auth-btn auth-btn--danger"
+                  disabled={deletingPraise || savingMetadata}
+                  onClick={() => void handleDeletePraise()}
+                >
+                  {deletingPraise ? 'Removendo…' : 'Remover louvor'}
+                </button>
+                <button
+                  type="button"
                   className="auth-btn"
-                  disabled={savingMetadata}
+                  disabled={savingMetadata || deletingPraise}
                   onClick={() => void saveMetadata()}
                 >
                   {savingMetadata ? 'Salvando…' : 'Salvar'}

@@ -1,5 +1,8 @@
 /** Auto-generated — do not edit. Run: npx tsx scripts/generate-material-kind-aliases.ts */
 export const GENERATED_ALIASES: Record<string, readonly string[]> = {
+  '0084abef-6e3e-4003-9882-afab27107713': [
+    "Trombone I",
+  ],
   '02e00e67-ada7-4ac3-a8c5-7d9a2ab2465b': [
     "MIDI Baritone",
     "MIDI barítono",
@@ -16,6 +19,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "MIDI Tenor II",
     "MIDI tenor II",
   ],
+  '085c34e3-1129-4ef3-8e48-e10d31c9579f': [
+    "Clarinete II",
+    "Clarinet II",
+  ],
   '09d5120b-2dd2-4408-8982-68bee197ce6a': [
     "Piano",
   ],
@@ -30,6 +37,9 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
   '1427517d-7991-4fad-a023-4b0ec3f46166': [
     "Metais",
     "Brass",
+  ],
+  '1c73024a-872a-44ad-bd63-4536a28a3063': [
+    "Trombones",
   ],
   '22997832-30fe-48e1-bdc0-3493b39814fb': [
     "Trompete em Si bemol",
@@ -84,6 +94,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
   '3b55c854-aa8e-43cf-9433-ba49a0161d90': [
     "Lyrics",
     "Letra",
+  ],
+  '3ba482c9-fb5f-4a80-a62b-11d71e5f5be6': [
+    "Flauta II",
+    "Flute II",
   ],
   '40f562c0-c506-4044-a598-cccea7500fc4': [
     "Baritone Saxophone",
@@ -148,6 +162,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "MIDI instrumentos",
     "MIDI Instruments",
   ],
+  '5989b562-aa89-465c-a869-4dc06efc19fc': [
+    "Trompete I",
+    "Trumpet I",
+  ],
   '59df1962-d245-41eb-9fdc-ca79d69a34ab': [
     "Clarinete em Si bemol",
     "Clarinet in Bb",
@@ -194,6 +212,9 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "Contra Bass",
     "Contrabaixo",
   ],
+  '71f3dd8f-02ae-434a-8e6a-0ba37fc736cc': [
+    "Trombone II",
+  ],
   '76dd9e81-3b5a-4cad-b9c1-a688bdd60fbc': [
     "MIDI Tenor I",
     "MIDI tenor I",
@@ -233,6 +254,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "Audio",
     "Áudio",
   ],
+  '8b647c5f-bf5b-40fa-9a2b-aefb8bddd541': [
+    "Trompete II",
+    "Trumpet II",
+  ],
   '8c548fbb-7c9b-4563-aea9-5b7cfb9f9244': [
     "Suspended Cymbal",
     "Prato suspenso",
@@ -259,6 +284,14 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
   '9854d697-97cc-4c27-9d66-996cf38ebf10': [
     "Vibraphone",
     "Vibrafone",
+  ],
+  '9a2e9a05-44cf-4d88-b51b-09e6e32cd722': [
+    "Trompetes",
+    "Trumpets",
+  ],
+  '9a931e47-fade-4965-891b-790d8d90164a': [
+    "Clarinetes",
+    "Clarinets",
   ],
   '9b0099ff-dc7a-48c2-a3be-6d02b5c2340c': [
     "Tímpanos",
@@ -291,6 +324,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "MIDI contralto",
     "MIDI Alto",
   ],
+  'ac1ee2a5-0dfa-4fb5-999f-e6f2025c0cc2': [
+    "Flautas",
+    "Flutes",
+  ],
   'ac66b2d8-814c-42a0-8210-1b767ac609f7': [
     "Strings",
     "Cordas",
@@ -315,8 +352,24 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "MIDI Soprano",
     "MIDI soprano",
   ],
+  'b403be03-b66c-47c7-b28c-c8e248f99df5': [
+    "Clarinetes em Si bemol",
+    "Clarinets in Sib",
+  ],
+  'b5b61ce6-6ad1-41da-9889-eeabed58ffd2': [
+    "Clarinete em Si bemol II",
+    "Clarinet in Sib II",
+  ],
   'b6a296c6-f1f5-4b4d-a5db-1a63021b9c3a': [
     "Glockenspiel",
+  ],
+  'baa2b993-c37a-4f96-ae5f-8560d2e4b6d8': [
+    "Clarinete em Si bemol I",
+    "Clarinet in Sib I",
+  ],
+  'bf62dc10-4a2e-48d2-8d4f-1f182c8fe6f9': [
+    "Clarinete I",
+    "Clarinet I",
   ],
   'bfcc4a22-e9ae-4cab-946c-f4c6199f1feb': [
     "MIDI Score",
@@ -339,11 +392,16 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
     "MIDI segunda voz",
   ],
   'c7454ea9-3ae0-4548-9cc5-c4187b80641a': [
+    "Desconhecido",
     "Unknown",
   ],
   'cf15647d-eaab-47ec-b313-95deec1d04e8': [
     "Soprano Voice I",
     "Voz soprano I",
+  ],
+  'd336b4ef-7cee-4b6e-8d7a-cdb15264e70d': [
+    "Áudio (estúdio)",
+    "Audio (Studio)",
   ],
   'd65e6267-372e-4377-80ed-8a02a6bed47f': [
     "Flugelhorn",
@@ -351,6 +409,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
   'da800c21-8078-4c3b-9fc5-ff66d53858d3': [
     "MIDI Voice",
     "MIDI voz",
+  ],
+  'dd947eae-1d84-4f82-9bae-c6bce23f7bf2': [
+    "Audio (Church)",
+    "Áudio (igreja)",
   ],
   'e1a12c9e-ef1a-4ec9-9289-799479bc2e9b': [
     "Experiência",
@@ -375,6 +437,10 @@ export const GENERATED_ALIASES: Record<string, readonly string[]> = {
   'e3e43744-492b-41a1-9f84-92f9e7d983dd': [
     "Soprano Voice II",
     "Voz soprano II",
+  ],
+  'e4d3baf3-c5f5-4c87-af45-298217d8a66f': [
+    "Flauta I",
+    "Flute I",
   ],
   'e559526d-1064-401b-9a34-e4c39a302143': [
     "Voz homens",

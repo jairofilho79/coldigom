@@ -21,6 +21,23 @@ const KIND = {
   midiSopranoII: '48a0529d-f6c4-455c-b83b-19a99c0285ae',
   audio: '8860ed67-6b33-4e08-9064-adb93a5f5c2a',
   trumpet: 'b2d08b24-26b7-4bf6-970d-eb84e29833ea',
+  audioStudio: 'd336b4ef-7cee-4b6e-8d7a-cdb15264e70d',
+  audioChurch: 'dd947eae-1d84-4f82-9bae-c6bce23f7bf2',
+  fluteI: 'e4d3baf3-c5f5-4c87-af45-298217d8a66f',
+  fluteII: '3ba482c9-fb5f-4a80-a62b-11d71e5f5be6',
+  flutes: 'ac1ee2a5-0dfa-4fb5-999f-e6f2025c0cc2',
+  trumpetI: '5989b562-aa89-465c-a869-4dc06efc19fc',
+  trumpetII: '8b647c5f-bf5b-40fa-9a2b-aefb8bddd541',
+  trumpets: '9a2e9a05-44cf-4d88-b51b-09e6e32cd722',
+  tromboneI: '0084abef-6e3e-4003-9882-afab27107713',
+  tromboneII: '71f3dd8f-02ae-434a-8e6a-0ba37fc736cc',
+  trombones: '1c73024a-872a-44ad-bd63-4536a28a3063',
+  clarinetI: 'bf62dc10-4a2e-48d2-8d4f-1f182c8fe6f9',
+  clarinetII: '085c34e3-1129-4ef3-8e48-e10d31c9579f',
+  clarinets: '9a931e47-fade-4965-891b-790d8d90164a',
+  clarinetSibI: 'baa2b993-c37a-4f96-ae5f-8560d2e4b6d8',
+  clarinetSibII: 'b5b61ce6-6ad1-41da-9889-eeabed58ffd2',
+  clarinetsSib: 'b403be03-b66c-47c7-b28c-c8e248f99df5',
 } as const;
 
 function catalog(...ids: string[]): Set<string> {
@@ -149,6 +166,36 @@ describe('inferMaterialKind', () => {
   it('infere Audio em inglês', () => {
     const r = infer('Audio.mp3');
     expect(r.materialKindId).toBe(KIND.audio);
+  });
+
+  it('infere divisões de flauta (Flauta I, Flauta 2, Flautas)', () => {
+    expect(infer('Flauta I.pdf').materialKindId).toBe(KIND.fluteI);
+    expect(infer('Flauta 1.pdf').materialKindId).toBe(KIND.fluteI);
+    expect(infer('Flute 2.pdf').materialKindId).toBe(KIND.fluteII);
+    expect(infer('Flautas.pdf').materialKindId).toBe(KIND.flutes);
+  });
+
+  it('infere divisões de clarinete e clarinete em Si bemol', () => {
+    expect(infer('Clarinete 1.pdf').materialKindId).toBe(KIND.clarinetI);
+    expect(infer('Clarinete II.pdf').materialKindId).toBe(KIND.clarinetII);
+    expect(infer('Clarinetes.pdf').materialKindId).toBe(KIND.clarinets);
+    expect(infer('Clarinete Sib 1.pdf').materialKindId).toBe(KIND.clarinetSibI);
+    expect(infer('Clarinete em Si bemol 2.pdf').materialKindId).toBe(KIND.clarinetSibII);
+    expect(infer('Clarinetes em Si bemol.pdf').materialKindId).toBe(KIND.clarinetsSib);
+  });
+
+  it('infere divisões de trompete e trombone', () => {
+    expect(infer('Trompete 1.pdf').materialKindId).toBe(KIND.trumpetI);
+    expect(infer('Trompete II.pdf').materialKindId).toBe(KIND.trumpetII);
+    expect(infer('Trompetes.pdf').materialKindId).toBe(KIND.trumpets);
+    expect(infer('Trombone 1.pdf').materialKindId).toBe(KIND.tromboneI);
+    expect(infer('Trombone II.pdf').materialKindId).toBe(KIND.tromboneII);
+    expect(infer('Trombones.pdf').materialKindId).toBe(KIND.trombones);
+  });
+
+  it('infere Áudio Studio e Áudio Igreja', () => {
+    expect(infer('Audio Studio.mp3').materialKindId).toBe(KIND.audioStudio);
+    expect(infer('Audio Igreja.mp3').materialKindId).toBe(KIND.audioChurch);
   });
 });
 

@@ -21,6 +21,8 @@ function statefulDb(contrib: Row, files: Row[]) {
     if (/FROM contribution_files WHERE contribution_id = \?/.test(s)) return Array.from(fileRows.values()).filter((f) => f.contribution_id === b[0]);
     if (/FROM contribution_files WHERE sha256 = \? AND scan_status = 'limpa'/.test(s)) return Array.from(fileRows.values()).filter((f) => f.sha256 === b[0] && f.scan_status === 'limpa' && f.id !== b[1]);
     if (/FROM contribution_quota/.test(s)) return [quota.get(`${b[0]}|${b[1]}`) ?? null];
+    if (/FROM contribution_triages/.test(s)) return [];
+    if (/INSERT INTO contribution_triages/.test(s)) return [];
     if (/^INSERT INTO contribution_quota/.test(s)) { const k = `${b[0]}|${b[1]}`; const q = quota.get(k) ?? { count: 0, bytes: 0 }; quota.set(k, { count: q.count + (b[2] as number), bytes: q.bytes + (b[3] as number) }); return []; }
     if (/^UPDATE contribution_files SET/.test(s)) { const id = b[b.length - 1] as string; const cols = [...s.matchAll(/(\w+) = \?/g)].map((m) => m[1]); const row = fileRows.get(id)!; cols.forEach((c, i) => { row[c] = b[i]; }); return []; }
     if (/^UPDATE contributions SET/.test(s)) {

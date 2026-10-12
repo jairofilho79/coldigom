@@ -180,6 +180,21 @@ export function registerContributionsRoutes(app: App) {
           console.error(JSON.stringify({ msg: 'contributions.queue_send_failed', id, err: String(err) }));
         }
       }
+    } else {
+      try {
+        const ctx = c.executionCtx;
+        if (ctx && typeof ctx.waitUntil === 'function') {
+          ctx.waitUntil(
+            import('../agent/triage').then(({ triageContribution }) =>
+              triageContribution(c.env, id).catch((err) =>
+                console.warn(JSON.stringify({ msg: 'contributions.immediate_triage_failed', id, err: String(err) }))
+              )
+            )
+          );
+        }
+      } catch {
+        // Sem ExecutionContext no ambiente atual (ex: testes locais)
+      }
     }
     return c.json({ id, status }, 201);
   });

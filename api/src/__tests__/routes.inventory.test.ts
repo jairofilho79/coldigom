@@ -119,6 +119,8 @@ const ROTAS_ESPERADAS = [
   'GET /api/admin/contributions',
   'GET /api/admin/contributions/:id',
   'GET /api/admin/contributions/:id',
+  'POST /api/admin/contributions/:id/triage',
+  'POST /api/admin/contributions/:id/triage',
   'POST /api/admin/contributions/:id/plan',
   'POST /api/admin/contributions/:id/plan',
   'POST /api/admin/contributions/:id/approve',

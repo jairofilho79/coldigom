@@ -7,6 +7,7 @@ import {
   approveAdminContributionPlan,
   fetchAdminContributionFile,
   generateAdminContributionPlan,
+  getAdminContribution,
   listAdminContributions,
   patchAdminContribution,
 } from '../services/api';
@@ -14,10 +15,12 @@ import type {
   AdminContribution,
   ContributionFile,
   PaginationInfo,
+  PlanTaskItem,
 } from '../types';
 
 const STATUS_TABS = [
   { id: 'pendente', label: 'Pendentes' },
+  { id: 'recebida', label: 'Recebidas' },
   { id: 'em_analise', label: 'Em Análise' },
   { id: 'aplicada', label: 'Aplicadas' },
   { id: 'recusada', label: 'Recusadas' },
@@ -68,6 +71,7 @@ export function ContributionsQueuePage() {
     name: string;
     type: string;
   } | null>(null);
+  const [editingContrib, setEditingContrib] = useState<AdminContribution | null>(null);
 
   const carregar = useCallback(
     async (signal?: AbortSignal) => {
@@ -211,6 +215,54 @@ export function ContributionsQueuePage() {
     } finally {
       setRejectingId(null);
     }
+  };
+
+  const handleOpenEditModal = async (contrib: AdminContribution) => {
+    setEditingContrib(contrib);
+    try {
+      const full = await getAdminContribution(contrib.id);
+      setEditingContrib((prev) => (prev?.id === contrib.id ? full : prev));
+    } catch {
+      // continua com os dados da lista caso getAdminContribution falhe
+    }
+  };
+
+  const handleSaveEditAndApply = async (
+    contrib: AdminContribution,
+    editData: {
+      tasks: PlanTaskItem[];
+      summary: string;
+      decisionNote?: string;
+    }
+  ) => {
+    setError(null);
+    setSuccessMsg(null);
+    if (editData.tasks.length > 0) {
+      await approveAdminContributionPlan(contrib.id, {
+        tasks: editData.tasks,
+        summary: editData.summary,
+        todos: editData.tasks.map((t) => `Executar ${t.operation}`),
+        decisionNote: editData.decisionNote,
+      });
+    } else {
+      await patchAdminContribution(contrib.id, 'aplicada', editData.decisionNote);
+    }
+
+    setContributions((prev) =>
+      prev.map((c) =>
+        c.id === contrib.id
+          ? {
+              ...c,
+              status: 'aplicada',
+              decision_note: editData.decisionNote || c.decision_note,
+            }
+          : c
+      )
+    );
+    setSuccessMsg(
+      `Contribuição editada e aplicada com sucesso! Crédito preservado para ${contrib.user_name || contrib.user_email}.`
+    );
+    setEditingContrib(null);
   };
 
   const handleViewAttachment = async (contribId: string, file: ContributionFile) => {
@@ -683,6 +735,19 @@ export function ContributionsQueuePage() {
                             </button>
                           )}
 
+                          {/* Botão Editar e Aplicar */}
+                          {c.status !== 'aplicada' && c.status !== 'recusada' && (
+                            <button
+                              type="button"
+                              className="cq-btn cq-btn--edit"
+                              disabled={isBusy}
+                              onClick={() => handleOpenEditModal(c)}
+                              title="Editar texto, cifras ou metadados e aplicar mantendo o crédito do colaborador"
+                            >
+                              ✎ Editar e Aplicar
+                            </button>
+                          )}
+
                           {/* Botão Concluir */}
                           {c.status !== 'aplicada' && c.status !== 'recusada' && (
                             <button
@@ -790,6 +855,386 @@ export function ContributionsQueuePage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Edição e Aplicação do Curador */}
+      {editingContrib && (
+        <EditAndApplyModal
+          contrib={editingContrib}
+          onClose={() => setEditingContrib(null)}
+          onApply={handleSaveEditAndApply}
+        />
+      )}
     </main>
+  );
+}
+
+interface EditAndApplyModalProps {
+  contrib: AdminContribution;
+  onClose: () => void;
+  onApply: (
+    contrib: AdminContribution,
+    data: {
+      tasks: PlanTaskItem[];
+      summary: string;
+      decisionNote?: string;
+    }
+  ) => Promise<void>;
+}
+
+function EditAndApplyModal({ contrib, onClose, onApply }: EditAndApplyModalProps) {
+  const targetPraise = (contrib.target_praise_data || {}) as Record<string, unknown>;
+  const fields = (contrib.fields || {}) as Record<string, unknown>;
+
+  const [activeTab, setActiveTab] = useState<'meta' | 'lyrics' | 'chord'>('meta');
+
+  // Praise ID
+  const [targetPraiseId, setTargetPraiseId] = useState(
+    contrib.target_praise_id || (fields.praiseId as string) || (fields.praise_id as string) || ''
+  );
+
+  // Metadados
+  const [tonality, setTonality] = useState(
+    String(fields.tonality ?? fields.proposed ?? targetPraise.tonality ?? '')
+  );
+  const [rhythm, setRhythm] = useState(
+    String(fields.rhythm ?? targetPraise.rhythm ?? '')
+  );
+  const [author, setAuthor] = useState(
+    String(fields.author ?? targetPraise.author ?? '')
+  );
+  const [praiseTitle, setPraiseTitle] = useState(
+    String(fields.title ?? targetPraise.title ?? '')
+  );
+
+  // Letra
+  const initialLyrics = String(
+    fields.lyrics ?? targetPraise.lyrics ?? (contrib.kind === 'lyrics' || contrib.subkind === 'lyrics' ? contrib.body : '')
+  );
+  const [lyrics, setLyrics] = useState(initialLyrics);
+
+  // Cifra
+  const initialChord = String(contrib.target_chord_content ?? fields.chord_content ?? '');
+  const [chordContent, setChordContent] = useState(initialChord);
+
+  // Nota do Curador
+  const [decisionNote, setDecisionNote] = useState(contrib.decision_note || '');
+
+  const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setModalError(null);
+
+    try {
+      const tasks: PlanTaskItem[] = [];
+      const praiseId = targetPraiseId.trim() || undefined;
+
+      // 1. Metadados
+      const metaToUpdate: Record<string, unknown> = {};
+      if (tonality.trim() && tonality.trim() !== String(targetPraise.tonality ?? '')) {
+        metaToUpdate.tonality = tonality.trim();
+      }
+      if (rhythm.trim() && rhythm.trim() !== String(targetPraise.rhythm ?? '')) {
+        metaToUpdate.rhythm = rhythm.trim();
+      }
+      if (author.trim() && author.trim() !== String(targetPraise.author ?? '')) {
+        metaToUpdate.author = author.trim();
+      }
+      if (praiseTitle.trim() && praiseTitle.trim() !== String(targetPraise.title ?? '')) {
+        metaToUpdate.title = praiseTitle.trim();
+      }
+
+      if (Object.keys(metaToUpdate).length > 0 && praiseId) {
+        tasks.push({
+          id: 'task_edit_metadata',
+          operation: 'edit_praise_metadata',
+          params: {
+            praise_id: praiseId,
+            fields: metaToUpdate,
+          },
+        });
+      }
+
+      // 2. Letra
+      if (lyrics.trim() && lyrics.trim() !== String(targetPraise.lyrics ?? '').trim() && praiseId) {
+        tasks.push({
+          id: 'task_update_lyrics',
+          operation: 'update_praise_lyrics',
+          params: {
+            praise_id: praiseId,
+            lyrics: lyrics.trim(),
+          },
+        });
+      }
+
+      // 3. Cifra
+      if (chordContent.trim() && chordContent.trim() !== initialChord.trim() && (praiseId || contrib.target_material_id)) {
+        tasks.push({
+          id: 'task_update_chord',
+          operation: 'update_chord_content',
+          params: {
+            praise_id: praiseId,
+            material_id: contrib.target_material_id || undefined,
+            content: chordContent,
+          },
+        });
+      }
+
+      const summaryParts: string[] = [];
+      if (Object.keys(metaToUpdate).length > 0) summaryParts.push('Metadados atualizados');
+      if (tasks.some((t) => t.operation === 'update_praise_lyrics')) summaryParts.push('Letra atualizada');
+      if (tasks.some((t) => t.operation === 'update_chord_content')) summaryParts.push('Cifra atualizada');
+      const summary = summaryParts.length > 0 ? summaryParts.join(' · ') : 'Edição e aplicação manual da curadoria';
+
+      await onApply(contrib, {
+        tasks,
+        summary,
+        decisionNote: decisionNote.trim() || undefined,
+      });
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : 'Falha ao aplicar alterações');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="cq-modal-backdrop"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cq-edit-modal-title"
+    >
+      <div className="cq-edit-modal-content" onClick={(e) => e.stopPropagation()}>
+        <header className="cq-modal-head">
+          <h3 id="cq-edit-modal-title">✎ Editar e Aplicar Contribuição</h3>
+          <button
+            type="button"
+            className="cq-modal-close"
+            onClick={onClose}
+            aria-label="Fechar"
+            disabled={saving}
+          >
+            ×
+          </button>
+        </header>
+
+        <form onSubmit={handleSubmit} className="cq-edit-body">
+          {/* Banner de Crédito Preservado do Colaborador Original */}
+          <div className="cq-credit-banner" role="note">
+            <span aria-hidden="true" style={{ fontSize: '1.25rem' }}>👤</span>
+            <div>
+              <strong>Crédito mantido para: </strong>
+              <span>{contrib.user_name || contrib.user_email}</span>{' '}
+              <span style={{ opacity: 0.8 }}>({contrib.user_email})</span>
+              <div style={{ marginTop: '2px', fontSize: '0.8em', color: 'var(--text-tertiary)' }}>
+                Mesmo após a edição da curadoria, a autoria desta contribuição permanece registrada para o colaborador original.
+              </div>
+            </div>
+          </div>
+
+          {/* Lembrete do texto original do colaborador */}
+          <div
+            className="cq-section"
+            style={{
+              background: 'var(--bg-surface)',
+              padding: 'var(--space-2) var(--space-3)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--text-tertiary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontWeight: 600,
+              }}
+            >
+              Descrição original do colaborador:
+            </div>
+            <div
+              style={{
+                fontSize: '0.85rem',
+                color: 'var(--text-secondary)',
+                marginTop: '4px',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {contrib.body}
+            </div>
+          </div>
+
+          {modalError && (
+            <div
+              className="error-state"
+              role="alert"
+              style={{ margin: 0, padding: 'var(--space-2) var(--space-3)' }}
+            >
+              <div className="error-state-desc">{modalError}</div>
+            </div>
+          )}
+
+          {/* Abas de Navegação */}
+          <div className="cq-edit-tabs">
+            <button
+              type="button"
+              className={`cq-edit-tab ${activeTab === 'meta' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('meta')}
+            >
+              Metadados
+            </button>
+            <button
+              type="button"
+              className={`cq-edit-tab ${activeTab === 'lyrics' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('lyrics')}
+            >
+              Letra
+            </button>
+            <button
+              type="button"
+              className={`cq-edit-tab ${activeTab === 'chord' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('chord')}
+            >
+              Cifra / ChordPro
+            </button>
+          </div>
+
+          {/* Tab Metadados */}
+          {activeTab === 'meta' && (
+            <div className="cq-edit-grid">
+              <div className="cq-edit-field">
+                <label htmlFor="cq-edit-praise-id">ID do Louvor Alvo</label>
+                <input
+                  id="cq-edit-praise-id"
+                  type="text"
+                  className="cq-edit-input"
+                  value={targetPraiseId}
+                  onChange={(e) => setTargetPraiseId(e.target.value)}
+                  placeholder="ID do louvor no acervo"
+                />
+              </div>
+              <div className="cq-edit-field">
+                <label htmlFor="cq-edit-title">Título do Louvor</label>
+                <input
+                  id="cq-edit-title"
+                  type="text"
+                  className="cq-edit-input"
+                  value={praiseTitle}
+                  onChange={(e) => setPraiseTitle(e.target.value)}
+                  placeholder="ex.: Ao Único"
+                />
+              </div>
+              <div className="cq-edit-field">
+                <label htmlFor="cq-edit-tonality">Tom</label>
+                <input
+                  id="cq-edit-tonality"
+                  type="text"
+                  className="cq-edit-input"
+                  value={tonality}
+                  onChange={(e) => setTonality(e.target.value)}
+                  placeholder="ex.: Em, C, G"
+                />
+              </div>
+              <div className="cq-edit-field">
+                <label htmlFor="cq-edit-rhythm">Ritmo</label>
+                <input
+                  id="cq-edit-rhythm"
+                  type="text"
+                  className="cq-edit-input"
+                  value={rhythm}
+                  onChange={(e) => setRhythm(e.target.value)}
+                  placeholder="ex.: Balada, Canção"
+                />
+              </div>
+              <div className="cq-edit-field">
+                <label htmlFor="cq-edit-author">Autor</label>
+                <input
+                  id="cq-edit-author"
+                  type="text"
+                  className="cq-edit-input"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="ex.: Benedito Carlos"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Tab Letra */}
+          {activeTab === 'lyrics' && (
+            <div className="cq-edit-field">
+              <label htmlFor="cq-edit-lyrics">Texto da Letra:</label>
+              <textarea
+                id="cq-edit-lyrics"
+                className="cq-edit-textarea"
+                value={lyrics}
+                onChange={(e) => setLyrics(e.target.value)}
+                placeholder="Cole ou edite a letra do louvor aqui..."
+                rows={10}
+              />
+            </div>
+          )}
+
+          {/* Tab Cifra */}
+          {activeTab === 'chord' && (
+            <div className="cq-edit-field">
+              <label htmlFor="cq-edit-chord">Texto da Cifra (ChordPro / texto):</label>
+              <textarea
+                id="cq-edit-chord"
+                className="cq-edit-textarea"
+                value={chordContent}
+                onChange={(e) => setChordContent(e.target.value)}
+                placeholder="[Em]Ao único que é digno..."
+                rows={10}
+              />
+            </div>
+          )}
+
+          {/* Nota do Curador */}
+          <div className="cq-edit-field" style={{ marginTop: 'var(--space-2)' }}>
+            <label htmlFor="cq-edit-decision-note">
+              Nota do Curador (gravada com a decisão):
+            </label>
+            <input
+              id="cq-edit-decision-note"
+              type="text"
+              className="cq-edit-input"
+              value={decisionNote}
+              onChange={(e) => setDecisionNote(e.target.value)}
+              placeholder="ex.: Tom e estrofe 2 revisados conforme sugestão do colaborador"
+            />
+          </div>
+
+          <footer className="cq-edit-footer">
+            <button
+              type="button"
+              className="cq-btn cq-btn--ghost"
+              onClick={onClose}
+              disabled={saving}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="cq-btn cq-btn--edit"
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <span className="loading-spinner-mini" aria-hidden="true" />
+                  Aplicando alterações…
+                </>
+              ) : (
+                '✓ Salvar e Aplicar (com crédito)'
+              )}
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
   );
 }

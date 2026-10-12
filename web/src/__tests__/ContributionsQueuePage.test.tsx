@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
@@ -13,6 +13,7 @@ vi.mock('../services/api', async (importOriginal) => {
     getMe: vi.fn().mockResolvedValue(null),
     refreshSession: vi.fn().mockResolvedValue(false),
     listAdminContributions: vi.fn(),
+    getAdminContribution: vi.fn(),
     generateAdminContributionPlan: vi.fn(),
     approveAdminContributionPlan: vi.fn(),
     patchAdminContribution: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('../services/api', async (importOriginal) => {
 import {
   getMe,
   listAdminContributions,
+  getAdminContribution,
   generateAdminContributionPlan,
   approveAdminContributionPlan,
   patchAdminContribution,
@@ -110,6 +112,7 @@ function renderPage() {
 
 beforeEach(() => {
   vi.mocked(listAdminContributions).mockReset();
+  vi.mocked(getAdminContribution).mockReset();
   vi.mocked(generateAdminContributionPlan).mockReset();
   vi.mocked(approveAdminContributionPlan).mockReset();
   vi.mocked(patchAdminContribution).mockReset();
@@ -435,6 +438,218 @@ describe('ContributionsQueuePage', () => {
     // Pressiona Space para reabrir
     await user.keyboard(' ');
     expect(screen.getByText('Descrição do Colaborador:')).toBeInTheDocument();
+  });
+
+  it('permite filtrar pela aba de status Recebidas', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [{ ...MOCK_CONTRIB, status: 'recebida' }],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+
+    renderPage();
+
+    const tabRecebidas = await screen.findByRole('tab', { name: 'Recebidas' });
+    await user.click(tabRecebidas);
+
+    expect(listAdminContributions).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'recebida', page: 1 })
+    );
+    expect(await screen.findByText('RECEBIDA')).toBeInTheDocument();
+  });
+
+  it('abre o modal de edição exibindo o crédito preservado do colaborador original', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(getAdminContribution).mockResolvedValue({
+      ...MOCK_CONTRIB,
+      target_praise_data: { tonality: 'Dm', rhythm: 'Balada', author: 'Autor Teste', title: 'Hino 123' },
+    });
+
+    renderPage();
+
+    const editBtn = await screen.findByRole('button', { name: /✎ Editar e Aplicar/i });
+    await user.click(editBtn);
+
+    expect(getAdminContribution).toHaveBeenCalledWith('contrib-1');
+    const modal = await screen.findByRole('dialog');
+    expect(modal).toBeInTheDocument();
+    expect(within(modal).getByText(/Crédito mantido para:/i)).toBeInTheDocument();
+    expect(within(modal).getByText('Irmão João')).toBeInTheDocument();
+    expect(within(modal).getByText(/irmao@test\.com/i)).toBeInTheDocument();
+  });
+
+  it('permite editar metadados/letra e aplicar mantendo o crédito do colaborador', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(getAdminContribution).mockResolvedValue({
+      ...MOCK_CONTRIB,
+      target_praise_data: { tonality: 'Dm', rhythm: 'Balada', author: 'Autor Teste', title: 'Hino 123' },
+    });
+    vi.mocked(approveAdminContributionPlan).mockResolvedValue({
+      ok: true,
+      message: 'Plano aprovado e executado com sucesso',
+      executed_tasks: 1,
+    });
+
+    renderPage();
+
+    const editBtn = await screen.findByRole('button', { name: /✎ Editar e Aplicar/i });
+    await user.click(editBtn);
+
+    const modal = await screen.findByRole('dialog');
+    const tonalityInput = within(modal).getByLabelText(/Tom/i);
+    await user.clear(tonalityInput);
+    await user.type(tonalityInput, 'F#m');
+
+    const noteInput = within(modal).getByLabelText(/Nota do Curador/i);
+    await user.type(noteInput, 'Ajustado para F#m no ensaio');
+
+    const submitBtn = within(modal).getByRole('button', { name: /Salvar e Aplicar \(com crédito\)/i });
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(approveAdminContributionPlan).toHaveBeenCalledWith('contrib-1', expect.objectContaining({
+        tasks: expect.arrayContaining([
+          expect.objectContaining({
+            operation: 'edit_praise_metadata',
+            params: expect.objectContaining({
+              fields: expect.objectContaining({ tonality: 'F#m' }),
+            }),
+          }),
+        ]),
+        decisionNote: 'Ajustado para F#m no ensaio',
+      }));
+    });
+
+    expect(
+      await screen.findByText(/Contribuição editada e aplicada com sucesso! Crédito preservado para Irmão João/i)
+    ).toBeInTheDocument();
+  });
+
+  it('permite fechar o modal de edição sem salvar', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(getAdminContribution).mockResolvedValue(MOCK_CONTRIB);
+
+    renderPage();
+
+    const editBtn = await screen.findByRole('button', { name: /✎ Editar e Aplicar/i });
+    await user.click(editBtn);
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    const cancelBtn = screen.getByRole('button', { name: /Cancelar/i });
+    await user.click(cancelBtn);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(approveAdminContributionPlan).not.toHaveBeenCalled();
+  });
+
+  it('permite alternar abas de Letra e Cifra no modal de edição', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(getAdminContribution).mockResolvedValue({
+      ...MOCK_CONTRIB,
+      target_praise_data: { tonality: 'Dm', rhythm: 'Balada', author: 'Autor Teste', title: 'Hino 123', lyrics: 'Letra antiga' },
+      target_chord_content: '[Dm]Cifra antiga',
+    });
+    vi.mocked(approveAdminContributionPlan).mockResolvedValue({
+      ok: true,
+      message: 'Plano aprovado e executado com sucesso',
+      executed_tasks: 2,
+    });
+
+    renderPage();
+
+    const editBtn = await screen.findByRole('button', { name: /✎ Editar e Aplicar/i });
+    await user.click(editBtn);
+
+    const modal = await screen.findByRole('dialog');
+
+    // Aba Letra
+    const tabLyrics = within(modal).getByRole('button', { name: 'Letra' });
+    await user.click(tabLyrics);
+
+    const lyricsInput = within(modal).getByLabelText(/Texto da Letra:/i);
+    await user.clear(lyricsInput);
+    await user.type(lyricsInput, 'Nova letra corrigida');
+
+    // Aba Cifra
+    const tabChord = within(modal).getByRole('button', { name: 'Cifra / ChordPro' });
+    await user.click(tabChord);
+
+    const chordInput = within(modal).getByLabelText(/Texto da Cifra/i);
+    await user.clear(chordInput);
+    await user.type(chordInput, '[Em]Nova cifra');
+
+    // Retorna para Metadados e altera ritmo e autor
+    const tabMeta = within(modal).getByRole('button', { name: 'Metadados' });
+    await user.click(tabMeta);
+
+    const rhythmInput = within(modal).getByLabelText(/Ritmo/i);
+    await user.type(rhythmInput, ' Canção');
+
+    const authorInput = within(modal).getByLabelText(/Autor/i);
+    await user.type(authorInput, ' Novo');
+
+    const titleInput = within(modal).getByLabelText(/Título do Louvor/i);
+    await user.type(titleInput, ' Novo');
+
+    const submitBtn = within(modal).getByRole('button', { name: /Salvar e Aplicar \(com crédito\)/i });
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(approveAdminContributionPlan).toHaveBeenCalledWith('contrib-1', expect.objectContaining({
+        tasks: expect.arrayContaining([
+          expect.objectContaining({ operation: 'update_praise_lyrics' }),
+          expect.objectContaining({ operation: 'update_chord_content' }),
+          expect.objectContaining({ operation: 'edit_praise_metadata' }),
+        ]),
+      }));
+    });
+  });
+
+  it('exibe erro dentro do modal caso salvar falhe', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getMe).mockResolvedValueOnce({ sub: 'admin-1', email: 'admin@coldigom.com' });
+    vi.mocked(listAdminContributions).mockResolvedValue({
+      data: [MOCK_CONTRIB],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    });
+    vi.mocked(getAdminContribution).mockResolvedValue(MOCK_CONTRIB);
+    vi.mocked(approveAdminContributionPlan).mockRejectedValue(new Error('Falha ao gravar no D1'));
+
+    renderPage();
+
+    const editBtn = await screen.findByRole('button', { name: /✎ Editar e Aplicar/i });
+    await user.click(editBtn);
+
+    const modal = await screen.findByRole('dialog');
+    const tonalityInput = within(modal).getByLabelText(/Tom/i);
+    await user.type(tonalityInput, 'G');
+
+    const submitBtn = within(modal).getByRole('button', { name: /Salvar e Aplicar \(com crédito\)/i });
+    await user.click(submitBtn);
+
+    expect(await within(modal).findByText('Falha ao gravar no D1')).toBeInTheDocument();
   });
 });
 

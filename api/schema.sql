@@ -418,3 +418,24 @@ CREATE TABLE IF NOT EXISTS collaboration_task_executions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_task_exec_plan ON collaboration_task_executions(plan_id);
+
+-- Triagem e Classificação com IA de Decisão Clef-Omni (migração 032).
+CREATE TABLE IF NOT EXISTS contribution_triages (
+  id                  TEXT PRIMARY KEY,
+  contribution_id     TEXT NOT NULL UNIQUE REFERENCES contributions(id) ON DELETE CASCADE,
+  model_name          TEXT NOT NULL DEFAULT '@cf/cloudflare/clef-omni',
+  intent              TEXT NOT NULL,
+  severity            TEXT NOT NULL,
+  urgency             TEXT NOT NULL,
+  is_actionable       INTEGER NOT NULL DEFAULT 1,
+  requires_curation   INTEGER NOT NULL DEFAULT 0,
+  recommended_action  TEXT NOT NULL,
+  confidence          REAL NOT NULL DEFAULT 1.0,
+  scores_json         TEXT NOT NULL,
+  state_summary       TEXT NOT NULL,
+  created_at          TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_contrib_triage_contrib ON contribution_triages(contribution_id);
+CREATE INDEX IF NOT EXISTS idx_contrib_triage_intent  ON contribution_triages(intent);
+CREATE INDEX IF NOT EXISTS idx_contrib_triage_urgency ON contribution_triages(urgency);

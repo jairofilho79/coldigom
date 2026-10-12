@@ -1,4 +1,4 @@
-import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding, AdminContribution, ContributionListParams, CollaborationPlan } from '../types';
+import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding, AdminContribution, ContributionListParams, CollaborationPlan, PlanTaskItem } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
 import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
 import type { GestureDictionary, GestureEntry } from '../lib/gestures/dictionary';
@@ -975,7 +975,14 @@ export async function generateAdminContributionPlan(
 
 export async function approveAdminContributionPlan(
   id: string,
-  opts: { planId?: string; planHash?: string; decisionNote?: string } = {}
+  opts: {
+    planId?: string;
+    planHash?: string;
+    decisionNote?: string;
+    tasks?: PlanTaskItem[];
+    summary?: string;
+    todos?: string[];
+  } = {}
 ): Promise<{ ok: boolean; message: string; executed_tasks: number }> {
   return fetchJson<{ ok: boolean; message: string; executed_tasks: number }>(
     `${API_BASE_URL}/api/admin/contributions/${id}/approve`,
@@ -986,6 +993,9 @@ export async function approveAdminContributionPlan(
         plan_id: opts.planId,
         plan_hash: opts.planHash,
         decision_note: opts.decisionNote,
+        tasks: opts.tasks,
+        summary: opts.summary,
+        todos: opts.todos,
       }),
     }
   );
@@ -993,7 +1003,7 @@ export async function approveAdminContributionPlan(
 
 export async function patchAdminContribution(
   id: string,
-  status: 'pendente' | 'em_analise' | 'aceita' | 'recusada' | 'aplicada',
+  status: 'recebida' | 'pendente' | 'em_analise' | 'aceita' | 'recusada' | 'aplicada',
   decisionNote?: string
 ): Promise<{ ok: boolean }> {
   return fetchJson<{ ok: boolean }>(

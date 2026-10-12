@@ -59,7 +59,7 @@ export interface AdminContribution {
   device: Record<string, unknown> | null;
   app_route: string | null;
   app_version: string | null;
-  status: 'pendente' | 'em_analise' | 'aceita' | 'recusada' | 'aplicada';
+  status: 'recebida' | 'pendente' | 'em_analise' | 'aceita' | 'recusada' | 'aplicada';
   scan_status: string;
   scan_report: Record<string, unknown> | null;
   decided_at: string | null;
@@ -69,6 +69,8 @@ export interface AdminContribution {
   updated_at: string;
   files: ContributionFile[];
   plan?: CollaborationPlan | null;
+  target_praise_data?: Record<string, unknown> | null;
+  target_chord_content?: string | null;
 }
 
 export interface ContributionListParams {

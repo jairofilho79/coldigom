@@ -121,6 +121,11 @@ export async function planContribution(env: Env, contributionId: string): Promis
     }
   }
 
+  const triageRow = await db
+    .prepare(`SELECT intent, severity, urgency, requires_curation, is_actionable FROM contribution_triages WHERE contribution_id = ?`)
+    .bind(contributionId)
+    .first<{ intent: string; severity: string; urgency: string; requires_curation: number; is_actionable: number }>();
+
   const promptUserContext = {
     contribution: {
       id: contrib.id,
@@ -132,6 +137,15 @@ export async function planContribution(env: Env, contributionId: string): Promis
       links: contrib.links ? JSON.parse(contrib.links) : null,
       target_praise_id: contrib.target_praise_id,
       target_material_id: contrib.target_material_id,
+      triage: triageRow
+        ? {
+            intent: triageRow.intent,
+            severity: triageRow.severity,
+            urgency: triageRow.urgency,
+            requires_curation: triageRow.requires_curation === 1,
+            is_actionable: triageRow.is_actionable === 1,
+          }
+        : null,
     },
     target_praise_state: targetPraiseContext,
     target_chord_content: targetChordContent,

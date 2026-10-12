@@ -16,22 +16,22 @@ export type ChordProRawEditorProps = {
  */
 export function ChordProRawEditor({ value, onChange, issues }: ChordProRawEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const selectionRef = useRef<{ start: number; end: number } | null>(null);
   const textareaId = useId();
 
   function inserirSimbolo(simbolo: string) {
     const ta = textareaRef.current;
-    if (!ta) {
-      onChange(value + simbolo);
-      return;
-    }
-    const isFocused = document.activeElement === ta;
-    const pos = isFocused && ta.selectionStart !== null ? ta.selectionStart : value.length;
-    const end = isFocused && ta.selectionEnd !== null ? ta.selectionEnd : pos;
+    const sel = selectionRef.current;
+    const pos = sel ? sel.start : value.length;
+    const end = sel ? sel.end : pos;
     const novo = value.slice(0, pos) + simbolo + value.slice(end);
+    const novoPos = pos + simbolo.length;
+    selectionRef.current = { start: novoPos, end: novoPos };
     onChange(novo);
     queueMicrotask(() => {
+      if (!ta) return;
       ta.focus();
-      ta.setSelectionRange(pos + simbolo.length, pos + simbolo.length);
+      ta.setSelectionRange(novoPos, novoPos);
     });
   }
 
@@ -47,7 +47,19 @@ export function ChordProRawEditor({ value, onChange, issues }: ChordProRawEditor
         className="cp-raw-textarea"
         aria-label="Cifra ChordPro (texto raw)"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          selectionRef.current = {
+            start: e.target.selectionStart,
+            end: e.target.selectionEnd,
+          };
+          onChange(e.target.value);
+        }}
+        onSelect={(e) => {
+          selectionRef.current = {
+            start: e.currentTarget.selectionStart,
+            end: e.currentTarget.selectionEnd,
+          };
+        }}
         rows={22}
         spellCheck={false}
         placeholder={'{title: Título}\n{key: Tom}\n\n[C]Letra do louvor...'}

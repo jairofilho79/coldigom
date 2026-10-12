@@ -703,4 +703,81 @@ describe('cifra que ainda não existe no R2', () => {
     await waitFor(() => expect(puts).toHaveLength(1));
     expect(puts[0]).toContain('Louvado [C]seja');
   });
+
+  it('avisa conflito quando arquivo que existia é removido no servidor durante a edição', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    let calls = 0;
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        calls += 1;
+        // Primeira chamada (GET na abertura): 200 com arquivo existente e válido
+        if (calls === 1) return new Response('{title: Inicial}\n[C]Louvor', { status: 200 });
+        // Segunda chamada (ao tentar salvar): 404 (removido no meio)
+        return new Response('', { status: 404 });
+      })
+    );
+
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/O arquivo foi removido no servidor desde que você abriu/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('salva com sucesso quando o servidor tem o mesmo conteúdo mas difere apenas em quebra de linha final', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const puts: string[] = [];
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') {
+          puts.push(String(init.body));
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        }
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        // Servidor com quebra de linha extra no final
+        return new Response('{title: Teste}\n[C]Louvor\n\n', { status: 200 });
+      })
+    );
+
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    const campo = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    fireEvent.change(campo, { target: { value: '{title: Teste}\n[C]Louvor' } });
+
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+    // Considera salvo como noServidor já reflete o rascunho
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^salvar$/i })).not.toBeInTheDocument());
+  });
+
+  it('exibe mensagem quando o material solicitado não existe no louvor', async () => {
+    vi.spyOn(api, 'getMe').mockResolvedValue(null);
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/praise/p1/cifra/material-inexistente']}>
+          <Routes>
+            <Route path="/praise/:praiseId/cifra/:materialId" element={<ChordProPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Material não encontrado neste louvor')).toBeInTheDocument();
+    });
+  });
 });
+

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ChordProRawEditor } from '../ChordProRawEditor';
@@ -69,6 +69,46 @@ describe('ChordProRawEditor', () => {
     // Clica para inserir ø
     await userEvent.click(screen.getByRole('button', { name: /inserir ø/i }));
     expect(onChange).toHaveBeenCalledWith('Cø');
+  });
+
+  it('insere símbolo na posição do cursor do textarea', async () => {
+    const onChange = vi.fn();
+    render(
+      <ChordProRawEditor
+        value="[C]Louvor"
+        onChange={onChange}
+        issues={[]}
+      />
+    );
+
+    const textarea = screen.getByRole('textbox', { name: /cifra.*raw/i }) as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(2, 2);
+    fireEvent.select(textarea);
+
+    await userEvent.click(screen.getByRole('button', { name: /como escrever os acordes/i }));
+    await userEvent.click(screen.getByRole('button', { name: /inserir ø/i }));
+    expect(onChange).toHaveBeenCalledWith('[Cø]Louvor');
+  });
+
+  it('substitui seleção no textarea ao inserir símbolo', async () => {
+    const onChange = vi.fn();
+    render(
+      <ChordProRawEditor
+        value="[Cxyz]Louvor"
+        onChange={onChange}
+        issues={[]}
+      />
+    );
+
+    const textarea = screen.getByRole('textbox', { name: /cifra.*raw/i }) as HTMLTextAreaElement;
+    textarea.focus();
+    textarea.setSelectionRange(2, 5);
+    fireEvent.select(textarea);
+
+    await userEvent.click(screen.getByRole('button', { name: /como escrever os acordes/i }));
+    await userEvent.click(screen.getByRole('button', { name: /inserir °/i }));
+    expect(onChange).toHaveBeenCalledWith('[C°]Louvor');
   });
 
   it('contém bloco retrátil de pré-visualização', () => {

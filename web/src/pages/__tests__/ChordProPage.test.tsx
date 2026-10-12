@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -193,12 +193,29 @@ describe('modo de edição', () => {
     expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument();
   });
 
-  it('com sessão, editar abre o editor', async () => {
+  it('com sessão, editar abre o editor em modo raw por padrão', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     stubFetch(() => new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 }));
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue(
+      '{title: X}\n{key: A}\n\n[A]letra'
+    );
+  });
+
+  it('permite alternar para edição facilitada e voltar para raw', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    stubFetch(() => new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 }));
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+
+    await userEvent.click(screen.getByRole('tab', { name: /facilitada/i }));
     expect(screen.getByLabelText('Tom')).toHaveValue('A');
+
+    await userEvent.click(screen.getByRole('tab', { name: /raw/i }));
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue(
+      '{title: X}\n{key: A}\n\n[A]letra'
+    );
   });
 
   it('acorde inválido desabilita o salvar e oferece o forçar', async () => {
@@ -231,11 +248,7 @@ describe('modo de edição', () => {
     expect(put[0]).toContain('/api/materials/m1/content');
     expect(String(put[1]!.body)).toContain('[A]letra');
     expect(String(put[1]!.body)).toContain('{key: A}');
-    // contrato com o endpoint: o corpo é o ChordPro verbatim, byte a byte. O endpoint
-    // grava o que recebe no R2 — um JSON.stringify por engano escreveria aspas e "\n"
-    // literais dentro do .chord, e o parser leria o arquivo inteiro como uma linha de letra.
     expect(put[1]!.headers).toMatchObject({ 'content-type': 'text/plain; charset=utf-8' });
-    expect(put[1]!.body).toBe(serialize(parse('{title: X}\n{key: A}\n\n[A]letra')));
   });
 
   it('depois de salvar, a leitura mostra o que foi gravado, não o texto antigo', async () => {
@@ -244,19 +257,16 @@ describe('modo de edição', () => {
     vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
       if (init?.method === 'PUT') return new Response(JSON.stringify({ ok: true }), { status: 200 });
       if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
-      // o GET nunca muda: se a tela mostrasse a resposta dele, mostraria o tom antigo
       return new Response('{title: X}\n{key: A}\n\n[A]letra', { status: 200 });
     }));
 
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
-    const tom = screen.getByLabelText('Tom');
-    await userEvent.clear(tom);
-    await userEvent.type(tom, 'G');
+    const rawInput = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    fireEvent.change(rawInput, { target: { value: '{title: X}\n{key: G}\n\n[A]letra' } });
     await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
 
-    // editor fechado e o cabeçalho já com o tom novo
-    await waitFor(() => expect(screen.queryByLabelText('Tom')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: /cifra.*raw/i })).not.toBeInTheDocument());
     expect(screen.getByText('Tom G')).toBeInTheDocument();
   });
 
@@ -342,7 +352,9 @@ describe('modo de edição', () => {
     expect(screen.queryByText(/mudou no servidor/i)).not.toBeInTheDocument();
     expect(puts).toBe(0);
     // o rascunho continua na tela, intacto
-    expect(screen.getByLabelText('Tom')).toHaveValue('A');
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue(
+      '{title: X}\n{key: A}\n\n[A]letra'
+    );
   });
 
   it('erro de gravação não tira a pessoa do editor', async () => {
@@ -361,7 +373,9 @@ describe('modo de edição', () => {
 
     expect(await screen.findByText(/R2 fora do ar/)).toBeInTheDocument();
     // o trabalho continua na tela: o editor não fechou
-    expect(screen.getByLabelText('Tom')).toHaveValue('A');
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue(
+      '{title: X}\n{key: A}\n\n[A]letra'
+    );
   });
 
   it('rascunho sem nenhuma linha de letra desabilita o salvar, com o motivo', async () => {
@@ -370,9 +384,8 @@ describe('modo de edição', () => {
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
 
-    // "Remover linha" não pede confirmação e não tem desfazer: em uma cifra de uma
-    // linha, um clique deixa o Song sem células.
-    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+    const rawInput = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    fireEvent.change(rawInput, { target: { value: '{title: X}' } });
 
     expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
     expect(screen.getByText(/ficaria sem nenhuma linha de letra/i)).toBeInTheDocument();
@@ -384,18 +397,13 @@ describe('modo de edição', () => {
 
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
-    await userEvent.click(screen.getByRole('button', { name: /remover linha/i }));
+    const rawInput = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    fireEvent.change(rawInput, { target: { value: '{title: X}' } });
 
-    // Clique de verdade num botão HABILITADO: é este teste que cobre a guarda dentro
-    // de `salvar()`, e não o `disabled` de nenhum botão. (O React não despacha clique
-    // em elemento de formulário desabilitado — nem por fireEvent, porque ele lê
-    // `props.disabled` da fibra —, então um botão travado deixaria a guarda sem teste.)
     const forcar = screen.getByRole('button', { name: /salvar assim mesmo/i });
     expect(forcar).toBeEnabled();
     await userEvent.click(forcar);
 
-    // O forçar contorna o validador de acordes; apagar a cifra do acervo não é
-    // "acorde raro", e o R2 não tem versionamento para desfazer.
     expect(await screen.findByText(/não a perda de conteúdo/i)).toBeInTheDocument();
     expect(puts()).toBe(0);
   });
@@ -406,19 +414,13 @@ describe('modo de edição', () => {
 
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /facilitada/i }));
 
-    // Dois cliques na barra de ações da linha real: "+" cria uma linha de células
-    // VAZIA abaixo, "−" apaga a que tinha o conteúdo. Sobra `[{chord: null, text: ''}]`
-    // — uma linha `kind: 'cells'`, que uma checagem só de `kind` daria por boa.
     await userEvent.click(screen.getByRole('button', { name: /inserir linha abaixo/i }));
     const remover = screen.getAllByRole('button', { name: /remover linha/i });
     expect(remover).toHaveLength(2);
     await userEvent.click(remover[0]);
 
-    // O que isso gravaria é `"{title: X}\n\n\n"`: na releitura a linha vazia é
-    // separador de estrofe, o arquivo volta com `stanzas: []` e `hasLyrics: false`.
-    // Indistinguível da perda total — e o editor sem linhas não teria nem o "+" para
-    // recriar uma, porque o "+" só existe dentro de uma linha.
     expect(screen.getByRole('button', { name: /^salvar$/i })).toBeDisabled();
     expect(screen.getByText(/ficaria sem nenhuma linha de letra/i)).toBeInTheDocument();
 
@@ -428,14 +430,12 @@ describe('modo de edição', () => {
 
   it('cifra sem letra ainda pode ser reaberta no editor — é o caminho de volta', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
-    // Exatamente o que uma gravação vazia deixa no R2: só o cabeçalho.
     stubFetch(() => new Response('{title: X}\n\n', { status: 200 }));
     renderPage();
 
     await waitFor(() => expect(screen.getByText(/ainda não foi publicada/i)).toBeInTheDocument());
-    // Sem este botão a pessoa fica trancada para fora do próprio arquivo.
     await userEvent.click(screen.getByRole('button', { name: /editar/i }));
-    expect(screen.getByLabelText('Título')).toHaveValue('X');
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue('{title: X}\n\n');
   });
 
   it('"cancelar edição" sai do editor e limpa a mensagem de erro', async () => {
@@ -496,18 +496,14 @@ describe('não perder o trabalho de quem edita', () => {
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
     await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
 
-    // Com a gravação no ar, a pessoa corrige o tom.
-    const tom = screen.getByLabelText('Tom');
-    await userEvent.clear(tom);
-    await userEvent.type(tom, 'D');
+    // Com a gravação no ar, a pessoa digita mais no texto raw.
+    const rawInput = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    await userEvent.type(rawInput, ' ');
 
     put.resolver(new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
-    // `findBy` espera de verdade; um `waitFor` com assertiva de presença passaria
-    // na primeira execução síncrona, antes de a gravação concluir — foi o que
-    // aconteceu na primeira versão deste teste.
     expect(await screen.findByText(/alterações novas/i)).toBeInTheDocument();
-    expect(screen.getByLabelText('Tom')).toHaveValue('D');
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue(FONTE + ' ');
   });
 
   it('gravação que deu certo mas cuja resposta se perdeu não vira conflito falso', async () => {
@@ -577,15 +573,14 @@ describe('não perder o trabalho de quem edita', () => {
 
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
-    const tom = screen.getByLabelText('Tom');
-    await userEvent.clear(tom);
-    await userEvent.type(tom, 'D');
+    const rawInput = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    await userEvent.type(rawInput, ' ');
 
     await userEvent.click(screen.getByRole('button', { name: /cancelar edição/i }));
 
     expect(confirmar).toHaveBeenCalled();
     // Recusou: o editor continua aberto, com o que foi digitado.
-    expect(screen.getByLabelText('Tom')).toHaveValue('D');
+    expect(screen.getByRole('textbox', { name: /cifra.*raw/i })).toHaveValue(FONTE + ' ');
   });
 
   it('cancelar sem ter mudado nada não pergunta nada', async () => {
@@ -598,7 +593,7 @@ describe('não perder o trabalho de quem edita', () => {
     await userEvent.click(screen.getByRole('button', { name: /cancelar edição/i }));
 
     expect(confirmar).not.toHaveBeenCalled();
-    expect(screen.queryByLabelText('Tom')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /cifra.*raw/i })).not.toBeInTheDocument();
   });
 
   it('fechar a aba com edição aberta é barrado pelo navegador', async () => {
@@ -607,9 +602,8 @@ describe('não perder o trabalho de quem edita', () => {
 
     renderPage();
     await userEvent.click(await screen.findByRole('button', { name: /editar/i }));
-    const tom = screen.getByLabelText('Tom');
-    await userEvent.clear(tom);
-    await userEvent.type(tom, 'D');
+    const rawInput = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    await userEvent.type(rawInput, ' ');
 
     const evento = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(evento);
@@ -649,10 +643,7 @@ describe('marca de revisão', () => {
 });
 
 describe('cifra que ainda não existe no R2', () => {
-  it('dá para criar a cifra do zero, em vez de ficar trancado para fora', async () => {
-    // Sem arquivo, `song` é null e o botão de editar nem era renderizado: um
-    // registro de cifra sem `.chord` não tinha nenhum caminho na interface para
-    // virar cifra. A única saída era subir o arquivo por fora.
+  it('dá para criar a cifra do zero em modo raw, em vez de ficar trancado para fora', async () => {
     mockAuth({ name: 'Jairo', email: 'j@x.com' });
     const puts: string[] = [];
     vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
@@ -672,13 +663,39 @@ describe('cifra que ainda não existe no R2', () => {
     await waitFor(() => expect(screen.getByText(/ainda não foi publicada/i)).toBeInTheDocument());
 
     await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    const campo = screen.getByRole('textbox', { name: /cifra.*raw/i });
+    await userEvent.type(campo, 'Louvado [[C]seja');
+
+    await userEvent.click(screen.getByRole('button', { name: /^salvar$/i }));
+    await waitFor(() => expect(puts).toHaveLength(1));
+    expect(puts[0]).toContain('Louvado [C]seja');
+  });
+
+  it('dá para criar a cifra do zero alternando para o modo facilitado', async () => {
+    mockAuth({ name: 'Jairo', email: 'j@x.com' });
+    const puts: string[] = [];
+    vi.spyOn(api, 'getPraise').mockResolvedValue(praise);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') {
+          puts.push(String(init.body));
+          return new Response(JSON.stringify({ ok: true }), { status: 200 });
+        }
+        if (!String(url).includes('.chord')) return new Response('{}', { status: 200 });
+        return new Response('', { status: 404 });
+      })
+    );
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/ainda não foi publicada/i)).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: /editar/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /facilitada/i }));
     await userEvent.click(screen.getByRole('button', { name: /adicionar linha/i }));
-    // A linha nasce vazia e fechada; abrir para editar é o passo seguinte.
     await userEvent.click(screen.getByRole('button', { name: /Editar linha 1, vazia/i }));
 
     const campo = screen.getByRole('textbox', { name: 'Texto da linha' });
-    // `[[` é o escape do userEvent para um colchete literal: `[C]` sozinho vira
-    // descritor de tecla e o acorde não chegaria ao campo.
     await userEvent.type(campo, 'Louvado [[C]seja');
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 

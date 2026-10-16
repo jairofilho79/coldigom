@@ -20,6 +20,11 @@
     "verify": "npm run typecheck && npm run coverage",
     "verify:strict": "npm run typecheck && npm run lint && npm run coverage",
     "lint:api": "cd api && npm run lint",
-    "lint:web": "cd web && npm run lint"
+    "lint:web": "cd web && npm run lint",
+    "louvores:sync": "python3 scripts/sincronizar_louvores.py",
+    "louvores:sync:force": "python3 scripts/sincronizar_louvores.py --force",
+    "louvores:consolidar": "python3 scripts/consolidar_metadados_biblicos.py",
+    "louvores:indexar": "python3 scripts/indexar_acervo_completo.py --only-praises --reindex-praises",
+    "louvores:buscar": "python3 scripts/buscar_louvores_semantico.py"
   }
 }

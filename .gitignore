@@ -77,3 +77,14 @@ api/.zshrc
 
 # Worktrees criados pelo Claude Code (scratch, nunca versionado)
 .claude/worktrees/
+
+# Databases, embeddings & local caches
+*.sqlite
+*.sqlite3
+*.npz
+data/embeddings/
+data/pericopes-louvores.json
+data/fila_cifras_avulsos.json
+scripts/revisao-duplicatas/data/
+curadoria-pages/data/*.bak
+

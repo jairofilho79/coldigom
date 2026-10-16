@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coldigom — Curadoria de Duplicatas</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-card: #334155;
+      --border: #475569;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #22c55e;
+      --success-hover: #16a34a;
+      --warning: #f59e0b;
+      --purple: #a855f7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Cabeçalho */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand h1 { font-size: 1.15rem; font-weight: 700; color: var(--primary); }
+    .badge-pill {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--primary);
+    }
+
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 0.85rem;
+    }
+    .stat-val { font-weight: 700; }
+    .stat-val--pend { color: var(--warning); }
+    .stat-val--done { color: var(--success); }
+    .stat-val--rem { color: var(--danger); }
+    .stat-val--arr { color: var(--purple); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Layout Principal */
+    .app-body {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 55px);
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    aside {
+      width: 350px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-search {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--primary); }
+    .filter-select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 0.75rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .item-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+    .item-row {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .item-row:hover { background: rgba(255, 255, 255, 0.04); }
+    .item-row.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-left: 3px solid var(--primary);
+    }
+    .item-row-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .item-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .item-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-row-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .status-badge--done { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+    .status-badge--rem { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .status-badge--pend { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-badge--arr { background: rgba(168, 85, 247, 0.2); color: var(--purple); }
+
+    /* Área Central */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .top-actions-bar {
+      padding: 10px 20px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .praise-details {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .praise-title-group h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .praise-meta-tags {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      text-decoration: none;
+      color: #fff;
+    }
+    .btn--primary { background: var(--primary); color: #0f172a; }
+    .btn--primary:hover { background: var(--primary-hover); }
+    .btn--success { background: var(--success); }
+    .btn--success:hover { background: var(--success-hover); }
+    .btn--danger { background: var(--danger); }
+    .btn--danger:hover { background: var(--danger-hover); }
+    .btn--purple { background: var(--purple); }
+    .btn--purple:hover { opacity: 0.9; }
+    .btn--outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn--outline:hover { background: rgba(255, 255, 255, 0.05); }
+
+    /* Barra de Decisões Globais do Item */
+    .decision-toolbar {
+      padding: 8px 20px;
+      background: #1e293b;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .decision-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn-toggle-arr {
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid var(--purple);
+      color: #d8b4fe;
+    }
+    .btn-toggle-arr.active {
+      background: var(--purple);
+      color: #fff;
+    }
+    .note-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      width: 280px;
+    }
+
+    /* Card de Recomendação Semântica Gemma */
+    .ai-card {
+      margin: 10px 12px 0 12px;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, #1e293b 0%, #151f30 100%);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+    .ai-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .ai-card-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ai-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 12px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ai-sim-badge {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .ai-card-title {
+      font-size: 0.92rem;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+    .ai-card-body {
+      font-size: 0.83rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+    .btn-ai-apply {
+      background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+      color: #0f172a !important;
+      font-weight: 700;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+      cursor: pointer;
+    }
+    .btn-ai-apply:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+    .ai-action-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 4px;
+    }
+    .ai-action-box--remover-b, .ai-action-box--remover-a {
+      border-color: rgba(239, 68, 68, 0.45);
+      background: rgba(239, 68, 68, 0.12);
+    }
+    .ai-action-box--reclassificar {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .ai-action-box--arranjo {
+      border-color: rgba(168, 85, 247, 0.45);
+      background: rgba(168, 85, 247, 0.12);
+    }
+    .ai-action-box--manual {
+      border-color: rgba(245, 158, 11, 0.45);
+      background: rgba(245, 158, 11, 0.12);
+    }
+    .ai-action-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .ai-action-text {
+      flex: 1;
+    }
+    .ai-action-header {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: #94a3b8;
+      margin-bottom: 2px;
+    }
+    .ai-action-content {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #f8fafc;
+      line-height: 1.4;
+    }
+
+    /* Banners de Sugestão nos Painéis A e B */
+    .panel-ai-hint {
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid transparent;
+      letter-spacing: 0.01em;
+    }
+    .panel-ai-hint--danger {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    .panel-ai-hint--success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border-color: rgba(34, 197, 94, 0.35);
+    }
+    .panel-ai-hint--primary {
+      background: rgba(56, 189, 248, 0.2);
+      color: #7dd3fc;
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+    .panel-ai-hint--purple {
+      background: rgba(168, 85, 247, 0.2);
+      color: #d8b4fe;
+      border-color: rgba(168, 85, 247, 0.35);
+    }
+    .panel-ai-hint--muted {
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .btn--highlight-ai {
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.7) !important;
+      border-color: #ef4444 !important;
+      animation: pulse-border 2s infinite;
+    }
+    @keyframes pulse-border {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Comparador Lado a Lado */
+    .compare-container {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      overflow: hidden;
+    }
+    .panel {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel.marked-remove {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.05);
+    }
+    .panel-header {
+      padding: 8px 12px;
+      background: #1e293b;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .panel-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .panel-info {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      overflow: hidden;
+    }
+    .panel-path {
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 360px;
+    }
+    .panel-id { font-family: monospace; font-size: 0.7rem; color: var(--primary); }
+
+    .kind-selector-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+    }
+    .kind-select {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      outline: none;
+    }
+    .kind-select:focus { border-color: var(--primary); }
+
+    .viewer-area {
+      flex: 1;
+      background: #000;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    iframe.pdf-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #525659;
+    }
+    .audio-wrapper {
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 450px;
+    }
+    audio { width: 100%; outline: none; }
+
+    .panel-decision-banner {
+      padding: 6px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border-top: 1px solid var(--danger);
+    }
+
+    /* Modal de Sincronização / Exportação */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 550px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .modal-body { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+    /* Estado Vazio Inicial */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+
+    /* Atalhos Rodapé */
+    .keyboard-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 4px 12px;
+      background: #111827;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    kbd {
+      background: #334155;
+      border: 1px solid #475569;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 0.7rem;
+      color: #e2e8f0;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cabeçalho -->
+  <header>
+    <div class="brand">
+      <h1>🎵 Coldigom Curadoria</h1>
+      <span class="badge-pill" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4);">🟢 Modo Direto (Coldigom D1)</span>
+    </div>
+
+    <div class="stats-bar">
+      <div>Pendentes: <span class="stat-val stat-val--pend" id="stat-pend">0</span></div>
+      <div>Resolvidos na Sessão: <span class="stat-val stat-val--done" id="stat-done">0</span></div>
+      <div>Remoções: <span class="stat-val stat-val--rem" id="stat-rem">0</span></div>
+      <div>Outro Arranjo: <span class="stat-val stat-val--arr" id="stat-arr">0</span></div>
+      <div>Duplicatas Atuais: <span class="stat-val" id="stat-total">0</span></div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-reload-d1" class="btn btn--outline" title="Recarregar duplicatas ao vivo do Cloudflare D1">
+        🔄 Recarregar D1
+      </button>
+      <a href="https://coldigom-web.pages.dev" target="_blank" rel="noopener noreferrer" class="btn btn--primary" title="Abrir Coldigom Web oficial">
+        🌐 Abrir Coldigom
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout Principal -->
+  <div class="app-body">
+    <!-- Sidebar -->
+    <aside>
+      <div class="sidebar-search">
+        <input type="text" id="input-search" class="search-input" placeholder="🔍 Buscar por nome ou número...">
+        <select id="select-ai-filter" class="filter-select" style="border-color: rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.05); font-weight: 600;">
+          <option value="">🤖 Todos os Diagnósticos IA</option>
+          <option value="falso_positivo">⚡ Falsos Positivos (683 Reclassificações)</option>
+          <option value="duplicata_real">🚨 Duplicatas Reais (998 Remoções)</option>
+          <option value="outro_arranjo">🎼 Variações de Arranjo</option>
+          <option value="manual">❓ Avaliação Manual</option>
+        </select>
+        <select id="select-category" class="filter-select">
+          <option value="">Todas as Categorias</option>
+          <option value="Choir">Coro (Choir)</option>
+          <option value="Audio">Áudio (Audio)</option>
+          <option value="Trombone">Trombone</option>
+          <option value="Flute">Flauta</option>
+          <option value="Saxophone">Saxofones</option>
+          <option value="Trumpet">Trompete</option>
+          <option value="Clarinet">Clarinete</option>
+          <option value="Voice">Vozes</option>
+          <option value="Violin">Violino</option>
+          <option value="Cello">Violoncelo</option>
+          <option value="Viola">Viola</option>
+          <option value="Chord">Cifras</option>
+          <option value="Score">Grade (Score)</option>
+        </select>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="pendente" id="tab-pendente">Pendentes</button>
+        <button class="tab-btn" data-tab="mantidos" id="tab-mantidos">Mantidos / Arranjos</button>
+        <button class="tab-btn" data-tab="todos" id="tab-todos">Todos</button>
+      </div>
+
+      <ul class="item-list" id="item-list"></ul>
+    </aside>
+
+    <!-- Área Principal de Comparação -->
+    <main>
+      <div class="top-actions-bar" id="top-bar">
+        <div class="praise-details">
+          <div class="praise-title-group">
+            <h2 id="view-title">Carregando dados...</h2>
+            <div class="praise-meta-tags">
+              <span id="view-kind-badge" class="badge-pill">--</span>
+              <span id="view-tags">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group" id="main-actions" style="display: none;">
+          <a id="btn-coldigom" href="#" target="_blank" rel="noopener noreferrer" class="btn btn--outline" title="Abrir página no Coldigom">
+            🔗 Abrir no Coldigom ↗
+          </a>
+          <button id="btn-manter" class="btn btn--success" title="Manter ambos os arquivos (mesmo arranjo)">
+            ✅ Manter Ambos [C]
+          </button>
+          <button id="btn-desfazer" class="btn btn--outline" style="display: none;" title="Limpar decisão deste louvor">
+            ↩️ Desfazer
+          </button>
+          <button id="btn-prev" class="btn btn--outline" title="Anterior [←]">←</button>
+          <button id="btn-next" class="btn btn--outline" title="Próximo [→]">→</button>
+        </div>
+      </div>
+
+      <!-- Barra de Opções Específicas do Item -->
+      <div class="decision-toolbar" id="decision-toolbar" style="display: none;">
+        <div class="decision-toolbar-left">
+          <button id="btn-outro-arranjo" class="btn btn-toggle-arr" title="Marcar que são arranjos diferentes da mesma música">
+            🎼 Outro Arranjo (Manter Ambos)
+          </button>
+          <input type="text" id="input-note" class="note-input" placeholder="💬 Anotação / Observação livre...">
+        </div>
+        <div>
+          <span id="item-status-summary" style="font-size: 0.8rem; color: var(--text-muted);">Pendente</span>
+        </div>
+      </div>
+
+      <!-- Card de Diagnóstico da IA Gemma -->
+      <div class="ai-card" id="ai-card" style="display: none;">
+        <div class="ai-card-header">
+          <div class="ai-card-left">
+            <span class="ai-pill" id="ai-badge">⚡ Sugestão IA</span>
+            <span class="ai-sim-badge" id="ai-similarity">Similaridade: --</span>
+            <strong class="ai-card-title" id="ai-title">Analisando...</strong>
+          </div>
+          <button id="btn-apply-ai" class="btn btn-ai-apply" title="Aplica os tipos e a ação sugerida pela IA em 1 clique">
+            ⚡ Aplicar Sugestão da IA
+          </button>
+        </div>
+        <div class="ai-card-body" id="ai-explanation">
+          Carregando diagnóstico...
+        </div>
+        <div class="ai-action-box" id="ai-action-box" style="display: none;">
+          <div class="ai-action-icon" id="ai-action-icon">👉</div>
+          <div class="ai-action-text">
+            <div class="ai-action-header">Ação Recomendada (Gemma 2):</div>
+            <div class="ai-action-content" id="ai-action-desc">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparador Lado a Lado -->
+      <div class="compare-container" id="compare-container" style="display: none;">
+        <!-- Painel Esquerdo (Material A) -->
+        <div class="panel" id="panel-a">
+          <div class="panel-header">
+            <div class="panel-header-top">
+              <div class="panel-info">
+                <div class="panel-path" id="path-a">Caminho: --</div>
+                <div>ID: <span class="panel-id" id="id-a">--</span></div>
+              </div>
+              <button class="btn btn--danger" id="btn-remove-a">
+                🗑️ Remover Este (A) [1]
+              </button>
+            </div>
+            <!-- Troca de Material Kind (A) -->
+            <div class="kind-selector-row">
+              <span>🏷️ Tipo:</span>
+              <select id="select-kind-a" class="kind-select"></select>
+            </div>
+          </div>
+          <div class="panel-ai-hint" id="ai-hint-a" style="display: none;"></div>
+          <div class="viewer-area" id="viewer-a"></div>
+          <div class="panel-decision-banner" id="banner-a" style="display: none;">
+            Marcado para Exclusão
+          </div>
+        </div>
+
+        <!-- Painel Direito (Material B) -->
+        <div class="panel" id="panel-b">
+          <div class="panel-header">
+            <div class="panel-header-top">
+              <div class="panel-info">
+                <div class="panel-path" id="path-b">Caminho: --</div>
+                <div>ID: <span class="panel-id" id="id-b">--</span></div>
+              </div>
+              <button class="btn btn--danger" id="btn-remove-b">
+                🗑️ Remover Este (B) [2]
+              </button>
+            </div>
+            <!-- Troca de Material Kind (B) -->
+            <div class="kind-selector-row">
+              <span>🏷️ Tipo:</span>
+              <select id="select-kind-b" class="kind-select"></select>
+            </div>
+          </div>
+          <div class="panel-ai-hint" id="ai-hint-b" style="display: none;"></div>
+          <div class="viewer-area" id="viewer-b"></div>
+          <div class="panel-decision-banner" id="banner-b" style="display: none;">
+            Marcado para Exclusão
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado Vazio -->
+      <div class="empty-state" id="empty-state">
+        <p>👈 Selecione um louvor na lista lateral para revisar.</p>
+        <p style="font-size: 0.8rem;">Os arquivos são carregados <strong>sob demanda</strong> para economizar rede e não sobrecarregar nada.</p>
+      </div>
+
+      <!-- Atalhos Rodapé -->
+      <div class="keyboard-hint">
+        <span>Atalhos: <kbd>A</kbd> Aplicar Sugestão IA · <kbd>1</kbd> Remover A · <kbd>2</kbd> Remover B · <kbd>C</kbd> Manter Ambos · <kbd>→</kbd> Próximo · <kbd>←</kbd> Anterior</span>
+        <span id="save-status">Salvo no Navegador (localStorage)</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Sincronização / Envio -->
+  <div class="modal-overlay" id="modal-sync" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-title">📤 Enviar / Sincronizar Decisões</div>
+      <div class="modal-body">
+        <p>Você pode enviar todo o seu progresso diretamente para o servidor ou baixar o arquivo de backup para repassar ao seu irmão.</p>
+        <div style="margin: 12px 0; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+          <div>Itens revisados: <strong id="modal-rev-count">0</strong></div>
+          <div>Materiais marcados para remoção: <strong id="modal-rem-count">0</strong></div>
+          <div>Marcados como outro arranjo: <strong id="modal-arr-count">0</strong></div>
+          <div>Material kinds alterados: <strong id="modal-kind-count">0</strong></div>
+        </div>
+        <div id="sync-feedback" style="font-size: 0.8rem; margin-top: 6px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-download-direct" class="btn btn--outline">💾 Baixar Arquivo JSON</button>
+        <button id="btn-do-sync" class="btn btn--primary">🚀 Enviar para o Servidor</button>
+        <button id="btn-close-modal" class="btn btn--outline">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allGroups = [];
+    let materialKinds = [];
+    let currentFiltered = [];
+    let currentIndex = -1;
+    let currentTab = 'pendente';
+    let sessionResolvedCount = 0;
+    const aiDiagnosisMap = {};
+
+    // Elementos DOM
+    const elList = document.getElementById('item-list');
+    const elSearch = document.getElementById('input-search');
+    const elCategory = document.getElementById('select-category');
+    const elCompare = document.getElementById('compare-container');
+    const elToolbar = document.getElementById('decision-toolbar');
+    const elEmpty = document.getElementById('empty-state');
+    const elMainActions = document.getElementById('main-actions');
+
+    const elAiFilter = document.getElementById('select-ai-filter');
+    const elAiCard = document.getElementById('ai-card');
+    const elAiBadge = document.getElementById('ai-badge');
+    const elAiSimilarity = document.getElementById('ai-similarity');
+    const elAiTitle = document.getElementById('ai-title');
+    const elAiExplanation = document.getElementById('ai-explanation');
+    const elBtnApplyAi = document.getElementById('btn-apply-ai');
+    const elAiActionBox = document.getElementById('ai-action-box');
+    const elAiActionIcon = document.getElementById('ai-action-icon');
+    const elAiActionDesc = document.getElementById('ai-action-desc');
+
+    const elViewTitle = document.getElementById('view-title');
+    const elViewKindBadge = document.getElementById('view-kind-badge');
+    const elViewTags = document.getElementById('view-tags');
+    const elBtnColdigom = document.getElementById('btn-coldigom');
+    const elBtnManter = document.getElementById('btn-manter');
+    const elBtnDesfazer = document.getElementById('btn-desfazer');
+    const elBtnPrev = document.getElementById('btn-prev');
+    const elBtnNext = document.getElementById('btn-next');
+    const elBtnOutroArranjo = document.getElementById('btn-outro-arranjo');
+    const elInputNote = document.getElementById('input-note');
+    const elItemStatus = document.getElementById('item-status-summary');
+
+    const elPanelA = document.getElementById('panel-a');
+    const elPanelB = document.getElementById('panel-b');
+    const elViewerA = document.getElementById('viewer-a');
+    const elViewerB = document.getElementById('viewer-b');
+    const elPathA = document.getElementById('path-a');
+    const elPathB = document.getElementById('path-b');
+    const elIdA = document.getElementById('id-a');
+    const elIdB = document.getElementById('id-b');
+    const elSelectKindA = document.getElementById('select-kind-a');
+    const elSelectKindB = document.getElementById('select-kind-b');
+    const elBtnRemoveA = document.getElementById('btn-remove-a');
+    const elBtnRemoveB = document.getElementById('btn-remove-b');
+    const elBannerA = document.getElementById('banner-a');
+    const elBannerB = document.getElementById('banner-b');
+    const elAiHintA = document.getElementById('ai-hint-a');
+    const elAiHintB = document.getElementById('ai-hint-b');
+
+    function normKey(k) {
+      return (k || '').replace(/[:_]/g, '_').toLowerCase().trim();
+    }
+
+    const elStatPend = document.getElementById('stat-pend');
+    const elStatDone = document.getElementById('stat-done');
+    const elStatRem = document.getElementById('stat-rem');
+    const elStatArr = document.getElementById('stat-arr');
+    const elStatTotal = document.getElementById('stat-total');
+
+    function mostrarToast(msg, tipo = 'success') {
+      let toast = document.getElementById('app-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'app-toast';
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          z-index: 9999;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+          transition: opacity 0.2s, transform 0.2s;
+        `;
+        document.body.appendChild(toast);
+      }
+      toast.style.background = tipo === 'success' ? '#166534' : (tipo === 'danger' ? '#991b1b' : '#1e293b');
+      toast.style.color = '#f8fafc';
+      toast.style.border = `1px solid ${tipo === 'success' ? '#22c55e' : (tipo === 'danger' ? '#ef4444' : '#38bdf8')}`;
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+      }, 3500);
+    }
+
+    // Inicialização de Dados ao Vivo do D1
+    async function init() {
+      elViewTitle.textContent = 'Carregando duplicatas ao vivo do Coldigom D1...';
+      try {
+        let resDups, resKinds;
+        try {
+          [resDups, resKinds] = await Promise.all([
+            fetch('/api/duplicatas'),
+            fetch('/api/material-kinds')
+          ]);
+          if (!resDups.ok || !resKinds.ok) throw new Error('API offline');
+          allGroups = await resDups.json();
+          materialKinds = await resKinds.json();
+          mostrarToast(`🟢 Conectado ao Cloudflare D1 (${allGroups.length} duplicatas reais)`, 'success');
+        } catch (apiErr) {
+          console.warn('Fallback para JSON estático:', apiErr);
+          mostrarToast('ℹ️ Modo estático/offline', 'info');
+          [resDups, resKinds] = await Promise.all([
+            fetch('./data/duplicatas.json'),
+            fetch('./data/material_kinds.json')
+          ]);
+          allGroups = await resDups.json();
+          materialKinds = await resKinds.json();
+        }
+
+        // Tenta carregar mapa de diagnósticos IA pré-calculados
+        try {
+          const resDiag = await fetch('./data/duplicatas.json');
+          if (resDiag.ok) {
+            const diags = await resDiag.json();
+            diags.forEach(d => {
+              if (d.ai_diagnosis && d.group_key) {
+                aiDiagnosisMap[normKey(d.group_key)] = d.ai_diagnosis;
+              }
+            });
+            allGroups.forEach(g => {
+              const k = normKey(g.group_key);
+              if (!g.ai_diagnosis && aiDiagnosisMap[k]) {
+                g.ai_diagnosis = aiDiagnosisMap[k];
+              }
+            });
+          }
+        } catch (e) {}
+
+        popularSelectKinds(elSelectKindA);
+        popularSelectKinds(elSelectKindB);
+
+        atualizarContadores();
+        aplicarFiltros();
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        elViewTitle.textContent = 'Erro ao carregar dados do Coldigom';
+      }
+    }
+
+    function popularSelectKinds(selectEl) {
+      selectEl.innerHTML = '';
+      const porClasse = {};
+      materialKinds.forEach(k => {
+        const c = k.class_id || 'outros';
+        if (!porClasse[c]) porClasse[c] = [];
+        porClasse[c].push(k);
+      });
+
+      Object.entries(porClasse).forEach(([classe, itens]) => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = classe.toUpperCase();
+        itens.sort((a,b) => a.label.localeCompare(b.label)).forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k.id;
+          opt.textContent = `${k.label} (${k.name})`;
+          selectEl.appendChild(opt);
+        });
+      });
+    }
+
+    function atualizarContadores() {
+      const total = allGroups.length;
+      let countPend = 0;
+      let countArr = 0;
+
+      allGroups.forEach(g => {
+        if (!g.saved_action) countPend++;
+        if (g.saved_action === 'outro_arranjo') countArr++;
+      });
+
+      elStatTotal.textContent = total;
+      elStatPend.textContent = countPend;
+      elStatDone.textContent = sessionResolvedCount;
+      elStatRem.textContent = sessionResolvedCount;
+      elStatArr.textContent = countArr;
+    }
+
+    // Filtros e Renderização
+    function aplicarFiltros() {
+      const q = elSearch.value.trim().toLowerCase();
+      const cat = elCategory.value.toLowerCase();
+      const aiCat = elAiFilter ? elAiFilter.value : '';
+
+      currentFiltered = allGroups.filter(g => {
+        const isMantido = !!g.saved_action;
+
+        if (currentTab === 'pendente' && isMantido) return false;
+        if (currentTab === 'mantidos' && !isMantido) return false;
+
+        if (aiCat) {
+          if (!g.ai_diagnosis || g.ai_diagnosis.categoria !== aiCat) return false;
+        }
+
+        if (cat) {
+          const matchKind = g.material_kind_name.toLowerCase().includes(cat) ||
+                            g.material_kind_label.toLowerCase().includes(cat);
+          if (!matchKind) return false;
+        }
+
+        if (q) {
+          const numMatch = (g.praise_number || '').toLowerCase().includes(q);
+          const nameMatch = (g.praise_name || '').toLowerCase().includes(q);
+          if (!numMatch && !nameMatch) return false;
+        }
+
+        return true;
+      });
+
+      renderLista();
+
+      if (currentFiltered.length > 0) {
+        if (currentIndex < 0 || currentIndex >= currentFiltered.length) {
+          selecionarItem(0);
+        } else {
+          selecionarItem(currentIndex);
+        }
+      } else {
+        desmontarVisualizadores();
+        elCompare.style.display = 'none';
+        elToolbar.style.display = 'none';
+        elMainActions.style.display = 'none';
+        if (elAiCard) elAiCard.style.display = 'none';
+        elEmpty.style.display = 'flex';
+        elViewTitle.textContent = currentTab === 'pendente' 
+          ? '🎉 Nenhuma duplicata pendente encontrada!'
+          : 'Nenhum louvor encontrado com estes filtros';
+      }
+    }
+
+    function renderLista() {
+      elList.innerHTML = '';
+
+      currentFiltered.forEach((g, idx) => {
+        const li = document.createElement('li');
+        li.className = `item-row ${idx === currentIndex ? 'active' : ''}`;
+        
+        let badgeHtml = '<span class="status-badge status-badge--pend">Pendente</span>';
+        if (g.saved_action === 'outro_arranjo') {
+          badgeHtml = '<span class="status-badge status-badge--arr">Outro Arranjo</span>';
+        } else if (g.saved_action === 'manter_ambos') {
+          badgeHtml = '<span class="status-badge status-badge--done">Manter Ambos</span>';
+        }
+
+        const diag = g.ai_diagnosis;
+        let aiBadgeHtml = '';
+        if (diag) {
+          aiBadgeHtml = `<span class="badge-pill" style="border: 1px solid ${diag.cor || '#38bdf8'}; color: ${diag.cor || '#38bdf8'}; background: rgba(0,0,0,0.3); font-size: 0.65rem; font-weight: 700;">${diag.badge || '⚡ IA'}</span>`;
+        }
+
+        li.innerHTML = `
+          <div class="item-row-top">
+            <span class="item-num">${g.praise_number || '-'}</span>
+            <span class="item-title" title="${g.praise_name}">${g.praise_name}</span>
+            ${badgeHtml}
+          </div>
+          <div class="item-row-meta">
+            <span>${g.material_kind_label} (${g.material_type})</span>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              ${aiBadgeHtml}
+              <span class="badge-pill">${(g.praise_tags || '').split(',')[0] || ''}</span>
+            </div>
+          </div>
+        `;
+        li.onclick = () => selecionarItem(idx);
+        elList.appendChild(li);
+      });
+    }
+
+    function desmontarVisualizadores() {
+      elViewerA.innerHTML = '';
+      elViewerB.innerHTML = '';
+    }
+
+    function selecionarItem(idx) {
+      if (idx < 0 || idx >= currentFiltered.length) return;
+      currentIndex = idx;
+
+      const rows = elList.querySelectorAll('.item-row');
+      rows.forEach((r, i) => r.classList.toggle('active', i === idx));
+
+      const item = currentFiltered[idx];
+      exibirItem(item);
+    }
+
+    function exibirItem(item) {
+      desmontarVisualizadores();
+
+      elEmpty.style.display = 'none';
+      elCompare.style.display = 'flex';
+      elToolbar.style.display = 'flex';
+      elMainActions.style.display = 'flex';
+
+      elViewTitle.textContent = `${item.praise_number ? item.praise_number + ' · ' : ''}${item.praise_name}`;
+      elViewKindBadge.textContent = `${item.material_kind_label} [${item.material_type}]`;
+      elViewTags.textContent = item.praise_tags || 'Sem tags';
+
+      const targetMatId = item.materials[0]?.id || '';
+      elBtnColdigom.href = `https://coldigom-web.pages.dev/praise/${item.praise_id}?materialId=${encodeURIComponent(targetMatId)}`;
+
+      const matA = item.materials[0];
+      const matB = item.materials[1] || matA;
+
+      // Diagnóstico da IA Gemma
+      const diag = item.ai_diagnosis;
+      elBtnRemoveA.classList.remove('btn--highlight-ai');
+      elBtnRemoveB.classList.remove('btn--highlight-ai');
+
+      if (diag) {
+        elAiCard.style.display = 'flex';
+        elAiBadge.textContent = diag.badge || '⚡ Sugestão IA';
+        elAiBadge.style.color = diag.cor || '#38bdf8';
+        elAiBadge.style.borderColor = diag.cor || '#38bdf8';
+        elAiSimilarity.textContent = (diag.similaridade !== undefined && diag.similaridade !== null)
+          ? `Similaridade: ${diag.similaridade}%`
+          : 'Similaridade: --';
+        elAiTitle.textContent = diag.titulo || 'Diagnóstico Semântico';
+        elAiExplanation.textContent = diag.explicacao || '';
+
+        // Box de Ação Recomendada
+        elAiActionBox.style.display = 'flex';
+        elAiActionBox.className = 'ai-action-box';
+
+        // Painel Hints
+        elAiHintA.style.display = 'flex';
+        elAiHintB.style.display = 'flex';
+
+        if (diag.acao_sugerida === 'remover_b') {
+          elAiActionBox.classList.add('ai-action-box--remover-b');
+          elAiActionIcon.textContent = '🗑️';
+          elAiActionDesc.innerHTML = '<strong>Remover Arquivo B (Duplicata)</strong> e <strong>MANTER Arquivo A</strong>.';
+          elBtnApplyAi.style.display = 'inline-flex';
+          elBtnApplyAi.textContent = '🗑️ Remover Material B (1 Clique) [A]';
+          elBtnApplyAi.onclick = async () => await executarRemoverMaterial(item, matB, 'B');
+
+          elAiHintA.className = 'panel-ai-hint panel-ai-hint--success';
+          elAiHintA.innerHTML = '<span>✅ Sugestão IA: <b>MANTER ESTE ARQUIVO (A)</b></span>';
+
+          elAiHintB.className = 'panel-ai-hint panel-ai-hint--danger';
+          elAiHintB.innerHTML = '<span>🚨 Sugestão IA: <b>REMOVER ESTA DUPLICATA (B)</b></span>';
+
+          elBtnRemoveB.classList.add('btn--highlight-ai');
+        } else if (diag.acao_sugerida === 'remover_a') {
+          elAiActionBox.classList.add('ai-action-box--remover-a');
+          elAiActionIcon.textContent = '🗑️';
+          elAiActionDesc.innerHTML = '<strong>Remover Arquivo A (Duplicata/Antigo)</strong> e <strong>MANTER Arquivo B</strong>.';
+          elBtnApplyAi.style.display = 'inline-flex';
+          elBtnApplyAi.textContent = '🗑️ Remover Material A (1 Clique) [A]';
+          elBtnApplyAi.onclick = async () => await executarRemoverMaterial(item, matA, 'A');
+
+          elAiHintA.className = 'panel-ai-hint panel-ai-hint--danger';
+          elAiHintA.innerHTML = '<span>🚨 Sugestão IA: <b>REMOVER ESTA DUPLICATA (A)</b></span>';
+
+          elAiHintB.className = 'panel-ai-hint panel-ai-hint--success';
+          elAiHintB.innerHTML = '<span>✅ Sugestão IA: <b>MANTER ESTE ARQUIVO (B)</b></span>';
+
+          elBtnRemoveA.classList.add('btn--highlight-ai');
+        } else if (diag.acao_sugerida === 'reclassificar_ambos') {
+          elAiActionBox.classList.add('ai-action-box--reclassificar');
+          elAiActionIcon.textContent = '🏷️';
+          const labelA = diag.sugestao_a?.label || 'Nova Categoria A';
+          const labelB = diag.sugestao_b?.label || 'Nova Categoria B';
+          elAiActionDesc.innerHTML = `<strong>Reclassificar Categorias (NÃO EXCLUIR)</strong>: Material A vira "<b>${labelA}</b>" e Material B vira "<b>${labelB}</b>".`;
+          elBtnApplyAi.style.display = 'inline-flex';
+          elBtnApplyAi.textContent = '🏷️ Reclassificar Ambos (1 Clique) [A]';
+          elBtnApplyAi.onclick = async () => {
+            if (diag.sugestao_a?.id && diag.sugestao_b?.id) {
+              await executarReclassificarAmbos(item, matA, matB, diag.sugestao_a.id, diag.sugestao_b.id);
+            } else if (diag.sugestao_a?.id) {
+              await executarAtualizarKind(item, matA, diag.sugestao_a.id, 'A');
+            } else if (diag.sugestao_b?.id) {
+              await executarAtualizarKind(item, matB, diag.sugestao_b.id, 'B');
+            }
+          };
+
+          elAiHintA.className = 'panel-ai-hint panel-ai-hint--primary';
+          elAiHintA.innerHTML = `<span>🏷️ Sugestão IA: Reclassificar para "<b>${labelA}</b>" (${diag.sugestao_a?.confianca || 0}%)</span>`;
+
+          elAiHintB.className = 'panel-ai-hint panel-ai-hint--primary';
+          elAiHintB.innerHTML = `<span>🏷️ Sugestão IA: Reclassificar para "<b>${labelB}</b>" (${diag.sugestao_b?.confianca || 0}%)</span>`;
+        } else if (diag.acao_sugerida === 'outro_arranjo') {
+          elAiActionBox.classList.add('ai-action-box--arranjo');
+          elAiActionIcon.textContent = '🎼';
+          elAiActionDesc.innerHTML = '<strong>Manter Ambos</strong> como <strong>Variação de Arranjo</strong> diferente (ex: playback vs cantado).';
+          elBtnApplyAi.style.display = 'inline-flex';
+          elBtnApplyAi.textContent = '🎼 Marcar Outro Arranjo (1 Clique) [A]';
+          elBtnApplyAi.onclick = async () => await executarOutroArranjo(item);
+
+          elAiHintA.className = 'panel-ai-hint panel-ai-hint--purple';
+          elAiHintA.innerHTML = '<span>🎼 Sugestão IA: <b>MANTER (Outro Arranjo)</b></span>';
+
+          elAiHintB.className = 'panel-ai-hint panel-ai-hint--purple';
+          elAiHintB.innerHTML = '<span>🎼 Sugestão IA: <b>MANTER (Outro Arranjo)</b></span>';
+        } else {
+          elAiActionBox.classList.add('ai-action-box--manual');
+          elAiActionIcon.textContent = '❓';
+          elAiActionDesc.innerHTML = '<strong>Avaliação Manual Necessária</strong>. Compare os dois arquivos para decidir a melhor ação.';
+          elBtnApplyAi.style.display = 'none';
+
+          elAiHintA.className = 'panel-ai-hint panel-ai-hint--muted';
+          elAiHintA.innerHTML = '<span>🔍 Avaliação Manual: Compare com o arquivo B</span>';
+
+          elAiHintB.className = 'panel-ai-hint panel-ai-hint--muted';
+          elAiHintB.innerHTML = '<span>🔍 Avaliação Manual: Compare com o arquivo A</span>';
+        }
+      } else {
+        elAiCard.style.display = 'none';
+        elAiActionBox.style.display = 'none';
+        elAiHintA.style.display = 'none';
+        elAiHintB.style.display = 'none';
+      }
+
+      // Status do Item
+      if (item.saved_action) {
+        elBtnDesfazer.style.display = 'inline-flex';
+        elBtnDesfazer.onclick = () => executarDesfazer(item);
+        elItemStatus.textContent = item.saved_action === 'outro_arranjo'
+          ? '🎼 Salvo no Coldigom como Outro Arranjo'
+          : '✅ Salvo no Coldigom como Manter Ambos';
+      } else {
+        elBtnDesfazer.style.display = 'none';
+        elItemStatus.textContent = '⏳ Duplicata pendente no Coldigom';
+      }
+
+      // Outro Arranjo Toggle
+      const isOutroArranjo = item.saved_action === 'outro_arranjo';
+      elBtnOutroArranjo.classList.toggle('active', isOutroArranjo);
+      elBtnOutroArranjo.onclick = () => executarOutroArranjo(item);
+
+      // Nota/Observação
+      elInputNote.value = item.saved_note || '';
+
+      // Manter Ambos
+      elBtnManter.onclick = () => executarManterAmbos(item);
+
+      // Painel A
+      elPathA.textContent = matA.file_path_legacy || matA.r2_key || 'Sem caminho';
+      elPathA.title = elPathA.textContent;
+      elIdA.textContent = matA.id;
+      elPanelA.classList.remove('marked-remove');
+      elBannerA.style.display = 'none';
+      elSelectKindA.value = item.material_kind_id;
+      elSelectKindA.onchange = () => executarAtualizarKind(item, matA, elSelectKindA.value, 'A');
+      elBtnRemoveA.onclick = () => executarRemoverMaterial(item, matA, 'A');
+
+      // Painel B
+      elPathB.textContent = matB.file_path_legacy || matB.r2_key || 'Sem caminho';
+      elPathB.title = elPathB.textContent;
+      elIdB.textContent = matB.id;
+      elPanelB.classList.remove('marked-remove');
+      elBannerB.style.display = 'none';
+      elSelectKindB.value = item.material_kind_id;
+      elSelectKindB.onchange = () => executarAtualizarKind(item, matB, elSelectKindB.value, 'B');
+      elBtnRemoveB.onclick = () => executarRemoverMaterial(item, matB, 'B');
+
+      // Visualizadores Sob Demanda
+      montarViewer(elViewerA, matA);
+      if (matA.id !== matB.id) {
+        montarViewer(elViewerB, matB);
+      } else {
+        elViewerB.innerHTML = '<div style="color: #94a3b8; font-size: 0.85rem;">(Apenas 1 material encontrado)</div>';
+      }
+    }
+
+    // Ações Diretas no Coldigom D1
+    async function executarRemoverMaterial(item, material, label) {
+      if (!confirm(`Remover definitivamente o Material ${label} (${material.id}) do Coldigom?`)) {
+        return;
+      }
+      try {
+        mostrarToast(`⏳ Removendo Material ${label} no Coldigom D1...`, 'info');
+        const res = await fetch('/api/material-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ praise_id: item.praise_id, material_id: material.id })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao remover material');
+
+        mostrarToast(`🗑️ Material ${label} removido com sucesso no Coldigom!`, 'success');
+        sessionResolvedCount++;
+
+        // Remove da lista de duplicatas pois não é mais duplicado
+        const idx = allGroups.findIndex(g => normKey(g.group_key) === normKey(item.group_key));
+        if (idx !== -1) allGroups.splice(idx, 1);
+
+        atualizarContadores();
+        aplicarFiltros();
+      } catch (err) {
+        alert(`Erro ao remover no Coldigom: ${err.message}`);
+      }
+    }
+
+    async function executarAtualizarKind(item, material, novoKindId, label) {
+      try {
+        mostrarToast(`⏳ Atualizando categoria de ${label} no Coldigom D1...`, 'info');
+        const res = await fetch('/api/material-update-kind', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            praise_id: item.praise_id,
+            material_id: material.id,
+            material_kind: novoKindId
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao atualizar categoria');
+
+        const kindObj = materialKinds.find(k => k.id === novoKindId);
+        const kindNome = kindObj ? kindObj.label : novoKindId;
+        mostrarToast(`🏷️ Categoria de ${label} alterada para "${kindNome}" no Coldigom!`, 'success');
+        sessionResolvedCount++;
+
+        // Como a categoria foi alterada, a duplicação deixa de existir!
+        const idx = allGroups.findIndex(g => normKey(g.group_key) === normKey(item.group_key));
+        if (idx !== -1) allGroups.splice(idx, 1);
+
+        atualizarContadores();
+        aplicarFiltros();
+      } catch (err) {
+        alert(`Erro ao atualizar categoria no Coldigom: ${err.message}`);
+      }
+    }
+
+    async function executarReclassificarAmbos(item, matA, matB, kindAId, kindBId) {
+      try {
+        mostrarToast(`⏳ Reclassificando ambos no Coldigom D1...`, 'info');
+        const [resA, resB] = await Promise.all([
+          fetch('/api/material-update-kind', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ praise_id: item.praise_id, material_id: matA.id, material_kind: kindAId })
+          }),
+          fetch('/api/material-update-kind', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ praise_id: item.praise_id, material_id: matB.id, material_kind: kindBId })
+          })
+        ]);
+        const dataA = await resA.json();
+        const dataB = await resB.json();
+        if (!resA.ok || !dataA.success || !resB.ok || !dataB.success) {
+          throw new Error((dataA.error || '') + ' ' + (dataB.error || ''));
+        }
+        const kindA = materialKinds.find(k => k.id === kindAId)?.label || kindAId;
+        const kindB = materialKinds.find(k => k.id === kindBId)?.label || kindBId;
+        mostrarToast(`🏷️ Reclassificados: A -> "${kindA}" e B -> "${kindB}"!`, 'success');
+        sessionResolvedCount++;
+
+        const idx = allGroups.findIndex(g => normKey(g.group_key) === normKey(item.group_key));
+        if (idx !== -1) allGroups.splice(idx, 1);
+
+        atualizarContadores();
+        aplicarFiltros();
+      } catch (err) {
+        alert(`Erro ao reclassificar no Coldigom: ${err.message}`);
+      }
+    }
+
+    async function executarManterAmbos(item) {
+      try {
+        mostrarToast(`⏳ Salvando decisão no Coldigom...`, 'info');
+        const res = await fetch('/api/material-decisao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            group_key: item.group_key,
+            praise_id: item.praise_id,
+            material_kind_id: item.material_kind_id,
+            material_type: item.material_type,
+            action: 'manter_ambos'
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao salvar decisão');
+
+        mostrarToast(`✅ Salvo: Manter ambos no Coldigom!`, 'success');
+        item.saved_action = 'manter_ambos';
+        sessionResolvedCount++;
+
+        atualizarContadores();
+        if (currentTab === 'pendente') {
+          aplicarFiltros();
+        } else {
+          selecionarItem(currentIndex);
+        }
+      } catch (err) {
+        alert(`Erro ao salvar no Coldigom: ${err.message}`);
+      }
+    }
+
+    async function executarOutroArranjo(item) {
+      const isArr = item.saved_action === 'outro_arranjo';
+      const novaAcao = isArr ? 'manter_ambos' : 'outro_arranjo';
+      try {
+        mostrarToast(`⏳ Salvando arranjo no Coldigom...`, 'info');
+        const res = await fetch('/api/material-decisao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            group_key: item.group_key,
+            praise_id: item.praise_id,
+            material_kind_id: item.material_kind_id,
+            material_type: item.material_type,
+            action: novaAcao,
+            note: elInputNote.value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao salvar arranjo');
+
+        mostrarToast(novaAcao === 'outro_arranjo' ? `🎼 Marcado como Outro Arranjo!` : `✅ Desmarcado outro arranjo`, 'success');
+        item.saved_action = novaAcao;
+        item.saved_note = elInputNote.value;
+
+        atualizarContadores();
+        aplicarFiltros();
+      } catch (err) {
+        alert(`Erro ao registrar arranjo no Coldigom: ${err.message}`);
+      }
+    }
+
+    async function executarDesfazer(item) {
+      try {
+        await fetch('/api/material-decisao', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            group_key: item.group_key,
+            praise_id: item.praise_id,
+            action: 'limpar'
+          })
+        });
+        item.saved_action = null;
+        mostrarToast('↩️ Decisão desfeita, item voltou para pendente', 'info');
+        atualizarContadores();
+        aplicarFiltros();
+      } catch (err) {
+        alert(`Erro ao desfazer: ${err.message}`);
+      }
+    }
+
+    function montarViewer(container, material) {
+      if (!material) return;
+      const url = material.asset_url;
+      const type = (material.type || '').toLowerCase();
+
+      if (type === 'pdf') {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'pdf-frame';
+        iframe.src = url;
+        container.appendChild(iframe);
+      } else if (type === 'mp3' || type === 'm4a' || type === 'wav' || type === 'mpeg') {
+        const wrap = document.createElement('div');
+        wrap.className = 'audio-wrapper';
+        wrap.innerHTML = `
+          <div style="font-size: 0.85rem; color: #94a3b8; text-align: center;">Áudio (${type.toUpperCase()})</div>
+          <audio controls preload="none">
+            <source src="${url}">
+            Navegador sem suporte a áudio.
+          </audio>
+          <a href="${url}" target="_blank" download class="btn btn--outline" style="font-size: 0.75rem;">⬇ Baixar áudio</a>
+        `;
+        container.appendChild(wrap);
+      } else {
+        const wrap = document.createElement('div');
+        wrap.className = 'audio-wrapper';
+        wrap.innerHTML = `
+          <div style="font-size: 0.9rem; color: #f8fafc; text-align: center;">Formato: ${type.toUpperCase()}</div>
+          <a href="${url}" target="_blank" class="btn btn--primary">🔗 Abrir arquivo direto</a>
+        `;
+        container.appendChild(wrap);
+      }
+    }
+
+    // Botão Recarregar D1
+    document.getElementById('btn-reload-d1').onclick = async () => {
+      mostrarToast('🔄 Recarregando duplicatas ao vivo do D1...', 'info');
+      await init();
+    };
+
+    // Navegação
+    elBtnPrev.onclick = () => {
+      if (currentIndex > 0) selecionarItem(currentIndex - 1);
+    };
+    elBtnNext.onclick = () => {
+      if (currentIndex < currentFiltered.length - 1) selecionarItem(currentIndex + 1);
+    };
+
+    // Tabs e Filtros
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        currentIndex = 0;
+        aplicarFiltros();
+      };
+    });
+
+    elSearch.oninput = () => { currentIndex = 0; aplicarFiltros(); };
+    elCategory.onchange = () => { currentIndex = 0; aplicarFiltros(); };
+    if (elAiFilter) {
+      elAiFilter.onchange = () => { currentIndex = 0; aplicarFiltros(); };
+    }
+
+    // Atalhos Teclado
+    window.onkeydown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+      if ((e.key === 'a' || e.key === 'A') && elBtnApplyAi && elBtnApplyAi.style.display !== 'none') {
+        elBtnApplyAi.click();
+      } else if (e.key === '1' && currentFiltered[currentIndex]?.materials[0]) {
+        elBtnRemoveA.click();
+      } else if (e.key === '2' && currentFiltered[currentIndex]?.materials[1]) {
+        elBtnRemoveB.click();
+      } else if (e.key === 'c' || e.key === 'C') {
+        elBtnManter.click();
+      } else if (e.key === 'ArrowRight') {
+        elBtnNext.click();
+      } else if (e.key === 'ArrowLeft') {
+        elBtnPrev.click();
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>

@@ -44,6 +44,7 @@ import type { ConversionProgress } from '../components/BulkFilePreviewList';
 import { StatusImportacaoDrive } from '../components/StatusImportacaoDrive';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { SecaoGestos } from '../components/gestures/SecaoGestos';
+import { PraiseBiblicalSection } from '../components/PraiseBiblicalSection';
 import {
   groupMaterialsByType,
   materialDisplayName,
@@ -1897,6 +1898,18 @@ export function PraiseDetailPage() {
           )
         )}
 
+        {!isEditing && praise?.biblical?.resumo_formatado && (
+          <div className="detail-biblical-banner">
+            <a
+              href="#secao-biblica"
+              className="detail-biblical-pill"
+              title="Ir para referências bíblicas e homilética"
+            >
+              {praise.biblical.resumo_formatado}
+            </a>
+          </div>
+        )}
+
         {isEditing && userName ? (
           <hr className="detail-section-divider" />
         ) : null}
@@ -2016,6 +2029,8 @@ export function PraiseDetailPage() {
             <div className="lyrics-empty">Sem letra cadastrada.</div>
           )}
       </section>
+
+      {!isEditing && <PraiseBiblicalSection biblical={praise?.biblical} />}
 
       {canEditMaterialsInline && totalMateriais > 0 ? (
         <section className="materials-bulk-bar" aria-label="Ações em lote de materiais">

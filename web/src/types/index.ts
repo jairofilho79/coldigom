@@ -57,6 +57,38 @@ export interface PraiseGroupMember {
   tags: Tag[];
 }
 
+export interface PraiseDirectCitation {
+  referencia: string;
+  livro: string;
+  capitulo?: number;
+  versiculo_inicio?: number;
+  versiculo_fim?: number;
+  tipo?: string;
+  similaridade?: number | null;
+  origem?: string;
+}
+
+export interface PraiseBiblicalPericope {
+  ordem?: number;
+  livro?: string;
+  referencia: string;
+  titulo: string;
+  similarity: number;
+  match_tipo?: string;
+}
+
+export interface PraiseBiblicalInsight {
+  tem_citacao_direta: boolean;
+  referencia_principal: string | null;
+  resumo_uma_linha: string;
+  resumo_formatado: string;
+  citacoes_diretas?: PraiseDirectCitation[];
+  mensagem_central?: string | null;
+  temas_homileticos?: string[];
+  passagem_origem_direta?: string | null;
+  pericopes_relacionadas?: PraiseBiblicalPericope[];
+}
+
 export interface PraiseDetail extends Praise {
   /**
    * Token de versão para detecção de escrita concorrente. Vai de volta como
@@ -67,6 +99,7 @@ export interface PraiseDetail extends Praise {
   tags: Tag[];
   materials: Material[];
   group_members: PraiseGroupMember[];
+  biblical?: PraiseBiblicalInsight | null;
 }
 
 /** Display name for the default locale (pt-BR); resolved by the API from D1 translations. */

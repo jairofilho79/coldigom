@@ -3604,6 +3604,58 @@ describe('Mais mensagens de erro sem instância de Error', () => {
       expect(scrollIntoViewMock).toHaveBeenCalled();
     });
   });
+
+  it('exibe badge bíblico no cabeçalho e seção bíblica e homilética completa quando disponível', async () => {
+    vi.mocked(getPraise).mockResolvedValueOnce({
+      ...mockPraiseDetail,
+      biblical: {
+        tem_citacao_direta: true,
+        referencia_principal: 'Marcos 5:27-30',
+        resumo_uma_linha: 'Marcos 5:27-30 · Doze anos de sangue, e o manto que cura',
+        resumo_formatado: '📖 Marcos 5:27-30 · Doze anos de sangue...',
+        citacoes_diretas: [
+          {
+            referencia: 'Marcos 5:27-30',
+            livro: 'Marcos',
+            capitulo: 5,
+            versiculo_inicio: 27,
+            versiculo_fim: 30,
+          },
+        ],
+        mensagem_central: 'O toque da fé que rompe o desespero e traz libertação completa.',
+        temas_homileticos: ['Fé', 'Milagre', 'Cura'],
+        pericopes_relacionadas: [
+          {
+            ordem: 0,
+            referencia: 'Marcos 5:21-43',
+            titulo: 'Doze anos de sangue, e a filha de Jairo',
+            similarity: 99,
+            match_tipo: 'citacao_direta',
+          },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8']}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // Pill no cabeçalho
+    expect(await screen.findByText('📖 Marcos 5:27-30 · Doze anos de sangue...')).toBeInTheDocument();
+
+    // Seção bíblica & homilética
+    expect(screen.getByLabelText('Fundamento Bíblico e Homilética')).toBeInTheDocument();
+    expect(screen.getByText('O toque da fé que rompe o desespero e traz libertação completa.')).toBeInTheDocument();
+    expect(screen.getByText('#Fé')).toBeInTheDocument();
+    expect(screen.getByText('Doze anos de sangue, e a filha de Jairo')).toBeInTheDocument();
+    expect(screen.getByText('99% afinidade')).toBeInTheDocument();
+  });
 });
 
 

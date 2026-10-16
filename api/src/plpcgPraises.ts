@@ -331,6 +331,7 @@ type CatalogPraiseRow = {
   rhythm: string | null;
   tonality: string | null;
   lyrics: string | null;
+  biblical_summary?: string | null;
 };
 
 type CatalogMaterialRow = {
@@ -408,13 +409,26 @@ export async function buildPlpcgCatalog(
   deps: PlpcgCatalogDeps,
   ifNoneMatch: string | undefined
 ): Promise<PlpcgCatalogResult> {
-  const praisesResult = await db
-    .prepare(
-      `SELECT p.id, p.short_id, p.group_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics
-       FROM praises p
-       ORDER BY p.number, p.name, p.id`
-    )
-    .all();
+  let praisesResult;
+  try {
+    praisesResult = await db
+      .prepare(
+        `SELECT p.id, p.short_id, p.group_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics,
+                pb.resumo_uma_linha AS biblical_summary
+         FROM praises p
+         LEFT JOIN praise_biblical pb ON pb.praise_id = p.id
+         ORDER BY p.number, p.name, p.id`
+      )
+      .all();
+  } catch {
+    praisesResult = await db
+      .prepare(
+        `SELECT p.id, p.short_id, p.group_id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics
+         FROM praises p
+         ORDER BY p.number, p.name, p.id`
+      )
+      .all();
+  }
   const materialsResult = await db
     .prepare(
       `SELECT pm.id, pm.praise_id, pm.type, pm.material_kind, pm.url, pm.r2_key
@@ -509,6 +523,9 @@ export async function buildPlpcgCatalog(
       rhythm: row.rhythm ?? '',
       tonality: row.tonality ?? '',
       tags: tagsByPraise.get(row.id) ?? [],
+      ...(row.biblical_summary && row.biblical_summary.trim()
+        ? { biblicalSummary: row.biblical_summary.trim() }
+        : {}),
     };
     if (typeof row.lyrics === 'string' && row.lyrics.trim().length > 0) {
       praise.lyrics = row.lyrics;

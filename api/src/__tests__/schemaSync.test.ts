@@ -126,4 +126,32 @@ describe('schema.sql acompanha as migrações', () => {
     const praises = schema.slice(schema.indexOf('CREATE TABLE IF NOT EXISTS praises ('));
     expect(praises.slice(0, praises.indexOf(');'))).not.toMatch(/\bcategory\b/);
   });
+
+  it('033: a tabela praise_biblical e o índice estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '033_praise_biblical.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS praise_biblical (',
+      'CREATE INDEX IF NOT EXISTS idx_praise_biblical_ref ON praise_biblical(referencia_principal);',
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+    const colunas = [
+      'praise_id TEXT PRIMARY KEY REFERENCES praises(id) ON DELETE CASCADE',
+      'tem_citacao_direta INTEGER NOT NULL DEFAULT 0',
+      'referencia_principal TEXT',
+      'resumo_uma_linha TEXT',
+      'resumo_formatado TEXT',
+      "citacoes_diretas_json TEXT NOT NULL DEFAULT '[]'",
+      'mensagem_central TEXT',
+      "temas_homileticos_json TEXT NOT NULL DEFAULT '[]'",
+      'passagem_origem_direta TEXT',
+      "pericopes_relacionadas_json TEXT NOT NULL DEFAULT '[]'",
+    ];
+    for (const c of colunas) {
+      expect(mig).toContain(c);
+      expect(schema).toContain(c);
+    }
+  });
 });

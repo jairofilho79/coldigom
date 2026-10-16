@@ -439,3 +439,21 @@ CREATE TABLE IF NOT EXISTS contribution_triages (
 CREATE INDEX IF NOT EXISTS idx_contrib_triage_contrib ON contribution_triages(contribution_id);
 CREATE INDEX IF NOT EXISTS idx_contrib_triage_intent  ON contribution_triages(intent);
 CREATE INDEX IF NOT EXISTS idx_contrib_triage_urgency ON contribution_triages(urgency);
+
+-- Metadados bíblicos e homiléticos dos louvores (migração 033).
+CREATE TABLE IF NOT EXISTS praise_biblical (
+  praise_id                   TEXT PRIMARY KEY REFERENCES praises(id) ON DELETE CASCADE,
+  tem_citacao_direta          INTEGER NOT NULL DEFAULT 0,
+  referencia_principal        TEXT,
+  resumo_uma_linha            TEXT,
+  resumo_formatado            TEXT,
+  citacoes_diretas_json       TEXT NOT NULL DEFAULT '[]',
+  mensagem_central            TEXT,
+  temas_homileticos_json      TEXT NOT NULL DEFAULT '[]',
+  passagem_origem_direta      TEXT,
+  pericopes_relacionadas_json TEXT NOT NULL DEFAULT '[]',
+  created_at                  TEXT DEFAULT (datetime('now')),
+  updated_at                  TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_praise_biblical_ref ON praise_biblical(referencia_principal);

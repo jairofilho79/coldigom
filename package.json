@@ -11,7 +11,7 @@
     "typecheck:web": "cd web && npx tsc -b --force",
     "typecheck": "npm run typecheck:api && npm run typecheck:web",
     "lint": "npm run lint:api && npm run lint:web",
-    "test:api": "cd api && npx vitest run --pool=threads",
+    "test:api": "cd api && npx vitest run",
     "test:web": "cd web && npx vitest run --pool=threads",
     "test": "npm run test:api && npm run test:web",
     "coverage:api": "cd api && npx vitest run --pool=threads --coverage",

@@ -413,6 +413,33 @@ export function registerPraisesRoutes(app: App): void {
         })
       );
 
+      let biblical: Record<string, unknown> | null = null;
+      try {
+        const bRow = (await c.env.DB.prepare(
+          `SELECT tem_citacao_direta, referencia_principal, resumo_uma_linha, resumo_formatado,
+                  citacoes_diretas_json, mensagem_central, temas_homileticos_json,
+                  passagem_origem_direta, pericopes_relacionadas_json
+           FROM praise_biblical
+           WHERE praise_id = ?`
+        ).bind(id).first()) as Record<string, unknown> | null;
+
+        if (bRow) {
+          biblical = {
+            tem_citacao_direta: Boolean(bRow.tem_citacao_direta),
+            referencia_principal: bRow.referencia_principal ?? null,
+            resumo_uma_linha: (bRow.resumo_uma_linha as string) || '',
+            resumo_formatado: (bRow.resumo_formatado as string) || '',
+            citacoes_diretas: JSON.parse((bRow.citacoes_diretas_json as string) || '[]'),
+            mensagem_central: bRow.mensagem_central ?? null,
+            temas_homileticos: JSON.parse((bRow.temas_homileticos_json as string) || '[]'),
+            passagem_origem_direta: bRow.passagem_origem_direta ?? null,
+            pericopes_relacionadas: JSON.parse((bRow.pericopes_relacionadas_json as string) || '[]'),
+          };
+        }
+      } catch {
+        biblical = null;
+      }
+
       return c.json({
         data: {
           ...praiseResult,
@@ -420,6 +447,7 @@ export function registerPraisesRoutes(app: App): void {
           tags,
           materials,
           group_members,
+          biblical,
         },
       });
     } catch (error) {

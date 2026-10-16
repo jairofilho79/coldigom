@@ -71,11 +71,11 @@ def main() -> None:
             f"praise_id, tem_citacao_direta, referencia_principal, resumo_uma_linha, "
             f"resumo_formatado, citacoes_diretas_json, mensagem_central, temas_homileticos_json, "
             f"passagem_origem_direta, pericopes_relacionadas_json"
-            f") VALUES ("
+            f") SELECT "
             f"{escape_sql(pid)}, {tem_citacao}, {ref_principal}, {resumo_1linha}, "
             f"{resumo_formatado}, {citacoes_json}, {msg_central}, {temas_json}, "
-            f"{passagem_origem}, {pericopes_json}"
-            f");"
+            f"{passagem_origem}, {pericopes_json} "
+            f"WHERE EXISTS (SELECT 1 FROM praises WHERE id = {escape_sql(pid)});"
         )
         linhas_sql.append(sql)
         total_inseridos += 1

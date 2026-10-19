@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -134,8 +135,17 @@ def gerar_resumos_uma_linha(
     # Prioridade 1: Citação Direta Determinística ou Validada
     if citacoes:
         ref = citacoes[0]["referencia"]
-        if top_pericope and top_pericope.get("titulo"):
-            resumo_limpo = f"{ref} · {top_pericope['titulo']}"
+        livro_cit = (citacoes[0].get("livro") or "").strip().lower()
+        cap_cit = citacoes[0].get("capitulo")
+        per_corresp = None
+        for p in pericopes:
+            p_ref = p.get("referencia", "")
+            if p.get("livro") and p["livro"].strip().lower() == livro_cit:
+                if cap_cit is None or f" {cap_cit}:" in f" {p_ref} " or p_ref.startswith(f"{p['livro']} {cap_cit}:") or p_ref == f"{p['livro']} {cap_cit}":
+                    per_corresp = p
+                    break
+        if per_corresp and per_corresp.get("titulo"):
+            resumo_limpo = f"{ref} · {per_corresp['titulo']}"
         elif temas_homileticos:
             resumo_limpo = f"{ref} · {temas_homileticos[0]}"
         else:
@@ -145,8 +155,17 @@ def gerar_resumos_uma_linha(
     # Prioridade 2: Passagem de Origem Teológica (Gemini)
     if passagem_origem:
         ref = passagem_origem.strip()
-        if top_pericope and top_pericope.get("similarity", 0) >= 75 and top_pericope.get("titulo"):
-            resumo_limpo = f"{ref} · {top_pericope['titulo']}"
+        m_po = re.search(r"(\d+)(?::\d+)?", ref)
+        cap_po = m_po.group(1) if m_po else None
+        per_corresp = None
+        for p in pericopes:
+            p_ref = p.get("referencia", "")
+            if p.get("livro") and p["livro"].strip().lower() in ref.lower():
+                if cap_po is None or f" {cap_po}:" in f" {p_ref} " or p_ref.startswith(f"{p['livro']} {cap_po}:") or p_ref == f"{p['livro']} {cap_po}":
+                    per_corresp = p
+                    break
+        if per_corresp and per_corresp.get("titulo"):
+            resumo_limpo = f"{ref} · {per_corresp['titulo']}"
         elif temas_homileticos:
             resumo_limpo = f"{ref} · {temas_homileticos[0]}"
         else:
@@ -157,7 +176,7 @@ def gerar_resumos_uma_linha(
     # Se não há citação nem passagem de origem explícita, os temas homiléticos
     # representam o verdadeiro coração espiritual do louvor com precisão.
     if temas_homileticos:
-        # Se a perícope tiver altíssima afinidade (>= 82%), podemos incluir a referência
+        # Se a perícope tiver altíssima afinidade (>= 82%), usamos a referência dela com seu próprio título
         if top_pericope and top_pericope.get("similarity", 0) >= 82.0 and top_pericope.get("titulo"):
             ref = top_pericope["referencia"]
             resumo_limpo = f"{ref} · {top_pericope['titulo']}"

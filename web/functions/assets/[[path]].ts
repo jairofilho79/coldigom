@@ -8,7 +8,7 @@ type PagesContext = {
 /** Only proxy R2 praise assets; Vite build also lives under /assets/*.js|css. */
 export const onRequest = async (context: PagesContext) => {
   const path = new URL(context.request.url).pathname;
-  if (path.startsWith('/assets/praises/')) {
+  if (path.startsWith('/assets/praises/') || path.startsWith('/assets/cia/')) {
     return proxyToApi(context.request);
   }
   return context.next();

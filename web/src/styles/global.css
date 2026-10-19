@@ -4429,6 +4429,38 @@ button.linkish {
   .ge-coluna--preview { position: static; max-height: none; }
 }
 
+.ge-raw-editor { display: flex; flex-direction: column; gap: 8px; }
+.ge-raw-textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  padding: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+  resize: vertical;
+  min-height: 520px;
+  box-sizing: border-box;
+}
+.ge-raw-textarea:focus {
+  outline: none;
+  border-color: #1E63C8;
+  box-shadow: 0 0 0 2px rgba(30, 99, 200, 0.25);
+}
+.ge-raw-error {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-danger);
+  background: rgba(211, 47, 47, 0.1);
+  color: #ff6b6b;
+  font-size: 0.85rem;
+}
+
 /* ---------- dicionário de gestos ---------- */
 .gd-page { max-width: 1100px; }
 .gd-filtros { display: flex; gap: 12px; align-items: center; margin: 12px 0; }

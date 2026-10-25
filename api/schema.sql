@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS praise_materials (
     is_reviewed INTEGER NOT NULL DEFAULT 0,  -- Passou por revisão humana
     reviewed_at TEXT,              -- Quando foi marcado como revisado
     reviewed_by TEXT,              -- Quem marcou
+    notes TEXT,                    -- Anotação rápida do arranjo/material (ex: I, II, Cifrado)
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
 );

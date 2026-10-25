@@ -318,6 +318,7 @@ export function registerPraisesRoutes(app: App): void {
           pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.file_path_legacy,
           pm.source_material_id, pm.merged_from_praise_id, pm.url,
           pm.is_reviewed, pm.reviewed_at, pm.reviewed_by,
+          pm.notes,
           mp.name AS merged_from_praise_name
         FROM praise_materials pm
         LEFT JOIN praises mp ON mp.id = pm.merged_from_praise_id
@@ -1346,11 +1347,12 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     const id = crypto.randomUUID();
+    const notes = typeof body.notes === 'string' && body.notes.trim().length > 0 ? body.notes.trim() : null;
 
     try {
       await c.env.DB.prepare(
-        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         id,
         praiseId,
@@ -1360,7 +1362,8 @@ export function registerPraisesRoutes(app: App): void {
         '',
         sourceMaterialId,
         null,
-        hasUrl ? url.trim() : null
+        hasUrl ? url.trim() : null,
+        notes
       ).run();
     } catch (error) {
       console.error('Error creating material:', error);

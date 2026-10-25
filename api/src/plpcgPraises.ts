@@ -49,6 +49,7 @@ type SlimMaterial = {
   r2_key: string | null;
   url: string | null;
   material_kind_name: string;
+  notes?: string | null;
 };
 
 type ListRow = {
@@ -225,7 +226,7 @@ export async function listPlpcgPraises(
         const placeholders = praiseIds.map(() => '?').join(',');
         const materialsResult = await db
           .prepare(
-            `SELECT pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.url
+            `SELECT pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.url, pm.notes
              FROM praise_materials pm WHERE pm.praise_id IN (${placeholders})`
           )
           .bind(...praiseIds)
@@ -239,6 +240,7 @@ export async function listPlpcgPraises(
           type: string;
           r2_key: string | null;
           url: string | null;
+          notes: string | null;
         }>) {
           const list = materialsByPraise.get(m.praise_id);
           if (!list) continue;
@@ -250,6 +252,7 @@ export async function listPlpcgPraises(
             r2_key: m.r2_key,
             url: m.url,
             material_kind_name: labelFor(materialKindLabels, m.material_kind),
+            notes: m.notes ?? null,
           });
         }
       }
@@ -319,6 +322,7 @@ export type PlpcgCatalogMaterial = {
   type: string;
   url?: string;
   r2?: string;
+  notes?: string;
 };
 
 type CatalogPraiseRow = {
@@ -341,6 +345,7 @@ type CatalogMaterialRow = {
   material_kind: string | null;
   url: string | null;
   r2_key: string | null;
+  notes?: string | null;
 };
 
 type CatalogTagRow = { praise_id: string; label: string };
@@ -431,7 +436,7 @@ export async function buildPlpcgCatalog(
   }
   const materialsResult = await db
     .prepare(
-      `SELECT pm.id, pm.praise_id, pm.type, pm.material_kind, pm.url, pm.r2_key
+      `SELECT pm.id, pm.praise_id, pm.type, pm.material_kind, pm.url, pm.r2_key, pm.notes
        FROM praise_materials pm
        ORDER BY pm.praise_id, pm.id`
     )
@@ -468,6 +473,7 @@ export async function buildPlpcgCatalog(
       kind: row.material_kind ?? null,
       type: row.type,
     };
+    if (row.notes) material.notes = row.notes;
     if (row.material_kind) kindIds.add(row.material_kind);
     if (row.url) material.url = row.url;
     const derived = derivedCatalogR2Key(row.praise_id, row.id, row.type);

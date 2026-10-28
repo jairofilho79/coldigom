@@ -43,6 +43,8 @@ export interface Material {
   is_reviewed?: boolean;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
+  /** Anotação rápida do arranjo/material (ex: I, II, Cifrado). */
+  notes?: string | null;
 }
 
 export interface Tag {

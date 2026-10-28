@@ -324,7 +324,12 @@ export function PraiseMergeImportPage() {
             {keeper.materials.map((m) => (
               <div key={m.id} className="materials-row">
                 <div className="materials-cell materials-main">
-                  <div className="materials-title">{m.material_kind_name || 'Material'}</div>
+                  <div className="materials-title">
+                    {m.material_kind_name || 'Material'}
+                    {m.notes?.trim() ? (
+                      <span className="material-notes-badge">{m.notes.trim()}</span>
+                    ) : null}
+                  </div>
                   <div className="materials-meta">
                     <span className="pill">{m.type}</span>
                   </div>
@@ -408,7 +413,12 @@ export function PraiseMergeImportPage() {
                       }}
                     />
                     <div>
-                      <div className="materials-title">{m.material_kind_name || 'Material'}</div>
+                      <div className="materials-title">
+                    {m.material_kind_name || 'Material'}
+                    {m.notes?.trim() ? (
+                      <span className="material-notes-badge">{m.notes.trim()}</span>
+                    ) : null}
+                  </div>
                       <div className="materials-meta">
                         <span className="pill">{m.type}</span>
                         <span className="merge-material-badge">De: {source.name}</span>

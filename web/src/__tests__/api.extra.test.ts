@@ -128,10 +128,20 @@ describe('API Service — escritas de louvor e material', () => {
 
   it('createMaterial, updateMaterial e deleteMaterial usam os verbos e corpos certos', async () => {
     mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
-    await createMaterial('p1', { material_kind: 'kind1', type: 'pdf', url: 'https://x' });
+    await createMaterial('p1', { material_kind: 'kind1', type: 'pdf', url: 'https://x', notes: 'Cifrado' });
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/praises/p1/materials'),
-      expect.objectContaining({ method: 'POST' })
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ material_kind: 'kind1', type: 'pdf', url: 'https://x', notes: 'Cifrado' }),
+      })
+    );
+
+    mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));
+    await updateMaterial('mat1', { notes: 'II' });
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/materials/mat1'),
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ notes: 'II' }) })
     );
 
     mockFetch.mockResolvedValueOnce(okComData(mockPraiseDetail));

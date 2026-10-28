@@ -34,6 +34,7 @@ import {
 import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
+import { MaterialNotesInput } from '../components/MaterialNotesInput';
 import { MoverMaterialForm } from '../components/MoverMaterialForm';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { INITIAL_BULK_SCAN, type BulkScanState } from '../components/bulkScanState';
@@ -89,6 +90,7 @@ type NewMaterialForm = {
   type: MaterialFormType;
   url: string;
   file: File | null;
+  notes: string;
 };
 
 const DEFAULT_NEW_MAT: NewMaterialForm = {
@@ -96,6 +98,7 @@ const DEFAULT_NEW_MAT: NewMaterialForm = {
   type: 'pdf',
   url: '',
   file: null,
+  notes: '',
 };
 
 function preserveScroll(el: HTMLElement | null | undefined, run: () => void) {
@@ -1063,6 +1066,19 @@ export function PraiseDetailPage() {
     }
   };
 
+  const handleMaterialNotesChange = async (materialId: string, notes: string | null) => {
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      await executarEscrita(() => updateMaterial(materialId, { notes }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao atualizar nota do material');
+      throw err;
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
   const handleMaterialDelete = async (materialId: string) => {
     // Um clique apagava o material e o arquivo no R2, sem volta. Mesma confirmação
     // que a tela de mesclagem usa antes de excluir do louvor que sobrevive.
@@ -1235,6 +1251,7 @@ export function PraiseDetailPage() {
         materialKindOptions,
         saving: savingMaterials,
         onUpdateKind: handleMaterialKindChange,
+        onUpdateNotes: handleMaterialNotesChange,
         onDelete: handleMaterialDelete,
         onMove: handleMaterialMove,
         onConvertToMp3: handleConvertMaterialToMp3,
@@ -2120,7 +2137,12 @@ export function PraiseDetailPage() {
                     </div>
                     <div className="yt-body">
                       <div className="yt-title">{praise?.name ?? ''}</div>
-                      <div className="yt-meta">{m.material_kind_name || 'Vídeo'}</div>
+                      <div className="yt-meta">
+                        {m.material_kind_name || 'Vídeo'}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </div>
                     </div>
                   </a>
                   {canEditMaterialsInline ? (
@@ -2129,6 +2151,7 @@ export function PraiseDetailPage() {
                       options={materialKindOptions}
                       saving={savingMaterials}
                       onUpdateKind={handleMaterialKindChange}
+                      onUpdateNotes={handleMaterialNotesChange}
                       onDelete={handleMaterialDelete}
                       onMove={handleMaterialMove}
                       selected={selectedMaterialIds.has(m.id)}
@@ -2262,6 +2285,16 @@ export function PraiseDetailPage() {
                   />
                 </div>
 
+                <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                  <label htmlFor="new-mat-notes">Nota / Complemento (opcional)</label>
+                  <input
+                    id="new-mat-notes"
+                    value={newMat.notes}
+                    onChange={(e) => setNewMat((s) => ({ ...s, notes: e.target.value }))}
+                    placeholder="Nota/Voz, ex: I, II, Cifrado"
+                  />
+                </div>
+
                 {newMat.type === 'youtube' && (
                   <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
                     <label htmlFor="new-mat-youtube-url">Link do YouTube</label>
@@ -2321,12 +2354,14 @@ export function PraiseDetailPage() {
                       setSavingMaterials(true);
                       setError(null);
                       try {
+                        const notesVal = newMat.notes.trim() || null;
                         let updated: PraiseDetail;
                         if (newMat.type === 'youtube') {
                           updated = await createMaterial(id, {
                             material_kind: newMat.material_kind,
                             type: 'youtube',
                             url: newMat.url.trim(),
+                            notes: notesVal,
                           });
                         } else if (newMat.type === 'pdf' || newMat.type === 'mp3') {
                           let fileToUpload = newMat.file!;
@@ -2336,11 +2371,19 @@ export function PraiseDetailPage() {
                               fileToUpload = await convertAudioToMp3(fileToUpload);
                             }
                           }
+                          const prevIds = new Set(praise.materials.map((m) => m.id));
                           updated = await bulkUploadMaterials(id, [{
                             file: fileToUpload,
                             material_kind: newMat.material_kind,
                             type: newMat.type,
+                            notes: notesVal,
                           }]);
+                          if (notesVal) {
+                            const created = updated.materials.find((m) => !prevIds.has(m.id));
+                            if (created && created.notes !== notesVal) {
+                              updated = await updateMaterial(created.id, { notes: notesVal });
+                            }
+                          }
                         } else {
                           return;
                         }
@@ -2629,13 +2672,19 @@ export function PraiseDetailPage() {
                         options={materialKindOptions}
                         saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
+                        onUpdateNotes={handleMaterialNotesChange}
                         onDelete={handleMaterialDelete}
                         onMove={handleMaterialMove}
                         selected={selectedMaterialIds.has(m.id)}
                         onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
                       />
                     ) : (
-                      <span className="pdf-viewer-title">{title}</span>
+                      <span className="pdf-viewer-title">
+                        {title}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </span>
                     )}
                     {pdfUrl ? (
                       <a
@@ -2692,7 +2741,12 @@ export function PraiseDetailPage() {
                   >
                     <span className="material-link-icon">🎸</span>
                     <div>
-                      <div className="material-link-text">{m.material_kind_name || 'Acordes'}</div>
+                      <div className="material-link-text">
+                        {m.material_kind_name || 'Acordes'}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </div>
                       <div className="material-link-meta">
                         {m.has_content === false ? 'Sem conteúdo' : 'Cifra'}
                       </div>
@@ -2710,6 +2764,11 @@ export function PraiseDetailPage() {
                           aria-label={`Selecionar ${m.material_kind_name || 'Acordes'}`}
                         />
                       </label>
+                      <MaterialNotesInput
+                        value={m.notes}
+                        disabled={savingMaterials}
+                        onSave={(notes) => handleMaterialNotesChange(m.id, notes)}
+                      />
                       <div className="materials-placeholder materials-placeholder--inline">
                         Edição de categoria — em breve
                       </div>
@@ -2740,6 +2799,7 @@ export function PraiseDetailPage() {
           selectedIds={selectedMaterialIds}
           onToggleSelect={handleToggleSelectMaterial}
           onDeleteMaterial={handleMaterialDelete}
+          onUpdateNotes={handleMaterialNotesChange}
         />
       ) : null}
 
@@ -2777,7 +2837,12 @@ export function PraiseDetailPage() {
                       >
                         <span className="material-link-icon">📎</span>
                         <div>
-                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-text">
+                            {nome}
+                            {m.notes?.trim() ? (
+                              <span className="material-notes-badge">{m.notes.trim()}</span>
+                            ) : null}
+                          </div>
                           <div className="material-link-meta">{grupo.label}</div>
                         </div>
                       </a>
@@ -2785,7 +2850,12 @@ export function PraiseDetailPage() {
                       <div className="material-link material-link--empty">
                         <span className="material-link-icon">📎</span>
                         <div>
-                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-text">
+                            {nome}
+                            {m.notes?.trim() ? (
+                              <span className="material-notes-badge">{m.notes.trim()}</span>
+                            ) : null}
+                          </div>
                           <div className="material-link-meta">
                             {grupo.label} · arquivo indisponível
                           </div>
@@ -2798,6 +2868,7 @@ export function PraiseDetailPage() {
                         options={materialKindOptions}
                         saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
+                        onUpdateNotes={handleMaterialNotesChange}
                         onDelete={handleMaterialDelete}
                         onMove={handleMaterialMove}
                         selected={selectedMaterialIds.has(m.id)}

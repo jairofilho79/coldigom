@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { createMaterial } from '../../services/api';
+import { MaterialNotesInput } from '../MaterialNotesInput';
 import type { Material, MaterialKind, PraiseDetail } from '../../types';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   selectedIds?: Set<string>;
   onToggleSelect?: (materialId: string, selected: boolean) => void;
   onDeleteMaterial?: (materialId: string) => Promise<void>;
+  onUpdateNotes?: (materialId: string, notes: string | null) => Promise<void>;
 };
 
 /**
@@ -28,6 +30,7 @@ export function SecaoGestos({
   selectedIds,
   onToggleSelect,
   onDeleteMaterial,
+  onUpdateNotes,
 }: Props) {
   const gestos = materiais.filter((m) => m.type === 'gestures');
   const pdfs = materiais.filter((m) => m.type === 'pdf');
@@ -76,24 +79,37 @@ export function SecaoGestos({
               <Link to={`/praise/${praiseId}/gestos/${m.id}`} className={`material-link${m.has_content === false ? ' material-link--empty' : ''}`}>
                 <span className="material-link-icon">🤲</span>
                 <div>
-                  <div className="material-link-text">{m.material_kind_name || 'Gestos'}</div>
+                  <div className="material-link-text">
+                    {m.material_kind_name || 'Gestos'}
+                    {m.notes?.trim() ? (
+                      <span className="material-notes-badge">{m.notes.trim()}</span>
+                    ) : null}
+                  </div>
                   <div className="material-link-meta">
                     {m.has_content === false ? 'Sem conteúdo' : 'Documento'}
                     {m.is_reviewed ? ' · ✓ revisado' : ''}
                   </div>
                 </div>
               </Link>
-              {podeEditar && onToggleSelect ? (
+              {podeEditar && (onToggleSelect || onDeleteMaterial || onUpdateNotes) ? (
                 <div className="chord-inline-actions">
-                  <label className="material-bulk-select-label" title="Selecionar material">
-                    <input
-                      type="checkbox"
-                      className="material-bulk-checkbox"
-                      checked={Boolean(selectedIds?.has(m.id))}
-                      onChange={(e) => onToggleSelect(m.id, e.target.checked)}
-                      aria-label={`Selecionar ${m.material_kind_name || 'Gestos'}`}
+                  {onToggleSelect ? (
+                    <label className="material-bulk-select-label" title="Selecionar material">
+                      <input
+                        type="checkbox"
+                        className="material-bulk-checkbox"
+                        checked={Boolean(selectedIds?.has(m.id))}
+                        onChange={(e) => onToggleSelect(m.id, e.target.checked)}
+                        aria-label={`Selecionar ${m.material_kind_name || 'Gestos'}`}
+                      />
+                    </label>
+                  ) : null}
+                  {onUpdateNotes ? (
+                    <MaterialNotesInput
+                      value={m.notes}
+                      onSave={(notes) => onUpdateNotes(m.id, notes)}
                     />
-                  </label>
+                  ) : null}
                   {onDeleteMaterial ? (
                     <button
                       type="button"

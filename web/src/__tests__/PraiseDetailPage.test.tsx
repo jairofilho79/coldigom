@@ -3656,6 +3656,165 @@ describe('Mais mensagens de erro sem instância de Error', () => {
     expect(screen.getByText('Doze anos de sangue, e a filha de Jairo')).toBeInTheDocument();
     expect(screen.getByText('99% afinidade')).toBeInTheDocument();
   });
+
+  describe('suporte ao campo notes em materiais', () => {
+    it('exibe badge com material.notes ao lado de material_kind_name e não exibe quando notes é nulo', async () => {
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          {
+            id: 'mat-pdf',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-partitura',
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+            r2_key: 'assets/pdf1.pdf',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'I',
+          },
+          {
+            id: 'mat-mp3',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-audio',
+            material_kind_name: 'Áudio',
+            type: 'mp3',
+            r2_key: 'assets/audio1.mp3',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: null,
+          },
+          {
+            id: 'mat-yt',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-video',
+            material_kind_name: 'Vídeo',
+            type: 'youtube',
+            url: 'https://youtu.be/video1',
+            r2_key: null,
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'Cifrado',
+          },
+        ],
+      });
+
+      renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      const badgeI = await screen.findByText('I');
+      expect(badgeI).toHaveClass('material-notes-badge');
+
+      const badgeCifrado = await screen.findByText('Cifrado');
+      expect(badgeCifrado).toHaveClass('material-notes-badge');
+
+      const allBadges = document.querySelectorAll('.material-notes-badge');
+      expect(allBadges).toHaveLength(2);
+    });
+
+    it('permite editar notes inline no modo edição e chama updateMaterial com valor trimado', async () => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          {
+            id: 'mat-pdf',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind1',
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+            r2_key: 'assets/x.pdf',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'I',
+          },
+        ],
+      });
+      (updateMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          {
+            id: 'mat-pdf',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind1',
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+            r2_key: 'assets/x.pdf',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'II',
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument());
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      await waitFor(() => expect(screen.getByText('Partituras')).toBeInTheDocument());
+      const pdfBlock = document.querySelector('.pdf-viewer-header') as HTMLElement;
+      const notesInput = within(pdfBlock).getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+      expect(notesInput).toHaveValue('I');
+
+      await user.clear(notesInput);
+      await user.type(notesInput, 'II{Enter}');
+
+      await waitFor(() => {
+        expect(updateMaterial).toHaveBeenCalledWith('mat-pdf', { notes: 'II' });
+      });
+    });
+
+    it('adiciona novo material com o campo opcional notes preenchido', async () => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+      (createMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          ...mockPraiseDetail.materials,
+          {
+            id: 'mat-novo',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-novo',
+            material_kind_name: 'Vídeo YouTube',
+            type: 'youtube',
+            url: 'https://youtu.be/novo123',
+            r2_key: null,
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'Voz Tenor',
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument());
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      const heading = await screen.findByRole('heading', { name: 'Adicionar material' });
+      const painel = heading.closest('.materials-panel') as HTMLElement;
+
+      await user.click(within(painel).getByLabelText('Tipo do material'));
+      await user.click(screen.getByRole('option', { name: 'YouTube' }));
+      await user.type(screen.getByLabelText('Link do YouTube'), 'https://youtu.be/novo123');
+      await user.type(screen.getByLabelText(/Nota \/ Complemento/), 'Voz Tenor');
+
+      await user.click(within(painel).getByRole('button', { name: 'Adicionar material' }));
+
+      await waitFor(() => {
+        expect(createMaterial).toHaveBeenCalledWith(
+          '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+          expect.objectContaining({
+            type: 'youtube',
+            url: 'https://youtu.be/novo123',
+            notes: 'Voz Tenor',
+          })
+        );
+      });
+    });
+  });
 });
 
 

@@ -36,6 +36,7 @@ type Props = {
     materialKindOptions: SelectOption[];
     saving: boolean;
     onUpdateKind: (materialId: string, kind: string) => Promise<void>;
+    onUpdateNotes?: (materialId: string, notes: string | null) => Promise<void>;
     onDelete: (materialId: string) => Promise<void>;
     onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
     onConvertToMp3?: (material: Material) => Promise<void>;
@@ -198,6 +199,7 @@ export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin
             options={admin.materialKindOptions}
             saving={admin.saving}
             onUpdateKind={admin.onUpdateKind}
+            onUpdateNotes={admin.onUpdateNotes}
             onDelete={admin.onDelete}
             onMove={admin.onMove}
             selected={admin.selectedIds?.has(current?.id)}
@@ -208,7 +210,12 @@ export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin
             }
           />
         ) : (
-          <span className="audio-player-track-name">{trackName}</span>
+          <span className="audio-player-track-name">
+            {trackName}
+            {current?.notes?.trim() ? (
+              <span className="material-notes-badge">{current.notes.trim()}</span>
+            ) : null}
+          </span>
         )}
         <div className="audio-player-meta">
           <span className="audio-player-type-badge">{(current?.type || 'mp3').toUpperCase()}</span>
@@ -336,7 +343,14 @@ export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin
                         </svg>
                       )}
                     </span>
-                    {!admin ? <span className="audio-track-label">{name}</span> : null}
+                    {!admin ? (
+                      <span className="audio-track-label">
+                        {name}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </span>
+                    ) : null}
                   </button>
                   {admin ? (
                     <MaterialInlineAdmin
@@ -344,6 +358,7 @@ export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin
                       options={admin.materialKindOptions}
                       saving={admin.saving}
                       onUpdateKind={admin.onUpdateKind}
+                      onUpdateNotes={admin.onUpdateNotes}
                       onDelete={admin.onDelete}
                       onMove={admin.onMove}
                       selected={admin.selectedIds?.has(m.id)}

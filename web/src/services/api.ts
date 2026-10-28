@@ -384,6 +384,7 @@ export async function createMaterial(praiseId: string, material: {
   type: string;
   url?: string;
   source_material_id?: string;
+  notes?: string | null;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${praiseId}/materials`,
@@ -403,6 +404,7 @@ export async function updateMaterial(materialId: string, updates: {
   is_reviewed?: boolean;
   /** Move o material para outro louvor; a resposta continua sendo o louvor de origem. */
   praise_id?: string;
+  notes?: string | null;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,
@@ -482,6 +484,7 @@ type ItemDeLote = {
   material_kind: string;
   type: string;
   file_path_legacy?: string;
+  notes?: string | null;
 };
 
 async function enviarUmLote(praiseId: string, itens: ItemDeLote[]): Promise<PraiseDetail> {
@@ -494,6 +497,7 @@ async function enviarUmLote(praiseId: string, itens: ItemDeLote[]): Promise<Prai
       material_kind: it.material_kind,
       type: it.type,
       file_path_legacy: it.file_path_legacy,
+      notes: it.notes ?? undefined,
     };
   });
   form.append('items', JSON.stringify(meta));

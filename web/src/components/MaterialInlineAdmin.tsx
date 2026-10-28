@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SearchableSelect } from './SearchableSelect';
 import { MoverMaterialForm } from './MoverMaterialForm';
+import { MaterialNotesInput } from './MaterialNotesInput';
 import type { Material, PraiseDetail } from '../types';
 import type { SelectOption } from './selectTypes';
 
@@ -9,6 +10,7 @@ type Props = {
   options: SelectOption[];
   saving: boolean;
   onUpdateKind: (materialId: string, kind: string) => Promise<void>;
+  onUpdateNotes?: (materialId: string, notes: string | null) => Promise<void>;
   onDelete: (materialId: string) => Promise<void>;
   /** Sem isto o botão "Mover" não aparece. */
   onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
@@ -22,6 +24,7 @@ export function MaterialInlineAdmin({
   options,
   saving,
   onUpdateKind,
+  onUpdateNotes,
   onDelete,
   onMove,
   buscarLouvor,
@@ -53,6 +56,13 @@ export function MaterialInlineAdmin({
           options={options}
           aria-label="Categoria do material"
         />
+        {onUpdateNotes ? (
+          <MaterialNotesInput
+            value={material.notes}
+            disabled={saving}
+            onSave={(notes) => onUpdateNotes(material.id, notes)}
+          />
+        ) : null}
         {material.merged_from_praise_id ? (
           <span className="merge-material-badge" title={material.merged_from_praise_id}>
             Mesclado{material.merged_from_praise_name ? `: ${material.merged_from_praise_name}` : ''}

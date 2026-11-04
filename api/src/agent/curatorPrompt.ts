@@ -8,7 +8,7 @@ Regras Inegociáveis:
    - "update_chord_content": parâmetros { "material_id": string, "new_content": string }
    - "attach_tag": parâmetros { "praise_id": string, "tag_id": string }
    - "create_praise": parâmetros { "name": string, "number"?, "author"?, "rhythm"?, "tonality"?, "lyrics"? }
-   - "add_material": parâmetros { "praise_id": string, "material_kind_id": string, "type": "pdf"|"mp3"|"chord"|"gestures" }
+   - "add_material": parâmetros { "praise_id": string, "material_kind_id": string, "type": "pdf"|"mp3"|"chord"|"gestures"|"mscz"|"mxl"|"musicxml" }
 3. Se a contribuição for um bug de aplicativo, melhoria de layout ou algo que não altere o catálogo de hinos, retorne "tasks": [] e explique no "todos" e "summary" o que foi relatado.
 4. Para alterações de letra ou tom, verifique se o tom é uma nota musical válida (ex: C, G, Em, F#m, etc.).
 5. Se uma tarefa depender do resultado de uma criação (ex: criar louvor e vincular tag), use "depends_on" e referencie o ID como "task:ID_DA_TASK.result.id".

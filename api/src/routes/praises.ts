@@ -12,6 +12,8 @@ import { requireAuth, requireUploadOrAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { storageKeyFor } from '../storageKeys';
+import { CONTENT_TYPES, declaredTypeFromName } from '../contributions/sniff';
+import { checkStructural } from '../contributions/structural';
 import type { MaterialRow, PraiseRow } from '../praiseZip';
 import {
   TAG_LABEL_SQL,
@@ -1412,7 +1414,7 @@ export function registerPraisesRoutes(app: App): void {
     // Valida o lote INTEIRO antes de escrever qualquer coisa. O laço antigo
     // validava e gravava item a item: um lote com o segundo item inválido já
     // tinha gravado o primeiro no R2 e no banco.
-    const validados: { item: (typeof items)[number]; file: File }[] = [];
+    const validados: { item: (typeof items)[number]; file: File; contentType?: string }[] = [];
     for (const item of items) {
       if (!item || typeof item !== 'object') return c.json({ error: 'Invalid item' }, 400);
       if (typeof item.key !== 'string') return c.json({ error: "Item missing 'key'" }, 400);
@@ -1442,7 +1444,32 @@ export function registerPraisesRoutes(app: App): void {
         );
       }
 
-      validados.push({ item, file });
+      let contentType = file.type || undefined;
+      const fileType = declaredTypeFromName(file.name);
+      if ((fileType === 'mscz' || fileType === 'mxl' || fileType === 'musicxml') && fileType !== item.type) {
+        return c.json({ error: `O tipo da partitura deve corresponder à extensão .${fileType}: ${file.name}` }, 400);
+      }
+      if (item.type === 'mscz' || item.type === 'mxl' || item.type === 'musicxml') {
+        if (fileType !== item.type) {
+          return c.json({ error: `A extensão da partitura deve ser .${item.type}: ${file.name}` }, 400);
+        }
+        // Mesmos tetos de scoreStructure, antes de materializar o buffer inteiro.
+        const limite = (item.type === 'musicxml' ? 4 : 16) * 1024 * 1024;
+        if (file.size > limite) {
+          return c.json({ error: `Partitura acima do limite de ${limite / (1024 * 1024)} MB: ${file.name}` }, 413);
+        }
+        const verdict = checkStructural(new Uint8Array(await file.arrayBuffer()), item.type);
+        if (verdict.status !== 'limpa') {
+          return c.json({
+            error: `Partitura inválida ou insegura: ${file.name}`,
+            code: 'invalid_score',
+            reason: verdict.reason,
+          }, 400);
+        }
+        contentType = CONTENT_TYPES[item.type];
+      }
+
+      validados.push({ item, file, contentType });
     }
 
     const categoriasInvalidas = await materialKindsForaDoCatalogo(
@@ -1458,13 +1485,13 @@ export function registerPraisesRoutes(app: App): void {
     // mão se o banco recusar o lote.
     const subidos: { materialId: string; r2_key: string; item: (typeof items)[number]; file: File }[] = [];
     try {
-      for (const { item, file } of validados) {
+      for (const { item, file, contentType } of validados) {
         const materialId = crypto.randomUUID();
         const r2_key = `assets/praises/${praiseId}/${materialId}.${item.type}`;
 
         await c.env.ASSETS.put(`storage/${r2_key}`, file.stream(), {
           httpMetadata: {
-            contentType: file.type || undefined,
+            contentType,
           },
         });
         subidos.push({ materialId, r2_key, item, file });

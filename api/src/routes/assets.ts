@@ -71,6 +71,11 @@ export function registerAssetsRoutes(app: App): void {
     const ext = r2Key.split('.').pop()?.toLowerCase();
     const contentTypes: Record<string, string> = {
       pdf: 'application/pdf',
+      mscz: 'application/x-musescore',
+      mxl: 'application/vnd.recordare.musicxml',
+      musicxml: 'application/vnd.recordare.musicxml+xml',
+      sf2: 'audio/x-soundfont',
+      sf3: 'audio/x-soundfont',
       mp3: 'audio/mpeg',
       m4a: 'audio/mp4',
       aac: 'audio/aac',

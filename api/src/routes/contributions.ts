@@ -24,7 +24,7 @@ export const MAX_FILE_BYTES = 32 * 1024 * 1024;
 // Este teto (96 MiB) só existe para responder 413 com um erro nosso, cedo,
 // em vez de deixar o edge cortar a conexão sem explicação nenhuma pro app.
 export const MAX_REQUEST_BYTES = 96 * 1024 * 1024;
-// Assinatura binária cabe em 16 bytes; texto (txt/chordpro) precisa de uma
+// Assinatura binária cabe em 16 bytes; texto (txt/chordpro/MusicXML) precisa de uma
 // janela maior porque a spec pede "UTF-8 válido nos primeiros 4 KB" — 16
 // bytes cortaria um caractere acentuado no meio na maioria dos arquivos reais.
 const BINARY_SNIFF_WINDOW = 16;
@@ -105,7 +105,9 @@ export function registerContributionsRoutes(app: App) {
       if (file.size > MAX_FILE_BYTES) return c.json({ error: 'file_too_large', file: name }, 413);
       // Só a janela de sniff é lida agora — o arquivo inteiro só é lido uma
       // vez, no upload/hash lá embaixo (nunca duas cópias em memória).
-      const window = type === 'txt' || type === 'chordpro' ? TEXT_SNIFF_WINDOW : BINARY_SNIFF_WINDOW;
+      const window = type === 'txt' || type === 'chordpro' || type === 'musicxml'
+        ? TEXT_SNIFF_WINDOW
+        : BINARY_SNIFF_WINDOW;
       const head = new Uint8Array(await file.slice(0, window).arrayBuffer());
       if (!headMatchesDeclared(head, type)) return c.json({ error: 'file_type_mismatch', file: name }, 400);
       // file.size vem do parser de multipart do runtime, não de nada que o

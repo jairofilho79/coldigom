@@ -85,6 +85,56 @@ describe('GET /assets/* — objeto inteiro', () => {
   });
 });
 
+describe.each([
+  { modo: 'objeto inteiro', range: undefined, status: 200 },
+  { modo: 'Range', range: 'bytes=2-5', status: 206 },
+])('GET /assets/* — MIME de partituras e regressões ($modo)', ({ range, status }) => {
+  it.each([
+    ['mscz', 'application/x-musescore'],
+    ['mxl', 'application/vnd.recordare.musicxml'],
+    ['musicxml', 'application/vnd.recordare.musicxml+xml'],
+    ['sf2', 'audio/x-soundfont'],
+    ['sf3', 'audio/x-soundfont'],
+    ['pdf', 'application/pdf'],
+    ['mp3', 'audio/mpeg'],
+    ['chord', 'text/plain; charset=utf-8'],
+    ['gestures', 'application/json; charset=utf-8'],
+  ].flatMap(([ext, mime]) => [[ext, mime], [ext.toUpperCase(), mime]]))(
+    'entrega .%s como %s, ignorando metadado R2 genérico',
+    async (ext, mime) => {
+      const directory = ext.toLowerCase().startsWith('sf') ? 'soundfonts' : 'praises/praise-1';
+      const path = `/assets/${directory}/mat-1.${ext}`;
+      const key = `storage${path}`;
+      const dados = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      const assets = {
+        head: vi.fn(async () => ({
+          size: dados.length,
+          httpEtag: '"etag-score"',
+          httpMetadata: { contentType: 'application/octet-stream' },
+        })),
+        get: vi.fn(async () => ({ body: corpo(range ? dados.slice(2, 6) : dados) })),
+      };
+      const res = await app.request(path, { headers: range ? { range } : {} }, {
+        DB: {}, ASSETS: assets,
+      } as never);
+
+      expect(res.status).toBe(status);
+      expect(res.headers.get('content-type')).toBe(mime);
+      expect(res.headers.get('content-length')).toBe(range ? '4' : '10');
+      expect(res.headers.get('content-range')).toBe(range ? 'bytes 2-5/10' : null);
+      expect(res.headers.get('etag')).toBe('"etag-score"');
+      expect(res.headers.get('accept-ranges')).toBe('bytes');
+      expect(res.headers.get('cross-origin-resource-policy')).toBe('cross-origin');
+      expect(res.headers.get('content-disposition')).toBe(`inline; filename="mat-1.${ext}"`);
+      expect(assets.head).toHaveBeenCalledWith(key);
+      expect(assets.get.mock.calls[0]).toEqual(
+        range ? [key, { range: { offset: 2, length: 4 } }] : [key]
+      );
+      expect(new Uint8Array(await res.arrayBuffer())).toEqual(range ? dados.slice(2, 6) : dados);
+    }
+  );
+});
+
 describe('GET /assets/* — Range', () => {
   it('devolve 206 com a faixa pedida', async () => {
     const { res, gets } = await pedir('bytes=2-5');

@@ -72,6 +72,7 @@ export function registerPraisesRoutes(app: App): void {
         order,
         search || undefined
       );
+      const stableOrderClause = `${orderClause}, p.id ASC`;
       // A página é escolhida ANTES de juntar as tags: o GROUP BY com os JOINs de
       // tags sobre a tabela inteira lia ~12 mil linhas do D1 por página (e estourou
       // a cota diária em 20 e 23/09/2026). Agora só os `limit` louvores da página
@@ -90,11 +91,11 @@ export function registerPraisesRoutes(app: App): void {
         WHERE p.id IN (
           SELECT p.id FROM praises p
           ${whereClause}
-          ${orderClause}
+          ${stableOrderClause}
           LIMIT ? OFFSET ?
         )
         GROUP BY p.id
-        ${orderClause}
+        ${stableOrderClause}
       `;
 
       const result = await c.env.DB.prepare(query).bind(...bindings).all();

@@ -230,6 +230,7 @@ describe('antes da 025: o mesmo código com a coluna ainda no banco', () => {
   function comColuna() {
     const sqlite = new DatabaseSync(':memory:');
     sqlite.exec(lerSqlDaApi('src/__tests__/fixtures/schema.pre-025.sql'));
+    sqlite.exec(lerSqlDaApi('migrations/022_praise_is_reviewed.sql'));
     return ambiente(sqlite);
   }
 

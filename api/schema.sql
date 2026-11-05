@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS praises (
     tonality TEXT,                 -- Tom
     lyrics TEXT,                   -- Letra completa
     group_id TEXT,                 -- Shared id for same song / different arrangements
+    is_reviewed INTEGER NOT NULL DEFAULT 0,  -- Metadados e tags passaram por revisão humana (022)
+    reviewed_at TEXT,              -- Quando foi marcado como revisado
+    reviewed_by TEXT,              -- Quem marcou
     short_id TEXT,                 -- Id curto do louvor (migração 023): hex, único, imutável, atribuído pelo gatilho
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
@@ -117,6 +120,7 @@ CREATE INDEX IF NOT EXISTS idx_praises_group_id ON praises(group_id);
 -- sobre estas colunas a cada carregamento, e eram varreduras completas.
 CREATE INDEX IF NOT EXISTS idx_praises_rhythm ON praises(rhythm);
 CREATE INDEX IF NOT EXISTS idx_praises_tonality ON praises(tonality);
+CREATE INDEX IF NOT EXISTS idx_praises_is_reviewed ON praises(is_reviewed);
 
 -- Auth: rotating refresh tokens (opaque value hashed at rest; access JWT is short-lived in cookie)
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (

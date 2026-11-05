@@ -22,12 +22,14 @@ function acervo() {
     INSERT INTO praise_materials (id, praise_id, material_kind, type, url) VALUES
       ('material-a', 'a', 'cifra', 'youtube', 'https://youtu.be/abcdefghijk'),
       ('material-z', 'z', 'cifra', 'pdf', NULL);
+    UPDATE praises SET is_reviewed = 1, reviewed_at = '2026-09-18T12:00:00Z',
+      reviewed_by = 'reviewer@example.test' WHERE id = 'm';
   `);
   return { sqlite, env: { DB: d1DeSqlite(sqlite) } };
 }
 
 type Lista = {
-  data: { id: string; tag_ids: string | null; tag_names: string | null }[];
+  data: { id: string; is_reviewed: number; reviewed_at: string | null; tag_ids: string | null; tag_names: string | null }[];
   pagination: { total: number; totalPages: number };
 };
 
@@ -42,6 +44,8 @@ describe('GET /api/praises — paginação SQLite', () => {
     const { env } = acervo();
     const paginas = await Promise.all([1, 2, 3].map((page) => listar(env, `limit=1&page=${page}`)));
     expect(paginas.map((pagina) => pagina.data[0].id)).toEqual(['a', 'm', 'z']);
+    expect(paginas[1].data[0]).toMatchObject({ is_reviewed: 1, reviewed_at: '2026-09-18T12:00:00Z' });
+    for (const pagina of paginas) expect(pagina.data[0]).not.toHaveProperty('reviewed_by');
   });
 
   it('preserva a paginação quando o índice FTS está indisponível', async () => {
@@ -77,6 +81,7 @@ describe('GET /api/praises — paginação SQLite', () => {
     const order = buildOrderClause(cenario.sort, cenario.order, cenario.search);
     const original = sqlite.prepare(`
       SELECT p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics, p.group_id,
+        p.is_reviewed, p.reviewed_at,
         GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
         GROUP_CONCAT(DISTINCT ${TAG_LABEL_SQL}) as tag_names
       FROM praises p

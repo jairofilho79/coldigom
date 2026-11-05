@@ -61,6 +61,24 @@ describe('schema.sql acompanha as migrações', () => {
     }
   });
 
+  it('022_praise_is_reviewed: as três colunas e o índice estão no schema.sql', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '022_praise_is_reviewed.sql'), 'utf8'));
+    for (const trecho of [
+      'is_reviewed INTEGER NOT NULL DEFAULT 0',
+      'reviewed_at TEXT',
+      'reviewed_by TEXT',
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+    }
+    // a tabela praises do schema.sql tem que trazer as colunas
+    const praises = schema.slice(schema.indexOf('CREATE TABLE IF NOT EXISTS praises ('), schema.indexOf('CREATE TABLE IF NOT EXISTS praise_materials'));
+    for (const trecho of ['is_reviewed INTEGER NOT NULL DEFAULT 0', 'reviewed_at TEXT', 'reviewed_by TEXT']) {
+      expect(praises, `schema.sql (praises) sem: ${trecho}`).toContain(trecho);
+    }
+    expect(schema).toContain('idx_praises_is_reviewed');
+  });
+
   it('019: a tabela plpcg_crosswalk e os dois índices estão nos dois', () => {
     const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
     const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '019_plpcg_crosswalk.sql'), 'utf8'));

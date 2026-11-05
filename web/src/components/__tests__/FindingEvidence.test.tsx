@@ -43,6 +43,34 @@ describe('FindingEvidence', () => {
     expect(getPraise).toHaveBeenCalledTimes(2);
   });
 
+  it('merge_praise: mostra erro de carregamento sem ocultar os dados da outra coluna', async () => {
+    vi.mocked(getPraise).mockImplementation(async (id) => {
+      if (id === 'p-fonte') throw new Error('indisponível');
+      return {
+        id, name: 'Louvor mantido', number: '306', author: 'Autora', tonality: 'Dó',
+        lyrics: '', tag_names: 'Coletânea',
+      } as never;
+    });
+    render(<FindingEvidence finding={BASE} />);
+    expect(await screen.findByText('não foi possível carregar p-fonte')).toBeInTheDocument();
+    expect(await screen.findByText('Louvor mantido')).toBeInTheDocument();
+    expect(screen.getByText('Autora')).toBeInTheDocument();
+    expect(screen.getByText('Dó')).toBeInTheDocument();
+    expect(screen.getByText('(sem letra)')).toBeInTheDocument();
+  });
+
+  it('ignora respostas recebidas depois de desmontar as colunas', async () => {
+    let resolvePraise!: (value: never) => void;
+    const pending = new Promise<never>((resolve) => { resolvePraise = resolve; });
+    vi.mocked(getPraise).mockReturnValue(pending);
+    const { unmount } = render(<FindingEvidence finding={BASE} />);
+    expect(screen.getAllByRole('status')).toHaveLength(2);
+    unmount();
+    resolvePraise({ id: 'late' } as never);
+    await pending;
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('merge_praise: não mostra a categoria, mesmo que a API ainda a mande', async () => {
     vi.mocked(getPraise).mockImplementation(async (id: string) => ({
       id, name: id === 'p-fonte' ? 'Medo tens' : 'Medo tens que o tentador', number: '',

@@ -12,7 +12,6 @@ const destino: PraiseDetail = {
   author: '',
   rhythm: '',
   tonality: '',
-  category: '',
   lyrics: '',
   group_id: null,
   tag_ids: null,

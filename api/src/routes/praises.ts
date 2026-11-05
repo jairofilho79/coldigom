@@ -7,13 +7,13 @@ import {
   loadMaterialKindLabels,
   materialKindsForaDoCatalogo,
 } from '../materialKindLabels';
-import { listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
+import { buildPlpcgCatalog, listPlpcgPraises, parsePlpcgListQuery } from '../plpcgPraises';
 import type { App, Env } from '../env';
-import { requireAuth } from '../middleware';
+import { requireAuth, requireUploadOrAuth } from '../middleware';
 import { parseFiltrosDeLista, parseListNumbers } from '../queryParams';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ITEMS, isSafeMaterialType } from '../uploadLimits';
 import { storageKeyFor } from '../storageKeys';
-import type { MaterialRow } from '../praiseZip';
+import type { MaterialRow, PraiseRow } from '../praiseZip';
 import {
   TAG_LABEL_SQL,
   VALID_SORT_FIELDS,
@@ -21,7 +21,6 @@ import {
   buildWhereClause,
   isFtsError,
   resolveTagFilterGroups,
-  tagHasChildren,
   type PraiseResult,
   type SortField,
   type TagRow,
@@ -43,7 +42,6 @@ export function registerPraisesRoutes(app: App): void {
     const tags = c.req.query('tags') ? c.req.query('tags')!.split(',').filter(Boolean) : undefined;
     const rhythm = c.req.query('rhythm') ? c.req.query('rhythm')!.split(',').filter(Boolean) : undefined;
     const tonality = c.req.query('tonality') ? c.req.query('tonality')!.split(',').filter(Boolean) : undefined;
-    const category = c.req.query('category') ? c.req.query('category')!.split(',').filter(Boolean) : undefined;
     const materialKinds = c.req.query('materialKinds')
       ? c.req.query('materialKinds')!.split(',').filter(Boolean)
       : undefined;
@@ -65,7 +63,6 @@ export function registerPraisesRoutes(app: App): void {
         tagGroups,
         rhythm,
         tonality,
-        category,
         materialKinds,
         numberMin,
         numberMax,
@@ -80,8 +77,8 @@ export function registerPraisesRoutes(app: App): void {
 
       const query = `
         SELECT
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
-          p.is_reviewed, p.reviewed_at, p.reviewed_by,
+          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics, p.group_id,
+          p.is_reviewed, p.reviewed_at,
           GROUP_CONCAT(DISTINCT pt.tag_id) as tag_ids,
           GROUP_CONCAT(DISTINCT ${TAG_LABEL_SQL}) as tag_names
         FROM praises p
@@ -138,7 +135,8 @@ export function registerPraisesRoutes(app: App): void {
     return c.json({ error: 'Failed to fetch praises' }, 500);
   });
 
-  // GET /api/plpcg/praises - Lightweight list for PLPCG (no lyrics text; slim materials)
+  // GET /api/plpcg/praises - Lightweight list for PLPCG (slim materials; lyrics_excerpt
+  // when the search matches the lyrics — no full lyrics text)
   app.get('/api/plpcg/praises', async (c) => {
     try {
       const parsed = parsePlpcgListQuery(c);
@@ -159,10 +157,31 @@ export function registerPraisesRoutes(app: App): void {
     }
   });
 
+  // GET /api/plpcg/catalog - Compact full-catalog dump for the PLPCG app (ETag/304)
+  app.get('/api/plpcg/catalog', async (c) => {
+    try {
+      const result = await buildPlpcgCatalog(
+        c.env.DB,
+        { tagLabelSql: TAG_LABEL_SQL },
+        c.req.header('If-None-Match')
+      );
+      if (result.status === 304) {
+        return new Response(null, { status: 304, headers: result.headers });
+      }
+      return new Response(result.body, {
+        status: 200,
+        headers: { ...result.headers, 'Content-Type': 'application/json; charset=utf-8' },
+      });
+    } catch (error) {
+      console.error('Error building PLPCG catalog:', error);
+      return c.json({ error: 'Failed to build catalog' }, 500);
+    }
+  });
+
   // GET /api/praises/filters - Get filter options
   app.get('/api/praises/filters', async (c) => {
-    // As opções eram globais: a tela oferecia um ritmo que, combinado com a
-    // categoria já escolhida, dava zero resultados. Agora cada dimensão é
+    // As opções eram globais: a tela oferecia um ritmo que, combinado com o
+    // tom já escolhido, dava zero resultados. Agora cada dimensão é
     // contada sob os DEMAIS filtros — ignorando o próprio, senão escolher
     // "Valsa" apagaria os outros ritmos da lista e não haveria como trocar
     // para "Marcha" sem limpar o filtro antes.
@@ -184,7 +203,6 @@ export function registerPraisesRoutes(app: App): void {
           tagGroups: dimensao === 'tags' ? undefined : gruposDeTags,
           rhythm: dimensao === 'rhythm' ? undefined : filtros.rhythm,
           tonality: dimensao === 'tonality' ? undefined : filtros.tonality,
-          category: dimensao === 'category' ? undefined : filtros.category,
           materialKinds: filtros.materialKinds,
           numberMin: filtros.numberMin,
           numberMax: filtros.numberMax,
@@ -192,7 +210,7 @@ export function registerPraisesRoutes(app: App): void {
         return { clause, bindings };
       };
 
-      const valoresDe = (coluna: 'rhythm' | 'tonality' | 'category') => {
+      const valoresDe = (coluna: 'rhythm' | 'tonality') => {
         const { clause, bindings } = exceto(coluna);
         const prefixo = clause ? `${clause} AND ` : 'WHERE ';
         const sql = `SELECT DISTINCT ${coluna} FROM praises p ${prefixo}p.${coluna} IS NOT NULL AND p.${coluna} != '' ORDER BY ${coluna}`;
@@ -222,10 +240,9 @@ export function registerPraisesRoutes(app: App): void {
         return c.env.DB.prepare(sql).bind(...bindings).all();
       };
 
-      const [rhythmsResult, tonalitiesResult, categoriesResult, tagsResult] = await Promise.all([
+      const [rhythmsResult, tonalitiesResult, tagsResult] = await Promise.all([
         valoresDe('rhythm'),
         valoresDe('tonality'),
-        valoresDe('category'),
         tagsComContagem(),
       ]);
 
@@ -235,7 +252,6 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({
         rhythms: (rhythmsResult.results as { rhythm: string }[]).map((r) => r.rhythm),
         tonalities: (tonalitiesResult.results as { tonality: string }[]).map((r) => r.tonality),
-        categories: (categoriesResult.results as { category: string }[]).map((r) => r.category),
         tags: tagRows.map((t) => ({
           id: t.id,
           name: t.name,
@@ -276,6 +292,20 @@ export function registerPraisesRoutes(app: App): void {
     }
   });
 
+  app.get('/api/admin/praises/:id/review', requireAuth, async (c) => {
+    try {
+      const review = await c.env.DB.prepare(
+        'SELECT is_reviewed, reviewed_at, reviewed_by FROM praises WHERE id = ?'
+      ).bind(c.req.param('id')).first();
+      if (!review) return c.json({ error: 'Praise not found' }, 404);
+      c.header('Cache-Control', 'no-store');
+      return c.json({ data: review });
+    } catch (error) {
+      console.error('Error fetching praise review:', error);
+      return c.json({ error: 'Failed to fetch praise review' }, 500);
+    }
+  });
+
   // GET /api/praises/:id - Get single praise with materials
   app.get('/api/praises/:id', async (c) => {
     const id = c.req.param('id');
@@ -284,8 +314,8 @@ export function registerPraisesRoutes(app: App): void {
       // Fetch praise with tags
       const praiseQuery = `
         SELECT 
-          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.category, p.lyrics, p.group_id,
-          p.updated_at, p.is_reviewed, p.reviewed_at, p.reviewed_by,
+          p.id, p.name, p.number, p.author, p.rhythm, p.tonality, p.lyrics, p.group_id,
+          p.short_id, p.updated_at, p.is_reviewed, p.reviewed_at,
           GROUP_CONCAT(pt.tag_id) as tag_ids
         FROM praises p
         LEFT JOIN praise_tags pt ON p.id = pt.praise_id
@@ -304,6 +334,7 @@ export function registerPraisesRoutes(app: App): void {
           pm.id, pm.praise_id, pm.material_kind, pm.type, pm.r2_key, pm.file_path_legacy,
           pm.source_material_id, pm.merged_from_praise_id, pm.url,
           pm.is_reviewed, pm.reviewed_at, pm.reviewed_by,
+          pm.notes,
           mp.name AS merged_from_praise_name
         FROM praise_materials pm
         LEFT JOIN praises mp ON mp.id = pm.merged_from_praise_id
@@ -399,6 +430,33 @@ export function registerPraisesRoutes(app: App): void {
         })
       );
 
+      let biblical: Record<string, unknown> | null = null;
+      try {
+        const bRow = (await c.env.DB.prepare(
+          `SELECT tem_citacao_direta, referencia_principal, resumo_uma_linha, resumo_formatado,
+                  citacoes_diretas_json, mensagem_central, temas_homileticos_json,
+                  passagem_origem_direta, pericopes_relacionadas_json
+           FROM praise_biblical
+           WHERE praise_id = ?`
+        ).bind(id).first()) as Record<string, unknown> | null;
+
+        if (bRow) {
+          biblical = {
+            tem_citacao_direta: Boolean(bRow.tem_citacao_direta),
+            referencia_principal: bRow.referencia_principal ?? null,
+            resumo_uma_linha: (bRow.resumo_uma_linha as string) || '',
+            resumo_formatado: (bRow.resumo_formatado as string) || '',
+            citacoes_diretas: JSON.parse((bRow.citacoes_diretas_json as string) || '[]'),
+            mensagem_central: bRow.mensagem_central ?? null,
+            temas_homileticos: JSON.parse((bRow.temas_homileticos_json as string) || '[]'),
+            passagem_origem_direta: bRow.passagem_origem_direta ?? null,
+            pericopes_relacionadas: JSON.parse((bRow.pericopes_relacionadas_json as string) || '[]'),
+          };
+        }
+      } catch {
+        biblical = null;
+      }
+
       return c.json({
         data: {
           ...praiseResult,
@@ -406,6 +464,7 @@ export function registerPraisesRoutes(app: App): void {
           tags,
           materials,
           group_members,
+          biblical,
         },
       });
     } catch (error) {
@@ -427,13 +486,12 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: "Field 'name' is required" }, 400);
     }
 
-    const optionalFields = ['number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+    const optionalFields = ['number', 'author', 'rhythm', 'tonality', 'lyrics'] as const;
     const fieldValues: Record<(typeof optionalFields)[number], string | null> = {
       number: null,
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
       lyrics: null,
     };
 
@@ -462,8 +520,8 @@ export function registerPraisesRoutes(app: App): void {
 
     try {
       await c.env.DB.prepare(
-        `INSERT INTO praises (id, name, number, author, rhythm, tonality, category, lyrics)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         id,
         name.trim(),
@@ -471,16 +529,12 @@ export function registerPraisesRoutes(app: App): void {
         fieldValues.author,
         fieldValues.rhythm,
         fieldValues.tonality,
-        fieldValues.category,
         fieldValues.lyrics
       ).run();
 
       for (const tagId of tagIds) {
         const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
         if (!tag) return c.json({ error: 'Tag not found' }, 400);
-        if (await tagHasChildren(c.env.DB, tagId)) {
-          return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
-        }
 
         await c.env.DB.prepare(
           'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
@@ -518,7 +572,7 @@ export function registerPraisesRoutes(app: App): void {
       return c.json({ error: "Field 'if_updated_at' must be a non-empty string" }, 400);
     }
 
-    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'lyrics'] as const;
     const sets: string[] = [];
     const bindings: (string | number | null)[] = [];
 
@@ -609,6 +663,56 @@ export function registerPraisesRoutes(app: App): void {
     }
   });
 
+  // DELETE /api/praises/:id - Delete a praise with its materials, tags, and R2 assets (admin)
+  app.delete('/api/praises/:id', requireAuth, async (c) => {
+    const id = c.req.param('id');
+    try {
+      const praise = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(id).first();
+      if (!praise) return c.json({ error: 'Praise not found' }, 404);
+
+      const materials = await c.env.DB.prepare(
+        'SELECT id, r2_key FROM praise_materials WHERE praise_id = ?'
+      ).bind(id).all();
+      const rows = (materials.results as Array<{ id: string; r2_key: string | null }>) ?? [];
+
+      let totalOccurrences = 0;
+      for (const mat of rows) {
+        const oc = await c.env.DB.prepare(
+          'SELECT COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id = ?'
+        ).bind(mat.id).first<{ n: number }>();
+        totalOccurrences += oc?.n ?? 0;
+      }
+
+      const stmts = [];
+      for (const mat of rows) {
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_usage WHERE material_id = ?').bind(mat.id));
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_video_occurrences WHERE material_id = ?').bind(mat.id));
+      }
+      stmts.push(c.env.DB.prepare('DELETE FROM praise_materials WHERE praise_id = ?').bind(id));
+      stmts.push(c.env.DB.prepare('DELETE FROM praise_tags WHERE praise_id = ?').bind(id));
+      stmts.push(c.env.DB.prepare('DELETE FROM praises WHERE id = ?').bind(id));
+      if (totalOccurrences > 0) {
+        stmts.push(c.env.DB.prepare('UPDATE gesture_dictionary_meta SET version = version + 1 WHERE id = 1').bind());
+      }
+
+      await c.env.DB.batch(stmts);
+
+      const uniqueR2Keys = [...new Set(rows.map((r) => r.r2_key).filter((k): k is string => Boolean(k)))];
+      for (const key of uniqueR2Keys) {
+        try {
+          await c.env.ASSETS.delete(storageKeyFor(key));
+        } catch (e) {
+          console.warn('Failed to delete R2 object:', e);
+        }
+      }
+
+      return c.json({ ok: true });
+    } catch (error) {
+      console.error('Error deleting praise:', error);
+      return c.json({ error: 'Failed to delete praise' }, 500);
+    }
+  });
+
   // POST /api/praises/:id/group - Link this praise into another's group (admin)
   app.post('/api/praises/:id/group', requireAuth, async (c) => {
     const id = c.req.param('id');
@@ -672,9 +776,6 @@ export function registerPraisesRoutes(app: App): void {
 
       const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
       if (!tag) return c.json({ error: 'Tag not found' }, 404);
-      if (await tagHasChildren(c.env.DB, tagId)) {
-        return c.json({ error: 'Cannot attach a parent tag; use a subtag' }, 400);
-      }
 
       await c.env.DB.prepare(
         'INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)'
@@ -760,16 +861,17 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     const metaObj = metadata as Record<string, unknown>;
-    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'category', 'lyrics'] as const;
+    const updatable = ['name', 'number', 'author', 'rhythm', 'tonality', 'lyrics'] as const;
     const metaValues: Record<(typeof updatable)[number], string | null> = {
       name: null,
       number: null,
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
       lyrics: null,
     };
+
+    // A categoria do louvor saiu do schema (migração 025): a chave em `metadata`, se vier, é ignorada.
 
     for (const key of updatable) {
       if (!(key in metaObj)) {
@@ -814,35 +916,12 @@ export function registerPraisesRoutes(app: App): void {
       const source = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(sourceId).first();
       if (!source) return c.json({ error: 'Source praise not found' }, 404);
 
-      // A lista que chega é a união das tags dos dois louvores, então as tags
-      // que o keeper JÁ tinha voltam aqui. Uma delas virar tag pai (alguém criou
-      // uma subtag depois) não é tentativa nova de associar tag pai: é dado
-      // preexistente, e recusar matava toda mesclagem daquele louvor. Tag pai
-      // vinda só do louvor fonte continua barrada — aí a associação é nova.
-      const jaNoKeeper = new Set(
-        (
-          (
-            await c.env.DB.prepare('SELECT tag_id FROM praise_tags WHERE praise_id = ?')
-              .bind(keeperId)
-              .all<{ tag_id: string }>()
-          ).results ?? []
-        ).map((linha) => linha.tag_id)
-      );
-
+      // Tag pai (raiz com subtags) é aceita: ligada direto, quer dizer «sem
+      // subtag específica» (spec seções da Coletânea, §3.2). Só tag que não
+      // existe barra o merge, antes de qualquer escrita.
       for (const tagId of tagIds) {
         const tag = await c.env.DB.prepare('SELECT id FROM tags WHERE id = ?').bind(tagId).first();
         if (!tag) return c.json({ error: 'Tag not found' }, 400);
-        if (jaNoKeeper.has(tagId)) continue;
-        if (await tagHasChildren(c.env.DB, tagId)) {
-          // Sem o nome não havia como saber qual das tags do lote era a culpada.
-          const nome = await c.env.DB.prepare('SELECT name FROM tags WHERE id = ?')
-            .bind(tagId)
-            .first<{ name: string }>();
-          return c.json(
-            { error: `Cannot attach a parent tag; use a subtag: ${nome?.name ?? tagId}` },
-            400
-          );
-        }
       }
 
       for (const materialId of materialIdsToImport) {
@@ -866,7 +945,7 @@ export function registerPraisesRoutes(app: App): void {
       // sem nenhuma tag.
       await c.env.DB.batch([
         c.env.DB.prepare(
-          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, category = ?, lyrics = ?,
+          `UPDATE praises SET name = ?, number = ?, author = ?, rhythm = ?, tonality = ?, lyrics = ?,
            updated_at = datetime('now') WHERE id = ?`
         ).bind(
           metaValues.name,
@@ -874,7 +953,6 @@ export function registerPraisesRoutes(app: App): void {
           metaValues.author,
           metaValues.rhythm,
           metaValues.tonality,
-          metaValues.category,
           metaValues.lyrics,
           keeperId
         ),
@@ -941,8 +1019,303 @@ export function registerPraisesRoutes(app: App): void {
     }
   });
 
+  // POST /api/praises/:id/duplicate - Duplicate praise with materials, tags and metadata (admin)
+  app.post('/api/praises/:id/duplicate', requireAuth, async (c) => {
+    const origId = c.req.param('id');
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+
+    try {
+      const orig = await c.env.DB.prepare('SELECT * FROM praises WHERE id = ?')
+        .bind(origId)
+        .first<PraiseRow & { group_id: string | null }>();
+      if (!orig) return c.json({ error: 'Praise not found' }, 404);
+
+      const newName = typeof body?.name === 'string' && body.name.trim()
+        ? body.name.trim()
+        : `${orig.name} (cópia)`;
+      const newPraiseId = crypto.randomUUID();
+
+      // Buscar tags do original
+      const tagsResult = await c.env.DB.prepare('SELECT tag_id FROM praise_tags WHERE praise_id = ?')
+        .bind(origId)
+        .all<{ tag_id: string }>();
+      const tagIds = (tagsResult.results ?? []).map((r) => r.tag_id);
+
+      // Buscar materiais do original
+      const matsResult = await c.env.DB.prepare('SELECT * FROM praise_materials WHERE praise_id = ?')
+        .bind(origId)
+        .all<MaterialRow & { is_reviewed?: number; reviewed_at?: string | null; reviewed_by?: string | null }>();
+      const originalMaterials = matsResult.results ?? [];
+
+      const idMap = new Map<string, string>();
+      for (const m of originalMaterials) {
+        idMap.set(m.id, crypto.randomUUID());
+      }
+
+      // Preparar cópia de assets no R2
+      const materialsToInsert: Array<{
+        id: string;
+        material_kind: string;
+        type: string;
+        r2_key: string | null;
+        file_path_legacy: string;
+        source_material_id: string | null;
+        merged_from_praise_id: string | null;
+        url: string | null;
+        is_reviewed: number;
+        reviewed_at: string | null;
+        reviewed_by: string | null;
+      }> = [];
+
+      for (const m of originalMaterials) {
+        const newMatId = idMap.get(m.id)!;
+        let newR2Key: string | null = null;
+        if (m.r2_key) {
+          const ext = m.r2_key.split('.').pop() || m.type;
+          newR2Key = `assets/praises/${newPraiseId}/${newMatId}.${ext}`;
+          try {
+            const oldStorageKey = storageKeyFor(m.r2_key);
+            const obj = await c.env.ASSETS.get(oldStorageKey);
+            if (obj) {
+              const newStorageKey = storageKeyFor(newR2Key);
+              await c.env.ASSETS.put(newStorageKey, obj.body, {
+                httpMetadata: obj.httpMetadata,
+                customMetadata: obj.customMetadata,
+              });
+            }
+          } catch (e) {
+            console.warn('Failed to copy R2 object during duplicate:', e);
+          }
+        }
+
+        const newSourceMatId = m.source_material_id && idMap.has(m.source_material_id)
+          ? idMap.get(m.source_material_id)!
+          : m.source_material_id;
+
+        materialsToInsert.push({
+          id: newMatId,
+          material_kind: m.material_kind,
+          type: m.type,
+          r2_key: newR2Key,
+          file_path_legacy: m.file_path_legacy || '',
+          source_material_id: newSourceMatId,
+          merged_from_praise_id: null,
+          url: m.url ?? null,
+          is_reviewed: m.is_reviewed ?? 0,
+          reviewed_at: m.reviewed_at ?? null,
+          reviewed_by: m.reviewed_by ?? null,
+        });
+      }
+
+      // Buscar gestos e vídeos para manter relacionamentos
+      const gestureUsagesToInsert: Array<{ material_id: string; gesture_id: string; count: number }> = [];
+      const gestureVideosToInsert: Array<{ gesture_id: string; material_id: string; seconds: number | null }> = [];
+
+      for (const m of originalMaterials) {
+        const newMatId = idMap.get(m.id)!;
+        if (m.type === 'gestures') {
+          const usages = await c.env.DB.prepare('SELECT gesture_id, count FROM gesture_usage WHERE material_id = ?')
+            .bind(m.id)
+            .all<{ gesture_id: string; count: number }>();
+          for (const u of usages.results ?? []) {
+            gestureUsagesToInsert.push({ material_id: newMatId, gesture_id: u.gesture_id, count: u.count });
+          }
+        } else if (m.type === 'youtube') {
+          const vids = await c.env.DB.prepare('SELECT gesture_id, seconds FROM gesture_video_occurrences WHERE material_id = ?')
+            .bind(m.id)
+            .all<{ gesture_id: string; seconds: number | null }>();
+          for (const v of vids.results ?? []) {
+            gestureVideosToInsert.push({ gesture_id: v.gesture_id, material_id: newMatId, seconds: v.seconds });
+          }
+        }
+      }
+
+      await c.env.DB.batch([
+        c.env.DB.prepare(
+          `INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics, group_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          newPraiseId,
+          newName,
+          orig.number,
+          orig.author,
+          orig.rhythm,
+          orig.tonality,
+          orig.lyrics,
+          orig.group_id
+        ),
+        ...tagIds.map((tid) =>
+          c.env.DB.prepare('INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES (?, ?)').bind(newPraiseId, tid)
+        ),
+        ...materialsToInsert.map((mat) =>
+          c.env.DB.prepare(
+            `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url, is_reviewed, reviewed_at, reviewed_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            mat.id,
+            newPraiseId,
+            mat.material_kind,
+            mat.type,
+            mat.r2_key,
+            mat.file_path_legacy,
+            mat.source_material_id,
+            mat.merged_from_praise_id,
+            mat.url,
+            mat.is_reviewed,
+            mat.reviewed_at,
+            mat.reviewed_by
+          )
+        ),
+        ...gestureUsagesToInsert.map((gu) =>
+          c.env.DB.prepare('INSERT OR IGNORE INTO gesture_usage (material_id, gesture_id, count) VALUES (?, ?, ?)')
+            .bind(gu.material_id, gu.gesture_id, gu.count)
+        ),
+        ...gestureVideosToInsert.map((gv) =>
+          c.env.DB.prepare('INSERT INTO gesture_video_occurrences (gesture_id, material_id, seconds) VALUES (?, ?, ?)')
+            .bind(gv.gesture_id, gv.material_id, gv.seconds)
+        ),
+      ]);
+
+      const res = await app.request(`/api/praises/${newPraiseId}`, { method: 'GET' }, c.env as Env);
+      const json = await res.json();
+      return c.json(json, 201);
+    } catch (error) {
+      console.error('Error duplicating praise:', error);
+      return c.json({ error: 'Failed to duplicate praise' }, 500);
+    }
+  });
+
+  // POST /api/praises/:id/materials/bulk-move - Move multiple materials to another praise (admin)
+  app.post('/api/praises/:id/materials/bulk-move', requireAuth, async (c) => {
+    const praiseId = c.req.param('id');
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+    const destinationPraiseId = typeof body.destination_praise_id === 'string' ? body.destination_praise_id.trim() : '';
+    if (!destinationPraiseId) {
+      return c.json({ error: "Field 'destination_praise_id' must be a non-empty string" }, 400);
+    }
+    if (destinationPraiseId === praiseId) {
+      return c.json({ error: 'O material já está neste louvor' }, 400);
+    }
+
+    if (!Array.isArray(body.material_ids) || body.material_ids.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+    const materialIds = body.material_ids.filter((m): m is string => typeof m === 'string' && m.trim().length > 0);
+    if (materialIds.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+
+    try {
+      const source = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(praiseId).first();
+      if (!source) return c.json({ error: 'Praise not found' }, 404);
+
+      const dest = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(destinationPraiseId).first();
+      if (!dest) return c.json({ error: 'Louvor de destino não encontrado' }, 404);
+
+      for (const matId of materialIds) {
+        const mat = await c.env.DB.prepare('SELECT id, praise_id FROM praise_materials WHERE id = ?')
+          .bind(matId)
+          .first<{ id: string; praise_id: string }>();
+        if (!mat) return c.json({ error: `Material not found: ${matId}` }, 404);
+        if (mat.praise_id !== praiseId) {
+          return c.json({ error: `Material ${matId} does not belong to source praise` }, 400);
+        }
+      }
+
+      await c.env.DB.batch(
+        materialIds.map((matId) =>
+          c.env.DB.prepare('UPDATE praise_materials SET praise_id = ? WHERE id = ? AND praise_id = ?')
+            .bind(destinationPraiseId, matId, praiseId)
+        )
+      );
+
+      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as Env);
+      const json = await res.json();
+      return c.json(json, res.status as ContentfulStatusCode);
+    } catch (error) {
+      console.error('Error bulk moving materials:', error);
+      return c.json({ error: 'Failed to move materials' }, 500);
+    }
+  });
+
+  // POST /api/praises/:id/materials/bulk-delete - Delete multiple materials (admin)
+  app.post('/api/praises/:id/materials/bulk-delete', requireAuth, async (c) => {
+    const praiseId = c.req.param('id');
+    const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
+
+    if (!Array.isArray(body.material_ids) || body.material_ids.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+    const materialIds = body.material_ids.filter((m): m is string => typeof m === 'string' && m.trim().length > 0);
+    if (materialIds.length === 0) {
+      return c.json({ error: "Field 'material_ids' must be a non-empty array of strings" }, 400);
+    }
+
+    try {
+      const praise = await c.env.DB.prepare('SELECT id FROM praises WHERE id = ?').bind(praiseId).first();
+      if (!praise) return c.json({ error: 'Praise not found' }, 404);
+
+      const rows: Array<{ id: string; r2_key: string | null }> = [];
+      let totalOccurrences = 0;
+
+      for (const matId of materialIds) {
+        const mat = await c.env.DB.prepare('SELECT id, praise_id, r2_key FROM praise_materials WHERE id = ?')
+          .bind(matId)
+          .first<{ id: string; praise_id: string; r2_key: string | null }>();
+        if (!mat) return c.json({ error: `Material not found: ${matId}` }, 404);
+        if (mat.praise_id !== praiseId) {
+          return c.json({ error: `Material ${matId} does not belong to praise` }, 400);
+        }
+        rows.push({ id: mat.id, r2_key: mat.r2_key });
+
+        const oc = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM gesture_video_occurrences WHERE material_id = ?')
+          .bind(matId)
+          .first<{ n: number }>();
+        totalOccurrences += oc?.n ?? 0;
+      }
+
+      const stmts = [];
+      for (const r of rows) {
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_usage WHERE material_id = ?').bind(r.id));
+        stmts.push(c.env.DB.prepare('DELETE FROM gesture_video_occurrences WHERE material_id = ?').bind(r.id));
+        stmts.push(c.env.DB.prepare('DELETE FROM praise_materials WHERE id = ?').bind(r.id));
+      }
+      if (totalOccurrences > 0) {
+        stmts.push(c.env.DB.prepare('UPDATE gesture_dictionary_meta SET version = version + 1 WHERE id = 1').bind());
+      }
+
+      await c.env.DB.batch(stmts);
+
+      // Limpeza no R2
+      for (const r of rows) {
+        if (r.r2_key) {
+          try {
+            await c.env.ASSETS.delete(storageKeyFor(r.r2_key));
+          } catch (e) {
+            console.warn('Failed to delete R2 object:', e);
+          }
+        }
+      }
+
+      const res = await app.request(`/api/praises/${praiseId}`, { method: 'GET' }, c.env as Env);
+      const json = await res.json();
+      return c.json(json, res.status as ContentfulStatusCode);
+    } catch (error) {
+      console.error('Error bulk deleting materials:', error);
+      return c.json({ error: 'Failed to delete materials' }, 500);
+    }
+  });
+
   // POST /api/praises/:id/materials - Create a material (admin, JSON)
-  app.post('/api/praises/:id/materials', requireAuth, async (c) => {
+  // O token de upload já pode GRAVAR o conteúdo de qualquer material `chord`
+  // (`PUT /api/materials/:id/content`). Criar a linha vazia é menos poder do que
+  // sobrescrever o que está lá, e é o que faltava para quem roda sem sessão —
+  // o review-app e o agente de cifras — poder criar o material gêmeo de um PDF.
+  // Quem vem com JWT de sessão continua passando pelo mesmo `requireAuth`.
+  app.post('/api/praises/:id/materials', requireUploadOrAuth, async (c) => {
     const praiseId = c.req.param('id');
     const body = await c.req.json().catch(() => null) as Record<string, unknown> | null;
     if (!body || typeof body !== 'object') return c.json({ error: 'Invalid JSON body' }, 400);
@@ -985,13 +1358,16 @@ export function registerPraisesRoutes(app: App): void {
       .first();
     if (!louvor) return c.json({ error: 'Praise not found' }, 404);
 
-    // Gestos: a linha nasce com a chave padrão do R2 e SEM objeto — o editor lê
-    // o 404 do asset como "documento novo". A origem (o PDF de gestos) é
-    // opcional e precisa ser do mesmo louvor, senão o link "Abrir PDF" apontaria
-    // para o material de outro.
+    // Gestos e cifra: a linha nasce com a chave padrão do R2 e SEM objeto — quem
+    // for editar lê o 404 do asset como "documento novo", e é o PUT de conteúdo
+    // que grava o objeto (ele recusa material sem `r2_key`). A origem é opcional
+    // e precisa ser do mesmo louvor, senão o link apontaria para o material de
+    // outro: nos gestos é o PDF de gestos; na cifra é o PDF do hinário de que
+    // ela foi tirada, que é como todo material `chord` do acervo já está ligado.
     const ehGestos = type === 'gestures';
+    const temConteudoProprio = ehGestos || type === 'chord';
     const sourceMaterialId =
-      ehGestos && typeof body.source_material_id === 'string' && body.source_material_id.trim()
+      temConteudoProprio && typeof body.source_material_id === 'string' && body.source_material_id.trim()
         ? body.source_material_id.trim()
         : null;
     if (sourceMaterialId) {
@@ -1003,21 +1379,23 @@ export function registerPraisesRoutes(app: App): void {
     }
 
     const id = crypto.randomUUID();
+    const notes = typeof body.notes === 'string' && body.notes.trim().length > 0 ? body.notes.trim() : null;
 
     try {
       await c.env.DB.prepare(
-        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO praise_materials (id, praise_id, material_kind, type, r2_key, file_path_legacy, source_material_id, merged_from_praise_id, url, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         id,
         praiseId,
         material_kind,
         type,
-        ehGestos ? `assets/praises/${praiseId}/${id}.gestures` : null,
+        temConteudoProprio ? `assets/praises/${praiseId}/${id}.${ehGestos ? 'gestures' : 'chord'}` : null,
         '',
         sourceMaterialId,
         null,
-        hasUrl ? url.trim() : null
+        hasUrl ? url.trim() : null,
+        notes
       ).run();
     } catch (error) {
       console.error('Error creating material:', error);

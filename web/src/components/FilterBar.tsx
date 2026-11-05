@@ -4,7 +4,7 @@ import type { FilterOptions, MaterialKind } from '../types';
 import { SortSelector } from './SortSelector';
 import { useFilters } from '../hooks/useFilters';
 
-type MultiSelectKey = 'category' | 'rhythm' | 'tonality' | 'materialKinds';
+type MultiSelectKey = 'rhythm' | 'tonality' | 'materialKinds';
 
 export function FilterBar() {
   const { filters, setFilters, toggleTag, clearAllFilters, activeFilterCount } = useFilters();
@@ -33,7 +33,6 @@ export function FilterBar() {
     filters.tags,
     filters.rhythm,
     filters.tonality,
-    filters.category,
     filters.materialKinds,
     filters.numberMin,
     filters.numberMax,
@@ -42,9 +41,9 @@ export function FilterBar() {
   useEffect(() => {
     let cancelado = false;
     const correntes = JSON.parse(chaveDosFiltros) as [
-      string, string[], string[], string[], string[], string[], number | null, number | null
+      string, string[], string[], string[], string[], number | null, number | null
     ];
-    const [query, tags, rhythm, tonality, category, materialKinds, minCru, maxCru] = correntes;
+    const [query, tags, rhythm, tonality, materialKinds, minCru, maxCru] = correntes;
     // JSON.stringify troca `undefined` por `null` dentro de um array, então o que
     // volta daqui não é o mesmo tipo que entrou. Desfaz a troca na fronteira, em
     // vez de deixar o `null` viajar para dentro do serviço.
@@ -52,7 +51,7 @@ export function FilterBar() {
     const numberMax = maxCru ?? undefined;
 
     Promise.all([
-      getFilterOptions({ query, tags, rhythm, tonality, category, materialKinds, numberMin, numberMax }),
+      getFilterOptions({ query, tags, rhythm, tonality, materialKinds, numberMin, numberMax }),
       getMaterialKinds(),
     ])
       .then(([opts, kinds]) => {
@@ -107,7 +106,7 @@ export function FilterBar() {
   };
 
   const renderStringDropdown = (
-    key: 'category' | 'rhythm' | 'tonality',
+    key: 'rhythm' | 'tonality',
     label: string,
     options: string[]
   ) => {
@@ -231,7 +230,6 @@ export function FilterBar() {
     for (const [campo, titulo] of [
       ['rhythm', 'Ritmo'],
       ['tonality', 'Tom'],
-      ['category', 'Categoria'],
     ] as const) {
       for (const valor of filters[campo]) {
         filtrosAtivos.push({
@@ -349,7 +347,6 @@ export function FilterBar() {
 
       <div className="filter-controls-row">
         {renderMaterialKindsDropdown()}
-        {renderStringDropdown('category', 'Categoria', filterOptions.categories)}
         {/* Ritmo e Tom existiam no FilterState, no useFilters, no services/api e
             a API já devolvia as opções — faltava só a barra renderizar. */}
         {renderStringDropdown('rhythm', 'Ritmo', filterOptions.rhythms)}

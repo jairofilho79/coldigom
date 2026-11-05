@@ -22,7 +22,6 @@ const mockPraise: PraiseRow = {
   author: 'Autor 1',
   rhythm: 'Avulsos',
   tonality: 'C',
-  category: 'Louvor',
   lyrics: 'Letra do louvor',
   tag_ids: 'tag1,tag2',
 };
@@ -157,6 +156,11 @@ describe('praiseZip helpers', () => {
     const mats = parsed.praise_materials as Array<Record<string, unknown>>;
     expect(mats).toHaveLength(4);
     expect(mats[3].url).toBe('https://www.youtube.com/watch?v=abc123');
+  });
+
+  it('buildMetadataYaml não escreve praise_category (fase 3 das seções da Coletânea)', () => {
+    const text = buildMetadataYaml(mockPraise, [], []);
+    expect(text).not.toContain('praise_category');
   });
 });
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChordProEditor } from '../components/chordpro/ChordProEditor';
+import { ChordProRawEditor } from '../components/chordpro/ChordProRawEditor';
 import { ChordProView } from '../components/chordpro/ChordProView';
 import { ReviewSwitch } from '../components/ReviewSwitch';
 import { useMaterialContent } from '../hooks/useMaterialContent';
@@ -78,6 +79,14 @@ export function ChordProPage() {
   // `null` é modo leitura. O Song editado mora aqui porque o ChordProEditor é
   // controlado — é esta página que sabe gravar.
   const [draft, setDraft] = useState<Song | null>(null);
+  // Modo de edição: 'raw' (padrão) ou 'facilitada'
+  const [editMode, setEditMode] = useState<'raw' | 'facilitada'>('raw');
+  // Rascunho em texto cru para o modo raw
+  const [rawDraft, setRawDraft] = useState('');
+  const rawDraftRef = useRef('');
+  rawDraftRef.current = rawDraft;
+  const rawBaselineRef = useRef('');
+
   // O que gravamos com sucesso, carimbado com a chave a que pertence (mesmo truque
   // do useMaterialContent). Sem isso, sair do editor mostraria de novo o texto
   // antigo do GET; com isso, não é preciso refazer o GET só para ver o próprio
@@ -144,8 +153,62 @@ export function ChordProPage() {
   // Trocar de material fecha o editor: o rascunho pertencia ao arquivo anterior.
   useEffect(() => {
     setDraft(null);
+    setRawDraft('');
+    setEditMode('raw');
     setSaveError(null);
   }, [material?.r2_key]);
+
+  function alternarModo(novoModo: 'raw' | 'facilitada') {
+    if (novoModo === editMode) return;
+    if (novoModo === 'facilitada') {
+      const parsed =
+        rawDraft === rawBaselineRef.current && song ? song : parse(rawDraft);
+      setDraft(parsed);
+      setEditMode('facilitada');
+    } else {
+      if (draft === song) {
+        setRawDraft(rawBaselineRef.current);
+      } else if (draft) {
+        setRawDraft(serialize(draft));
+      }
+      setEditMode('raw');
+    }
+  }
+
+  function iniciarEdicao() {
+    setSaveError(null);
+    setSaveAviso(null);
+    setTextoDoConflito(null);
+    const inicial = serverSource ?? '';
+    rawBaselineRef.current = inicial;
+    setRawDraft(inicial);
+    setDraft(song ?? CIFRA_VAZIA);
+    setEditMode('raw');
+  }
+
+  const currentSong = useMemo(() => {
+    if (!draft) return song;
+    if (editMode === 'raw') {
+      return parse(rawDraft);
+    }
+    return draft;
+  }, [draft, editMode, rawDraft, song]);
+
+  const issues = useMemo(
+    () => (draft && currentSong ? validateSong(currentSong) : []),
+    [draft, currentSong]
+  );
+
+  /**
+   * Há trabalho na tela que ainda não está no servidor?
+   */
+  const temAlteracoesPendentes =
+    draft !== null &&
+    (editMode === 'raw'
+      ? rawDraft !== rawBaselineRef.current
+      : draft !== song);
+
+  const rascunhoVazio = draft !== null && currentSong !== null && !temLinhaDeLetra(currentSong);
 
   useEffect(() => {
     if (!temAlteracoesPendentes) return;
@@ -154,25 +217,18 @@ export function ChordProPage() {
     const aoSair = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener('beforeunload', aoSair);
     return () => window.removeEventListener('beforeunload', aoSair);
-  });
-
-  const issues = useMemo(() => (draft ? validateSong(draft) : []), [draft]);
-  /**
-   * Há trabalho na tela que ainda não está no servidor?
-   *
-   * Identidade de referência, não comparação de texto: abrir o editor faz
-   * `setDraft(song)`, e toda operação de `edit.ts` devolve um objeto novo. Comparar
-   * `serialize(draft)` com `serverSource` pareceria mais direto, mas amarraria esta
-   * guarda à fidelidade do ida-e-volta — e enquanto ela não for perfeita, abrir e
-   * fechar o editor sem tocar em nada acusaria alteração pendente.
-   */
-  const temAlteracoesPendentes = draft !== null && draft !== song;
-  const rascunhoVazio = draft !== null && !temLinhaDeLetra(draft);
+  }, [temAlteracoesPendentes]);
 
   /** Fecha o editor — a menos que a pessoa tenha continuado editando durante a gravação. */
-  function concluir(gravado: Song) {
-    if (draftRef.current === gravado) {
+  function concluir(novoTexto: string, gravadoSong: Song | null) {
+    const semMudancasDuranteEnvio =
+      editMode === 'raw'
+        ? rawDraftRef.current === novoTexto
+        : draftRef.current === gravadoSong;
+
+    if (semMudancasDuranteEnvio) {
       setDraft(null);
+      setRawDraft('');
       setSaveAviso(null);
       return;
     }
@@ -186,7 +242,7 @@ export function ChordProPage() {
     // Vale inclusive com `forcar`: "salvar assim mesmo" existe porque a gramática pode
     // não prever o próximo acorde legítimo do acervo — gravar um arquivo sem nenhuma
     // linha de letra não é acorde raro, é apagar a cifra.
-    if (!temLinhaDeLetra(draft)) {
+    if (!currentSong || !temLinhaDeLetra(currentSong)) {
       setSaveError(FORCAR_NAO_COBRE);
       return;
     }
@@ -213,6 +269,7 @@ export function ChordProPage() {
         setSaveError(mensagemDeRede());
         return;
       }
+      const novo = editMode === 'raw' ? rawDraft : serialize(draft);
       if (atual.status === 404) {
         // Não existe arquivo. Se também não existia quando abrimos, é a criação da
         // cifra — o caminho normal, e recusá-lo trancava para fora quem quisesse
@@ -222,7 +279,7 @@ export function ChordProPage() {
             'O arquivo foi removido no servidor desde que você abriu. ' +
               'Copie o seu texto abaixo antes de recarregar.'
           );
-          setTextoDoConflito(serialize(draft));
+          setTextoDoConflito(novo);
           return;
         }
       } else if (!atual.ok) {
@@ -232,16 +289,15 @@ export function ChordProPage() {
         setSaveError('Não foi possível verificar o arquivo no servidor. Tente salvar de novo.');
         return;
       }
-      const novo = serialize(draft);
       const noServidor = atual.status === 404 ? null : await atual.text();
       if (noServidor !== serverSource) {
         // Antes de acusar terceiro: pode ser a nossa própria gravação anterior, que
         // chegou ao servidor e cuja resposta se perdeu no caminho. Nesse caso a tela
         // acusava conflito e mandava recarregar — jogando fora o rascunho por causa
         // de um trabalho que já estava salvo, num ciclo que se repetia para sempre.
-        if (noServidor === novo) {
+        if (noServidor === novo || (noServidor && novo && noServidor.trimEnd() === novo.trimEnd())) {
           setSaved({ key: material.r2_key, source: novo });
-          concluir(draft);
+          concluir(novo, draft);
           return;
         }
         setSaveError(
@@ -255,7 +311,7 @@ export function ChordProPage() {
       await putMaterialContent(material.id, novo);
       // O que está no servidor agora é o que acabamos de gravar.
       setSaved({ key: material.r2_key, source: novo });
-      concluir(draft);
+      concluir(novo, draft);
     } catch (err) {
       // Erro vira mensagem ao lado dos botões e o editor continua aberto: sair
       // daqui jogaria fora o trabalho da pessoa.
@@ -347,10 +403,7 @@ export function ChordProPage() {
             <button
               type="button"
               className="cp-theme-btn"
-              onClick={() => {
-                setSaveError(null);
-                setDraft(song ?? CIFRA_VAZIA);
-              }}
+              onClick={iniciarEdicao}
             >
               ✎ editar
             </button>
@@ -400,21 +453,50 @@ export function ChordProPage() {
 
       {draft ? (
         <div className="cp-scope" data-cp-theme={theme}>
-          <ChordProEditor
-            song={draft}
-            onChange={(newSong) => {
-              setDraft(newSong);
-              setSaveAviso(null);
-              setTextoDoConflito(null);
-              // Limpar erro obsoleto quando usuário retorna a editar após uma recusa.
-              // Se `salvar()` rejeitou por conteúdo vazio ou validação, a mensagem fica
-              // em tela até que o botão "Cancelar edição" a apague — a menos que desfaça
-              // e volte a digitar, caso em que o `saveError` precisa sumir para não
-              // desmentir o "Salvar" habilitado que aparece junto.
-              setSaveError(null);
-            }}
-            issues={issues}
-          />
+          <div className="cp-mode-tabs" role="tablist" aria-label="Modo de edição">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={editMode === 'raw'}
+              className={`cp-mode-tab ${editMode === 'raw' ? 'is-active' : ''}`}
+              onClick={() => alternarModo('raw')}
+            >
+              Raw
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={editMode === 'facilitada'}
+              className={`cp-mode-tab ${editMode === 'facilitada' ? 'is-active' : ''}`}
+              onClick={() => alternarModo('facilitada')}
+            >
+              Facilitada
+            </button>
+          </div>
+
+          {editMode === 'raw' ? (
+            <ChordProRawEditor
+              value={rawDraft}
+              onChange={(novoTexto) => {
+                setRawDraft(novoTexto);
+                setSaveAviso(null);
+                setTextoDoConflito(null);
+                setSaveError(null);
+              }}
+              issues={issues}
+            />
+          ) : (
+            <ChordProEditor
+              song={draft}
+              onChange={(newSong) => {
+                setDraft(newSong);
+                setSaveAviso(null);
+                setTextoDoConflito(null);
+                setSaveError(null);
+              }}
+              issues={issues}
+            />
+          )}
           <div className="cp-edit-actions">
             <button
               type="button"
@@ -460,6 +542,8 @@ export function ChordProPage() {
                   return;
                 }
                 setDraft(null);
+                setRawDraft('');
+                setEditMode('raw');
                 setSaveError(null);
                 setSaveAviso(null);
                 setTextoDoConflito(null);

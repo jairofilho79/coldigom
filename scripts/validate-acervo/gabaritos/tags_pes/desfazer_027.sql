@@ -1,0 +1,21 @@
+-- Recoloca as 20 tags removidas pela migração 027 (backup em antes_027.json).
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('a58b3522-c21b-4352-a765-b905194900d5', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('811e5bbd-b22f-4e57-8c1c-8a2ed138ede7', '377b4956-8af4-40b5-90ce-868956eab5c2');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('e36df20a-8990-41f5-8ae8-a22b5f780b24', '377b4956-8af4-40b5-90ce-868956eab5c2');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('e36df20a-8990-41f5-8ae8-a22b5f780b24', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('03705399-2766-4d5b-8fcd-81de53ab5b06', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('0657ade2-5a11-4ada-b3da-2b27681ba051', '377b4956-8af4-40b5-90ce-868956eab5c2');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('0657ade2-5a11-4ada-b3da-2b27681ba051', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('4253abab-e827-4458-a73f-21560ffe2c86', '377b4956-8af4-40b5-90ce-868956eab5c2');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('4253abab-e827-4458-a73f-21560ffe2c86', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('47ed83ea-b8b0-4dcf-89f7-37b9e97f22a6', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('a0e6a5e7-486d-49f6-a018-55536446b0ed', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('732d6058-e74a-4c17-b48e-40a30801f98e', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('f3132f54-63d3-4308-a269-8c9820719330', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('8ba55eea-9ff0-4f67-8378-8c2d8cc84358', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('c9400dfe-473e-450d-902c-7fb3cdb7e9e6', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('d3a83de4-d004-465d-8302-15d4a6731d91', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('7478870e-7c4d-4813-8077-6a05c82bea96', '377b4956-8af4-40b5-90ce-868956eab5c2');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('59644c4e-5806-47f1-b3ac-2b2ac0327f8d', '377b4956-8af4-40b5-90ce-868956eab5c2');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('8be8a36d-9663-4afa-881d-d433f3f4bbca', 'd369f950-5259-483c-9412-b0a37d90042c');
+INSERT OR IGNORE INTO praise_tags (praise_id, tag_id) VALUES ('25fdf1bf-9d7c-4d9f-a58c-24c249378f20', 'd369f950-5259-483c-9412-b0a37d90042c');

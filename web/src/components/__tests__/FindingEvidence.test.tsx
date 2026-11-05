@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { FindingEvidence } from '../FindingEvidence';
 import type { ValidationFinding } from '../../types';
 
@@ -21,7 +21,7 @@ beforeEach(() => vi.mocked(getPraise).mockReset());
 
 describe('FindingEvidence', () => {
   it('genérico: um par por chave, url vira link', async () => {
-    vi.mocked(getPraise).mockResolvedValue({ id: 'x', name: 'x', number: '', author: '', rhythm: '', tonality: '', category: '', lyrics: '', group_id: null, tag_ids: null, tag_names: null, materials: [] } as never);
+    vi.mocked(getPraise).mockResolvedValue({ id: 'x', name: 'x', number: '', author: '', rhythm: '', tonality: '', lyrics: '', group_id: null, tag_ids: null, tag_names: null, materials: [] } as never);
     render(<FindingEvidence finding={{ ...BASE, action: 'set_praise_field', proposed_value: null }} />);
     expect(screen.getByText('letra')).toBeInTheDocument();
     expect(screen.getByText('true')).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe('FindingEvidence', () => {
   it('merge_praise: busca fonte e keeper e mostra os dois lado a lado', async () => {
     vi.mocked(getPraise).mockImplementation(async (id: string) => ({
       id, name: id === 'p-fonte' ? 'Medo tens' : 'Medo tens que o tentador', number: id === 'p-k1' ? '306' : '',
-      author: '', rhythm: '', tonality: '', category: '', lyrics: `letra de ${id}`, group_id: null, tag_ids: null,
+      author: '', rhythm: '', tonality: '', lyrics: `letra de ${id}`, group_id: null, tag_ids: null,
       tag_names: id === 'p-k1' ? 'Coletânea' : 'Avulsos', materials: [],
     }) as never);
     render(<FindingEvidence finding={BASE} />);
@@ -41,6 +41,21 @@ describe('FindingEvidence', () => {
     expect(screen.getByText('letra de p-fonte')).toBeInTheDocument();
     expect(screen.getByText('letra de p-k1')).toBeInTheDocument();
     expect(getPraise).toHaveBeenCalledTimes(2);
+  });
+
+  it('merge_praise: não mostra a categoria, mesmo que a API ainda a mande', async () => {
+    vi.mocked(getPraise).mockImplementation(async (id: string) => ({
+      id, name: id === 'p-fonte' ? 'Medo tens' : 'Medo tens que o tentador', number: '',
+      author: '', rhythm: '', tonality: '', category: 'Consolo e Encorajamento', lyrics: '',
+      group_id: null, tag_ids: null, tag_names: 'Coletânea · Consolo e Encorajamento', materials: [],
+    }) as never);
+    render(<FindingEvidence finding={BASE} />);
+
+    // As duas colunas carregadas: a seção aparece como subtag, uma vez em cada.
+    await waitFor(() =>
+      expect(screen.getAllByText('Coletânea · Consolo e Encorajamento')).toHaveLength(2)
+    );
+    expect(screen.queryAllByText('Consolo e Encorajamento')).toHaveLength(0);
   });
 
   it('evidência que veio como string crua é mostrada como está', () => {

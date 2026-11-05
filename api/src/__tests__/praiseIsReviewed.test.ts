@@ -20,7 +20,7 @@ function ambiente() {
   const linha = {
     id: 'praise-1', name: 'Louvor', number: '086', author: null, rhythm: null, tonality: null,
     category: null, lyrics: null, group_id: null, updated_at: '2026-09-18 20:00:00',
-    is_reviewed: 0, reviewed_at: null, reviewed_by: null, tag_ids: null, tag_names: null,
+    is_reviewed: 0, reviewed_at: null, tag_ids: null, tag_names: null,
   };
   const db = {
     prepare: vi.fn((sql: string) => ({
@@ -52,20 +52,22 @@ function ambiente() {
 }
 
 describe('praises.is_reviewed', () => {
-  it('GET /api/praises devolve is_reviewed, reviewed_at e reviewed_by por praise', async () => {
+  it('GET /api/praises devolve is_reviewed e reviewed_at por praise', async () => {
     const { env } = ambiente();
     const res = await app.request('/api/praises?limit=10', { method: 'GET' }, env);
     expect(res.status).toBe(200);
     const json = (await res.json()) as { data: Record<string, unknown>[] };
-    expect(json.data[0]).toMatchObject({ is_reviewed: 0, reviewed_at: null, reviewed_by: null });
+    expect(json.data[0]).toMatchObject({ is_reviewed: 0, reviewed_at: null });
+    expect(json.data[0]).not.toHaveProperty('reviewed_by');
   });
 
-  it('GET /api/praises/:id devolve as três colunas', async () => {
+  it('GET /api/praises/:id devolve a marca sem a identidade', async () => {
     const { env } = ambiente();
     const res = await app.request('/api/praises/praise-1', { method: 'GET' }, env);
     expect(res.status).toBe(200);
     const json = (await res.json()) as { data: Record<string, unknown> };
-    expect(json.data).toMatchObject({ is_reviewed: 0, reviewed_at: null, reviewed_by: null });
+    expect(json.data).toMatchObject({ is_reviewed: 0, reviewed_at: null });
+    expect(json.data).not.toHaveProperty('reviewed_by');
   });
 
   it('PATCH is_reviewed=true grava 1, reviewed_at e o e-mail de quem marcou', async () => {

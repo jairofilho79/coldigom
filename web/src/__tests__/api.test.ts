@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials } from '../services/api';
+import { searchPraises, getFilterOptions, getPraise, getPraiseDownloadZipUrl, getMaterialKinds, getTags, getAssetUrl, setAuthTokens, clearAuthTokens, bulkUploadMaterials, duplicatePraise, deletePraise, bulkMoveMaterials, bulkDeleteMaterials } from '../services/api';
 import { MAX_UPLOAD_ITEMS } from '../lib/uploadLimits';
 import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, FilterOptions } from '../types';
 
@@ -25,7 +25,6 @@ describe('API Service', () => {
         author: 'Autor 1',
         rhythm: 'Avulsos',
         tonality: 'C',
-        category: 'Louvor',
         lyrics: 'Letra do louvor 1',
         group_id: null,
         tag_ids: 'tag1,tag2',
@@ -38,7 +37,6 @@ describe('API Service', () => {
         author: 'Autor 2',
         rhythm: 'Coletânea',
         tonality: 'G',
-        category: 'Adoração',
         lyrics: 'Letra do louvor 2',
         group_id: null,
         tag_ids: 'tag1',
@@ -204,16 +202,17 @@ describe('API Service', () => {
       await expect(searchPraises()).rejects.toThrow('Server error');
     });
 
-    it('should include category parameters', async () => {
+    it('não manda category, mesmo que um chamador antigo passe', async () => {
+      // O filtro «Categoria» foi aposentado (seções da Coletânea viraram subtags).
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
 
-      await searchPraises({ category: ['Louvor', 'Adoração'] });
+      await searchPraises({ category: ['Louvor', 'Adoração'] } as never);
 
       const url = new URL(mockFetch.mock.calls[0][0] as string);
-      expect(url.searchParams.get('category')).toBe('Louvor,Adoração');
+      expect(url.searchParams.has('category')).toBe(false);
     });
 
     it('should include tonality parameters', async () => {
@@ -265,7 +264,6 @@ describe('API Service', () => {
     const mockFilterOptions: FilterOptions = {
       rhythms: ['Avulsos', 'Coletânea'],
       tonalities: ['C', 'G'],
-      categories: ['Louvor', 'Adoração'],
       tags: [
         { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
         { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
@@ -288,6 +286,19 @@ describe('API Service', () => {
       expect(result.tags).toHaveLength(2);
     });
 
+    it('não manda category ao pedir as opções', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockFilterOptions),
+      });
+
+      await getFilterOptions({ category: ['Louvor'], rhythm: ['Valsa'] } as never);
+
+      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      expect(url.searchParams.has('category')).toBe(false);
+      expect(url.searchParams.get('rhythm')).toBe('Valsa');
+    });
+
     it('should throw error when response is not ok', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -307,7 +318,6 @@ describe('API Service', () => {
       author: 'Autor 1',
       rhythm: 'Avulsos',
       tonality: 'C',
-      category: 'Louvor',
       lyrics: 'Letra do louvor 1',
       group_id: null,
       tag_ids: 'tag1,tag2',
@@ -432,7 +442,7 @@ describe('API Service', () => {
       // carregar os filtros" sem nada no console e sem nada no network.
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+        json: async () => ({ rhythms: [], tonalities: [], tags: [] }),
       });
 
       await expect(
@@ -450,7 +460,7 @@ describe('API Service', () => {
     it('continua mandando a faixa quando ela existe de verdade', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ rhythms: [], tonalities: [], categories: [], tags: [] }),
+        json: async () => ({ rhythms: [], tonalities: [], tags: [] }),
       });
 
       await getFilterOptions({ numberMin: 10, numberMax: 20 });
@@ -515,6 +525,108 @@ describe('API Service', () => {
         [MAX_UPLOAD_ITEMS, MAX_UPLOAD_ITEMS + 50],
         [MAX_UPLOAD_ITEMS + 50, MAX_UPLOAD_ITEMS + 50],
       ]);
+    });
+
+    it('quando o lote é vazio devolve o louvor atual', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p1' } }),
+      });
+
+      const res = await bulkUploadMaterials('p1', []);
+      expect(res).toEqual({ id: 'p1' });
+    });
+  });
+
+  describe('duplicatePraise', () => {
+    it('envia POST para /api/praises/:id/duplicate com nome', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p2', name: 'Cópia' } }),
+      });
+
+      const res = await duplicatePraise('p1', 'Cópia');
+      expect(res).toEqual({ id: 'p2', name: 'Cópia' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/duplicate'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ name: 'Cópia' }),
+        })
+      );
+    });
+
+    it('envia POST para /api/praises/:id/duplicate sem nome (body vazio)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p2', name: 'Cópia Padrão' } }),
+      });
+
+      const res = await duplicatePraise('p1');
+      expect(res).toEqual({ id: 'p2', name: 'Cópia Padrão' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/duplicate'),
+        expect.objectContaining({
+          method: 'POST',
+          body: '{}',
+        })
+      );
+    });
+  });
+
+  describe('bulkMoveMaterials', () => {
+    it('envia POST para /api/praises/:id/materials/bulk-move', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p1' } }),
+      });
+
+      const res = await bulkMoveMaterials('p1', ['m1', 'm2'], 'pDestino');
+      expect(res).toEqual({ id: 'p1' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/materials/bulk-move'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ material_ids: ['m1', 'm2'], destination_praise_id: 'pDestino' }),
+        })
+      );
+    });
+  });
+
+  describe('bulkDeleteMaterials', () => {
+    it('envia POST para /api/praises/:id/materials/bulk-delete', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: { id: 'p1' } }),
+      });
+
+      const res = await bulkDeleteMaterials('p1', ['m1', 'm2']);
+      expect(res).toEqual({ id: 'p1' });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1/materials/bulk-delete'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ material_ids: ['m1', 'm2'] }),
+        })
+      );
+    });
+  });
+
+  describe('deletePraise', () => {
+    it('envia DELETE para /api/praises/:id', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ok: true }),
+      });
+
+      const res = await deletePraise('p1');
+      expect(res).toEqual({ ok: true });
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/praises/p1'),
+        expect.objectContaining({
+          method: 'DELETE',
+        })
+      );
     });
   });
 

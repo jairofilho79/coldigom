@@ -12,14 +12,14 @@ export interface PraiseResult {
   author: string;
   rhythm: string;
   tonality: string;
-  category: string;
   lyrics: string;
   group_id: string | null;
+  /** Id curto do louvor (migração 023) — hex minúsculo, imutável; o link `?p=` do app PLPCG. */
+  short_id?: string | null;
   /** Token de versão da tela: volta no PATCH como `if_updated_at`. */
   updated_at?: string | null;
   is_reviewed: number;
   reviewed_at: string | null;
-  reviewed_by: string | null;
   tag_ids: string | null;
 }
 
@@ -33,8 +33,11 @@ export type TagRow = {
 export const TAG_LABEL_SQL = `CASE WHEN tp.name IS NOT NULL THEN tp.name || ' · ' || t.name ELSE t.name END`;
 
 /**
- * Para cada tag pedida, o grupo de tags que o filtro deve considerar: as
- * subtags dela, ou ela mesma quando não tem subtag.
+ * Para cada tag pedida, o grupo de tags que o filtro deve considerar: ela
+ * mesma e as subtags dela. Filtrar pelo pai traz os louvores ligados ao pai e
+ * aos filhos — a mesma semântica de `catalogTagMatches` no app. Antes o pai era
+ * TROCADO pelos filhos, e filtrar por PES ignorava os louvores ligados direto à
+ * raiz (spec seções da Coletânea, F6 / §3.1).
  *
  * Uma consulta só. Era uma por tag, em série — filtrar por cinco tags custava
  * cinco viagens ao D1 antes da consulta principal.
@@ -60,7 +63,7 @@ export async function resolveTagFilterGroups(
 
   // A ordem dos grupos acompanha a ordem das tags pedidas: cada grupo vira uma
   // condição AND separada, e trocar a ordem trocaria o significado do filtro.
-  return tagIds.map((id) => byParent.get(id) ?? [id]);
+  return tagIds.map((id) => [id, ...(byParent.get(id) ?? [])]);
 }
 
 /**
@@ -76,15 +79,10 @@ export function isFtsError(error: unknown): boolean {
   return /praises_fts|fts5|\bMATCH\b/i.test(msg);
 }
 
-export async function tagHasChildren(db: D1Database, tagId: string): Promise<boolean> {
-  const row = await db.prepare('SELECT id FROM tags WHERE parent_id = ? LIMIT 1').bind(tagId).first();
-  return Boolean(row);
-}
-
-export const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'category', 'author', 'created_at'] as const;
+export const VALID_SORT_FIELDS = ['number', 'name', 'rhythm', 'tonality', 'author', 'created_at'] as const;
 export type SortField = typeof VALID_SORT_FIELDS[number];
 
-export const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality', 'category'];
+export const NOCASE_FIELDS: SortField[] = ['name', 'author', 'rhythm', 'tonality'];
 
 /** Secondary sort: NULL/empty values always last, regardless of ASC/DESC. */
 export function buildSecondaryOrder(sort: SortField, order: 'ASC' | 'DESC'): string {
@@ -232,15 +230,28 @@ export function buildOrderClause(
   };
 }
 
-/** Build FTS5 MATCH string (prefix terms, ANDed). */
+/**
+ * Build FTS5 MATCH string: a phrase query (terms adjacent, in order, same
+ * column) with a prefix match on the last term.
+ *
+ * Era um AND de termos soltos — cada palavra bastava aparecer em qualquer
+ * canto (nome OU letra, qualquer ordem) pra casar a linha inteira. Pra "a ti
+ * pertence", 17 de 22 resultados reais não tinham a frase em lugar nenhum: a
+ * palavra "a" e "ti" são curtas e comuns, então o AND virava quase só "tem
+ * uma palavra começando com 'pertence' em algum lugar". A frase exige que as
+ * palavras estejam juntas, na ordem digitada — a mesma regra que
+ * `buildLyricsExcerpt` e o destaque do título já usam pra decidir o que
+ * mostrar, então todo resultado passa a ter uma frase real pra exibir.
+ */
 export function buildFtsMatchQuery(search: string): string {
   const terms = search
     .trim()
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
-    .filter(Boolean)
-    .map(t => `"${t.replace(/"/g, '""')}"*`);
-  return terms.length > 0 ? terms.join(' AND ') : '';
+    .filter(Boolean);
+  if (terms.length === 0) return '';
+  // terms já vem sem aspas (o replace acima remove tudo que não é letra/número).
+  return `"${terms.join(' ')}"*`;
 }
 
 /** Campos varridos pela busca textual sem FTS. */
@@ -250,7 +261,6 @@ const LIKE_TEXT_FIELDS = [
   'author',
   'rhythm',
   'tonality',
-  'category',
   'id',
   'number',
 ] as const;
@@ -261,7 +271,6 @@ export function buildWhereClause(params: {
   tagGroups?: string[][];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -329,11 +338,6 @@ export function buildWhereClause(params: {
   if (params.tonality && params.tonality.length > 0) {
     conditions.push(`p.tonality IN (${params.tonality.map(() => '?').join(',')})`);
     bindings.push(...params.tonality);
-  }
-
-  if (params.category && params.category.length > 0) {
-    conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
-    bindings.push(...params.category);
   }
 
   if (params.materialKinds && params.materialKinds.length > 0) {

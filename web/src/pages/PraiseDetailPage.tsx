@@ -1,10 +1,41 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { getPraise, getAssetUrl, getPraiseDownloadZipUrl, createPraise, updatePraise, groupPraise, getMaterialKinds, getTags, createTag, addPraiseTag, removePraiseTag, createMaterial, updateMaterial, deleteMaterial, bulkUploadMaterials, getDriveStatus, getDriveConnectUrl, startDriveScan, startDriveImport, downloadDriveFileBlob, getImportJob, retryFailedImportItems, type ImportJobSummary } from '../services/api';
+import {
+  getPraise,
+  getAssetUrl,
+  getPraiseDownloadZipUrl,
+  createPraise,
+  duplicatePraise,
+  deletePraise,
+  updatePraise,
+  groupPraise,
+  getMaterialKinds,
+  getTags,
+  createTag,
+  addPraiseTag,
+  removePraiseTag,
+  createMaterial,
+  updateMaterial,
+  deleteMaterial,
+  bulkMoveMaterials,
+  bulkDeleteMaterials,
+  bulkUploadMaterials,
+  getDriveStatus,
+  getDriveConnectUrl,
+  startDriveScan,
+  startDriveImport,
+  downloadDriveFileBlob,
+  getImportJob,
+  retryFailedImportItems,
+  getAdminContribution,
+  type ImportJobSummary,
+} from '../services/api';
 import { AuthControl } from '../components/AuthControl';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { MaterialInlineAdmin } from '../components/MaterialInlineAdmin';
+import { MaterialNotesInput } from '../components/MaterialNotesInput';
+import { MoverMaterialForm } from '../components/MoverMaterialForm';
 import { StyledFileInput } from '../components/StyledFileInput';
 import { INITIAL_BULK_SCAN, type BulkScanState } from '../components/bulkScanState';
 import { Select } from '../components/Select';
@@ -14,6 +45,7 @@ import type { ConversionProgress } from '../components/BulkFilePreviewList';
 import { StatusImportacaoDrive } from '../components/StatusImportacaoDrive';
 import { SearchableSelect } from '../components/SearchableSelect';
 import { SecaoGestos } from '../components/gestures/SecaoGestos';
+import { PraiseBiblicalSection } from '../components/PraiseBiblicalSection';
 import {
   groupMaterialsByType,
   materialDisplayName,
@@ -29,7 +61,7 @@ import {
   mapDriveFilesAsync,
   type BulkFileItem,
 } from '../lib/materialKindInference/scanFolder';
-import type { PraiseDetail, Tag, MaterialKind, Material } from '../types';
+import type { PraiseDetail, Tag, MaterialKind, Material, AdminContribution } from '../types';
 import { problemaDoArquivo } from '../lib/uploadLimits';
 
 function tagLabel(tag: Tag, catalog?: Tag[]): string {
@@ -58,6 +90,7 @@ type NewMaterialForm = {
   type: MaterialFormType;
   url: string;
   file: File | null;
+  notes: string;
 };
 
 const DEFAULT_NEW_MAT: NewMaterialForm = {
@@ -65,6 +98,7 @@ const DEFAULT_NEW_MAT: NewMaterialForm = {
   type: 'pdf',
   url: '',
   file: null,
+  notes: '',
 };
 
 function preserveScroll(el: HTMLElement | null | undefined, run: () => void) {
@@ -91,7 +125,6 @@ function camposDe(p: PraiseDetail) {
     author: p.author || '',
     rhythm: p.rhythm || '',
     tonality: p.tonality || '',
-    category: p.category || '',
     lyrics: p.lyrics || '',
   };
 }
@@ -108,7 +141,7 @@ type Rascunho = {
 /**
  * Autorizar o Drive é navegação de página inteira: o componente remonta do zero
  * na volta, e tudo que estava digitado — nome, número, autor, ritmo, tom,
- * categoria, letra, tags escolhidas e o próprio link colado — voltava em branco.
+ * letra, tags escolhidas e o próprio link colado — voltava em branco.
  *
  * Acesso tolerante ao armazenamento: bloqueado, degrada em vez de derrubar a
  * árvore inteira (mesma lição do S5). Arquivos locais não são recuperáveis por
@@ -142,6 +175,87 @@ function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   return false;
 }
 
+function ContributionCallout({
+  contribution,
+  targetMaterialName,
+  isMaterialRemoved,
+  onDismiss,
+}: {
+  contribution: AdminContribution;
+  targetMaterialName?: string;
+  isMaterialRemoved?: boolean;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="contribution-context-callout" role="region" aria-label="Contexto da Colaboração">
+      <div className="contribution-context-header">
+        <span className="contribution-context-badge">
+          🎯 Colaboração da Comunidade
+        </span>
+        <button
+          type="button"
+          className="contribution-context-close"
+          onClick={onDismiss}
+          aria-label="Fechar aviso"
+        >
+          ×
+        </button>
+      </div>
+
+      <h3 className="contribution-context-title">{contribution.title}</h3>
+      <p className="contribution-context-body">{contribution.body}</p>
+
+      {targetMaterialName && !isMaterialRemoved && (
+        <div className="contribution-context-target-info">
+          Material indicado no relato: <strong>{targetMaterialName}</strong>
+          {contribution.target_material_id && (
+            <span className="contribution-context-target-id">
+              {' '}(ID: <code>{contribution.target_material_id}</code>)
+            </span>
+          )}
+        </div>
+      )}
+
+      {isMaterialRemoved && (
+        <div className="contribution-context-target-status contribution-context-target-status--removed">
+          ✓ Material não encontrado na lista atual deste louvor (pode já ter sido removido com sucesso).
+        </div>
+      )}
+
+      {contribution.fields && Object.keys(contribution.fields).length > 0 && (
+        <div className="contribution-context-fields">
+          <span className="contribution-context-fields-title">Dados relatados:</span>
+          <div className="cq-fields-grid">
+            {Object.entries(contribution.fields).map(([k, v]) => (
+              <div key={k} className="cq-field-item">
+                <span className="cq-field-key">{k}:</span>
+                <code className="cq-field-val">
+                  {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                </code>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="contribution-context-footer">
+        <span className="contribution-context-author">
+          Colaborador: <strong>{contribution.user_name || contribution.user_email}</strong>
+        </span>
+        <div className="contribution-context-actions">
+          {!isMaterialRemoved && (
+            <span className="contribution-context-hint">
+              💡 Modo edição ativo: use o botão «Remover» deste material para excluí-lo permanentemente.
+            </span>
+          )}
+          <Link to="/contribuicoes" className="contribution-context-back-link">
+            ← Voltar para Fila de Colaborações
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function PraiseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -156,6 +270,52 @@ export function PraiseDetailPage() {
   const [isEditing, setIsEditing] = useState(isCreate);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [savingMetadata, setSavingMetadata] = useState(false);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
+  const [moverLoteAberto, setMoverLoteAberto] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const [deletingPraise, setDeletingPraise] = useState(false);
+
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const targetMaterialId = searchParams.get('materialId') || '';
+  const contributionId = searchParams.get('contributionId') || '';
+
+  const locationState = location.state as { contribution?: AdminContribution } | undefined;
+  const [contributionContext, setContributionContext] = useState<AdminContribution | null>(
+    locationState?.contribution || null
+  );
+  const [dismissContributionCallout, setDismissContributionCallout] = useState(false);
+
+  useEffect(() => {
+    if (contributionContext || !contributionId || !authReady || !userName) return;
+    let active = true;
+    getAdminContribution(contributionId)
+      .then((data) => {
+        if (active && data) setContributionContext(data);
+      })
+      .catch(() => {
+        /* Silencioso se não conseguir carregar */
+      });
+    return () => {
+      active = false;
+    };
+  }, [contributionId, contributionContext, authReady, userName]);
+
+  useEffect(() => {
+    if ((targetMaterialId || contributionId) && userName && !isEditing) {
+      setIsEditing(true);
+    }
+  }, [targetMaterialId, contributionId, userName, isEditing]);
+
+  useEffect(() => {
+    if (!targetMaterialId || loading || !praise) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`material-${targetMaterialId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [targetMaterialId, loading, praise]);
   // Criar é uma sequência de três passos com efeito no servidor: cria o louvor,
   // sobe os arquivos, dispara o import do Drive. Falhando qualquer passo depois do
   // primeiro, o louvor já existe — guardamos qual para que uma nova tentativa
@@ -207,7 +367,6 @@ export function PraiseDetailPage() {
     author: '',
     rhythm: '',
     tonality: '',
-    category: '',
     lyrics: '',
   });
   const [newSubtagParentId, setNewSubtagParentId] = useState('');
@@ -464,8 +623,9 @@ export function PraiseDetailPage() {
       driveImportJobId?: string;
       mergeSuccess?: boolean;
       mergedPraiseName?: string;
+      contribution?: AdminContribution;
     } | null;
-    if (!state) return;
+    if (!state || (!state.driveImportJobId && !state.mergeSuccess)) return;
 
     if (state.mergeSuccess) {
       setMergeAviso(
@@ -482,8 +642,13 @@ export function PraiseDetailPage() {
 
     // Consumido: sem limpar, o aviso e o painel do job antigo voltavam num F5 ou
     // no botão Voltar do navegador, porque o react-router preserva history.state.
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.state, location.pathname, isCreate, navigate]);
+    const remainingState = { ...state };
+    delete remainingState.driveImportJobId;
+    delete remainingState.mergeSuccess;
+    delete remainingState.mergedPraiseName;
+    const nextState = Object.keys(remainingState).length > 0 ? remainingState : null;
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: nextState });
+  }, [location.state, location.pathname, location.search, isCreate, navigate]);
 
   useEffect(() => {
     if (!driveImportJob?.id || driveJobErro) return;
@@ -846,12 +1011,12 @@ export function PraiseDetailPage() {
     if (!isCreate) return praise?.tags || [];
     return catalogTags.filter((t) => pendingTagIds.includes(t.id));
   }, [isCreate, praise?.tags, catalogTags, pendingTagIds]);
-  const availableTags = useMemo(() => {
-    const childParentIds = new Set(
-      catalogTags.filter((t) => t.parent_id).map((t) => t.parent_id as string)
-    );
-    return catalogTags.filter((t) => !assignedTagIds.has(t.id) && !childParentIds.has(t.id));
-  }, [catalogTags, assignedTagIds]);
+  // Tag raiz com subtags também é oferecida: ligar direto à raiz quer dizer «sem
+  // subtag específica», e a API deixou de recusar (spec das seções da Coletânea, §3.2).
+  const availableTags = useMemo(
+    () => catalogTags.filter((t) => !assignedTagIds.has(t.id)),
+    [catalogTags, assignedTagIds]
+  );
   const rootTags = useMemo(
     () => catalogTags.filter((t) => !t.parent_id),
     [catalogTags]
@@ -896,6 +1061,19 @@ export function PraiseDetailPage() {
       await executarEscrita(() => updateMaterial(materialId, { material_kind }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao atualizar material');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
+  const handleMaterialNotesChange = async (materialId: string, notes: string | null) => {
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      await executarEscrita(() => updateMaterial(materialId, { notes }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao atualizar nota do material');
+      throw err;
     } finally {
       setSavingMaterials(false);
     }
@@ -967,14 +1145,118 @@ export function PraiseDetailPage() {
     }
   };
 
+  const handleToggleSelectMaterial = (materialId: string, selected: boolean) => {
+    setSelectedMaterialIds((prev) => {
+      const next = new Set(prev);
+      if (selected) {
+        next.add(materialId);
+      } else {
+        next.delete(materialId);
+      }
+      return next;
+    });
+  };
+
+  const todosMateriais = praise?.materials ?? [];
+  const totalMateriais = todosMateriais.length;
+  const allSelected = totalMateriais > 0 && selectedMaterialIds.size === totalMateriais;
+
+  const handleSelectAllMaterials = () => {
+    if (allSelected) {
+      setSelectedMaterialIds(new Set());
+    } else {
+      setSelectedMaterialIds(new Set(todosMateriais.map((m) => m.id)));
+    }
+  };
+
+  const handleBulkMove = async (destino: PraiseDetail) => {
+    if (selectedMaterialIds.size === 0 || !praise) return;
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      const ids = Array.from(selectedMaterialIds);
+      await executarEscrita(() => bulkMoveMaterials(praise.id, ids, destino.id));
+      setMoveAviso({
+        id: destino.id,
+        rotulo: destino.number ? `${destino.number} — ${destino.name}` : destino.name,
+      });
+      setSelectedMaterialIds(new Set());
+      setMoverLoteAberto(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao mover materiais');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedMaterialIds.size === 0 || !praise) return;
+    const count = selectedMaterialIds.size;
+    const confirmMsg =
+      count === 1
+        ? '1 material selecionado será excluído permanentemente, junto com o arquivo guardado. Continuar?'
+        : `${count} materiais selecionados serão excluídos permanentemente, junto com os arquivos guardados. Continuar?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setSavingMaterials(true);
+    setError(null);
+    try {
+      const ids = Array.from(selectedMaterialIds);
+      await executarEscrita(() => bulkDeleteMaterials(praise.id, ids));
+      setSelectedMaterialIds(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao remover materiais');
+    } finally {
+      setSavingMaterials(false);
+    }
+  };
+
+  const handleDuplicatePraise = async () => {
+    if (!praise) return;
+    const nomePadrao = `${praise.name} (cópia)`;
+    const novoNome = window.prompt('Nome do louvor duplicado:', nomePadrao);
+    if (novoNome === null) return;
+
+    setDuplicating(true);
+    setError(null);
+    try {
+      const duplicado = await duplicatePraise(praise.id, novoNome.trim() || undefined);
+      navigate(`/praise/${duplicado.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao duplicar louvor');
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
+  const handleDeletePraise = async () => {
+    if (!praise || !id || isCreate) return;
+    const confirmMsg = `«${praise.name}» será excluído permanentemente, junto com todos os seus materiais. Continuar?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setDeletingPraise(true);
+    setError(null);
+    try {
+      await deletePraise(id);
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao remover louvor');
+    } finally {
+      setDeletingPraise(false);
+    }
+  };
+
   const materialAdminProps = canEditMaterialsInline
     ? {
         materialKindOptions,
         saving: savingMaterials,
         onUpdateKind: handleMaterialKindChange,
+        onUpdateNotes: handleMaterialNotesChange,
         onDelete: handleMaterialDelete,
         onMove: handleMaterialMove,
         onConvertToMp3: handleConvertMaterialToMp3,
+        selectedIds: selectedMaterialIds,
+        onToggleSelect: handleToggleSelectMaterial,
       }
     : undefined;
 
@@ -1059,7 +1341,6 @@ export function PraiseDetailPage() {
             author: edit.author || null,
             rhythm: edit.rhythm || null,
             tonality: edit.tonality || null,
-            category: edit.category || null,
             lyrics: edit.lyrics || null,
             tag_ids: pendingTagIds,
           });
@@ -1176,7 +1457,6 @@ export function PraiseDetailPage() {
               author: edit.author,
               rhythm: edit.rhythm,
               tonality: edit.tonality,
-              category: edit.category,
             },
             praise?.updated_at
           )
@@ -1255,6 +1535,10 @@ export function PraiseDetailPage() {
       // única vez no fetch: o valor abandonado ao fechar continuava lá, invisível, e
       // ia junto no próximo Salvar de qualquer outro campo.
       if (!editando && praise) setEdit(camposDe(praise));
+      if (editando) {
+        setSelectedMaterialIds(new Set());
+        setMoverLoteAberto(false);
+      }
       return !editando;
     });
   };
@@ -1319,19 +1603,33 @@ export function PraiseDetailPage() {
         </div>
       ) : null}
 
+      {contributionContext &&
+        !dismissContributionCallout &&
+        (!targetMaterialId || !praise?.materials.some((m) => m.id === targetMaterialId)) && (
+          <ContributionCallout
+            contribution={contributionContext}
+            targetMaterialName={targetMaterialId ? `Material ${targetMaterialId}` : undefined}
+            isMaterialRemoved={Boolean(targetMaterialId && praise && !praise.materials.some((m) => m.id === targetMaterialId))}
+            onDismiss={() => setDismissContributionCallout(true)}
+          />
+        )}
+
       <header className="detail-header animate-fade-in-scale">
         <div className="auth-row">
           {!authReady ? (
             <div className="auth-user muted">Verificando sessão…</div>
           ) : userName ? (
-            // Controle de sessão extraído para AuthControl; os botões de ação da página
-            // (Editar/Baixar em ZIP/Mesclar/Cancelar) não são parte dele e viajam como children,
-            // preservando a posição visual entre o nome e o "Sair". avatarSize preserva o
-            // tamanho original do avatar aqui (28px); onAfterLogout fecha o modo de edição
-            // ao sair, como o botão "Sair" original fazia.
+            // Controle de sessão gerenciado por AuthControl; os botões de ação da página
+            // (Editar/Baixar em ZIP/Mesclar/Cancelar) viajam como children e aparecem antes do botão
+            // de perfil, que fica no fim da linha. O avatarSize preserva o tamanho de 28px,
+            // e onAfterLogout fecha a edição ao sair pelo menu.
             <AuthControl
               avatarSize={28}
-              onAfterLogout={() => setIsEditing(false)}
+              onAfterLogout={() => {
+                setIsEditing(false);
+                setSelectedMaterialIds(new Set());
+                setMoverLoteAberto(false);
+              }}
               prefixo="Logado como"
             >
               {isCreate ? (
@@ -1346,6 +1644,14 @@ export function PraiseDetailPage() {
                     onClick={alternarEdicao}
                   >
                     {isEditing ? 'Fechar edição' : 'Editar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-btn"
+                    onClick={handleDuplicatePraise}
+                    disabled={duplicating}
+                  >
+                    {duplicating ? 'Duplicando…' : 'Duplicar'}
                   </button>
                   <a
                     className="auth-btn"
@@ -1407,17 +1713,21 @@ export function PraiseDetailPage() {
               <span className="edit-field-label">Tom</span>
               <input value={edit.tonality} onChange={(e) => setEdit(s => ({ ...s, tonality: e.target.value }))} />
             </label>
-            <label className="edit-field">
-              <span className="edit-field-label">Categoria</span>
-              <input value={edit.category} onChange={(e) => setEdit(s => ({ ...s, category: e.target.value }))} />
-            </label>
 
             {!isCreate ? (
               <div className="edit-actions">
                 <button
                   type="button"
+                  className="auth-btn auth-btn--danger"
+                  disabled={deletingPraise || savingMetadata}
+                  onClick={() => void handleDeletePraise()}
+                >
+                  {deletingPraise ? 'Removendo…' : 'Remover louvor'}
+                </button>
+                <button
+                  type="button"
                   className="auth-btn"
-                  disabled={savingMetadata}
+                  disabled={savingMetadata || deletingPraise}
                   onClick={() => void saveMetadata()}
                 >
                   {savingMetadata ? 'Salvando…' : 'Salvar'}
@@ -1477,12 +1787,6 @@ export function PraiseDetailPage() {
             <div className="detail-meta-item">
               <span className="label">Tom</span>
               <span className="value">{praise.tonality}</span>
-            </div>
-            )}
-            {praise.category && (
-            <div className="detail-meta-item">
-              <span className="label">Categoria</span>
-              <span className="value">{praise.category}</span>
             </div>
             )}
           </div>
@@ -1559,7 +1863,7 @@ export function PraiseDetailPage() {
                 </button>
               </div>
             ) : (
-              displayTags.length === 0 && catalogTags.length > 0
+              catalogTags.length > 0
                 ? <span className="detail-tags-hint muted">Todas as tags do catálogo já estão associadas.</span>
                 : null
             )}
@@ -1609,6 +1913,18 @@ export function PraiseDetailPage() {
               ))}
             </div>
           )
+        )}
+
+        {!isEditing && praise?.biblical?.resumo_formatado && (
+          <div className="detail-biblical-banner">
+            <a
+              href="#secao-biblica"
+              className="detail-biblical-pill"
+              title="Ir para referências bíblicas e homilética"
+            >
+              {praise.biblical.resumo_formatado}
+            </a>
+          </div>
         )}
 
         {isEditing && userName ? (
@@ -1731,6 +2047,60 @@ export function PraiseDetailPage() {
           )}
       </section>
 
+      {!isEditing && <PraiseBiblicalSection biblical={praise?.biblical} />}
+
+      {canEditMaterialsInline && totalMateriais > 0 ? (
+        <section className="materials-bulk-bar" aria-label="Ações em lote de materiais">
+          <div className="materials-bulk-bar-main">
+            <label className="materials-bulk-checkbox-label">
+              <input
+                type="checkbox"
+                className="material-bulk-checkbox"
+                checked={allSelected}
+                onChange={handleSelectAllMaterials}
+                aria-label={allSelected ? 'Desmarcar todos os materiais' : 'Selecionar todos os materiais'}
+              />
+              <span>Selecionar todos ({totalMateriais})</span>
+            </label>
+            <span className="materials-bulk-count">
+              {selectedMaterialIds.size} de {totalMateriais} selecionado{selectedMaterialIds.size === 1 ? '' : 's'}
+            </span>
+            <div className="materials-bulk-actions">
+              <button
+                type="button"
+                className="auth-btn"
+                disabled={selectedMaterialIds.size === 0 || savingMaterials}
+                onClick={() => setMoverLoteAberto((aberto) => !aberto)}
+              >
+                {moverLoteAberto ? 'Cancelar mover' : `Mover selecionados (${selectedMaterialIds.size})`}
+              </button>
+              <button
+                type="button"
+                className="auth-btn material-inline-admin-remove"
+                disabled={selectedMaterialIds.size === 0 || savingMaterials}
+                onClick={handleBulkDelete}
+              >
+                Remover selecionados ({selectedMaterialIds.size})
+              </button>
+            </div>
+          </div>
+          {moverLoteAberto ? (
+            <div className="materials-bulk-move-container">
+              <p className="materials-bulk-move-prompt">
+                Escolha o louvor de destino para {selectedMaterialIds.size}{' '}
+                {selectedMaterialIds.size === 1 ? 'material selecionado' : 'materiais selecionados'}:
+              </p>
+              <MoverMaterialForm
+                praiseAtualId={praise!.id}
+                busy={savingMaterials}
+                onCancel={() => setMoverLoteAberto(false)}
+                onConfirm={handleBulkMove}
+              />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {youtubeMaterials.length > 0 && (
         <section className="detail-section animate-fade-in-up">
           <h2 className="detail-section-title">
@@ -1741,8 +2111,20 @@ export function PraiseDetailPage() {
             {youtubeMaterials.map(m => {
               const ytId = m.url ? parseYouTubeId(m.url) : null;
               const thumb = ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : null;
+              const isTarget = m.id === targetMaterialId;
               return (
-                <div key={m.id} className="yt-card-wrap">
+                <div
+                  key={m.id}
+                  id={`material-${m.id}`}
+                  className={`yt-card-wrap${isTarget ? ' material-highlight-target' : ''}${selectedMaterialIds.has(m.id) ? ' is-selected' : ''}`}
+                >
+                  {isTarget && contributionContext && !dismissContributionCallout && (
+                    <ContributionCallout
+                      contribution={contributionContext}
+                      targetMaterialName={m.material_kind_name || 'Vídeo YouTube'}
+                      onDismiss={() => setDismissContributionCallout(true)}
+                    />
+                  )}
                   <a
                     className="yt-card"
                     href={m.url || '#'}
@@ -1755,13 +2137,26 @@ export function PraiseDetailPage() {
                     </div>
                     <div className="yt-body">
                       <div className="yt-title">{praise?.name ?? ''}</div>
-                      <div className="yt-meta">{m.material_kind_name || 'Vídeo'}</div>
+                      <div className="yt-meta">
+                        {m.material_kind_name || 'Vídeo'}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </div>
                     </div>
                   </a>
                   {canEditMaterialsInline ? (
-                    <div className="materials-placeholder materials-placeholder--inline">
-                      Edição de categoria — em breve
-                    </div>
+                    <MaterialInlineAdmin
+                      material={m}
+                      options={materialKindOptions}
+                      saving={savingMaterials}
+                      onUpdateKind={handleMaterialKindChange}
+                      onUpdateNotes={handleMaterialNotesChange}
+                      onDelete={handleMaterialDelete}
+                      onMove={handleMaterialMove}
+                      selected={selectedMaterialIds.has(m.id)}
+                      onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
+                    />
                   ) : null}
                 </div>
               );
@@ -1890,6 +2285,16 @@ export function PraiseDetailPage() {
                   />
                 </div>
 
+                <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                  <label htmlFor="new-mat-notes">Nota / Complemento (opcional)</label>
+                  <input
+                    id="new-mat-notes"
+                    value={newMat.notes}
+                    onChange={(e) => setNewMat((s) => ({ ...s, notes: e.target.value }))}
+                    placeholder="Nota/Voz, ex: I, II, Cifrado"
+                  />
+                </div>
+
                 {newMat.type === 'youtube' && (
                   <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
                     <label htmlFor="new-mat-youtube-url">Link do YouTube</label>
@@ -1949,12 +2354,14 @@ export function PraiseDetailPage() {
                       setSavingMaterials(true);
                       setError(null);
                       try {
+                        const notesVal = newMat.notes.trim() || null;
                         let updated: PraiseDetail;
                         if (newMat.type === 'youtube') {
                           updated = await createMaterial(id, {
                             material_kind: newMat.material_kind,
                             type: 'youtube',
                             url: newMat.url.trim(),
+                            notes: notesVal,
                           });
                         } else if (newMat.type === 'pdf' || newMat.type === 'mp3') {
                           let fileToUpload = newMat.file!;
@@ -1964,11 +2371,19 @@ export function PraiseDetailPage() {
                               fileToUpload = await convertAudioToMp3(fileToUpload);
                             }
                           }
+                          const prevIds = new Set(praise.materials.map((m) => m.id));
                           updated = await bulkUploadMaterials(id, [{
                             file: fileToUpload,
                             material_kind: newMat.material_kind,
                             type: newMat.type,
+                            notes: notesVal,
                           }]);
+                          if (notesVal) {
+                            const created = updated.materials.find((m) => !prevIds.has(m.id));
+                            if (created && created.notes !== notesVal) {
+                              updated = await updateMaterial(created.id, { notes: notesVal });
+                            }
+                          }
                         } else {
                           return;
                         }
@@ -2205,9 +2620,22 @@ export function PraiseDetailPage() {
             <span className="detail-section-icon">🎵</span>
             Áudio
           </h2>
+          {audioMaterials.some((m) => m.id === targetMaterialId) &&
+            contributionContext &&
+            !dismissContributionCallout && (
+              <ContributionCallout
+                contribution={contributionContext}
+                targetMaterialName={
+                  audioMaterials.find((m) => m.id === targetMaterialId)?.material_kind_name ||
+                  'Áudio'
+                }
+                onDismiss={() => setDismissContributionCallout(true)}
+              />
+            )}
           <AudioPlayer
             materials={audioMaterials}
             getAssetUrl={getAssetUrl}
+            highlightMaterialId={targetMaterialId}
             admin={materialAdminProps}
           />
         </section>
@@ -2223,8 +2651,20 @@ export function PraiseDetailPage() {
             {pdfMaterials.map(m => {
               const pdfUrl = m.r2_key ? getAssetUrl(m.r2_key) : null;
               const title = m.material_kind_name || 'Partitura';
+              const isTarget = m.id === targetMaterialId;
               return (
-                <div key={m.id} className="pdf-viewer-block">
+                <div
+                  key={m.id}
+                  id={`material-${m.id}`}
+                  className={`pdf-viewer-block${isTarget ? ' material-highlight-target' : ''}`}
+                >
+                  {isTarget && contributionContext && !dismissContributionCallout && (
+                    <ContributionCallout
+                      contribution={contributionContext}
+                      targetMaterialName={title}
+                      onDismiss={() => setDismissContributionCallout(true)}
+                    />
+                  )}
                   <div className="pdf-viewer-header">
                     {canEditMaterialsInline ? (
                       <MaterialInlineAdmin
@@ -2232,11 +2672,19 @@ export function PraiseDetailPage() {
                         options={materialKindOptions}
                         saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
+                        onUpdateNotes={handleMaterialNotesChange}
                         onDelete={handleMaterialDelete}
                         onMove={handleMaterialMove}
+                        selected={selectedMaterialIds.has(m.id)}
+                        onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
                       />
                     ) : (
-                      <span className="pdf-viewer-title">{title}</span>
+                      <span className="pdf-viewer-title">
+                        {title}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </span>
                     )}
                     {pdfUrl ? (
                       <a
@@ -2272,27 +2720,71 @@ export function PraiseDetailPage() {
             Acordes
           </h2>
           <div className="material-grid">
-            {chordMaterials.map(m => (
-              <div key={m.id} className="material-card-wrap">
-                <Link
-                  to={`/praise/${praise!.id}/cifra/${m.id}`}
-                  className={`material-link${m.has_content === false ? ' material-link--empty' : ''}`}
+            {chordMaterials.map(m => {
+              const isTarget = m.id === targetMaterialId;
+              return (
+                <div
+                  key={m.id}
+                  id={`material-${m.id}`}
+                  className={`material-card-wrap${isTarget ? ' material-highlight-target' : ''}${selectedMaterialIds.has(m.id) ? ' is-selected' : ''}`}
                 >
-                  <span className="material-link-icon">🎸</span>
-                  <div>
-                    <div className="material-link-text">{m.material_kind_name || 'Acordes'}</div>
-                    <div className="material-link-meta">
-                      {m.has_content === false ? 'Sem conteúdo' : 'Cifra'}
+                  {isTarget && contributionContext && !dismissContributionCallout && (
+                    <ContributionCallout
+                      contribution={contributionContext}
+                      targetMaterialName={m.material_kind_name || 'Acordes'}
+                      onDismiss={() => setDismissContributionCallout(true)}
+                    />
+                  )}
+                  <Link
+                    to={`/praise/${praise!.id}/cifra/${m.id}`}
+                    className={`material-link${m.has_content === false ? ' material-link--empty' : ''}`}
+                  >
+                    <span className="material-link-icon">🎸</span>
+                    <div>
+                      <div className="material-link-text">
+                        {m.material_kind_name || 'Acordes'}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </div>
+                      <div className="material-link-meta">
+                        {m.has_content === false ? 'Sem conteúdo' : 'Cifra'}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-                {canEditMaterialsInline ? (
-                  <div className="materials-placeholder materials-placeholder--inline">
-                    Edição de categoria — em breve
-                  </div>
-                ) : null}
-              </div>
-            ))}
+                  </Link>
+                  {canEditMaterialsInline ? (
+                    <div className="chord-inline-actions">
+                      <label className="material-bulk-select-label" title="Selecionar material">
+                        <input
+                          type="checkbox"
+                          className="material-bulk-checkbox"
+                          checked={Boolean(selectedMaterialIds.has(m.id))}
+                          disabled={savingMaterials}
+                          onChange={(e) => handleToggleSelectMaterial(m.id, e.target.checked)}
+                          aria-label={`Selecionar ${m.material_kind_name || 'Acordes'}`}
+                        />
+                      </label>
+                      <MaterialNotesInput
+                        value={m.notes}
+                        disabled={savingMaterials}
+                        onSave={(notes) => handleMaterialNotesChange(m.id, notes)}
+                      />
+                      <div className="materials-placeholder materials-placeholder--inline">
+                        Edição de categoria — em breve
+                      </div>
+                      <button
+                        type="button"
+                        className="auth-btn material-inline-admin-remove"
+                        disabled={savingMaterials}
+                        onClick={() => handleMaterialDelete(m.id)}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -2304,6 +2796,10 @@ export function PraiseDetailPage() {
           categorias={materialKinds}
           podeEditar={Boolean(userName) && !isCreate}
           onAtualizar={setPraise}
+          selectedIds={selectedMaterialIds}
+          onToggleSelect={handleToggleSelectMaterial}
+          onDeleteMaterial={handleMaterialDelete}
+          onUpdateNotes={handleMaterialNotesChange}
         />
       ) : null}
 
@@ -2318,8 +2814,20 @@ export function PraiseDetailPage() {
               grupo.items.map((m) => {
                 const href = m.r2_key ? getAssetUrl(m.r2_key) : m.url || null;
                 const nome = materialDisplayName(m);
+                const isTarget = m.id === targetMaterialId;
                 return (
-                  <div key={m.id} className="material-card-wrap">
+                  <div
+                    key={m.id}
+                    id={`material-${m.id}`}
+                    className={`material-card-wrap${isTarget ? ' material-highlight-target' : ''}${selectedMaterialIds.has(m.id) ? ' is-selected' : ''}`}
+                  >
+                    {isTarget && contributionContext && !dismissContributionCallout && (
+                      <ContributionCallout
+                        contribution={contributionContext}
+                        targetMaterialName={nome}
+                        onDismiss={() => setDismissContributionCallout(true)}
+                      />
+                    )}
                     {href ? (
                       <a
                         className="material-link"
@@ -2329,7 +2837,12 @@ export function PraiseDetailPage() {
                       >
                         <span className="material-link-icon">📎</span>
                         <div>
-                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-text">
+                            {nome}
+                            {m.notes?.trim() ? (
+                              <span className="material-notes-badge">{m.notes.trim()}</span>
+                            ) : null}
+                          </div>
                           <div className="material-link-meta">{grupo.label}</div>
                         </div>
                       </a>
@@ -2337,7 +2850,12 @@ export function PraiseDetailPage() {
                       <div className="material-link material-link--empty">
                         <span className="material-link-icon">📎</span>
                         <div>
-                          <div className="material-link-text">{nome}</div>
+                          <div className="material-link-text">
+                            {nome}
+                            {m.notes?.trim() ? (
+                              <span className="material-notes-badge">{m.notes.trim()}</span>
+                            ) : null}
+                          </div>
                           <div className="material-link-meta">
                             {grupo.label} · arquivo indisponível
                           </div>
@@ -2350,8 +2868,11 @@ export function PraiseDetailPage() {
                         options={materialKindOptions}
                         saving={savingMaterials}
                         onUpdateKind={handleMaterialKindChange}
+                        onUpdateNotes={handleMaterialNotesChange}
                         onDelete={handleMaterialDelete}
                         onMove={handleMaterialMove}
+                        selected={selectedMaterialIds.has(m.id)}
+                        onToggleSelect={(sel) => handleToggleSelectMaterial(m.id, sel)}
                       />
                     ) : null}
                   </div>

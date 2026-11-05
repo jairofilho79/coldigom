@@ -41,7 +41,7 @@ describe('FilterBar — falha ao carregar as opções', () => {
     const usuario = userEvent.setup();
     vi.mocked(getFilterOptions)
       .mockRejectedValueOnce(new Error('rede caiu'))
-      .mockResolvedValueOnce({ rhythms: ['Valsa'], tonalities: ['C'], categories: ['Louvor'], tags: [] });
+      .mockResolvedValueOnce({ rhythms: ['Valsa'], tonalities: ['C'], tags: [] });
     vi.mocked(getMaterialKinds).mockResolvedValue([]);
 
     renderFilterBar();

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coldigom — Revisor de Duplicatas</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-card: #334155;
+      --border: #475569;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #22c55e;
+      --success-hover: #16a34a;
+      --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand h1 { font-size: 1.15rem; font-weight: 700; color: var(--primary); }
+    .badge-pill {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--primary);
+    }
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 0.85rem;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stat-val { font-weight: 700; }
+    .stat-val--pend { color: var(--warning); }
+    .stat-val--done { color: var(--success); }
+    .stat-val--rem { color: var(--danger); }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      user-select: none;
+    }
+    .checkbox-label input { cursor: pointer; accent-color: var(--primary); }
+
+    /* Layout Principal */
+    .app-body {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 55px);
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    aside {
+      width: 340px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-search {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--primary); }
+    .filter-select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 0.75rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .item-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+    .item-row {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .item-row:hover { background: rgba(255, 255, 255, 0.04); }
+    .item-row.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-left: 3px solid var(--primary);
+    }
+    .item-row-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .item-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .item-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-row-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .tag-badge {
+      background: #334155;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .status-badge--done { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+    .status-badge--rem { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .status-badge--pend { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+    /* Área de Conteúdo */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .top-actions-bar {
+      padding: 10px 20px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+    .praise-details {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+    .praise-title-group h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .praise-meta-tags {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn--primary {
+      background: var(--primary);
+      color: #0f172a;
+    }
+    .btn--primary:hover { background: var(--primary-hover); }
+    .btn--success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn--success:hover { background: var(--success-hover); }
+    .btn--danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn--danger:hover { background: var(--danger-hover); }
+    .btn--outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn--outline:hover { background: rgba(255, 255, 255, 0.05); }
+
+    /* Comparador Lado a Lado */
+    .compare-container {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      overflow: hidden;
+    }
+    .panel {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel.removed {
+      opacity: 0.4;
+      border-color: var(--danger);
+      pointer-events: none;
+    }
+    .panel-header {
+      padding: 8px 12px;
+      background: #1e293b;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .panel-info {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      overflow: hidden;
+    }
+    .panel-path {
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 420px;
+    }
+    .panel-id { font-family: monospace; font-size: 0.7rem; color: var(--primary); }
+
+    .viewer-area {
+      flex: 1;
+      background: #000;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    iframe.pdf-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #525659;
+    }
+    .audio-wrapper {
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 450px;
+    }
+    audio { width: 100%; outline: none; }
+
+    .panel-decision-banner {
+      padding: 8px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border-top: 1px solid var(--danger);
+    }
+
+    /* Estado Vazio */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+
+    /* Atalhos Rodapé */
+    .keyboard-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 4px 12px;
+      background: #111827;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    kbd {
+      background: #334155;
+      border: 1px solid #475569;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 0.7rem;
+      color: #e2e8f0;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cabeçalho -->
+  <header>
+    <div class="brand">
+      <h1>🎵 Coldigom Revisor</h1>
+      <span class="badge-pill">Duplicatas</span>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span>Pendentes:</span>
+        <span class="stat-val stat-val--pend" id="stat-pend">0</span>
+      </div>
+      <div class="stat-item">
+        <span>Concluídos:</span>
+        <span class="stat-val stat-val--done" id="stat-done">0</span>
+      </div>
+      <div class="stat-item">
+        <span>Removidos D1:</span>
+        <span class="stat-val stat-val--rem" id="stat-rem">0</span>
+      </div>
+      <div class="stat-item">
+        <span>Total:</span>
+        <span class="stat-val" id="stat-total">0</span>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <label class="checkbox-label" title="Executar exclusão diretamente no Cloudflare D1 ao clicar no botão Remover">
+        <input type="checkbox" id="chk-auto-d1" checked>
+        <span>Excluir direto no Cloudflare D1</span>
+      </label>
+    </div>
+  </header>
+
+  <!-- Corpo -->
+  <div class="app-body">
+    <!-- Sidebar de Lista -->
+    <aside>
+      <div class="sidebar-search">
+        <input type="text" id="input-search" class="search-input" placeholder="🔍 Filtrar louvor (nome ou número)...">
+        <select id="select-category" class="filter-select">
+          <option value="">Todas as Categorias</option>
+          <option value="Choir">Coro (Choir)</option>
+          <option value="Audio">Áudio (Audio)</option>
+          <option value="Trombone">Trombone</option>
+          <option value="Flute">Flauta</option>
+          <option value="Saxophone">Saxofones</option>
+          <option value="Trumpet">Trompete</option>
+          <option value="Clarinet">Clarinete</option>
+          <option value="Voice">Vozes</option>
+          <option value="Violin">Violinos</option>
+          <option value="Cello">Violoncelo</option>
+          <option value="Viola">Viola</option>
+          <option value="Chord">Cifras</option>
+          <option value="Score">Grade (Score)</option>
+        </select>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="pendente" id="tab-pendente">Pendentes</button>
+        <button class="tab-btn" data-tab="concluido" id="tab-concluido">Concluídos</button>
+        <button class="tab-btn" data-tab="todos" id="tab-todos">Todos</button>
+      </div>
+
+      <ul class="item-list" id="item-list">
+        <!-- Itens inseridos via JS -->
+      </ul>
+    </aside>
+
+    <!-- Área Principal de Comparação -->
+    <main>
+      <div class="top-actions-bar" id="top-bar">
+        <div class="praise-details">
+          <div class="praise-title-group">
+            <h2 id="view-title">Selecione um louvor na lista</h2>
+            <div class="praise-meta-tags">
+              <span id="view-kind-badge" class="tag-badge">--</span>
+              <span id="view-tags">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group" id="main-actions" style="display: none;">
+          <a id="btn-coldigom" href="#" target="_blank" rel="noopener noreferrer" class="btn btn--outline" title="Abrir página no Coldigom">
+            🔗 Abrir no Coldigom ↗
+          </a>
+          <button id="btn-manter" class="btn btn--success" title="Manter ambos os arquivos e marcar este louvor como resolvido">
+            ✅ Manter Ambos / Concluir [C]
+          </button>
+          <button id="btn-desfazer" class="btn btn--outline" style="display: none;" title="Desfazer decisão e voltar a pendente">
+            ↩️ Desfazer
+          </button>
+          <button id="btn-prev" class="btn btn--outline" title="Louvor anterior [←]">←</button>
+          <button id="btn-next" class="btn btn--outline" title="Próximo louvor [→]">→</button>
+        </div>
+      </div>
+
+      <!-- Comparador Lado a Lado -->
+      <div class="compare-container" id="compare-container" style="display: none;">
+        <!-- Painel Esquerdo (Material A) -->
+        <div class="panel" id="panel-a">
+          <div class="panel-header">
+            <div class="panel-info">
+              <div class="panel-path" id="path-a" title="">Caminho: --</div>
+              <div>ID: <span class="panel-id" id="id-a">--</span> · <span id="created-a">--</span></div>
+            </div>
+            <button class="btn btn--danger btn-remove" id="btn-remove-a">
+              🗑️ Remover Este [1]
+            </button>
+          </div>
+          <div class="viewer-area" id="viewer-a">
+            <!-- Iframe ou Audio inserido sob demanda -->
+          </div>
+          <div class="panel-decision-banner" id="banner-a" style="display: none;">
+            Material Removido
+          </div>
+        </div>
+
+        <!-- Painel Direito (Material B) -->
+        <div class="panel" id="panel-b">
+          <div class="panel-header">
+            <div class="panel-info">
+              <div class="panel-path" id="path-b" title="">Caminho: --</div>
+              <div>ID: <span class="panel-id" id="id-b">--</span> · <span id="created-b">--</span></div>
+            </div>
+            <button class="btn btn--danger btn-remove" id="btn-remove-b">
+              🗑️ Remover Este [2]
+            </button>
+          </div>
+          <div class="viewer-area" id="viewer-b">
+            <!-- Iframe ou Audio inserido sob demanda -->
+          </div>
+          <div class="panel-decision-banner" id="banner-b" style="display: none;">
+            Material Removido
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado Vazio Inicial -->
+      <div class="empty-state" id="empty-state">
+        <p>👈 Selecione um item na barra lateral para começar a comparação lado a lado.</p>
+        <p style="font-size: 0.8rem;">Os arquivos são carregados <strong>sob demanda</strong> para máxima rapidez e economia.</p>
+      </div>
+
+      <!-- Atalhos de Teclado -->
+      <div class="keyboard-hint">
+        <span>Atalhos: <kbd>1</kbd> Remover Esquerda · <kbd>2</kbd> Remover Direita · <kbd>C</kbd> Manter Ambos · <kbd>→</kbd> Próximo · <kbd>←</kbd> Anterior</span>
+        <span id="save-status">Pronto</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let allGroups = [];
+    let currentFiltered = [];
+    let currentIndex = -1;
+    let currentTab = 'pendente';
+
+    // Elementos DOM
+    const elList = document.getElementById('item-list');
+    const elSearch = document.getElementById('input-search');
+    const elCategory = document.getElementById('select-category');
+    const elCompare = document.getElementById('compare-container');
+    const elEmpty = document.getElementById('empty-state');
+    const elMainActions = document.getElementById('main-actions');
+
+    const elViewTitle = document.getElementById('view-title');
+    const elViewKindBadge = document.getElementById('view-kind-badge');
+    const elViewTags = document.getElementById('view-tags');
+    const elBtnColdigom = document.getElementById('btn-coldigom');
+    const elBtnManter = document.getElementById('btn-manter');
+    const elBtnDesfazer = document.getElementById('btn-desfazer');
+    const elBtnPrev = document.getElementById('btn-prev');
+    const elBtnNext = document.getElementById('btn-next');
+
+    const elPanelA = document.getElementById('panel-a');
+    const elPanelB = document.getElementById('panel-b');
+    const elViewerA = document.getElementById('viewer-a');
+    const elViewerB = document.getElementById('viewer-b');
+    const elPathA = document.getElementById('path-a');
+    const elPathB = document.getElementById('path-b');
+    const elIdA = document.getElementById('id-a');
+    const elIdB = document.getElementById('id-b');
+    const elCreatedA = document.getElementById('created-a');
+    const elCreatedB = document.getElementById('created-b');
+    const elBtnRemoveA = document.getElementById('btn-remove-a');
+    const elBtnRemoveB = document.getElementById('btn-remove-b');
+    const elBannerA = document.getElementById('banner-a');
+    const elBannerB = document.getElementById('banner-b');
+
+    const elStatPend = document.getElementById('stat-pend');
+    const elStatDone = document.getElementById('stat-done');
+    const elStatRem = document.getElementById('stat-rem');
+    const elStatTotal = document.getElementById('stat-total');
+    const elChkAutoD1 = document.getElementById('chk-auto-d1');
+    const elSaveStatus = document.getElementById('save-status');
+
+    // Carregar Dados da API
+    async function carregarDados() {
+      elSaveStatus.textContent = 'Carregando dados...';
+      try {
+        const res = await fetch('/api/dados');
+        const json = await res.parse ? await res.parse() : await res.json();
+        allGroups = json.groups || [];
+        atualizarStats(json.stats);
+        aplicarFiltros();
+        elSaveStatus.textContent = 'Pronto';
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        elSaveStatus.textContent = 'Erro ao carregar dados';
+      }
+    }
+
+    function atualizarStats(stats) {
+      if (!stats) return;
+      elStatPend.textContent = stats.pendentes;
+      elStatDone.textContent = stats.concluidos;
+      elStatRem.textContent = stats.removidos;
+      elStatTotal.textContent = stats.total;
+    }
+
+    // Filtragem e Renderização da Lista
+    function aplicarFiltros() {
+      const q = elSearch.value.trim().toLowerCase();
+      const cat = elCategory.value.toLowerCase();
+
+      currentFiltered = allGroups.filter(g => {
+        // Filtro por Tab
+        const hasDecisao = !!g.decisao;
+        if (currentTab === 'pendente' && hasDecisao) return false;
+        if (currentTab === 'concluido' && !hasDecisao) return false;
+
+        // Filtro por Categoria
+        if (cat) {
+          const kindMatch = g.material_kind_name.toLowerCase().includes(cat) ||
+                            g.material_kind_label.toLowerCase().includes(cat);
+          if (!kindMatch) return false;
+        }
+
+        // Filtro por Busca de Texto
+        if (q) {
+          const numMatch = (g.praise_number || '').toLowerCase().includes(q);
+          const nameMatch = (g.praise_name || '').toLowerCase().includes(q);
+          if (!numMatch && !nameMatch) return false;
+        }
+
+        return true;
+      });
+
+      renderLista();
+
+      // Se temos itens e nenhum selecionado, seleciona o primeiro
+      if (currentFiltered.length > 0) {
+        if (currentIndex < 0 || currentIndex >= currentFiltered.length) {
+          selecionarItem(0);
+        } else {
+          selecionarItem(currentIndex);
+        }
+      } else {
+        desmontarVisualizadores();
+        elCompare.style.display = 'none';
+        elMainActions.style.display = 'none';
+        elEmpty.style.display = 'flex';
+        elViewTitle.textContent = 'Nenhum louvor encontrado neste filtro';
+      }
+    }
+
+    function renderLista() {
+      elList.innerHTML = '';
+      currentFiltered.forEach((g, idx) => {
+        const li = document.createElement('li');
+        li.className = `item-row ${idx === currentIndex ? 'active' : ''}`;
+        
+        let statusBadge = '<span class="status-badge status-badge--pend">Pendente</span>';
+        if (g.decisao) {
+          if (g.decisao.action === 'remover_material') {
+            statusBadge = `<span class="status-badge status-badge--rem">${g.decisao.status_remocao === 'removido_d1' ? 'Removido D1' : 'Removido'}</span>`;
+          } else {
+            statusBadge = '<span class="status-badge status-badge--done">Concluído</span>';
+          }
+        }
+
+        li.innerHTML = `
+          <div class="item-row-top">
+            <span class="item-num">${g.praise_number || '-'}</span>
+            <span class="item-title" title="${g.praise_name}">${g.praise_name}</span>
+            ${statusBadge}
+          </div>
+          <div class="item-row-meta">
+            <span>${g.material_kind_label} (${g.material_type})</span>
+            <span class="tag-badge">${(g.praise_tags || '').split(',')[0] || ''}</span>
+          </div>
+        `;
+        li.onclick = () => selecionarItem(idx);
+        elList.appendChild(li);
+      });
+    }
+
+    // Selecionar um Item para Revisão
+    function selecionarItem(idx) {
+      if (idx < 0 || idx >= currentFiltered.length) return;
+      currentIndex = idx;
+
+      // Atualizar classe ativa na lista
+      const rows = elList.querySelectorAll('.item-row');
+      rows.forEach((r, i) => r.classList.toggle('active', i === idx));
+
+      const item = currentFiltered[idx];
+      exibirItem(item);
+    }
+
+    function desmontarVisualizadores() {
+      // Liberar memória e parar requisições imediatamente
+      elViewerA.innerHTML = '';
+      elViewerB.innerHTML = '';
+    }
+
+    function exibirItem(item) {
+      desmontarVisualizadores();
+
+      elEmpty.style.display = 'none';
+      elCompare.style.display = 'flex';
+      elMainActions.style.display = 'flex';
+
+      elViewTitle.textContent = `${item.praise_number ? item.praise_number + ' · ' : ''}${item.praise_name}`;
+      elViewKindBadge.textContent = `${item.material_kind_label} [${item.material_type}]`;
+      elViewTags.textContent = item.praise_tags || 'Sem tags';
+
+      const targetMatId = item.materials[0]?.id || '';
+      elBtnColdigom.href = `https://coldigom-web.pages.dev/praise/${item.praise_id}?materialId=${encodeURIComponent(targetMatId)}`;
+
+      const matA = item.materials[0];
+      const matB = item.materials[1] || matA;
+
+      const decisao = item.decisao;
+      const isA_Removido = decisao && decisao.removed_material_id === matA.id;
+      const isB_Removido = decisao && decisao.removed_material_id === matB.id;
+
+      // Painel A
+      elPathA.textContent = matA.file_path_legacy || matA.r2_key || 'Sem caminho legado';
+      elPathA.title = elPathA.textContent;
+      elIdA.textContent = matA.id;
+      elCreatedA.textContent = matA.created_at || '';
+      elPanelA.classList.toggle('removed', isA_Removido);
+      elBannerA.style.display = isA_Removido ? 'block' : 'none';
+      elBtnRemoveA.style.display = decisao ? 'none' : 'inline-flex';
+      elBtnRemoveA.onclick = () => tomarDecisao('remover_material', matA.id);
+
+      // Painel B
+      elPathB.textContent = matB.file_path_legacy || matB.r2_key || 'Sem caminho legado';
+      elPathB.title = elPathB.textContent;
+      elIdB.textContent = matB.id;
+      elCreatedB.textContent = matB.created_at || '';
+      elPanelB.classList.toggle('removed', isB_Removido);
+      elBannerB.style.display = isB_Removido ? 'block' : 'none';
+      elBtnRemoveB.style.display = decisao ? 'none' : 'inline-flex';
+      elBtnRemoveB.onclick = () => tomarDecisao('remover_material', matB.id);
+
+      // Botões centrais
+      if (decisao) {
+        elBtnManter.style.display = 'none';
+        elBtnDesfazer.style.display = 'inline-flex';
+        elBtnDesfazer.onclick = () => desfazerDecisao(item.group_key);
+      } else {
+        elBtnManter.style.display = 'inline-flex';
+        elBtnDesfazer.style.display = 'none';
+        elBtnManter.onclick = () => tomarDecisao('manter_ambos', null);
+      }
+
+      // Montar visualizadores SOB DEMANDA
+      montarViewer(elViewerA, matA);
+      if (matA.id !== matB.id) {
+        montarViewer(elViewerB, matB);
+      } else {
+        elViewerB.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">(Apenas 1 material encontrado no grupo)</div>';
+      }
+    }
+
+    function montarViewer(container, material) {
+      if (!material) return;
+      const url = material.asset_url;
+      const type = material.type.toLowerCase();
+
+      if (type === 'pdf') {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'pdf-frame';
+        iframe.src = url;
+        container.appendChild(iframe);
+      } else if (type === 'mp3' || type === 'm4a' || type === 'wav' || type === 'mpeg') {
+        const wrap = document.createElement('div');
+        wrap.className = 'audio-wrapper';
+        wrap.innerHTML = `
+          <div style="font-size: 0.85rem; color: #94a3b8; text-align: center;">Player de Áudio (${type.toUpperCase()})</div>
+          <audio controls preload="none">
+            <source src="${url}" type="audio/${type === 'mp3' ? 'mpeg' : type}">
+            Seu navegador não suporta reprodução de áudio.
+          </audio>
+          <a href="${url}" target="_blank" download class="btn btn--outline" style="font-size: 0.75rem;">⬇ Baixar arquivo</a>
+        `;
+        container.appendChild(wrap);
+      } else {
+        // Outros formatos (ex: chord, youtube)
+        const wrap = document.createElement('div');
+        wrap.className = 'audio-wrapper';
+        wrap.innerHTML = `
+          <div style="font-size: 0.9rem; color: #f8fafc; text-align: center;">Formato: ${type.toUpperCase()}</div>
+          <a href="${url}" target="_blank" class="btn btn--primary">🔗 Abrir arquivo diretamente</a>
+        `;
+        container.appendChild(wrap);
+      }
+    }
+
+    // Tomar Decisão (Remover ou Manter)
+    async function tomarDecisao(action, removedMatId) {
+      const item = currentFiltered[currentIndex];
+      if (!item) return;
+
+      const deleteD1 = elChkAutoD1.checked;
+      elSaveStatus.textContent = deleteD1 && action === 'remover_material' ? 'Excluindo do D1...' : 'Salvando...';
+
+      try {
+        const res = await fetch('/api/decidir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            group_key: item.group_key,
+            praise_id: item.praise_id,
+            material_kind_id: item.material_kind_id,
+            material_type: item.material_type,
+            action: action,
+            removed_material_id: removedMatId,
+            delete_d1: deleteD1
+          })
+        });
+        const json = await res.json();
+        if (json.ok) {
+          item.decisao = json.decisao;
+          elSaveStatus.textContent = json.msg;
+          
+          // Se estiver na aba Pendentes, remover item da lista atual e avançar
+          if (currentTab === 'pendente') {
+            aplicarFiltros();
+          } else {
+            exibirItem(item);
+            renderLista();
+          }
+        } else {
+          alert('Erro ao salvar: ' + (json.error || 'Erro desconhecido'));
+          elSaveStatus.textContent = 'Erro';
+        }
+      } catch (err) {
+        console.error('Erro na requisição:', err);
+        alert('Erro ao conectar ao servidor local: ' + err.message);
+        elSaveStatus.textContent = 'Erro de conexão';
+      }
+    }
+
+    // Desfazer Decisão
+    async function desfazerDecisao(groupKey) {
+      elSaveStatus.textContent = 'Revertendo...';
+      try {
+        const res = await fetch('/api/desfazer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ group_key: groupKey })
+        });
+        const json = await res.json();
+        if (json.ok) {
+          const item = allGroups.find(g => g.group_key === groupKey);
+          if (item) item.decisao = null;
+          elSaveStatus.textContent = 'Decisão revertida';
+          aplicarFiltros();
+        }
+      } catch (err) {
+        console.error('Erro:', err);
+      }
+    }
+
+    // Navegação
+    elBtnPrev.onclick = () => {
+      if (currentIndex > 0) selecionarItem(currentIndex - 1);
+    };
+    elBtnNext.onclick = () => {
+      if (currentIndex < currentFiltered.length - 1) selecionarItem(currentIndex + 1);
+    };
+
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        currentIndex = 0;
+        aplicarFiltros();
+      };
+    });
+
+    // Inputs de Busca
+    elSearch.oninput = () => {
+      currentIndex = 0;
+      aplicarFiltros();
+    };
+    elCategory.onchange = () => {
+      currentIndex = 0;
+      aplicarFiltros();
+    };
+
+    // Atalhos de Teclado
+    window.onkeydown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+      if (e.key === '1' || e.key === 'e' || e.key === 'E') {
+        const item = currentFiltered[currentIndex];
+        if (item && !item.decisao && item.materials[0]) {
+          tomarDecisao('remover_material', item.materials[0].id);
+        }
+      } else if (e.key === '2' || e.key === 'd' || e.key === 'D') {
+        const item = currentFiltered[currentIndex];
+        if (item && !item.decisao && item.materials[1]) {
+          tomarDecisao('remover_material', item.materials[1].id);
+        }
+      } else if (e.key === 'c' || e.key === 'C') {
+        const item = currentFiltered[currentIndex];
+        if (item && !item.decisao) {
+          tomarDecisao('manter_ambos', null);
+        }
+      } else if (e.key === 'ArrowRight') {
+        elBtnNext.click();
+      } else if (e.key === 'ArrowLeft') {
+        elBtnPrev.click();
+      }
+    };
+
+    // Inicialização
+    carregarDados();
+  </script>
+</body>
+</html>

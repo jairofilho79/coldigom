@@ -32,7 +32,6 @@ const CORPO = {
     author: null,
     rhythm: null,
     tonality: null,
-    category: null,
     lyrics: null,
   },
   tag_ids: ['tag-1'],

@@ -16,8 +16,10 @@ from core.snapshot import conectar
 LOG_PADRAO = os.path.join(OUT, "apply_log.jsonl")
 
 # Campos que a fonte pode doar ao keeper numa fusão. 'name' fica de fora: o
-# nome do keeper é o nome que o acervo já usa.
-DOAVEIS = ("number", "author", "rhythm", "tonality", "category", "lyrics")
+# nome do keeper é o nome que o acervo já usa. 'category' também: as seções da
+# Coletânea viraram subtags e a coluna foi esvaziada (fase 3) — um snapshot
+# antigo não pode escrevê-la de volta.
+DOAVEIS = ("number", "author", "rhythm", "tonality", "lyrics")
 
 # Tags que nunca migram da fonte para o keeper numa fusão. 'Avulsos' marca
 # o louvor que não está na Coletânea; um órfão só-YouTube nasce Avulsos por
@@ -45,6 +47,9 @@ FASE_DA_ACAO = {
     "set_material_kind": "Fase 2",
     "move_material": "Fase 3B",
     "set_group_id": "Fase 7",
+    "link_plpcg": "Fase C da migração PLPCG",
+    "import_plpcg_material": "Fase C da migração PLPCG",
+    "create_praise_plpcg": "Fase C da migração PLPCG",
 }
 
 

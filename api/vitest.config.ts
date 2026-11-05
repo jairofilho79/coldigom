@@ -18,12 +18,16 @@ export default defineConfig({
       // S4 (2026-08-31): 58 / 51 / 65 / 59
       // P2 (2026-09-03): fila de revisão — 70.48 / 66.16 / 72.79 / 72.88
       // Gestos (2026-09-11): editor de gestos — 74.64 / 70.97 / 76.65 / 77.09
+      // Contribuições, rotas admin (2026-09-17): 77.51 / 73.16 / 79.8 / 79.97
+      // Contribuições admin, fix de revisão (2026-09-17): 77.64 / 73.19 / 80.04 / 80.12
+      // Contribuições, onda final de revisão (2026-09-17): 78.58 / 73.87 / 80.93 / 81.04
+      // short_id + crosswalk (2026-09-23): 79.9 / 75.33 / 82.4 / 82.27
       thresholds: {
-        // Gestos: medido 74.64 / 70.97 / 76.65 / 77.09
-        statements: 74,
-        branches: 70,
-        functions: 76,
-        lines: 77,
+        // short_id + crosswalk: medido 79.9 / 75.33 / 82.4 / 82.27
+        statements: 79,
+        branches: 75,
+        functions: 82,
+        lines: 82,
       },
     },
   },

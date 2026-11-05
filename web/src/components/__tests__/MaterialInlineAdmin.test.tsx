@@ -68,3 +68,111 @@ describe('MaterialInlineAdmin — mover material', () => {
     expect(screen.getByRole('button', { name: 'Remover' })).toBeInTheDocument();
   });
 });
+
+describe('MaterialInlineAdmin — edição de notes', () => {
+  it('renderiza o input de notes com o valor inicial e placeholder correto', () => {
+    render(
+      <MaterialInlineAdmin
+        material={{ ...material, notes: 'Cifrado' }}
+        options={options}
+        saving={false}
+        onUpdateKind={vi.fn()}
+        onUpdateNotes={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue('Cifrado');
+  });
+
+  it('ao alterar o texto e desfocar (blur), chama onUpdateNotes com o valor trimado', async () => {
+    const user = userEvent.setup();
+    const onUpdateNotes = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <MaterialInlineAdmin
+        material={{ ...material, notes: 'I' }}
+        options={options}
+        saving={false}
+        onUpdateKind={vi.fn()}
+        onUpdateNotes={onUpdateNotes}
+        onDelete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+    await user.clear(input);
+    await user.type(input, '  II  ');
+    await user.tab();
+
+    expect(onUpdateNotes).toHaveBeenCalledWith('mat-1', 'II');
+  });
+
+  it('ao limpar o texto e desfocar (blur), chama onUpdateNotes com null', async () => {
+    const user = userEvent.setup();
+    const onUpdateNotes = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <MaterialInlineAdmin
+        material={{ ...material, notes: 'Cifrado' }}
+        options={options}
+        saving={false}
+        onUpdateKind={vi.fn()}
+        onUpdateNotes={onUpdateNotes}
+        onDelete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+    await user.clear(input);
+    await user.tab();
+
+    expect(onUpdateNotes).toHaveBeenCalledWith('mat-1', null);
+  });
+
+  it('ao teclar Enter, confirma a edição e chama onUpdateNotes', async () => {
+    const user = userEvent.setup();
+    const onUpdateNotes = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <MaterialInlineAdmin
+        material={{ ...material, notes: null }}
+        options={options}
+        saving={false}
+        onUpdateKind={vi.fn()}
+        onUpdateNotes={onUpdateNotes}
+        onDelete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+    await user.type(input, 'Arranjo Novo{Enter}');
+
+    expect(onUpdateNotes).toHaveBeenCalledWith('mat-1', 'Arranjo Novo');
+  });
+
+  it('ao teclar Escape, restaura o valor original sem chamar onUpdateNotes', async () => {
+    const user = userEvent.setup();
+    const onUpdateNotes = vi.fn();
+
+    render(
+      <MaterialInlineAdmin
+        material={{ ...material, notes: 'Original' }}
+        options={options}
+        saving={false}
+        onUpdateKind={vi.fn()}
+        onUpdateNotes={onUpdateNotes}
+        onDelete={vi.fn()}
+      />
+    );
+
+    const input = screen.getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+    await user.clear(input);
+    await user.type(input, 'Modificado{Escape}');
+
+    expect(input).toHaveValue('Original');
+    expect(onUpdateNotes).not.toHaveBeenCalled();
+  });
+});

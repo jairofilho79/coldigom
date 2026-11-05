@@ -14,7 +14,6 @@ const mockPraises = [
     author: 'Autor 1',
     rhythm: 'Avulsos',
     tonality: 'C',
-    category: 'Louvor',
     lyrics: 'Letra do louvor 1',
     tag_ids: 'tag1,tag2',
   },
@@ -25,7 +24,6 @@ const mockPraises = [
     author: 'Autor 2',
     rhythm: 'Coletânea',
     tonality: 'G',
-    category: 'Adoração',
     lyrics: 'Letra do louvor 2',
     tag_ids: 'tag1',
   },
@@ -158,8 +156,7 @@ function createStatefulMockD1() {
               author: args[3],
               rhythm: args[4],
               tonality: args[5],
-              category: args[6],
-              lyrics: args[7],
+              lyrics: args[6],
             });
           }
           if (query.includes('INSERT OR IGNORE INTO praise_tags')) {
@@ -629,7 +626,7 @@ describe('API Routes', () => {
       expect(json.data).toHaveLength(1);
     });
 
-    it('should handle category filter', async () => {
+    it('ignores the removed category filter (migração 025)', async () => {
       const mockDB = createMockD1({
         all: { results: [mockPraises[1]] },
         first: { total: 1 },
@@ -645,6 +642,9 @@ describe('API Routes', () => {
       
       const json = await res.json();
       expect(json.data).toHaveLength(1);
+      const sqls = mockDB.prepare.mock.calls.map(([sql]) => sql as string);
+      expect(sqls.length).toBeGreaterThan(0);
+      for (const sql of sqls) expect(sql).not.toContain('category');
     });
 
     it('should handle number range filter', async () => {
@@ -714,7 +714,6 @@ describe('API Routes', () => {
       author: mockPraises[0].author,
       rhythm: mockPraises[0].rhythm,
       tonality: mockPraises[0].tonality,
-      category: mockPraises[0].category,
       group_id: null,
       tag_ids: 'tag1',
       tag_names: 'Coletânea',
@@ -857,6 +856,277 @@ describe('API Routes', () => {
     });
   });
 
+  describe('GET /api/plpcg/catalog', () => {
+    /** D1 falso: despacha pelo texto da query, sem `bind` (o dump não tem parâmetros). */
+    function catalogMockDB(options: {
+      praises?: unknown[];
+      materials?: unknown[];
+      tags?: unknown[];
+      kindTaxonomy?: unknown[];
+      kindClasses?: unknown[];
+    } = {}) {
+      const results = (query: string) => {
+        if (query.includes('FROM material_kind_classes')) return { results: options.kindClasses ?? [] };
+        if (query.includes('parent_id, sort_order FROM material_kinds')) return { results: options.kindTaxonomy ?? [] };
+        if (query.includes('COALESCE(t.label')) return { results: mockMaterialKindLabels };
+        if (query.includes('FROM praise_materials')) return { results: options.materials ?? mockMaterials };
+        if (query.includes('FROM praise_tags')) return { results: options.tags ?? [] };
+        if (query.includes('FROM praises p')) return { results: options.praises ?? mockPraises };
+        return { results: [] };
+      };
+      return {
+        prepare: vi.fn((query: string) => ({
+          all: vi.fn(async () => results(query)),
+          bind: vi.fn((..._args: unknown[]) => ({
+            all: vi.fn(async () => results(query)),
+            first: vi.fn().mockResolvedValue(null),
+          })),
+        })),
+      };
+    }
+
+    it('returns compact praises with derived materials, tags and ETag', async () => {
+      const res = await app.request('/api/plpcg/catalog', {}, {
+        DB: catalogMockDB({
+          tags: [{ praise_id: mockPraises[0].id, label: 'PES' }],
+        }),
+        ASSETS: createMockR2(),
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.headers.get('ETag')).toMatch(/^"[0-9a-f]{32}"$/);
+      expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
+      // ETag não é CORS-safelisted: sem Access-Control-Expose-Headers o client web lê `null` e baixa tudo de novo a cada sync.
+      expect(res.headers.get('Access-Control-Expose-Headers')).toBe('ETag');
+      const json = await res.json();
+      expect(typeof json.generatedAt).toBe('string');
+      expect(json.kinds).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: expect.any(String), name: expect.any(String) })]),
+      );
+      const first = json.praises.find((p: { id: string }) => p.id === mockPraises[0].id);
+      expect(first).toBeDefined();
+      expect(first.name).toBe(mockPraises[0].name);
+      expect(first.tags).toEqual(['PES']);
+      expect(first.lyrics).toBe(mockPraises[0].lyrics);
+      // Materiais só com {id, kind, type}: o r2_key é derivado no app.
+      const pdf = first.materials.find((m: { id: string }) => m.id === 'mat1');
+      expect(pdf).toEqual({ id: 'mat1', kind: mockMaterials[0].material_kind, type: 'pdf' });
+      expect(first.materials.every((m: { r2?: unknown }) => m.r2 === undefined)).toBe(true);
+    });
+
+    it('omits lyrics when blank', async () => {
+      const res = await app.request('/api/plpcg/catalog', {}, {
+        DB: catalogMockDB({ praises: [{ ...mockPraises[0], lyrics: '   ' }] }),
+        ASSETS: createMockR2(),
+      });
+
+      const json = await res.json();
+      expect(json.praises[0].lyrics).toBeUndefined();
+    });
+
+    it('emits youtube with url and no r2', async () => {
+      const youtube = {
+        id: 'yt1',
+        praise_id: mockPraises[0].id,
+        type: 'youtube',
+        material_kind: null,
+        url: 'https://www.youtube.com/watch?v=abc',
+        r2_key: null,
+      };
+      const res = await app.request('/api/plpcg/catalog', {}, {
+        DB: catalogMockDB({ materials: [youtube] }),
+        ASSETS: createMockR2(),
+      });
+
+      const json = await res.json();
+      expect(json.praises[0].materials).toEqual([
+        { id: 'yt1', kind: null, type: 'youtube', url: 'https://www.youtube.com/watch?v=abc' },
+      ]);
+    });
+
+    it('emits explicit r2 only when the stored r2_key diverges from the derived pattern', async () => {
+      const praiseId = mockPraises[0].id;
+      const conforming = {
+        id: 'm-ok',
+        praise_id: praiseId,
+        type: 'pdf',
+        material_kind: 'kind1',
+        url: null,
+        r2_key: `assets/praises/${praiseId}/m-ok.pdf`,
+      };
+      const divergent = {
+        id: 'm-odd',
+        praise_id: praiseId,
+        type: 'audio',
+        material_kind: 'kind2',
+        url: null,
+        r2_key: `assets/praises/${praiseId}/m-odd.m4a`,
+      };
+      const res = await app.request('/api/plpcg/catalog', {}, {
+        DB: catalogMockDB({ materials: [conforming, divergent] }),
+        ASSETS: createMockR2(),
+      });
+
+      const json = await res.json();
+      const materials = json.praises[0].materials;
+      expect(materials.find((m: { id: string }) => m.id === 'm-ok').r2).toBeUndefined();
+      expect(materials.find((m: { id: string }) => m.id === 'm-odd').r2).toBe(
+        `assets/praises/${praiseId}/m-odd.m4a`,
+      );
+    });
+
+    it('emits r2 for a material type outside the known R2 extension set', async () => {
+      const praiseId = mockPraises[0].id;
+      const weird = {
+        id: 'm-weird',
+        praise_id: praiseId,
+        type: 'weird',
+        material_kind: 'kind3',
+        url: null,
+        r2_key: `assets/praises/${praiseId}/m-weird.bin`,
+      };
+      const res = await app.request('/api/plpcg/catalog', {}, {
+        DB: catalogMockDB({ materials: [weird] }),
+        ASSETS: createMockR2(),
+      });
+
+      const json = await res.json();
+      expect(json.praises[0].materials[0].r2).toBe(`assets/praises/${praiseId}/m-weird.bin`);
+    });
+
+    it('answers 304 without body when If-None-Match matches', async () => {
+      const env = { DB: catalogMockDB(), ASSETS: createMockR2() };
+      const first = await app.request('/api/plpcg/catalog', {}, env);
+      const etag = first.headers.get('ETag')!;
+
+      const second = await app.request(
+        '/api/plpcg/catalog',
+        { headers: { 'If-None-Match': etag } },
+        env,
+      );
+
+      expect(second.status).toBe(304);
+      expect(second.headers.get('ETag')).toBe(etag);
+      expect(await second.text()).toBe('');
+    });
+
+    it('returns 500 on database error', async () => {
+      const mockDB = {
+        prepare: vi.fn().mockReturnValue({
+          all: vi.fn().mockRejectedValue(new Error('DB Error')),
+          bind: vi.fn().mockReturnValue({
+            all: vi.fn().mockRejectedValue(new Error('DB Error')),
+            first: vi.fn().mockRejectedValue(new Error('DB Error')),
+          }),
+        }),
+      };
+
+      const res = await app.request('/api/plpcg/catalog', {}, {
+        DB: mockDB,
+        ASSETS: createMockR2(),
+      });
+
+      expect(res.status).toBe(500);
+      const json = await res.json();
+      expect(json.error).toBe('Failed to build catalog');
+    });
+
+    describe('taxonomia dos kinds (spec filtro-materiais §3.2)', () => {
+      const praiseId = () => mockPraises[0].id;
+      const material = (id: string, kind: string) => ({
+        id,
+        praise_id: praiseId(),
+        type: 'pdf',
+        material_kind: kind,
+        url: null,
+        r2_key: `assets/praises/${praiseId()}/${id}.pdf`,
+      });
+      const classes = [
+        { id: 'metais', label: 'Metais' },
+        { id: 'banda', label: 'Banda' },
+        { id: 'cordas', label: 'Cordas' },
+      ];
+      const taxonomia = [
+        { id: 'sax', class_id: 'metais', parent_id: null, sort_order: 30 },
+        { id: 'sax-alto', class_id: 'metais', parent_id: 'sax', sort_order: 50 },
+        { id: 'cifra', class_id: 'banda', parent_id: null, sort_order: 10 },
+        { id: 'novo', class_id: null, parent_id: null, sort_order: null },
+      ];
+
+      async function dump(env: unknown) {
+        const res = await app.request('/api/plpcg/catalog', {}, env as never);
+        return { res, json: await res.json() };
+      }
+
+      it('manda class/parent/order nos kinds e omite as chaves nulas', async () => {
+        const { json } = await dump({
+          DB: catalogMockDB({
+            materials: [material('m1', 'sax'), material('m2', 'sax-alto'), material('m3', 'novo')],
+            kindTaxonomy: taxonomia,
+            kindClasses: classes,
+          }),
+          ASSETS: createMockR2(),
+        });
+        const porId = Object.fromEntries(json.kinds.map((k: { id: string }) => [k.id, k]));
+        expect(porId['sax']).toEqual({ id: 'sax', name: expect.any(String), class: 'metais', order: 30 });
+        expect(porId['sax-alto']).toEqual({
+          id: 'sax-alto',
+          name: expect.any(String),
+          class: 'metais',
+          parent: 'sax',
+          order: 50,
+        });
+        expect(porId['novo']).toEqual({ id: 'novo', name: expect.any(String) });
+      });
+
+      it('kindClasses vem na ordem e só com classes usadas no dump', async () => {
+        const { json } = await dump({
+          DB: catalogMockDB({
+            materials: [material('m1', 'sax'), material('m2', 'cifra')],
+            kindTaxonomy: taxonomia,
+            kindClasses: classes,
+          }),
+          ASSETS: createMockR2(),
+        });
+        expect(json.kindClasses).toEqual([
+          { id: 'metais', label: 'Metais' },
+          { id: 'banda', label: 'Banda' },
+        ]);
+      });
+
+      it('um pai sem material entra em kinds quando um filho tem material', async () => {
+        const { json } = await dump({
+          DB: catalogMockDB({
+            materials: [material('m2', 'sax-alto')],
+            kindTaxonomy: taxonomia,
+            kindClasses: classes,
+          }),
+          ASSETS: createMockR2(),
+        });
+        expect(json.kinds.map((k: { id: string }) => k.id).sort()).toEqual(['sax', 'sax-alto']);
+      });
+
+      it('sem taxonomia (tabela vazia) o dump sai como antes, com kindClasses vazio', async () => {
+        const { json } = await dump({ DB: catalogMockDB(), ASSETS: createMockR2() });
+        expect(json.kindClasses).toEqual([]);
+        for (const k of json.kinds) expect(Object.keys(k).sort()).toEqual(['id', 'name']);
+      });
+
+      it('mesma taxonomia, mesmo ETag; mudar a classe de um kind muda o ETag', async () => {
+        const env = (tax: unknown[]) => ({
+          DB: catalogMockDB({ materials: [material('m1', 'sax')], kindTaxonomy: tax, kindClasses: classes }),
+          ASSETS: createMockR2(),
+        });
+        const a = (await dump(env(taxonomia))).res.headers.get('ETag');
+        const b = (await dump(env(taxonomia))).res.headers.get('ETag');
+        const outra = taxonomia.map((k) => (k.id === 'sax' ? { ...k, class_id: 'banda' } : k));
+        const c = (await dump(env(outra))).res.headers.get('ETag');
+        expect(a).toBe(b);
+        expect(c).not.toBe(a);
+      });
+    });
+  });
+
   describe('CORS origin patterns', () => {
     const webOrigin = 'https://coldigom-web.pages.dev,https://*plpcg.com';
 
@@ -894,9 +1164,6 @@ describe('API Routes', () => {
           if (query.includes('DISTINCT tonality')) {
             return responder([{ tonality: 'C' }, { tonality: 'G' }]);
           }
-          if (query.includes('DISTINCT category')) {
-            return responder([{ category: 'Louvor' }, { category: 'Adoração' }]);
-          }
           if (query.includes('FROM tags')) {
             return responder(mockTags.map(t => ({ ...t, count: 1 })));
           }
@@ -914,7 +1181,7 @@ describe('API Routes', () => {
       const json = await res.json();
       expect(json.rhythms).toContain('Avulsos');
       expect(json.tonalities).toContain('C');
-      expect(json.categories).toContain('Louvor');
+      expect(json).not.toHaveProperty('categories');
       expect(json.tags).toHaveLength(3);
     });
 
@@ -1738,7 +2005,6 @@ describe('API Routes', () => {
           author: 'Autor X',
           rhythm: 'Marcha',
           tonality: 'C',
-          category: 'Adoração',
           lyrics: 'Letra nova',
           tag_ids: ['tag1', 'tag2'],
         }),
@@ -1842,25 +2108,34 @@ describe('API Routes', () => {
     });
   });
 
-  describe('POST /api/praises/:id/tags leaf-only', () => {
+  describe('POST /api/praises/:id/tags — tag pai', () => {
     const envBase = {
       AUTH_JWT_SECRET: TEST_JWT_SECRET,
       AUTH_ALLOWED_EMAILS: '*',
       WEB_ORIGIN: TEST_WEB_ORIGIN,
     };
 
-    it('rejects attaching a parent that has children', async () => {
+    it('accepts attaching a parent that has children', async () => {
+      // Era recusado ('Cannot attach a parent tag; use a subtag'). Desde as
+      // seções da Coletânea (spec 2026-09-24 §3.2) a raiz ligada direto vale:
+      // quer dizer «sem subtag específica».
       const tags = [
         ...mockTags,
         { id: 'child1', name: '4.2026', parent_id: 'tag1' },
       ];
+      const inseridas: unknown[][] = [];
       const mockDB = {
         prepare: vi.fn((query: string) => ({
           bind: vi.fn((...args: unknown[]) => ({
-            run: vi.fn(),
+            run: vi.fn(async () => {
+              if (query.includes('INSERT OR IGNORE INTO praise_tags')) inseridas.push(args);
+            }),
             first: vi.fn(async () => {
               if (query.includes('SELECT id FROM praises')) {
                 return { id: mockPraises[0].id };
+              }
+              if (query.includes('FROM praises p') && query.includes('WHERE p.id')) {
+                return { ...mockPraises[0], tag_ids: 'tag1' };
               }
               if (query.includes('FROM tags WHERE parent_id')) {
                 return tags.find((t) => t.parent_id === args[0]) ?? null;
@@ -1880,9 +2155,8 @@ describe('API Routes', () => {
         await authRequestInit({ tag_id: 'tag1' }),
         { DB: mockDB, ASSETS: createMockR2(), ...envBase }
       );
-      expect(res.status).toBe(400);
-      const json = await res.json();
-      expect(json.error).toContain('subtag');
+      expect(res.status).toBe(200);
+      expect(inseridas).toEqual([[mockPraises[0].id, 'tag1']]);
     });
   });
 
@@ -1952,7 +2226,7 @@ describe('API Routes', () => {
           bind: vi.fn((...args: unknown[]) => ({
             run: vi.fn(async () => {
               if (query.includes('UPDATE praises SET')) {
-                const id = args[7] as string;
+                const id = args[6] as string;
                 const p = praises.get(id);
                 if (p) {
                   praises.set(id, {
@@ -1962,8 +2236,7 @@ describe('API Routes', () => {
                     author: args[2],
                     rhythm: args[3],
                     tonality: args[4],
-                    category: args[5],
-                    lyrics: args[6],
+                    lyrics: args[5],
                   });
                 }
               }
@@ -2071,7 +2344,6 @@ describe('API Routes', () => {
         author: 'Autor mesclado',
         rhythm: 'Avulsos',
         tonality: 'C',
-        category: 'Louvor',
         lyrics: 'Letra escolhida',
       },
       tag_ids: ['tag1', 'tag2'],
@@ -2253,7 +2525,6 @@ describe('buildWhereClause', () => {
     tagGroups?: string[][];
     rhythm?: string[];
     tonality?: string[];
-    category?: string[];
     materialKinds?: string[];
     numberMin?: number;
     numberMax?: number;
@@ -2262,9 +2533,9 @@ describe('buildWhereClause', () => {
     const bindings: (string | number)[] = [];
 
     if (params.search) {
-      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.category LIKE ? OR p.id LIKE ?)`);
+      conditions.push(`(p.name LIKE ? OR p.lyrics LIKE ? OR p.author LIKE ? OR p.rhythm LIKE ? OR p.tonality LIKE ? OR p.id LIKE ?)`);
       const pattern = `%${params.search}%`;
-      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+      bindings.push(pattern, pattern, pattern, pattern, pattern, pattern);
     }
 
     if (params.tagGroups && params.tagGroups.length > 0) {
@@ -2282,11 +2553,6 @@ describe('buildWhereClause', () => {
     if (params.tonality && params.tonality.length > 0) {
       conditions.push(`p.tonality IN (${params.tonality.map(() => '?').join(',')})`);
       bindings.push(...params.tonality);
-    }
-
-    if (params.category && params.category.length > 0) {
-      conditions.push(`p.category IN (${params.category.map(() => '?').join(',')})`);
-      bindings.push(...params.category);
     }
 
     if (params.materialKinds && params.materialKinds.length > 0) {
@@ -2327,7 +2593,7 @@ describe('buildWhereClause', () => {
     expect(result.clause).toContain('p.lyrics LIKE ?');
     expect(result.clause).toContain('p.author LIKE ?');
     expect(result.clause).toContain('p.id LIKE ?');
-    expect(result.bindings).toEqual(['%test%', '%test%', '%test%', '%test%', '%test%', '%test%', '%test%']);
+    expect(result.bindings).toEqual(['%test%', '%test%', '%test%', '%test%', '%test%', '%test%']);
   });
 
   it('should include id in search bindings for uuid', () => {
@@ -2367,12 +2633,6 @@ describe('buildWhereClause', () => {
     expect(result.bindings).toEqual(['C', 'G']);
   });
 
-  it('should build category clause correctly', () => {
-    const result = buildWhereClause({ category: ['Louvor'] });
-    expect(result.clause).toContain('p.category IN (?)');
-    expect(result.bindings).toEqual(['Louvor']);
-  });
-
   it('should build materialKinds clause correctly', () => {
     const result = buildWhereClause({ materialKinds: ['kind1', 'kind2'] });
     expect(result.clause).toContain('praise_materials pm');
@@ -2407,7 +2667,7 @@ describe('buildWhereClause', () => {
     expect(result.clause).toContain('p.rhythm IN (?)');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) >= ?');
     expect(result.clause).toContain('CAST(p.number AS INTEGER) <= ?');
-    expect(result.bindings).toHaveLength(11);
+    expect(result.bindings).toHaveLength(10);
   });
 });
 

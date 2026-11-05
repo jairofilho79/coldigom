@@ -28,14 +28,19 @@ Em MXL, o primeiro rootfile deve ser MusicXML partwise ou timewise; o
 `media-type` pode ser omitido. Rootfiles posteriores podem apontar para
 outras representacoes, como PDF ou audio, desde que os caminhos sejam seguros,
 unicos e existentes. Opus nao e aceito por esta triagem.
+Rootfiles que declaram MusicXML ou omitem o media-type sao analisados como
+MusicXML, mesmo sem extensao, inclusive quando sao representacoes alternativas.
 
 DOCTYPEs PUBLIC oficiais do MusicXML sao aceitos sem resolucao externa.
 DTD arbitraria, entidades e subconjuntos internos permanecem proibidos.
 Instrucoes `xml-stylesheet` e elementos `script` em MusicXML sao rejeitados.
 MusicXML precisa de lista de partes com `score-part` identificado, `part-name`
-e ao menos um compasso em uma parte. IDs de `score-part` nao podem se repetir
-e as partes musicais devem referenciar um ID declarado. Essa triagem nao e
-uma validacao completa do schema musical.
+e partes musicais que referenciem IDs declarados. Cada parte partwise precisa
+ter ao menos um compasso; no formato timewise, precisa haver ao menos uma
+parte em um compasso. IDs MusicXML sao normalizados segundo whitespace XSD,
+validados como NCName XML e unicos entre elementos com tipo ID do MusicXML 4.0;
+os IDREF declarados devem apontar para um ID existente, e os de partes para um
+`score-part`. Essa triagem nao e uma validacao completa do schema musical.
 
 ## Bloqueio de curadoria de contribuicoes
 
@@ -50,6 +55,12 @@ A promocao automatica continua bloqueada. Uma implementacao futura precisa
 definir um contrato explicito de arquivo e categoria, conferir que o arquivo
 pertence a contribuicao e passou no scan, e cobrir autorizacao, idempotencia,
 concorrencia, copia R2/D1 e recuperacao de falhas com testes de ponta a ponta.
+O planner nao inclui os IDs dos anexos no contexto do modelo. A leitura admin
+verifica status limpo e caminho fora da quarentena, mas isso nao e uma etapa
+de promocao no executor. O executor pula apenas execucoes `completed`; ao
+repetir uma execucao `failed` ou `running`, tenta inserir a mesma chave unica
+de idempotencia, sem protocolo de retomada. Uma copia R2 e a gravacao no D1
+precisam de recuperacao explicita para falhas e concorrencia entre essas etapas.
 Outra opcao e o curador cadastrar manualmente pelo upload administrativo, com
 procedimento e decisao da contribuicao definidos separadamente; isso nao torna
 o plano automatico executavel.

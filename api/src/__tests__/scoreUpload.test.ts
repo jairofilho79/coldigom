@@ -79,6 +79,27 @@ async function upload(
 const item = (type: string, material_kind = 'violin'): Item => ({ key: 'file', material_kind, type });
 
 describe('admin score upload', () => {
+  it('recusa DTD em rootfile alternativo MusicXML sem extensão antes de gravar', async () => {
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8('<container><rootfiles><rootfile full-path="main.xml"/><rootfile full-path="alternativo" media-type="application/vnd.recordare.musicxml+xml"/></rootfiles></container>'),
+      'main.xml': strToU8(MUSICXML),
+      'alternativo': strToU8('<!DOCTYPE x [<!ENTITY x SYSTEM "file:///etc/passwd">]><x>&x;</x>'),
+    });
+    const { response, assets, db } = await upload([item('mxl')], [file(bytes, 'score.mxl')]);
+    expect(response.status).toBe(400);
+    expect(assets.put).not.toHaveBeenCalled();
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it('recusa uma parte sem compasso mesmo com outra parte válida', async () => {
+    const xml = MUSICXML.replace('</part-list>', '<score-part id="P2"><part-name>Outra</part-name></score-part></part-list>')
+      .replace('</score-partwise>', '<part id="P2"/></score-partwise>');
+    const { response, assets, db } = await upload([item('musicxml')], [file(strToU8(xml), 'invalida.musicxml')]);
+    expect(response.status).toBe(400);
+    expect(assets.put).not.toHaveBeenCalled();
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
   it('aceita MXL com media-type omitido e PDF alternativo', async () => {
     const bytes = zipSync({
       'META-INF/container.xml': strToU8('<container><rootfiles><rootfile full-path="main.xml"/><rootfile full-path="part.pdf" media-type="application/pdf"/></rootfiles></container>'),

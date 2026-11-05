@@ -17,6 +17,27 @@ const CONTAINER = 'META-INF/container.xml';
 const CONTAINER_NS = 'urn:oasis:names:tc:opendocument:xmlns:container';
 const MUSICXML_NS = 'http://www.musicxml.org/ns/musicxml';
 const MUSICXML_MEDIA = 'application/vnd.recordare.musicxml+xml';
+// XML 1.0 Fifth Edition NameStartChar / NameChar, sem ":" (NCName).
+// eslint-disable-next-line no-misleading-character-class -- XML permite marcas combinantes em NameChar.
+const NCNAME = /^[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u{10000}-\u{EFFFF}][A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u{10000}-\u{EFFFF}\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]*$/u;
+// Elementos cujo atributo id é xsd:ID em MusicXML 4.0; part e instrument
+// são IDREF e não devem ser incluídos na verificação de unicidade.
+const MUSICXML_ID_ELEMENTS = new Set([
+  'accidental-mark', 'accordion-registration', 'arpeggiate', 'articulations', 'barline',
+  'beam', 'bookmark', 'bracket', 'clef', 'coda', 'credit', 'credit-image', 'credit-symbol',
+  'credit-words', 'damp', 'damp-all', 'dashes', 'direction', 'direction-type', 'dynamics',
+  'eyeglasses', 'fermata', 'figured-bass', 'for-part', 'frame', 'glissando', 'grouping',
+  'harmony', 'harp-pedals', 'image', 'key', 'lyric', 'measure', 'measure-style', 'metronome',
+  'non-arpeggiate', 'notations', 'note', 'octave-shift', 'ornaments', 'other-direction',
+  'other-notation', 'pedal', 'percussion', 'player', 'principal-voice', 'print', 'rehearsal',
+  'scordatura', 'score-instrument', 'score-part', 'segno', 'slide', 'slur', 'sound',
+  'staff-divide', 'string-mute', 'symbol', 'technical', 'tied', 'time', 'transpose', 'tuplet',
+  'wedge', 'words',
+]);
+const MUSICXML_IDREF_ELEMENTS = new Set([
+  'instrument', 'instrument-change', 'instrument-link', 'midi-device', 'midi-instrument', 'part', 'play',
+]);
+const MUSICXML_PLAYER_IDREF_ELEMENTS = new Set(['assess', 'other-listen', 'other-listening', 'sync', 'wait']);
 // PUBLICs legados constam no catálogo oficial: w3c/musicxml v4.0/schema/catalog.xml.
 const PUBLIC_DTD_VERSIONS = ['1.0', '1.1', '2.0', '3.0', '3.1', '4.0'];
 
@@ -24,6 +45,12 @@ class InvalidScore extends Error {}
 
 function fail(reason: string): never {
   throw new InvalidScore(reason);
+}
+
+function normalizedId(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const normalized = value.replace(/[ \t\r\n]+/g, ' ').replace(/^ | $/g, '');
+  return NCNAME.test(normalized) ? normalized : undefined;
 }
 
 function safePath(name: string, directory = false): boolean {
@@ -63,8 +90,11 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
   };
   const parser = new SaxesParser({ xmlns: true });
   const ancestors: string[] = [];
+  const ids = new Set<string>();
+  const references: string[] = [];
   let doctype: { root: string; version: string } | undefined;
   let scorePartHasName = false;
+  let partHasMeasure = false;
   parser.on('error', () => fail('score_invalid_xml'));
   parser.on('processinginstruction', ({ target }) => {
     if (target.toLowerCase() === 'xml-stylesheet') fail('score_invalid_xml');
@@ -94,6 +124,21 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
       info.uri = tag.uri;
     }
     if (tag.uri === info.uri) {
+      if ((info.root === 'score-partwise' || info.root === 'score-timewise')
+        && MUSICXML_ID_ELEMENTS.has(tag.local) && tag.attributes.id !== undefined) {
+        const id = normalizedId(tag.attributes.id.value);
+        if (!id || ids.has(id)) info.invalidParts = true;
+        else ids.add(id);
+      }
+      if (info.root === 'score-partwise' || info.root === 'score-timewise') {
+        const attr = MUSICXML_IDREF_ELEMENTS.has(tag.local) ? tag.attributes.id
+          : MUSICXML_PLAYER_IDREF_ELEMENTS.has(tag.local) ? tag.attributes.player : undefined;
+        if (attr !== undefined) {
+          const idref = normalizedId(attr.value);
+          if (!idref) info.invalidParts = true;
+          else references.push(idref);
+        }
+      }
       if (ancestors.length === 1 && info.root === 'museScore' && tag.local === 'Score') info.scores++;
       if (container && ancestors.join('/') === 'container/rootfiles' && tag.local === 'rootfile') {
         const path = tag.attributes['full-path']?.value;
@@ -102,8 +147,8 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
         info.rootfiles.push({ path, media });
       }
       if (ancestors.length === 2 && ancestors[1] === 'part-list' && tag.local === 'score-part') {
-        const id = tag.attributes.id?.value;
-        if (!id || /\s/u.test(id) || info.scoreParts.has(id)) info.invalidParts = true;
+        const id = normalizedId(tag.attributes.id?.value);
+        if (!id || info.scoreParts.has(id)) info.invalidParts = true;
         else info.scoreParts.add(id);
         scorePartHasName = false;
       }
@@ -115,14 +160,18 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
         (info.root === 'score-partwise' && ancestors.length === 1)
         || (info.root === 'score-timewise' && ancestors.length === 2 && ancestors[1] === 'measure')
       )) {
-        const id = tag.attributes.id?.value;
-        if (!id || /\s/u.test(id)) info.invalidParts = true;
+        const id = normalizedId(tag.attributes.id?.value);
+        if (!id) info.invalidParts = true;
         else info.partReferences.push(id);
+        if (info.root === 'score-partwise') partHasMeasure = false;
       }
       if (ancestors.length === 2 && (
         (info.root === 'score-partwise' && ancestors[1] === 'part' && tag.local === 'measure')
         || (info.root === 'score-timewise' && ancestors[1] === 'measure' && tag.local === 'part')
-      )) info.musicalMeasures++;
+      )) {
+        info.musicalMeasures++;
+        if (info.root === 'score-partwise') partHasMeasure = true;
+      }
     }
     if ((info.root === 'score-partwise' || info.root === 'score-timewise')
       && tag.local.toLowerCase() === 'script') fail('score_invalid_xml');
@@ -133,9 +182,13 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
     if (ancestors.length === 3 && ancestors[1] === 'part-list' && ancestors[2] === 'score-part' && !scorePartHasName) {
       info.invalidParts = true;
     }
+    if (info.root === 'score-partwise' && ancestors.length === 2 && ancestors[1] === 'part' && !partHasMeasure) {
+      info.invalidParts = true;
+    }
     ancestors.pop();
   });
   parser.write(xml).close();
+  if (references.some((ref) => !ids.has(ref))) info.invalidParts = true;
   return info;
 }
 
@@ -321,10 +374,13 @@ export function scoreStructuralReason(bytes: Uint8Array, type: ScoreType): strin
       fail('score_container_mismatch');
     }
     if (!documents.has(target.path)) fail('score_missing_target');
+    const musicXmlPaths = new Set(type === 'mxl'
+      ? info.rootfiles.filter((f) => f.media === undefined || f.media === MUSICXML_MEDIA).map((f) => f.path)
+      : []);
     for (const [name, content] of documents) {
-      if (name === CONTAINER || (name !== target.path && !xmlEntry(name))) continue;
+      if (name === CONTAINER || (name !== target.path && !xmlEntry(name) && !musicXmlPaths.has(name))) continue;
       const doc = parseXml(content, false, type === 'mscz' && /\.mscx$/i.test(name) ? MAX_ENTRY : MAX_XML, !/\.mss$/i.test(name));
-      if (name === target.path) {
+      if (name === target.path || musicXmlPaths.has(name)) {
         const matches = type === 'mscz'
           ? doc.root === 'museScore' && doc.uri === '' && doc.scores === 1
           : isMusicXml(doc);

@@ -19,6 +19,66 @@ function museScoreArchive(score = '<museScore><Score/></museScore>', styleXml = 
 }
 
 describe('regressões da revisão de partituras', () => {
+  it.each([undefined, 'application/vnd.recordare.musicxml+xml'])(
+    'recusa DTD em rootfile MusicXML alternativo sem extensão e media-type %s',
+    (media) => {
+      const bad = '<!DOCTYPE x [<!ENTITY x SYSTEM "file:///etc/passwd">]><x>&x;</x>';
+      const bytes = zipSync({
+        'META-INF/container.xml': strToU8(`<container><rootfiles><rootfile full-path="main.xml"/><rootfile full-path="alternativo"${media ? ` media-type="${media}"` : ''}/></rootfiles></container>`),
+        'main.xml': strToU8(partwise),
+        'alternativo': strToU8(bad),
+      });
+      expect(checkStructural(bytes, 'mxl')).toMatchObject({ status: 'suspeita', reason: 'score_dtd_forbidden' });
+    },
+  );
+
+  it.each(['P1', '_nome', 'Ária', '名', '𝄞', 'a·b', 'a\u0301', 'a\u203fb'])(
+    'aceita NCName XML válido %s e normaliza espaços XSD em ID/IDREF', (id) => {
+      const xml = partwise.replace('id="P1"', `id="  ${id}  "`).replace('id="P1"', `id="&#x9;${id}&#xA;"`);
+      expect(checkStructural(strToU8(xml), 'musicxml').status).toBe('limpa');
+    },
+  );
+
+  it.each(['1id', '-id', '.id', 'a:b', 'a b', '\u0301a', 'a\u00a0b'])(
+    'rejeita ID ou IDREF que não é NCName XML: %s', (id) => {
+      const xml = partwise.replaceAll('id="P1"', `id="${id}"`);
+      expect(checkStructural(strToU8(xml), 'musicxml').status).toBe('suspeita');
+    },
+  );
+
+  it('recusa IDs duplicados após normalização XSD inclusive em outros elementos musicais', () => {
+    const duplicatedPart = partwise.replace('</part-list>', '<score-part id=" P1 "><part-name>Outra</part-name></score-part></part-list>');
+    const duplicatedNote = partwise.replace('<measure number="1"/>', '<measure number="1"><note id=" P1 "/></measure>');
+    for (const xml of [duplicatedPart, duplicatedNote]) {
+      expect(checkStructural(strToU8(xml), 'musicxml').status).toBe('suspeita');
+    }
+  });
+
+  it('valida outros IDREF do MusicXML e seus alvos após normalização', () => {
+    const withInstrument = partwise
+      .replace('</score-part>', '<score-instrument id="I1"><instrument-name>Voz</instrument-name></score-instrument></score-part>')
+      .replace('<measure number="1"/>', '<measure number="1"><note><instrument id=" I1 "/></note></measure>');
+    expect(checkStructural(strToU8(withInstrument), 'musicxml').status).toBe('limpa');
+    expect(checkStructural(strToU8(withInstrument.replace('id=" I1 "', 'id=" I2 "')), 'musicxml').status).toBe('suspeita');
+    expect(checkStructural(strToU8(withInstrument.replace('id=" I1 "', 'id=" 2inválido "')), 'musicxml').status).toBe('suspeita');
+  });
+
+  it('exige ao menos um compasso em cada parte partwise', () => {
+    const xml = partwise.replace('</part-list>', '<score-part id="P2"><part-name>Outra</part-name></score-part></part-list>')
+      .replace('</score-partwise>', '<part id="P2"/></score-partwise>');
+    expect(checkStructural(strToU8(xml), 'musicxml').status).toBe('suspeita');
+    expect(checkStructural(strToU8(xml.replace('<part id="P2"/>', '<part id="P2"><measure/></part>')), 'musicxml').status).toBe('limpa');
+  });
+
+  it('aceita rootfile MusicXML alternativo válido sem extensão', () => {
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8('<container><rootfiles><rootfile full-path="main.xml"/><rootfile full-path="alternativo" media-type="application/vnd.recordare.musicxml+xml"/></rootfiles></container>'),
+      'main.xml': strToU8(partwise),
+      'alternativo': strToU8(timewise),
+    });
+    expect(checkStructural(bytes, 'mxl').status).toBe('limpa');
+  });
+
   it.each([
     ['score.musicxml', undefined],
     ['score.xml', 'application/vnd.recordare.musicxml+xml'],

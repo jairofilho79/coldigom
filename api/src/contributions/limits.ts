@@ -1,0 +1,1 @@
+export const MAX_CONTRIBUTION_FILE_BYTES = 32 * 1024 * 1024;

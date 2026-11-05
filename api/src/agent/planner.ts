@@ -1,7 +1,8 @@
 import type { Env } from '../env';
 import { CURATOR_SYSTEM_PROMPT } from './curatorPrompt';
+import { isPromotableContributionFile, MATERIAL_TYPE_BY_ATTACHMENT_TYPE } from './addMaterial';
 import { getPraiseDetail, getChordContent, KNOWLEDGE_PACKAGE } from './mcpTools';
-import type { ContributionRow } from '../contributions/repo';
+import { listFiles, type ContributionRow } from '../contributions/repo';
 
 export type PlanTask = {
   id: string;
@@ -126,6 +127,20 @@ export async function planContribution(env: Env, contributionId: string): Promis
     .bind(contributionId)
     .first<{ intent: string; severity: string; urgency: string; requires_curation: number; is_actionable: number }>();
 
+  const files = contrib.scan_status === 'limpa' ? await listFiles(db, contrib.id) : [];
+  const eligibleAttachments = files
+    .filter((file) => isPromotableContributionFile(file, contrib.id))
+    .map((file) => ({
+      attachment_id: file.id,
+      original_name: file.original_name,
+      declared_type: file.declared_type,
+      material_type: MATERIAL_TYPE_BY_ATTACHMENT_TYPE[file.declared_type],
+      size: file.size,
+    }));
+  const materialKinds = contrib.scan_status === 'limpa'
+    ? (await db.prepare(`SELECT id, name FROM material_kinds ORDER BY name`).all<{ id: string; name: string }>()).results ?? []
+    : [];
+
   const promptUserContext = {
     contribution: {
       id: contrib.id,
@@ -149,6 +164,8 @@ export async function planContribution(env: Env, contributionId: string): Promis
     },
     target_praise_state: targetPraiseContext,
     target_chord_content: targetChordContent,
+    eligible_attachments: eligibleAttachments,
+    available_material_kinds: materialKinds,
     catalog_rules: KNOWLEDGE_PACKAGE,
   };
 

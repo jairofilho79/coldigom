@@ -1,5 +1,6 @@
 import type { Env } from '../env';
 import type { CanonicalPlan } from './planner';
+import { addContributionMaterial } from './addMaterial';
 
 type ExecutionResult = {
   ok: boolean;
@@ -64,6 +65,7 @@ export async function executePlan(
   const plan = JSON.parse(planRow.plan_json) as CanonicalPlan;
   const tasks = plan.tasks || [];
   const taskResults = new Map<string, Record<string, unknown>>();
+  const createdPraiseIds = new Set<string>();
   const errors: string[] = [];
   let executedCount = 0;
 
@@ -82,34 +84,70 @@ export async function executePlan(
     const existing = await db
       .prepare(`SELECT * FROM collaboration_task_executions WHERE idempotency_key = ?`)
       .bind(idempotencyKey)
-      .first<{ status: string; result_data: string | null }>();
+      .first<{ id: string; status: string; result_data: string | null }>();
 
     if (existing && existing.status === 'completed') {
-      try {
-        if (existing.result_data) {
-          taskResults.set(task.id, JSON.parse(existing.result_data));
+      if (existing.result_data) {
+        let resultData: Record<string, unknown>;
+        try {
+          const parsed = JSON.parse(existing.result_data) as unknown;
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('Resultado da tarefa concluída inválido');
+          }
+          resultData = parsed as Record<string, unknown>;
+        } catch (error) {
+          errors.push(`Task ${task.id}: resultado persistido inválido (${error instanceof Error ? error.message : String(error)})`);
+          break;
         }
-      } catch { /* vazio */ }
+        taskResults.set(task.id, resultData);
+        if (task.operation === 'create_praise') {
+          if (typeof resultData.id !== 'string') {
+            errors.push(`Task ${task.id}: resultado persistido não contém o ID do louvor`);
+            break;
+          }
+          createdPraiseIds.add(resultData.id);
+        }
+      } else if (task.operation === 'create_praise') {
+        errors.push(`Task ${task.id}: resultado persistido não contém o ID do louvor`);
+        break;
+      }
       executedCount++;
       continue;
     }
 
-    const execId = crypto.randomUUID();
-    await db
-      .prepare(
-        `INSERT INTO collaboration_task_executions (
-          id, plan_id, task_id, operation, status, idempotency_key, resolved_params
-        ) VALUES (?, ?, ?, ?, 'running', ?, ?)`
-      )
-      .bind(
-        execId,
-        planId,
-        task.id,
-        task.operation,
-        idempotencyKey,
-        JSON.stringify(resolvedParams)
-      )
-      .run();
+    let execId: string;
+    if (existing) {
+      if (task.operation !== 'add_material') {
+        errors.push(`Task ${task.id}: execução anterior não concluída; requer revisão antes de repetir`);
+        break;
+      }
+      execId = existing.id;
+      await db
+        .prepare(
+          `UPDATE collaboration_task_executions
+           SET status = 'running', error_message = NULL, executed_at = datetime('now')
+           WHERE id = ?`
+        )
+        .bind(execId)
+        .run();
+    } else {
+      execId = crypto.randomUUID();
+      await db
+        .prepare(
+          `INSERT INTO collaboration_task_executions (
+            id, plan_id, task_id, operation, status, idempotency_key, resolved_params
+          ) VALUES (?, ?, ?, ?, 'running', ?, ?)`
+        )
+        .bind(
+          execId,
+          planId,
+          task.id,
+          task.operation,
+          idempotencyKey,
+          JSON.stringify(resolvedParams)
+        )
+        .run();
+    }
 
     let res: ExecutionResult = { ok: false, error: 'Operação desconhecida' };
 
@@ -202,6 +240,19 @@ export async function executePlan(
             .run();
 
           res = { ok: true, data: { id: newId } };
+          createdPraiseIds.add(newId);
+          break;
+        }
+
+        case 'add_material': {
+          const material = await addContributionMaterial(
+            env,
+            planRow.contribution_id,
+            resolvedParams,
+            idempotencyKey,
+            createdPraiseIds
+          );
+          res = { ok: true, data: material };
           break;
         }
 
@@ -229,7 +280,7 @@ export async function executePlan(
         .prepare(
           `UPDATE collaboration_task_executions
            SET status = 'failed', error_message = ?
-           WHERE id = ?`
+           WHERE id = ? AND status <> 'completed'`
         )
         .bind(res.error || 'Erro desconhecido', execId)
         .run();

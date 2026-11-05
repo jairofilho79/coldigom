@@ -9,6 +9,7 @@
 import type { App } from '../env';
 import { requireAppUser } from '../appUser';
 import { declaredTypeFromName, headMatchesDeclared, IMAGE_TYPES, safeOriginalName, type DeclaredType } from '../contributions/sniff';
+import { MAX_CONTRIBUTION_FILE_BYTES } from '../contributions/limits';
 import { parsePayload } from '../contributions/schema';
 import { bumpQuotaStmt, dayUtc, MAX_DAILY_BYTES, MAX_DAILY_COUNT, readQuota, resetAtUtc } from '../contributions/quota';
 import { getContributionForUser, insertContributionStmt, insertFileStmt, listFiles, listFilesForContributions, listMine, toUserJson } from '../contributions/repo';
@@ -18,7 +19,7 @@ export const MAX_FILES = 5;
 // corpo, campos); 64 KiB é folgado para o maior formulário real e barato de
 // rejeitar antes do `JSON.parse` de um valor artificialmente enorme.
 export const MAX_PAYLOAD_BYTES = 64 * 1024;
-export const MAX_FILE_BYTES = 32 * 1024 * 1024;
+export const MAX_FILE_BYTES = MAX_CONTRIBUTION_FILE_BYTES;
 // O edge da Cloudflare já limita o corpo da requisição a 100 MB nos planos
 // Free/Pro — 5 arquivos de 32 MiB nunca chegam até aqui de qualquer forma.
 // Este teto (96 MiB) só existe para responder 413 com um erro nosso, cedo,

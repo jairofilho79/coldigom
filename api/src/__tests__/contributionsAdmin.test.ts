@@ -16,6 +16,7 @@ function db(opts: { linhas?: Linha[]; primeira?: Linha | null; arquivos?: Linha[
     all: vi.fn(async () => ({ results: /contribution_files/.test(sql) ? (opts.arquivos ?? []) : (opts.linhas ?? []) })),
     first: vi.fn(async () => {
       if (/COUNT\(\*\)/.test(sql)) return { total: opts.total ?? (opts.linhas?.length ?? 0) };
+      if (/collaboration_task_executions/.test(sql)) return null;
       if (/contribution_files/.test(sql)) return opts.arquivos?.[0] ?? null;
       return opts.primeira === undefined ? (opts.linhas?.[0] ?? null) : opts.primeira;
     }),

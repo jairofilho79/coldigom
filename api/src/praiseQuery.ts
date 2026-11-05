@@ -18,6 +18,8 @@ export interface PraiseResult {
   short_id?: string | null;
   /** Token de versão da tela: volta no PATCH como `if_updated_at`. */
   updated_at?: string | null;
+  is_reviewed: number;
+  reviewed_at: string | null;
   tag_ids: string | null;
 }
 

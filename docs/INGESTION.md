@@ -32,6 +32,36 @@ A migração `003` corrige rótulos (Score → Grade, Sheet Music → Partitura,
 
 Ambiente local: troque `--remote` por `--local` se estiver usando D1 local.
 
+### Revisão humana de louvores (migração 022)
+
+`praises.is_reviewed` registra que alguém revisou o louvor em algum momento;
+`reviewed_at` e `reviewed_by` registram a última marcação. Como a migração 022
+descreve uma marca de passagem pela curadoria e o PATCH só a altera quando
+`is_reviewed` é informado, a marca é **histórica**, não garantia de que os
+metadados e tags atuais permaneçam revisados. Edições não a desmarcam;
+desmarcar explicitamente limpa os três campos. Isso preserva o comportamento
+existente, sem presumir uma regra de invalidação não especificada.
+
+Os GETs públicos de louvor retornam a marca e a data, mas não `reviewed_by`.
+Para consultar também a identidade, use `GET /api/admin/praises/:id/review`,
+com a mesma autenticação e autorização das operações administrativas.
+
+O deploy do Worker é automático quando a API entra na `main`; portanto a
+coluna precisa existir **antes do merge/deploy**, apesar do número 022 ser
+anterior a migrações já presentes na main. A operação em produção é separada:
+
+1. Verifique a identidade do banco, histórico de aplicação, backup/recuperação e
+   o estado das três colunas e do índice, por exemplo com `PRAGMA table_info(praises)`
+   e consulta a `sqlite_master`. Não conclua que a migração falta só pelo número.
+2. Em uma cópia isolada representativa, valide a migração e os endpoints. Se as
+   três colunas e o índice já existirem conforme a definição, não reaplique.
+   Se houver estado parcial ou divergente, interrompa e prepare reparo específico.
+3. Só com autorização operacional e esquema anterior intacto, aplique uma vez
+   `cd api && wrangler d1 execute coldigom --remote --file=migrations/022_praise_is_reviewed.sql`.
+   Os `ALTER TABLE` não são idempotentes. Confira novamente o schema e os dados
+   antes de integrar o Worker. Se o deploy falhar, a versão anterior da API
+   continua compatível com as colunas adicionais; não remova dados sem plano.
+
 ### Fila de revisão da validação (P2)
 
 ```bash

@@ -62,4 +62,50 @@ describe('MaterialNotesInput', () => {
     expect(input).toHaveFocus();
     expect(onSave).not.toHaveBeenCalled();
   });
+
+  it('mantém a entrada vazia sem salvar quando o valor inicial é indefinido', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(<MaterialNotesInput value={undefined} onSave={onSave} />);
+    const input = screen.getByRole('textbox');
+    await user.click(input);
+    await user.tab();
+    expect(input).toHaveValue('');
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('desabilita a entrada durante o salvamento e permite voltar a editar', async () => {
+    const user = userEvent.setup();
+    let concluir!: () => void;
+    const onSave = vi.fn(() => new Promise<void>((resolve) => { concluir = resolve; }));
+    render(<MaterialNotesInput value="Soprano" onSave={onSave} className="nota-extra" />);
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveClass('nota-extra');
+    await user.clear(input);
+    await user.type(input, 'Alto{Enter}');
+    expect(input).toBeDisabled();
+    concluir();
+    await waitFor(() => expect(input).toBeEnabled());
+    expect(onSave).toHaveBeenCalledWith('Alto');
+  });
+
+  it('recupera entrada vazia quando o salvamento de uma nota falha', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockRejectedValue(new Error('falha'));
+    render(<MaterialNotesInput value={null} onSave={onSave} />);
+    const input = screen.getByRole('textbox');
+    await user.type(input, 'Alto{Enter}');
+    await waitFor(() => expect(input).toHaveValue(''));
+    expect(onSave).toHaveBeenCalledWith('Alto');
+  });
+
+  it('Enter não encerra a edição enquanto o IME está compondo', () => {
+    const onSave = vi.fn();
+    render(<MaterialNotesInput value="Tenor" onSave={onSave} />);
+    const input = screen.getByRole('textbox');
+    input.focus();
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+    expect(input).toHaveFocus();
+    expect(onSave).not.toHaveBeenCalled();
+  });
 });

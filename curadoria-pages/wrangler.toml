@@ -1,0 +1,8 @@
+name = "coldigom-curadoria"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "coldigom"
+database_id = "7186c208-a639-469e-810c-8e7401c16b33"

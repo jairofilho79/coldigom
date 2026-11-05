@@ -56,7 +56,6 @@ function ColunaLouvor({ id, papel }: { id: string; papel: string }) {
             {estado.praise.number && <span>nº {estado.praise.number}</span>}
             {estado.praise.author && <span>{estado.praise.author}</span>}
             {estado.praise.tonality && <span>{estado.praise.tonality}</span>}
-            {estado.praise.category && <span>{estado.praise.category}</span>}
             {estado.praise.tag_names && <span>{estado.praise.tag_names}</span>}
           </div>
           <pre className="vf-compare-letra">{estado.praise.lyrics || '(sem letra)'}</pre>

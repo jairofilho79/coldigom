@@ -31,29 +31,40 @@ function readStoredVolume(): number {
 type Props = {
   materials: Material[];
   getAssetUrl: (key: string) => string;
+  highlightMaterialId?: string;
   admin?: {
     materialKindOptions: SelectOption[];
     saving: boolean;
     onUpdateKind: (materialId: string, kind: string) => Promise<void>;
+    onUpdateNotes?: (materialId: string, notes: string | null) => Promise<void>;
     onDelete: (materialId: string) => Promise<void>;
     onMove?: (materialId: string, destino: PraiseDetail) => Promise<void>;
     onConvertToMp3?: (material: Material) => Promise<void>;
+    selectedIds?: Set<string>;
+    onToggleSelect?: (materialId: string, selected: boolean) => void;
   };
 };
 
-export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
+export function AudioPlayer({ materials, getAssetUrl, highlightMaterialId, admin }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const wasPlayingRef = useRef(false);
 
-  // A faixa é identificada pelo id, não pela posição: a lista encolhe embaixo
-  // do player quando o usuário remove um material, e um índice guardado apontava
-  // para o vazio (player inteiro sumia) ou para a faixa errada (trocava sozinho).
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(highlightMaterialId || null);
+  const [prevHighlight, setPrevHighlight] = useState<string | undefined>(highlightMaterialId);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(readStoredVolume);
   const [isMuted, setIsMuted] = useState(false);
+
+  if (highlightMaterialId !== prevHighlight) {
+    setPrevHighlight(highlightMaterialId);
+    if (highlightMaterialId && materials.some((m) => m.id === highlightMaterialId)) {
+      setSelectedId(highlightMaterialId);
+    }
+  }
+
+  const currentId = selectedId ?? highlightMaterialId ?? null;
 
   // Se a faixa escolhida saiu da lista, cai na primeira em vez de sumir.
   const current = materials.find(m => m.id === currentId) ?? materials[0];
@@ -150,7 +161,7 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
     (materialId: string) => {
       if (materialId === current?.id) return;
       wasPlayingRef.current = isPlaying;
-      setCurrentId(materialId);
+      setSelectedId(materialId);
       // Zerar o relógio é consequência do gesto, não sincronia com sistema
       // externo: num efeito isso virava render em cascata a cada troca de faixa.
       setCurrentTime(0);
@@ -161,8 +172,13 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
 
   if (!current) return null;
 
+  const isCardHighlighted = current.id === highlightMaterialId;
+
   return (
-    <div className="audio-player-card">
+    <div
+      id={`material-${current.id}`}
+      className={`audio-player-card${isCardHighlighted ? ' material-highlight-target' : ''}`}
+    >
       <audio
         ref={audioRef}
         className="audio-player-element"
@@ -183,11 +199,23 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
             options={admin.materialKindOptions}
             saving={admin.saving}
             onUpdateKind={admin.onUpdateKind}
+            onUpdateNotes={admin.onUpdateNotes}
             onDelete={admin.onDelete}
             onMove={admin.onMove}
+            selected={admin.selectedIds?.has(current?.id)}
+            onToggleSelect={
+              materials.length <= 1 && admin.onToggleSelect && current
+                ? (sel) => admin.onToggleSelect!(current.id, sel)
+                : undefined
+            }
           />
         ) : (
-          <span className="audio-player-track-name">{trackName}</span>
+          <span className="audio-player-track-name">
+            {trackName}
+            {current?.notes?.trim() ? (
+              <span className="material-notes-badge">{current.notes.trim()}</span>
+            ) : null}
+          </span>
         )}
         <div className="audio-player-meta">
           <span className="audio-player-type-badge">{(current?.type || 'mp3').toUpperCase()}</span>
@@ -283,22 +311,25 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
         <ul className="audio-track-list" aria-label="Faixas de áudio">
           {materials.map(m => {
             const isActive = m.id === current.id;
+            const isHighlighted = m.id === highlightMaterialId;
             const name = m.material_kind_name || 'Áudio';
             return (
               <li
                 key={m.id}
-                className={`audio-track-item${isActive ? ' is-active' : ''}`}
+                id={`material-${m.id}`}
+                className={`audio-track-item${isActive ? ' is-active' : ''}${isHighlighted ? ' material-highlight-target' : ''}`}
               >
                 <div className="audio-track-item-main">
                   <button
                     type="button"
-                    className="audio-track-select"
+                    className={`audio-track-select${admin ? ' audio-track-select--admin' : ''}`}
                     onClick={() => selectTrack(m.id)}
                     // Com `admin` o rótulo visível sai daqui (a categoria vira
                     // editável ao lado) e sobrava só o ícone `aria-hidden`: o
                     // botão não se anunciava e não havia como trocar de faixa
                     // por leitor de tela.
                     aria-label={admin ? `Tocar ${name}` : undefined}
+                    title={admin ? `Tocar ${name}` : undefined}
                   >
                     <span className="audio-track-icon" aria-hidden>
                       {isActive && isPlaying ? (
@@ -312,7 +343,14 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
                         </svg>
                       )}
                     </span>
-                    {!admin ? <span className="audio-track-label">{name}</span> : null}
+                    {!admin ? (
+                      <span className="audio-track-label">
+                        {name}
+                        {m.notes?.trim() ? (
+                          <span className="material-notes-badge">{m.notes.trim()}</span>
+                        ) : null}
+                      </span>
+                    ) : null}
                   </button>
                   {admin ? (
                     <MaterialInlineAdmin
@@ -320,8 +358,11 @@ export function AudioPlayer({ materials, getAssetUrl, admin }: Props) {
                       options={admin.materialKindOptions}
                       saving={admin.saving}
                       onUpdateKind={admin.onUpdateKind}
+                      onUpdateNotes={admin.onUpdateNotes}
                       onDelete={admin.onDelete}
                       onMove={admin.onMove}
+                      selected={admin.selectedIds?.has(m.id)}
+                      onToggleSelect={admin.onToggleSelect ? (sel) => admin.onToggleSelect!(m.id, sel) : undefined}
                     />
                   ) : null}
                   {m.r2_key && (

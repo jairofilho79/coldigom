@@ -7,7 +7,6 @@ export interface Praise {
   author: string;
   rhythm: string;
   tonality: string;
-  category: string;
   lyrics: string;
   group_id: string | null;
   tag_ids: string | null;
@@ -44,6 +43,8 @@ export interface Material {
   is_reviewed?: boolean;
   reviewed_at?: string | null;
   reviewed_by?: string | null;
+  /** Anotação rápida do arranjo/material (ex: I, II, Cifrado). */
+  notes?: string | null;
 }
 
 export interface Tag {
@@ -58,6 +59,38 @@ export interface PraiseGroupMember {
   tags: Tag[];
 }
 
+export interface PraiseDirectCitation {
+  referencia: string;
+  livro: string;
+  capitulo?: number;
+  versiculo_inicio?: number;
+  versiculo_fim?: number;
+  tipo?: string;
+  similaridade?: number | null;
+  origem?: string;
+}
+
+export interface PraiseBiblicalPericope {
+  ordem?: number;
+  livro?: string;
+  referencia: string;
+  titulo: string;
+  similarity: number;
+  match_tipo?: string;
+}
+
+export interface PraiseBiblicalInsight {
+  tem_citacao_direta: boolean;
+  referencia_principal: string | null;
+  resumo_uma_linha: string;
+  resumo_formatado: string;
+  citacoes_diretas?: PraiseDirectCitation[];
+  mensagem_central?: string | null;
+  temas_homileticos?: string[];
+  passagem_origem_direta?: string | null;
+  pericopes_relacionadas?: PraiseBiblicalPericope[];
+}
+
 export interface PraiseDetail extends Praise {
   /**
    * Token de versão para detecção de escrita concorrente. Vai de volta como
@@ -68,6 +101,7 @@ export interface PraiseDetail extends Praise {
   tags: Tag[];
   materials: Material[];
   group_members: PraiseGroupMember[];
+  biblical?: PraiseBiblicalInsight | null;
 }
 
 /** Display name for the default locale (pt-BR); resolved by the API from D1 translations. */
@@ -119,7 +153,6 @@ export interface TagWithCount extends Tag {
 export interface FilterOptions {
   rhythms: string[];
   tonalities: string[];
-  categories: string[];
   tags: TagWithCount[];
 }
 
@@ -130,7 +163,6 @@ export const VALID_SORT_FIELDS = [
   'name',
   'rhythm',
   'tonality',
-  'category',
   'author',
   'created_at',
 ] as const;
@@ -154,7 +186,9 @@ export const SORT_OPTIONS: SortOption[] = [
   { field: 'name', label: 'Nome', ascending: { label: 'Nome (A-Z)', order: 'asc' }, descending: { label: 'Nome (Z-A)', order: 'desc' } },
   { field: 'rhythm', label: 'Ritmo', ascending: { label: 'Ritmo (A-Z)', order: 'asc' }, descending: { label: 'Ritmo (Z-A)', order: 'desc' } },
   { field: 'tonality', label: 'Tom', ascending: { label: 'Tom (A-Z)', order: 'asc' }, descending: { label: 'Tom (Z-A)', order: 'desc' } },
-  { field: 'category', label: 'Categoria', ascending: { label: 'Categoria (A-Z)', order: 'asc' }, descending: { label: 'Categoria (Z-A)', order: 'desc' } },
   { field: 'author', label: 'Autor', ascending: { label: 'Autor (A-Z)', order: 'asc' }, descending: { label: 'Autor (Z-A)', order: 'desc' } },
   { field: 'created_at', label: 'Cadastro', ascending: { label: 'Mais antigos', order: 'asc' }, descending: { label: 'Mais recentes', order: 'desc' } },
 ];
+
+export * from './contributions';
+

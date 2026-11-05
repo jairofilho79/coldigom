@@ -85,15 +85,17 @@ describe('resolveTagFilterGroups', () => {
     expect(consultas).toHaveLength(1);
   });
 
-  it('troca a tag pelos filhos, e mantém a própria tag quando não tem filho', async () => {
+  it('devolve a própria tag e os filhos; sem filho, só ela', async () => {
+    // Era `filhos ?? [id]`: o pai sumia do grupo, e filtrar por PES ignorava
+    // os louvores ligados direto à raiz (spec seções da Coletânea, F6).
     const { db } = dbTags({ a: ['a1', 'a2'], b: ['b1'], c: [] });
     const grupos = await resolveTagFilterGroups(db, ['a', 'b', 'c']);
-    expect(grupos).toEqual([['a1', 'a2'], ['b1'], ['c']]);
+    expect(grupos).toEqual([['a', 'a1', 'a2'], ['b', 'b1'], ['c']]);
   });
 
   it('preserva a ordem das tags pedidas', async () => {
     const { db } = dbTags({ z: ['z1'], a: ['a1'] });
-    expect(await resolveTagFilterGroups(db, ['z', 'a'])).toEqual([['z1'], ['a1']]);
+    expect(await resolveTagFilterGroups(db, ['z', 'a'])).toEqual([['z', 'z1'], ['a', 'a1']]);
   });
 
   it('não consulta nada quando não há tag', async () => {

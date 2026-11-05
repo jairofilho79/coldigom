@@ -14,7 +14,7 @@ const FIXTURES = resolve(__dirname, '..', '..', '..', '..', 'api', 'src', 'gestu
 const EXEMPLO = readFileSync(resolve(FIXTURES, 'valido-exemplo.json'), 'utf8');
 
 const praise = {
-  id: 'p1', name: 'Quero viver pra sempre com Jesus', number: '182', author: '', rhythm: '', tonality: '', category: '', lyrics: '',
+  id: 'p1', name: 'Quero viver pra sempre com Jesus', number: '182', author: '', rhythm: '', tonality: '', lyrics: '',
   group_id: null, tag_ids: null, tag_names: null, tags: [], group_members: [],
   materials: [
     { id: 'g1', praise_id: 'p1', material_kind: 'k1', material_kind_name: 'Gestos', type: 'gestures', r2_key: 'assets/praises/p1/g1.gestures', file_path_legacy: '', source_material_id: 'pdf1', is_reviewed: false },
@@ -299,4 +299,36 @@ describe('GesturesEditorPage', () => {
     await waitFor(() => expect(screen.getByRole('combobox', { name: 'Instrução' })).toBeInTheDocument());
     expect(screen.queryByText(/Documento vazio/)).not.toBeInTheDocument();
   });
+
+  it('permite alternar para modo Raw, editar no textarea e os botões continuam funcionando', async () => {
+    const user = userEvent.setup();
+    const { put } = montar({ etag: '"v1"' });
+    put.mockResolvedValue({ etag: '"v2"' });
+    await waitFor(() => expect(document.querySelector('.gv-coro')).not.toBeNull());
+
+    // Clica na aba Raw
+    const tabRaw = screen.getByRole('tab', { name: 'Raw' });
+    await user.click(tabRaw);
+    expect(tabRaw).toHaveAttribute('aria-selected', 'true');
+
+    // Textarea está presente com o JSON
+    const textarea = screen.getByLabelText('Documento de gestos (JSON raw)');
+    expect(textarea).toBeInTheDocument();
+    expect(textarea).toHaveValue(JSON.stringify(JSON.parse(EXEMPLO), null, 2));
+
+    // Botões da barra de ações funcionam no modo raw (ex.: Adicionar instrução)
+    await user.click(screen.getByRole('button', { name: 'Adicionar instrução' }));
+    expect(textarea.value).toContain('"kind": "instruments"');
+
+    // Salvar funciona no modo raw
+    await user.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.getByText('Salvo.')).toBeInTheDocument());
+    expect(put).toHaveBeenCalledTimes(1);
+    expect(put.mock.calls[0][1].items.some((it: { type: string }) => it.type === 'instruction')).toBe(true);
+
+    // Alternar de volta para Visual reflete a instrução adicionada (2 originais + 1 nova)
+    await user.click(screen.getByRole('tab', { name: 'Visual' }));
+    expect(screen.getAllByRole('combobox', { name: 'Instrução' })).toHaveLength(3);
+  });
 });
+

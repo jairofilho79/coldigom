@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { GestureDocumentView } from '../components/gestures/GestureDocumentView';
 import { GesturesEditor } from '../components/gestures/GesturesEditor';
+import { GesturesRawEditor } from '../components/gestures/GesturesRawEditor';
 import { ReviewSwitch } from '../components/ReviewSwitch';
 import { useAuth } from '../context/useAuth';
 import { useMaterialContent } from '../hooks/useMaterialContent';
@@ -16,6 +17,17 @@ import {
 import type { PraiseDetail } from '../types';
 
 const TETO_DO_HISTORICO = 50;
+const CHAVE_MODO_GESTOR = 'coldigom_gestures_edit_mode';
+
+function modoInicial(): 'visual' | 'raw' {
+  try {
+    const salvo = window.localStorage.getItem(CHAVE_MODO_GESTOR);
+    if (salvo === 'raw' || salvo === 'visual') return salvo;
+  } catch {
+    // ignorar erro de storage
+  }
+  return 'visual';
+}
 
 function tituloPadrao(praise: PraiseDetail): string {
   const nome = praise.name.toUpperCase();
@@ -108,31 +120,47 @@ export function GesturesEditorPage() {
   const [conflito, setConflito] = useState<string | null>(null);
   const [abrirSeletor, setAbrirSeletor] = useState(0);
   const [aba, setAba] = useState<'editor' | 'preview'>('editor');
+  const [modoEdicao, setModoEdicao] = useState<'visual' | 'raw'>(modoInicial);
+  const [rawDraft, setRawDraft] = useState<string>('');
+  const rawDraftRef = useRef(rawDraft);
+  rawDraftRef.current = rawDraft;
+  const [erroSintaxe, setErroSintaxe] = useState<string | null>(null);
+
+  const alternarModo = (novoModo: 'visual' | 'raw') => {
+    if (novoModo === modoEdicao) return;
+    if (novoModo === 'visual' && erroSintaxe) {
+      setMensagem('Corrija o erro de sintaxe no JSON antes de alternar para o editor visual.');
+      return;
+    }
+    setModoEdicao(novoModo);
+    try {
+      window.localStorage.setItem(CHAVE_MODO_GESTOR, novoModo);
+    } catch {
+      // ignorar erro de storage
+    }
+  };
 
   // Trocar de material ou receber a base pela primeira vez zera o rascunho.
-  // Ajuste durante o render (em vez de um `useEffect`): `base` muda de identidade
-  // sempre que o GET termina ou uma gravação é aplicada, e um efeito rodaria DEPOIS
-  // do primeiro paint com o rascunho velho — o `set-state-in-effect` do lint acusa
-  // exatamente esse padrão. Comparar `base` com o valor visto da última vez decide
-  // se este render é o de troca, e o `setState` aqui é síncrono com ele.
-  // Exceção: quando a base só mudou porque `salvar` acabou de gravar
-  // (`gravado && base === gravado.doc`), `salvar` já decidiu o que fazer com o
-  // rascunho e o histórico — inclusive o caso de ter havido digitação durante o
-  // PUT, que este bloco não pode ver. Zerar aqui por cima apagaria isso.
   const [baseAnterior, setBaseAnterior] = useState<GestureDocument | null>(null);
   if (base !== baseAnterior) {
     setBaseAnterior(base);
     if (!(gravado && base === gravado.doc)) {
       setRascunho(base);
+      setRawDraft(base ? JSON.stringify(base, null, 2) : '');
       setPassado([]);
       setFuturo([]);
       setFoco(null);
       setErroNoCaminho(null);
       setConflito(null);
+      setErroSintaxe(null);
     }
   }
 
-  const sujo = rascunho !== null && base !== null && rascunho !== base;
+  const sujo =
+    base !== null &&
+    (modoEdicao === 'raw'
+      ? rawDraft !== JSON.stringify(base, null, 2)
+      : rascunho !== null && rascunho !== base);
   useEffect(() => {
     if (!sujo) return;
     const aoSair = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -140,13 +168,46 @@ export function GesturesEditorPage() {
     return () => window.removeEventListener('beforeunload', aoSair);
   }, [sujo]);
 
-  const validacao = useMemo(() => (rascunho ? validarDocumento(rascunho) : null), [rascunho]);
+  const validacao = useMemo(() => {
+    if (modoEdicao === 'raw' && erroSintaxe) return null;
+    return rascunho ? validarDocumento(rascunho) : null;
+  }, [rascunho, modoEdicao, erroSintaxe]);
+
+  const aoMudarRaw = (novoTexto: string) => {
+    setRawDraft(novoTexto);
+    setMensagem(null);
+    let lido: unknown;
+    try {
+      lido = JSON.parse(novoTexto);
+      setErroSintaxe(null);
+    } catch (e) {
+      setErroSintaxe(e instanceof Error ? e.message : 'Erro de sintaxe JSON');
+      return;
+    }
+
+    const r = validarDocumento(lido);
+    if (!r.ok) {
+      const c = caminhoDaChave(r.erro.caminho);
+      setErroNoCaminho(c ? chaveDoCaminho(c) : null);
+    } else {
+      setErroNoCaminho(null);
+      setRascunho((atual) => {
+        if (atual && JSON.stringify(atual) !== JSON.stringify(r.doc)) {
+          setPassado((p) => [...p.slice(-(TETO_DO_HISTORICO - 1)), atual]);
+        }
+        return r.doc;
+      });
+      setFuturo([]);
+    }
+  };
 
   const aplicar = useCallback((r: Resultado) => {
     setRascunho((atual) => {
       if (atual) setPassado((p) => [...p.slice(-(TETO_DO_HISTORICO - 1)), atual]);
       return r.doc;
     });
+    setRawDraft(JSON.stringify(r.doc, null, 2));
+    setErroSintaxe(null);
     setFuturo([]);
     setFoco(r.foco);
     setErroNoCaminho(null);
@@ -161,11 +222,10 @@ export function GesturesEditorPage() {
         if (atual) setFuturo((f) => [...f, atual]);
         return anterior;
       });
+      setRawDraft(JSON.stringify(anterior, null, 2));
+      setErroSintaxe(null);
       return p.slice(0, -1);
     });
-    // O foco pode apontar para um caminho que só existe do lado de cá do tempo
-    // (o cartão que Desfazer acabou de desmanchar): soltar aqui é mais simples e
-    // mais seguro que tentar validar o caminho contra a árvore de destino.
     setFoco(null);
     setErroNoCaminho(null);
   }, []);
@@ -178,6 +238,8 @@ export function GesturesEditorPage() {
         if (atual) setPassado((p) => [...p, atual]);
         return proximo;
       });
+      setRawDraft(JSON.stringify(proximo, null, 2));
+      setErroSintaxe(null);
       return f.slice(0, -1);
     });
     setFoco(null);
@@ -186,18 +248,35 @@ export function GesturesEditorPage() {
 
   const rascunhoRef = useRef(rascunho);
   rascunhoRef.current = rascunho;
-  // Espelha `base` como `rascunhoRef` espelha `rascunho`: `salvar` precisa do valor
-  // mais recente sem entrar nas deps do useCallback — senão ele mudaria de
-  // identidade a cada tecla, e o listener de teclado (que depende dele) recriaria
-  // junto, o mesmo problema que rascunhoRef evita para o próprio rascunho.
   const baseRef = useRef(base);
   baseRef.current = base;
 
   const salvar = useCallback(async () => {
-    const doc = rascunhoRef.current;
+    let doc: GestureDocument | null = null;
+    if (modoEdicao === 'raw') {
+      if (erroSintaxe) {
+        setMensagem('Corrija o erro de sintaxe no JSON antes de salvar.');
+        return;
+      }
+      try {
+        const lido = JSON.parse(rawDraftRef.current);
+        const v = validarDocumento(lido);
+        if (!v.ok) {
+          setMensagem(MENSAGENS[v.erro.codigo]);
+          const c = caminhoDaChave(v.erro.caminho);
+          setErroNoCaminho(c ? chaveDoCaminho(c) : null);
+          return;
+        }
+        doc = v.doc;
+      } catch (e) {
+        setMensagem(e instanceof Error ? e.message : 'JSON inválido');
+        return;
+      }
+    } else {
+      doc = rascunhoRef.current;
+    }
+
     if (!doc || !material?.r2_key || !servidor || servidor.status === 'invalido') return;
-    // Ctrl+S num documento intocado não pode gravar: o PUT reseta is_reviewed no
-    // servidor mesmo sem mudança nenhuma no conteúdo.
     if (doc === baseRef.current) return;
     const v = validarDocumento(doc);
     if (!v.ok) {
@@ -212,21 +291,18 @@ export function GesturesEditorPage() {
     try {
       const paraGravar: GestureDocument = { ...doc, dictionaryVersion: indice?.version ?? doc.dictionaryVersion };
       const { etag } = await putGesturesContent(material.id, paraGravar, servidor.etag);
-      // A pessoa pode ter continuado digitando enquanto o PUT viajava: `doc` é a
-      // foto de quando o clique aconteceu, `rascunhoRef.current` é o que está na
-      // tela agora. Sobrescrever o rascunho com `paraGravar` nesse caso jogaria
-      // fora o que foi digitado depois — o mesmo risco que `concluir` cobre no
-      // ChordProPage.
-      const mudouDurante = rascunhoRef.current !== doc;
+      const mudouDurante =
+        modoEdicao === 'raw'
+          ? rawDraftRef.current !== JSON.stringify(doc, null, 2)
+          : rascunhoRef.current !== doc;
       setGravado({ key: material.r2_key, doc: paraGravar, etag });
-      // O servidor reseta a marca de revisão a cada gravação; o switch na tela
-      // não pode continuar dizendo "Revisada" depois de um Salvar bem-sucedido.
       setPraise((p) => p && {
         ...p,
         materials: p.materials.map((m) => (m.id === material.id ? { ...m, is_reviewed: false, reviewed_at: null, reviewed_by: null } : m)),
       });
       if (!mudouDurante) {
         setRascunho(paraGravar);
+        setRawDraft(JSON.stringify(paraGravar, null, 2));
         setPassado([]);
         setFuturo([]);
         setMensagem('Salvo.');
@@ -247,7 +323,7 @@ export function GesturesEditorPage() {
     } finally {
       setSalvando(false);
     }
-  }, [material, servidor, indice?.version]);
+  }, [material, servidor, indice?.version, modoEdicao, erroSintaxe]);
 
   // teclado
   useEffect(() => {
@@ -259,9 +335,11 @@ export function GesturesEditorPage() {
         e.preventDefault();
         void salvar();
       } else if (k === 'z' && e.shiftKey) {
+        if ((e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
         e.preventDefault();
         refazer();
       } else if (k === 'z') {
+        if ((e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
         e.preventDefault();
         desfazer();
       } else if (k === 'enter') {
@@ -351,15 +429,45 @@ export function GesturesEditorPage() {
         <>
           {isAuthenticated ? (
             <div className="cp-edit-actions">
-              <button type="button" className="cp-edit-save" disabled={salvando || !sujo || !validacao?.ok} onClick={() => void salvar()}>
+              <button
+                type="button"
+                className="cp-edit-save"
+                disabled={salvando || !sujo || (modoEdicao === 'raw' ? !!erroSintaxe || !validacao?.ok : !validacao?.ok)}
+                onClick={() => void salvar()}
+              >
                 Salvar
               </button>
               <button type="button" className="ge-btn" disabled={passado.length === 0} onClick={desfazer}>Desfazer</button>
               <button type="button" className="ge-btn" disabled={futuro.length === 0} onClick={refazer}>Refazer</button>
-              {validacao && !validacao.ok ? (
+              {erroSintaxe ? (
+                <span className="cp-edit-issues" role="status">JSON inválido</span>
+              ) : validacao && !validacao.ok ? (
                 <span className="cp-edit-issues" role="status">{MENSAGENS[validacao.erro.codigo]}</span>
               ) : null}
               {mensagem ? <span className="cp-edit-issues" role="status" aria-live="polite">{mensagem}</span> : null}
+            </div>
+          ) : null}
+
+          {isAuthenticated ? (
+            <div className="cp-mode-tabs" role="tablist" aria-label="Modo de edição">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={modoEdicao === 'visual'}
+                className={`cp-mode-tab ${modoEdicao === 'visual' ? 'is-active' : ''}`}
+                onClick={() => alternarModo('visual')}
+              >
+                Visual
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={modoEdicao === 'raw'}
+                className={`cp-mode-tab ${modoEdicao === 'raw' ? 'is-active' : ''}`}
+                onClick={() => alternarModo('raw')}
+              >
+                Raw
+              </button>
             </div>
           ) : null}
 
@@ -381,16 +489,32 @@ export function GesturesEditorPage() {
           <div className={`ge-layout is-aba-${aba}`}>
             <section className="ge-coluna ge-coluna--editor" aria-label="Editor">
               {isAuthenticated ? (
-                <GesturesEditor
-                  doc={rascunho}
-                  indice={indice}
-                  foco={foco}
-                  onFoco={setFoco}
-                  onMudar={aplicar}
-                  erroNoCaminho={erroNoCaminho}
-                  abrirSeletor={abrirSeletor}
-                  onGestoCriado={(entrada) => setIndice((atual) => (atual ? adicionarAoIndice(atual, entrada) : atual))}
-                />
+                modoEdicao === 'raw' ? (
+                  <GesturesRawEditor
+                    raw={rawDraft}
+                    onRawChange={aoMudarRaw}
+                    doc={rascunho}
+                    indice={indice}
+                    foco={foco}
+                    onFoco={setFoco}
+                    onMudar={aplicar}
+                    erroSintaxe={erroSintaxe}
+                    erroValidacao={validacao && !validacao.ok ? MENSAGENS[validacao.erro.codigo] : null}
+                    abrirSeletor={abrirSeletor}
+                    onGestoCriado={(entrada) => setIndice((atual) => (atual ? adicionarAoIndice(atual, entrada) : atual))}
+                  />
+                ) : (
+                  <GesturesEditor
+                    doc={rascunho}
+                    indice={indice}
+                    foco={foco}
+                    onFoco={setFoco}
+                    onMudar={aplicar}
+                    erroNoCaminho={erroNoCaminho}
+                    abrirSeletor={abrirSeletor}
+                    onGestoCriado={(entrada) => setIndice((atual) => (atual ? adicionarAoIndice(atual, entrada) : atual))}
+                  />
+                )
               ) : (
                 <p className="ge-vazio">Entre com o Google para editar.</p>
               )}

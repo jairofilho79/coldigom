@@ -42,7 +42,7 @@ storage/
 
 **Referência de catálogos (tabelas lookup no D1):**
 - `material_kinds_unique.csv` → tabela `material_kinds`: ~100 tipos (Audio, Score, MIDI, Lyrics, Chord Chart, Vozes, Instrumentos, etc.)
-- `praise_tags_unique.csv` → tabela `tags`: Tags fixas (Coletânea, Avulsos, CIAs, GLTM, PES, Migrados, Diversos)
+- `praise_tags_unique.csv` → tabela `tags`: Tags fixas (Coletânea, Avulsos, CIAs, PES, Diversos; Migrados saiu na migração 028 e GLTM virou a subtag Avulsos · GLTM na 029)
 
 **Regras de ingestão:**
 - Ignorar completamente `metadata.yml` vazio (ex: 0 bytes).

@@ -88,27 +88,47 @@ function validFields(kind: Kind, subkind: string | null, fields: Record<string, 
   return true;
 }
 
+export function deriveTitle(body: string): string {
+  const lines = body.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+  const text = lines[0] ?? '';
+  if (text.length < 3) {
+    return 'Contribuição';
+  }
+  if (text.length > 80) {
+    return `${text.slice(0, 77)}...`;
+  }
+  return text;
+}
+
 export function parsePayload(raw: unknown): SchemaResult {
   if (!isRecord(raw)) return { ok: false, error: 'invalid_payload' };
 
-  const kind = raw.kind;
-  if (typeof kind !== 'string' || !(KINDS as readonly string[]).includes(kind)) return { ok: false, error: 'invalid_kind' };
-  const k = kind as Kind;
-
-  let subkind: string | null = null;
-  if (raw.subkind != null) {
-    if (typeof raw.subkind !== 'string' || !SUBKINDS[k].includes(raw.subkind)) return { ok: false, error: 'invalid_subkind' };
-    subkind = raw.subkind;
-  } else if (SUBKINDS[k].length > 0) {
-    return { ok: false, error: 'invalid_subkind' };
+  let k: Kind = 'other';
+  if (raw.kind !== undefined && raw.kind !== null) {
+    if (typeof raw.kind !== 'string' || !(KINDS as readonly string[]).includes(raw.kind as Kind)) {
+      return { ok: false, error: 'invalid_kind' };
+    }
+    k = raw.kind as Kind;
   }
 
-  const title = typeof raw.title === 'string' ? raw.title.trim() : '';
-  if (!title) return { ok: false, error: 'title_required' };
-  if (title.length > MAX_TITLE) return { ok: false, error: 'title_too_long' };
+  let subkind: string | null = null;
+  if (raw.subkind !== undefined && raw.subkind !== null) {
+    if (typeof raw.subkind !== 'string' || !SUBKINDS[k].includes(raw.subkind)) {
+      return { ok: false, error: 'invalid_subkind' };
+    }
+    subkind = raw.subkind;
+  }
+
   const body = typeof raw.body === 'string' ? raw.body.trim() : '';
   if (!body) return { ok: false, error: 'body_required' };
   if (body.length > MAX_BODY) return { ok: false, error: 'body_too_long' };
+
+  let title = typeof raw.title === 'string' ? raw.title.trim() : '';
+  if (!title) {
+    title = deriveTitle(body);
+  } else if (title.length > MAX_TITLE) {
+    return { ok: false, error: 'title_too_long' };
+  }
 
   let target: ContributionPayload['target'] = null;
   if (raw.target != null) {
@@ -141,12 +161,9 @@ export function parsePayload(raw: unknown): SchemaResult {
     }
   }
 
-  // device é exclusivo de `bug` (spec §3) — nos demais kinds, mesmo que o
-  // cliente mande algo em `device`, o servidor descarta em vez de gravar.
   let device: Record<string, unknown> | null = null;
-  if (k === 'bug') {
-    if (!isRecord(raw.device) || typeof raw.device.same_device !== 'boolean') return { ok: false, error: 'device_required' };
-    if (raw.device.same_device === false && !optString(raw.device.other_device_note)) return { ok: false, error: 'device_required' };
+  if (raw.device !== undefined && raw.device !== null) {
+    if (!isRecord(raw.device)) return { ok: false, error: 'invalid_device' };
     if (JSON.stringify(raw.device).length > MAX_DEVICE_BYTES) return { ok: false, error: 'device_too_large' };
     device = raw.device;
   }

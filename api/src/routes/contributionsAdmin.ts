@@ -17,9 +17,35 @@ function parseJson(s: string | null): unknown {
   }
 }
 
-/** Visão do admin: tudo, com os JSONs abertos. */
-function toAdminJson(row: ContributionRow, files: unknown[]) {
-  return { ...row, fields: parseJson(row.fields), links: parseJson(row.links), device: parseJson(row.device), scan_report: parseJson(row.scan_report), files };
+async function sha256Hex(text: string): Promise<string> {
+  const enc = new TextEncoder();
+  const hash = await crypto.subtle.digest('SHA-256', enc.encode(text));
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** Visão do admin: tudo, com os JSONs abertos, plano e triagem da IA quando houver. */
+function toAdminJson(
+  row: ContributionRow,
+  files: unknown[],
+  plan: unknown = null,
+  triage: unknown = null,
+  targetPraiseData: unknown = null,
+  targetChordContent: unknown = null
+) {
+  return {
+    ...row,
+    fields: parseJson(row.fields),
+    links: parseJson(row.links),
+    device: parseJson(row.device),
+    scan_report: parseJson(row.scan_report),
+    files,
+    plan,
+    triage,
+    target_praise_data: targetPraiseData,
+    target_chord_content: targetChordContent,
+  };
 }
 
 /**
@@ -78,14 +104,191 @@ export function registerContributionsAdminRoutes(app: App) {
       c.env.DB,
       rows.map((row) => row.id)
     );
-    const data = rows.map((row) => toAdminJson(row, filesByContribution.get(row.id) ?? []));
+    const { listTriagesForContributions } = await import('../agent/triage');
+    const triagesByContribution = await listTriagesForContributions(
+      c.env.DB,
+      rows.map((row) => row.id)
+    );
+    const data = rows.map((row) =>
+      toAdminJson(
+        row,
+        filesByContribution.get(row.id) ?? [],
+        null,
+        triagesByContribution.get(row.id) ?? null
+      )
+    );
     return c.json({ data, pagination: { page, limit: PAGE, total, totalPages: Math.max(1, Math.ceil(total / PAGE)) } });
   });
 
   app.get('/api/admin/contributions/:id', requireAuth, async (c) => {
     const row = await getContribution(c.env.DB, c.req.param('id') as string);
     if (!row) return c.json({ error: 'not_found' }, 404);
-    return c.json({ data: toAdminJson(row, await listFiles(c.env.DB, row.id)) });
+    const files = await listFiles(c.env.DB, row.id);
+
+    const planRow = await c.env.DB
+      .prepare(`SELECT * FROM collaboration_plans WHERE contribution_id = ? ORDER BY version DESC LIMIT 1`)
+      .bind(row.id)
+      .first<{ todos: string; plan_json: string; [k: string]: unknown }>();
+
+    let plan: Record<string, unknown> | null = null;
+    if (planRow) {
+      plan = {
+        ...planRow,
+        todos: parseJson(planRow.todos),
+        plan_json: parseJson(planRow.plan_json),
+      };
+    }
+
+    const { getTriage } = await import('../agent/triage');
+    const triage = await getTriage(c.env.DB, row.id);
+
+    let targetPraiseData: Record<string, unknown> | null = null;
+    let targetChordContent: string | null = null;
+    if (row.target_praise_id) {
+      try {
+        const { getPraiseDetail, getChordContent } = await import('../agent/mcpTools');
+        targetPraiseData = await getPraiseDetail(c.env.DB, row.target_praise_id);
+        if (row.target_material_id) {
+          targetChordContent = await getChordContent(c.env.ASSETS, c.env.DB, row.target_material_id);
+        } else {
+          const chordMat = await c.env.DB
+            .prepare(`SELECT id FROM praise_materials WHERE praise_id = ? AND type = 'chord' LIMIT 1`)
+            .bind(row.target_praise_id)
+            .first<{ id: string }>();
+          if (chordMat) {
+            targetChordContent = await getChordContent(c.env.ASSETS, c.env.DB, chordMat.id);
+          }
+        }
+      } catch { /* ignora se falhar */ }
+    }
+
+    return c.json({ data: toAdminJson(row, files, plan, triage, targetPraiseData, targetChordContent) });
+  });
+
+  // POST /api/admin/contributions/:id/triage - Executa triagem e classificação com Clef-Omni
+  app.post('/api/admin/contributions/:id/triage', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const row = await getContribution(c.env.DB, id);
+    if (!row) return c.json({ error: 'not_found' }, 404);
+
+    const { triageContribution } = await import('../agent/triage');
+    const triage = await triageContribution(c.env, id, { force: true });
+    return c.json({ ok: true, triage });
+  });
+
+  // POST /api/admin/contributions/:id/plan - Gera plano de TODOs com IA
+  app.post('/api/admin/contributions/:id/plan', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const row = await getContribution(c.env.DB, id);
+    if (!row) return c.json({ error: 'not_found' }, 404);
+
+    const { planContribution } = await import('../agent/planner');
+    const planId = await planContribution(c.env, id);
+
+    const planRow = await c.env.DB
+      .prepare(`SELECT * FROM collaboration_plans WHERE id = ?`)
+      .bind(planId)
+      .first<{ todos: string; plan_json: string; [k: string]: unknown }>();
+
+    let plan: Record<string, unknown> | null = null;
+    if (planRow) {
+      plan = {
+        ...planRow,
+        todos: parseJson(planRow.todos),
+        plan_json: parseJson(planRow.plan_json),
+      };
+    }
+
+    return c.json({ ok: true, planId, plan });
+  });
+
+  // POST /api/admin/contributions/:id/approve - Aprova plano (IA ou editado pelo curador) e executa deterministicamente no Cloudflare
+  app.post('/api/admin/contributions/:id/approve', requireAuth, async (c) => {
+    const id = c.req.param('id') as string;
+    const user = c.get('user');
+    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+
+    const customTasks = Array.isArray(body.tasks) ? (body.tasks as Record<string, unknown>[]) : undefined;
+    const customSummary = typeof body.summary === 'string' ? body.summary.trim() : undefined;
+    const customTodos = Array.isArray(body.todos) ? body.todos.map(String) : undefined;
+    const planId = (body.plan_id as string) || undefined;
+    const planHash = (body.plan_hash as string) || undefined;
+    const decisionNote = typeof body.decision_note === 'string' ? body.decision_note.trim() : undefined;
+
+    let targetPlanId = planId;
+
+    if (customTasks && customTasks.length > 0) {
+      // O curador editou o plano ou forneceu tarefas manuais
+      const newPlanId = crypto.randomUUID();
+      const summary = customSummary || 'Plano editado pelo curador';
+      const todos = customTodos || ['Alterações manuais aprovadas pelo curador'];
+      const canonicalPlan = { summary, todos, tasks: customTasks };
+      const canonicalJson = JSON.stringify(canonicalPlan);
+      const newPlanHash = await sha256Hex(canonicalJson);
+
+      const lastPlan = await c.env.DB
+        .prepare('SELECT version FROM collaboration_plans WHERE contribution_id = ? ORDER BY version DESC LIMIT 1')
+        .bind(id)
+        .first<{ version: number }>();
+      const nextVersion = (lastPlan?.version ?? 0) + 1;
+
+      await c.env.DB
+        .prepare(
+          `INSERT INTO collaboration_plans (
+            id, contribution_id, version, model_name, summary, todos,
+            plan_json, plan_hash, status
+          ) VALUES (?, ?, ?, 'curator_edit', ?, ?, ?, ?, 'pending_approval')`
+        )
+        .bind(
+          newPlanId,
+          id,
+          nextVersion,
+          summary,
+          JSON.stringify(todos),
+          canonicalJson,
+          newPlanHash
+        )
+        .run();
+
+      targetPlanId = newPlanId;
+    } else {
+      let planStmt = `SELECT * FROM collaboration_plans WHERE contribution_id = ?`;
+      const bindings: string[] = [id];
+      if (planId) {
+        planStmt += ` AND id = ?`;
+        bindings.push(planId);
+      } else {
+        planStmt += ` ORDER BY version DESC LIMIT 1`;
+      }
+
+      const plan = await c.env.DB.prepare(planStmt).bind(...bindings).first<{ id: string; plan_hash: string }>();
+      if (!plan) return c.json({ error: 'plan_not_found', message: 'Nenhum plano encontrado para aprovar' }, 404);
+
+      if (planHash && plan.plan_hash !== planHash) {
+        return c.json({ error: 'stale_plan', message: 'O plano foi modificado e precisa de nova aprovação' }, 409);
+      }
+      targetPlanId = plan.id;
+    }
+
+    if (decisionNote) {
+      await c.env.DB
+        .prepare(`UPDATE contributions SET decision_note = ? WHERE id = ?`)
+        .bind(decisionNote, id)
+        .run();
+    }
+
+    const { executePlan } = await import('../agent/executor');
+    const result = await executePlan(c.env, targetPlanId!, user.email || 'admin');
+
+    if (!result.ok) {
+      return c.json({ error: 'execution_failed', errors: result.errors }, 500);
+    }
+
+    return c.json({
+      ok: true,
+      message: 'Plano aprovado e executado com sucesso',
+      executed_tasks: result.executedCount,
+    });
   });
 
   app.get('/api/admin/contributions/:id/files/:fileId', requireAuth, async (c) => {

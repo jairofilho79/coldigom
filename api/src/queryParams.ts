@@ -92,7 +92,6 @@ export type FiltrosDeLista = {
   tags?: string[];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -129,7 +128,6 @@ export function parseFiltrosDeLista(
       tags: lista(q('tags')),
       rhythm: lista(q('rhythm')),
       tonality: lista(q('tonality')),
-      category: lista(q('category')),
       materialKinds: lista(q('materialKinds')),
       numberMin: numeros.numberMin,
       numberMax: numeros.numberMax,

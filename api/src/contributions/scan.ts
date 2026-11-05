@@ -255,6 +255,14 @@ export async function handleContribScanBatch(batch: MessageBatch<ContribScanMess
         }
       } else {
         message.ack();
+        if (out.status === 'pendente') {
+          try {
+            const { triageContribution } = await import('../agent/triage');
+            await triageContribution(env, message.body.contributionId);
+          } catch (triageErr) {
+            console.warn(JSON.stringify({ msg: 'contributions.triage_error', id: message.body.contributionId, err: String(triageErr) }));
+          }
+        }
       }
     } catch (err) {
       console.error(JSON.stringify({ msg: 'contributions.scan.error', id: message.body.contributionId, err: String(err) }));

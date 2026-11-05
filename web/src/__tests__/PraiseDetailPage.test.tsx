@@ -23,6 +23,7 @@ vi.mock('../services/api', async (importOriginal) => {
     ]),
     createPraise: vi.fn(),
     updatePraise: vi.fn(),
+    deletePraise: vi.fn(),
     getTags: vi.fn().mockResolvedValue([
       { id: 'tag1', name: 'Coletânea', parent_id: null },
       { id: 'tag2', name: 'Avulsos', parent_id: null },
@@ -93,7 +94,6 @@ const mockPraiseDetail: PraiseDetail = {
   author: 'Autor 1',
   rhythm: 'Avulsos',
   tonality: 'C',
-  category: 'Louvor',
   lyrics: 'Esta é a letra do louvor',
   group_id: null,
   tag_ids: 'tag1,tag2',
@@ -180,7 +180,20 @@ describe('PraiseDetailPage Component', () => {
     expect(screen.getByText('Autor 1')).toBeTruthy();
     expect(screen.getAllByText('Avulsos').length).toBeGreaterThan(0);
     expect(screen.getByText('C')).toBeTruthy();
-    expect(screen.getByText('Louvor')).toBeTruthy();
+  });
+
+  it('a ficha do louvor não mostra a categoria, mesmo que a API ainda a mande', async () => {
+    // A seção da Coletânea virou subtag e aparece nas tags; `category` só
+    // continua na resposta da API até a fase 3 do spec.
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+
+    const { container } = renderWithRouter('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await screen.findByText('Grande Deus');
+
+    const meta = container.querySelector('.detail-meta-row') as HTMLElement;
+    expect(meta).toBeTruthy();
+    expect(within(meta).queryByText('Categoria')).toBeNull();
+    expect(within(meta).queryByText('Louvor')).toBeNull();
   });
 
   it('should show download zip link without login', async () => {
@@ -397,6 +410,7 @@ describe('PraiseDetailPage Component', () => {
           })
         );
       });
+      expect(Object.keys(vi.mocked(createPraise).mock.calls[0][0])).not.toContain('category');
     });
 
     it('aponta o arquivo que a API recusaria e trava o envio até resolver', async () => {
@@ -546,7 +560,7 @@ describe('PraiseDetailPage Component', () => {
         'coldigom_rascunho_louvor',
         JSON.stringify({
           rota: '/praise/new',
-          edit: { name: 'Louvor Novo', number: '42', author: '', rhythm: '', tonality: '', category: '', lyrics: '' },
+          edit: { name: 'Louvor Novo', number: '42', author: '', rhythm: '', tonality: '', lyrics: '' },
           pendingTagIds: [],
           driveUrl: 'https://drive.google.com/drive/folders/abc',
         })
@@ -1217,9 +1231,12 @@ describe('acessibilidade do formulário e dos materiais', () => {
     });
     await user.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
 
-    for (const rotulo of ['Nome', 'Número', 'Autor', 'Ritmo', 'Tom', 'Categoria']) {
+    for (const rotulo of ['Nome', 'Número', 'Autor', 'Ritmo', 'Tom']) {
       expect(screen.getAllByLabelText(rotulo).length).toBeGreaterThan(0);
     }
+    // «Categoria» ainda nomeia o seletor (um botão) da categoria do MATERIAL em
+    // «Adicionar material»; o campo de texto da categoria do louvor saiu.
+    expect(screen.queryByRole('textbox', { name: 'Categoria' })).toBeNull();
   });
 
   it('a página tem um landmark principal', async () => {
@@ -2221,7 +2238,7 @@ describe('Edição dos demais campos de metadados', () => {
     (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
   });
 
-  it('edita número, autor, ritmo, tom e categoria e salva tudo junto', async () => {
+  it('edita número, autor, ritmo e tom e salva tudo junto, sem categoria', async () => {
     (updatePraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
     const user = userEvent.setup();
     renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
@@ -2236,12 +2253,6 @@ describe('Edição dos demais campos de metadados', () => {
     await user.type(screen.getByLabelText('Ritmo'), 'Coletânea');
     await user.clear(screen.getByLabelText('Tom'));
     await user.type(screen.getByLabelText('Tom'), 'D');
-    // "Categoria" também nomeia o seletor de categoria do painel "Adicionar
-    // material", que aparece junto em modo edição — o campo de metadado é o
-    // primeiro elemento com esse nome acessível.
-    const campoCategoria = screen.getAllByLabelText('Categoria')[0];
-    await user.clear(campoCategoria);
-    await user.type(campoCategoria, 'Adoração');
 
     await user.click(screen.getAllByRole('button', { name: 'Salvar' })[0]);
 
@@ -2253,11 +2264,13 @@ describe('Edição dos demais campos de metadados', () => {
           author: 'Outro Autor',
           rhythm: 'Coletânea',
           tonality: 'D',
-          category: 'Adoração',
         }),
         undefined
       );
     });
+    // O PATCH não pode reescrever a categoria que o script de dados preserva
+    // até a fase 3: a chave não vai, nem vazia.
+    expect(Object.keys(vi.mocked(updatePraise).mock.calls[0][1])).not.toContain('category');
   });
 });
 
@@ -2296,16 +2309,14 @@ describe('Tags: hint de catálogo esgotado e adição de tag existente', () => {
     ]);
   });
 
-  it('avisa quando não há tag disponível para adicionar', async () => {
-    // availableTags só fica vazio com displayTags também vazio quando toda tag
-    // do catálogo é "pai" de outra dentro dele — aqui, um par se referenciando
-    // mutuamente, só para forçar esse canto defensivo da tela.
+  it('avisa quando todas as tags do catálogo já estão no louvor', async () => {
+    // Antes o aviso exigia também que o louvor não tivesse tag nenhuma — só
+    // alcançável com um catálogo em que toda tag era pai de outra. Com as tags
+    // raiz oferecidas (§3.2 do spec), o caso real é este: o louvor já tem todas.
     (getTags as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: 'a', name: 'A', parent_id: 'b' },
-      { id: 'b', name: 'B', parent_id: 'a' },
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag2', name: 'Avulsos', parent_id: null },
     ]);
-    const praiseSemTags: PraiseDetail = { ...mockPraiseDetail, tags: [], tag_ids: '' };
-    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseSemTags);
     const user = userEvent.setup();
     renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
     await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy());
@@ -2314,6 +2325,37 @@ describe('Tags: hint de catálogo esgotado e adição de tag existente', () => {
     expect(
       await screen.findByText('Todas as tags do catálogo já estão associadas.')
     ).toBeTruthy();
+    expect(screen.queryByLabelText('Adicionar tag')).toBeNull();
+  });
+
+  it('oferece a tag raiz que tem subtags, além das subtags (§3.2)', async () => {
+    // A trava «Cannot attach a parent tag» saiu da API: ligar direto à raiz
+    // quer dizer «sem subtag específica». Antes a raiz com filhos sumia do
+    // seletor, e `Avulsos` deixaria de poder ser marcada depois de ganhar `GLTM`.
+    (getTags as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 'tag1', name: 'Coletânea', parent_id: null },
+      { id: 'tag1a', name: 'Clamor', parent_id: 'tag1' },
+      { id: 'tag3', name: 'GLTM', parent_id: null },
+    ]);
+    const praiseSemTags: PraiseDetail = { ...mockPraiseDetail, tags: [], tag_ids: '' };
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseSemTags);
+    (addPraiseTag as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ...praiseSemTags,
+      tags: [{ id: 'tag1', name: 'Coletânea', parent_id: null }],
+    });
+    const user = userEvent.setup();
+    renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeTruthy());
+    await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+    await user.click(await screen.findByLabelText('Adicionar tag'));
+    expect(screen.getByRole('option', { name: 'Coletânea · Clamor' })).toBeTruthy();
+    await user.click(screen.getByRole('option', { name: 'Coletânea' }));
+    await user.click(screen.getByRole('button', { name: 'Adicionar' }));
+
+    await waitFor(() => {
+      expect(addPraiseTag).toHaveBeenCalledWith('1b2b33ab-4dff-4014-8582-dcb9a92efbc8', 'tag1');
+    });
   });
 
   it('associa uma tag já existente do catálogo ao louvor', async () => {
@@ -2584,7 +2626,6 @@ describe('Campos e rótulos com dados incompletos', () => {
       author: null,
       rhythm: null,
       tonality: null,
-      category: null,
     };
     (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(praiseEsparso);
     const user = userEvent.setup();
@@ -2596,7 +2637,6 @@ describe('Campos e rótulos com dados incompletos', () => {
     expect((screen.getByLabelText('Autor') as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText('Ritmo') as HTMLInputElement).value).toBe('');
     expect((screen.getByLabelText('Tom') as HTMLInputElement).value).toBe('');
-    expect((screen.getAllByLabelText('Categoria')[0] as HTMLInputElement).value).toBe('');
   });
 
   it('subtag sem parent_name resolve o nome do pai pelo catálogo', async () => {
@@ -3507,5 +3547,274 @@ describe('Mais mensagens de erro sem instância de Error', () => {
 
     expect(await screen.findByText('Falha ao salvar metadados')).toBeTruthy();
   });
+
+  it('exibe destaque no material e card de contexto da colaboração quando indicado na URL', async () => {
+    const scrollIntoViewMock = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+    (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+
+    const mockContrib = {
+      id: 'c-test-1',
+      title: 'Remover PDF duplicado',
+      body: 'Este PDF está repetido e com tom errado',
+      user_name: 'Colaborador Teste',
+      user_email: 'colab@test.com',
+      target_praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+      target_material_id: 'mat1',
+      kind: 'wrong_info',
+      subkind: 'wrong_material',
+      fields: { motivo: 'duplicata' },
+      status: 'pendente' as const,
+      scan_status: 'limpa',
+      created_at: '2026-10-04',
+      updated_at: '2026-10-04',
+      files: [],
+    };
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            search: '?materialId=mat1&contributionId=c-test-1',
+            state: { contribution: mockContrib },
+          },
+        ]}
+      >
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // Deve exibir o card de contexto da colaboração
+    expect(await screen.findByText('Remover PDF duplicado')).toBeTruthy();
+    expect(screen.getByText('Este PDF está repetido e com tom errado')).toBeTruthy();
+    expect(screen.getByText(/Colaborador Teste/)).toBeTruthy();
+
+    // Deve colocar a classe de destaque no material alvo
+    const highlightedMat = document.getElementById('material-mat1');
+    expect(highlightedMat).toBeTruthy();
+    expect(highlightedMat?.classList.contains('material-highlight-target')).toBe(true);
+
+    // Deve ter chamado o scrollIntoView
+    await waitFor(() => {
+      expect(scrollIntoViewMock).toHaveBeenCalled();
+    });
+  });
+
+  it('exibe badge bíblico no cabeçalho e seção bíblica e homilética completa quando disponível', async () => {
+    vi.mocked(getPraise).mockResolvedValueOnce({
+      ...mockPraiseDetail,
+      biblical: {
+        tem_citacao_direta: true,
+        referencia_principal: 'Marcos 5:27-30',
+        resumo_uma_linha: 'Marcos 5:27-30 · Doze anos de sangue, e o manto que cura',
+        resumo_formatado: '📖 Marcos 5:27-30 · Doze anos de sangue...',
+        citacoes_diretas: [
+          {
+            referencia: 'Marcos 5:27-30',
+            livro: 'Marcos',
+            capitulo: 5,
+            versiculo_inicio: 27,
+            versiculo_fim: 30,
+          },
+        ],
+        mensagem_central: 'O toque da fé que rompe o desespero e traz libertação completa.',
+        temas_homileticos: ['Fé', 'Milagre', 'Cura'],
+        pericopes_relacionadas: [
+          {
+            ordem: 0,
+            referencia: 'Marcos 5:21-43',
+            titulo: 'Doze anos de sangue, e a filha de Jairo',
+            similarity: 99,
+            match_tipo: 'citacao_direta',
+          },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/praise/1b2b33ab-4dff-4014-8582-dcb9a92efbc8']}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/praise/:id" element={<PraiseDetailPage />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // Pill no cabeçalho
+    expect(await screen.findByText('📖 Marcos 5:27-30 · Doze anos de sangue...')).toBeInTheDocument();
+
+    // Seção bíblica & homilética
+    expect(screen.getByLabelText('Fundamento Bíblico e Homilética')).toBeInTheDocument();
+    expect(screen.getByText('O toque da fé que rompe o desespero e traz libertação completa.')).toBeInTheDocument();
+    expect(screen.getByText('#Fé')).toBeInTheDocument();
+    expect(screen.getByText('Doze anos de sangue, e a filha de Jairo')).toBeInTheDocument();
+    expect(screen.getByText('99% afinidade')).toBeInTheDocument();
+  });
+
+  describe('suporte ao campo notes em materiais', () => {
+    it('exibe badge com material.notes ao lado de material_kind_name e não exibe quando notes é nulo', async () => {
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          {
+            id: 'mat-pdf',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-partitura',
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+            r2_key: 'assets/pdf1.pdf',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'I',
+          },
+          {
+            id: 'mat-mp3',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-audio',
+            material_kind_name: 'Áudio',
+            type: 'mp3',
+            r2_key: 'assets/audio1.mp3',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: null,
+          },
+          {
+            id: 'mat-yt',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-video',
+            material_kind_name: 'Vídeo',
+            type: 'youtube',
+            url: 'https://youtu.be/video1',
+            r2_key: null,
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'Cifrado',
+          },
+        ],
+      });
+
+      renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      const badgeI = await screen.findByText('I');
+      expect(badgeI).toHaveClass('material-notes-badge');
+
+      const badgeCifrado = await screen.findByText('Cifrado');
+      expect(badgeCifrado).toHaveClass('material-notes-badge');
+
+      const allBadges = document.querySelectorAll('.material-notes-badge');
+      expect(allBadges).toHaveLength(2);
+    });
+
+    it('permite editar notes inline no modo edição e chama updateMaterial com valor trimado', async () => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          {
+            id: 'mat-pdf',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind1',
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+            r2_key: 'assets/x.pdf',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'I',
+          },
+        ],
+      });
+      (updateMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          {
+            id: 'mat-pdf',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind1',
+            material_kind_name: 'Partitura',
+            type: 'pdf',
+            r2_key: 'assets/x.pdf',
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'II',
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument());
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      await waitFor(() => expect(screen.getByText('Partituras')).toBeInTheDocument());
+      const pdfBlock = document.querySelector('.pdf-viewer-header') as HTMLElement;
+      const notesInput = within(pdfBlock).getByPlaceholderText('Nota/Voz, ex: I, II, Cifrado');
+      expect(notesInput).toHaveValue('I');
+
+      await user.clear(notesInput);
+      await user.type(notesInput, 'II{Enter}');
+
+      await waitFor(() => {
+        expect(updateMaterial).toHaveBeenCalledWith('mat-pdf', { notes: 'II' });
+      });
+    });
+
+    it('adiciona novo material com o campo opcional notes preenchido', async () => {
+      (getMe as ReturnType<typeof vi.fn>).mockResolvedValue(mockAdminUser);
+      (getPraise as ReturnType<typeof vi.fn>).mockResolvedValue(mockPraiseDetail);
+      (createMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ...mockPraiseDetail,
+        materials: [
+          ...mockPraiseDetail.materials,
+          {
+            id: 'mat-novo',
+            praise_id: '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+            material_kind: 'kind-novo',
+            material_kind_name: 'Vídeo YouTube',
+            type: 'youtube',
+            url: 'https://youtu.be/novo123',
+            r2_key: null,
+            file_path_legacy: '',
+            source_material_id: null,
+            notes: 'Voz Tenor',
+          },
+        ],
+      });
+
+      const user = userEvent.setup();
+      renderPraisePage('1b2b33ab-4dff-4014-8582-dcb9a92efbc8');
+
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument());
+      await user.click(screen.getByRole('button', { name: 'Editar' }));
+
+      const heading = await screen.findByRole('heading', { name: 'Adicionar material' });
+      const painel = heading.closest('.materials-panel') as HTMLElement;
+
+      await user.click(within(painel).getByLabelText('Tipo do material'));
+      await user.click(screen.getByRole('option', { name: 'YouTube' }));
+      await user.type(screen.getByLabelText('Link do YouTube'), 'https://youtu.be/novo123');
+      await user.type(screen.getByLabelText(/Nota \/ Complemento/), 'Voz Tenor');
+
+      await user.click(within(painel).getByRole('button', { name: 'Adicionar material' }));
+
+      await waitFor(() => {
+        expect(createMaterial).toHaveBeenCalledWith(
+          '1b2b33ab-4dff-4014-8582-dcb9a92efbc8',
+          expect.objectContaining({
+            type: 'youtube',
+            url: 'https://youtu.be/novo123',
+            notes: 'Voz Tenor',
+          })
+        );
+      });
+    });
+  });
 });
+
 

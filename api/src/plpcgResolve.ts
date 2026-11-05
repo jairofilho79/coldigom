@@ -44,3 +44,59 @@ export async function resolvePlpcgShortId(
     url: pdfUrl(origin, row.praise_id, row.material_id, row.r2_key),
   };
 }
+
+/** POST /api/plpcg/crosswalk — teto do lote (contrato C2 do spec coldigui 2026-09-23-fim-fonte-plpcg §7.2). */
+export const CROSSWALK_MAX_IDS = 500;
+
+/**
+ * Lote de pdf_id legados → material do coldigom, para o normalizador do app
+ * trocar de uma vez os ids que as listas e o offline ainda guardam.
+ *
+ * Um parâmetro só (`json_each`): o D1 recusa mais de 100 parâmetros por
+ * consulta, e o lote vai até 500. O praise é o DONO ATUAL do material
+ * (`pm.praise_id`), não o `cw.praise_id`: merge e move mudam o dono e o
+ * crosswalk fica para trás. JOIN interno como no /resolve: material apagado
+ * no app fica de fora em vez de virar uma URL para um 404.
+ */
+export const CROSSWALK_SQL = `
+  SELECT cw.pdf_id, pm.praise_id, pm.id AS material_id, pm.r2_key
+  FROM plpcg_crosswalk cw
+  JOIN praise_materials pm ON pm.id = cw.praise_material_id
+  WHERE cw.pdf_id IN (SELECT value FROM json_each(?))`;
+
+type CrosswalkRow = { pdf_id: string; praise_id: string; material_id: string; r2_key: string | null };
+
+export type PlpcgCrosswalkItem = { praiseId: string; materialId: string; url: string };
+
+/** `{"pdfIds": [string, …]}` com 1 a 500 itens; repetidos saem, a ordem fica. */
+export function parseCrosswalkBody(
+  body: unknown,
+): { ok: true; pdfIds: string[] } | { ok: false; error: string } {
+  const pdfIds =
+    body && typeof body === 'object' && !Array.isArray(body) ? (body as { pdfIds?: unknown }).pdfIds : undefined;
+  if (!Array.isArray(pdfIds) || pdfIds.length === 0 || !pdfIds.every((id) => typeof id === 'string')) {
+    return { ok: false, error: `pdfIds: lista de 1 a ${CROSSWALK_MAX_IDS} strings` };
+  }
+  if (pdfIds.length > CROSSWALK_MAX_IDS) {
+    return { ok: false, error: `pdfIds: no máximo ${CROSSWALK_MAX_IDS} por lote` };
+  }
+  return { ok: true, pdfIds: [...new Set(pdfIds as string[])] };
+}
+
+/** Os conhecidos, por pdf_id; os desconhecidos simplesmente não aparecem. */
+export async function resolvePlpcgCrosswalk(
+  db: D1Database,
+  pdfIds: string[],
+  origin: string,
+): Promise<Record<string, PlpcgCrosswalkItem>> {
+  const { results } = await db.prepare(CROSSWALK_SQL).bind(JSON.stringify(pdfIds)).all<CrosswalkRow>();
+  const items: Record<string, PlpcgCrosswalkItem> = {};
+  for (const r of results ?? []) {
+    items[r.pdf_id] = {
+      praiseId: r.praise_id,
+      materialId: r.material_id,
+      url: pdfUrl(origin, r.praise_id, r.material_id, r.r2_key),
+    };
+  }
+  return items;
+}

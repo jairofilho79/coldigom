@@ -16,7 +16,6 @@ vi.mock('../hooks/useFilters', () => ({
       tags: [],
       rhythm: [],
       tonality: [],
-      category: [],
       materialKinds: [],
       sort: 'number',
       order: 'asc',
@@ -35,7 +34,6 @@ describe('FilterBar Component', () => {
   const mockFilterOptions: FilterOptions = {
     rhythms: ['Avulsos', 'Coletânea'],
     tonalities: ['C', 'G', 'D'],
-    categories: ['Louvor', 'Adoração'],
     tags: [
       { id: 'tag1', name: 'Coletânea', parent_id: null, count: 10 },
       { id: 'tag2', name: 'Avulsos', parent_id: null, count: 5 },
@@ -114,14 +112,18 @@ describe('FilterBar Component', () => {
     expect(screen.getByRole('button', { name: /^Tom/ })).toBeTruthy();
   });
 
-  it('should render category dropdown', async () => {
+  it('não oferece o filtro Categoria, mesmo com a API ainda mandando categories', async () => {
+    // A categoria foi aposentada: as seções da Coletânea são subtags e aparecem
+    // nos chips de Coleções. A API segue mandando `categories` até a fase 3 do
+    // spec (o mock acima também manda), e a barra ignora.
     render(
       <MemoryRouter>
         <FilterBar />
       </MemoryRouter>
     );
 
-    expect((await screen.findAllByText('Categoria'))[0]).toBeTruthy();
+    await screen.findByText('Coleções');
+    expect(screen.queryByRole('button', { name: /^categoria/i })).toBeNull();
   });
 
   it('should open Materiais dropdown when clicked', async () => {
@@ -197,7 +199,7 @@ describe('o que a barra realmente entrega ao serviço', () => {
     // no network. Os testes daqui mockam o serviço, então nada disso aparecia —
     // o mock aceita null de bom grado. Verificar o TIPO do que sai é o que pega.
     (getFilterOptions as ReturnType<typeof vi.fn>).mockResolvedValue({
-      rhythms: [], tonalities: [], categories: [], tags: [],
+      rhythms: [], tonalities: [], tags: [],
     });
     (getMaterialKinds as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 

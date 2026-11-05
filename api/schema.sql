@@ -10,9 +10,9 @@ CREATE TABLE IF NOT EXISTS praises (
     author TEXT,                   -- Autor/Tradutor
     rhythm TEXT,                   -- Ritmo
     tonality TEXT,                 -- Tom
-    category TEXT,                 -- Categoria
     lyrics TEXT,                   -- Letra completa
     group_id TEXT,                 -- Shared id for same song / different arrangements
+    short_id TEXT,                 -- Id curto do louvor (migração 023): hex, único, imutável, atribuído pelo gatilho
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS praise_materials (
     is_reviewed INTEGER NOT NULL DEFAULT 0,  -- Passou por revisão humana
     reviewed_at TEXT,              -- Quando foi marcado como revisado
     reviewed_by TEXT,              -- Quem marcou
+    notes TEXT,                    -- Anotação rápida do arranjo/material (ex: I, II, Cifrado)
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
 );
@@ -59,12 +60,38 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_root_name ON tags(name) WHERE parent_
 CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_child_name ON tags(parent_id, name) WHERE parent_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_tags_parent_id ON tags(parent_id);
 
+-- Table: material_kind_classes
+-- Classes do filtro «Materiais» do app (migração 024): Metais, Banda…
+CREATE TABLE IF NOT EXISTS material_kind_classes (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    sort_order INTEGER NOT NULL UNIQUE
+);
+
+INSERT OR IGNORE INTO material_kind_classes (id, label, sort_order) VALUES
+    ('regencia', 'Regência e geral', 10),
+    ('letra', 'Letra e projeção', 20),
+    ('vozes', 'Vozes', 30),
+    ('madeiras', 'Madeiras', 40),
+    ('metais', 'Metais', 50),
+    ('percussao', 'Percussão', 60),
+    ('banda', 'Banda', 70),
+    ('cordas', 'Cordas', 80),
+    ('audio', 'Áudio e acompanhamento', 90),
+    ('midi', 'MIDI de ensaio', 100);
+
 -- Table: material_kinds
 -- Lookup table for material types (Audio, Score, MIDI, Lyrics, Chord Chart, Vozes, Instrumentos, etc.)
+-- class_id/parent_id/sort_order (migração 024): classe, família de um nível (pai raiz,
+-- mesma classe) e ordem de grade dentro da classe.
 CREATE TABLE IF NOT EXISTS material_kinds (
     id TEXT PRIMARY KEY,           -- UUID
-    name TEXT NOT NULL UNIQUE      -- Canonical kind name (ingestion source language)
+    name TEXT NOT NULL UNIQUE,     -- Canonical kind name (ingestion source language)
+    class_id TEXT REFERENCES material_kind_classes(id) ON DELETE SET NULL,
+    parent_id TEXT REFERENCES material_kinds(id) ON DELETE RESTRICT,
+    sort_order INTEGER
 );
+CREATE INDEX IF NOT EXISTS idx_material_kinds_parent_id ON material_kinds(parent_id);
 
 -- Display labels per locale (pt-BR first; SSOT for UI strings)
 CREATE TABLE IF NOT EXISTS material_kind_translations (
@@ -86,11 +113,10 @@ CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);
 CREATE INDEX IF NOT EXISTS idx_praises_number ON praises(number);
 CREATE INDEX IF NOT EXISTS idx_praises_group_id ON praises(group_id);
--- Filtros e a tela de opções: /api/praises/filters faz três SELECT DISTINCT
+-- Filtros e a tela de opções: /api/praises/filters faz dois SELECT DISTINCT
 -- sobre estas colunas a cada carregamento, e eram varreduras completas.
 CREATE INDEX IF NOT EXISTS idx_praises_rhythm ON praises(rhythm);
 CREATE INDEX IF NOT EXISTS idx_praises_tonality ON praises(tonality);
-CREATE INDEX IF NOT EXISTS idx_praises_category ON praises(category);
 
 -- Auth: rotating refresh tokens (opaque value hashed at rest; access JWT is short-lived in cookie)
 CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
@@ -239,7 +265,9 @@ CREATE TRIGGER IF NOT EXISTS praises_ad AFTER DELETE ON praises BEGIN
     INSERT INTO praises_fts(praises_fts, rowid, name, lyrics) VALUES('delete', old.rowid, old.name, old.lyrics);
 END;
 
-CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE ON praises BEGIN
+-- Só as colunas indexadas: o UPDATE do gatilho de short_id (migração 023) roda
+-- antes do praises_ai e não pode mandar ao FTS um 'delete' de linha não indexada.
+CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE OF name, lyrics ON praises BEGIN
     INSERT INTO praises_fts(praises_fts, rowid, name, lyrics) VALUES('delete', old.rowid, old.name, old.lyrics);
     INSERT INTO praises_fts(rowid, name, lyrics) VALUES (new.rowid, new.name, new.lyrics);
 END;
@@ -315,3 +343,118 @@ CREATE TABLE IF NOT EXISTS plpcg_crosswalk (
 );
 CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_short ON plpcg_crosswalk(short_id);
 CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id);
+
+-- short_id do praise (migração 023; spec coldigui 2026-09-23-fim-fonte-plpcg §7.1).
+-- A coluna está no CREATE TABLE praises acima. O contador começa em 0 num D1 novo;
+-- quem atribui é o gatilho praises_short_id_ai, em todo INSERT, por qualquer porta.
+CREATE TABLE IF NOT EXISTS app_meta (
+  key   TEXT PRIMARY KEY,
+  value INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO app_meta (key, value) VALUES ('short_id_next', 0);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_praises_short_id ON praises(short_id);
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_ai AFTER INSERT ON praises
+WHEN NEW.short_id IS NULL
+BEGIN
+  UPDATE praises
+  SET short_id = (SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next')
+  WHERE id = NEW.id;
+  UPDATE app_meta SET value = value + 1 WHERE key = 'short_id_next';
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_bi BEFORE INSERT ON praises
+WHEN NEW.short_id IS NOT NULL AND (
+  NEW.short_id GLOB '*[^0-9a-f]*'
+  OR length(NEW.short_id) < 3
+  OR (length(NEW.short_id) > 3 AND substr(NEW.short_id, 1, 1) = '0')
+  OR length(NEW.short_id) > length((SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next'))
+  OR (
+    length(NEW.short_id) = length((SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next'))
+    AND NEW.short_id >= (SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next')
+  )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'praises.short_id: só um valor já emitido pode ser reposto');
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_bu BEFORE UPDATE OF short_id ON praises
+WHEN OLD.short_id IS NOT NULL AND NEW.short_id IS NOT OLD.short_id
+BEGIN
+  SELECT RAISE(ABORT, 'praises.short_id é imutável');
+END;
+
+-- Planos do Assistente de Acervo (migração 030). Ver migrations/030_collaboration_plans.sql.
+CREATE TABLE IF NOT EXISTS collaboration_plans (
+  id               TEXT PRIMARY KEY,
+  contribution_id  TEXT NOT NULL REFERENCES contributions(id) ON DELETE CASCADE,
+  version          INTEGER NOT NULL DEFAULT 1,
+  model_name       TEXT NOT NULL,
+  summary          TEXT NOT NULL,
+  todos            TEXT NOT NULL,
+  plan_json        TEXT NOT NULL,
+  plan_hash        TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'pending_approval',
+  decided_at       TEXT,
+  decided_by       TEXT,
+  decision_note    TEXT,
+  created_at       TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_colab_plans_colab ON collaboration_plans(contribution_id);
+CREATE INDEX IF NOT EXISTS idx_colab_plans_status ON collaboration_plans(status);
+
+CREATE TABLE IF NOT EXISTS collaboration_task_executions (
+  id               TEXT PRIMARY KEY,
+  plan_id          TEXT NOT NULL REFERENCES collaboration_plans(id) ON DELETE CASCADE,
+  task_id          TEXT NOT NULL,
+  operation        TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'pending',
+  idempotency_key  TEXT NOT NULL UNIQUE,
+  resolved_params  TEXT NOT NULL,
+  result_data      TEXT,
+  error_message    TEXT,
+  executed_at      TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_exec_plan ON collaboration_task_executions(plan_id);
+
+-- Triagem e Classificação com IA de Decisão Clef-Omni (migração 032).
+CREATE TABLE IF NOT EXISTS contribution_triages (
+  id                  TEXT PRIMARY KEY,
+  contribution_id     TEXT NOT NULL UNIQUE REFERENCES contributions(id) ON DELETE CASCADE,
+  model_name          TEXT NOT NULL DEFAULT '@cf/cloudflare/clef-omni',
+  intent              TEXT NOT NULL,
+  severity            TEXT NOT NULL,
+  urgency             TEXT NOT NULL,
+  is_actionable       INTEGER NOT NULL DEFAULT 1,
+  requires_curation   INTEGER NOT NULL DEFAULT 0,
+  recommended_action  TEXT NOT NULL,
+  confidence          REAL NOT NULL DEFAULT 1.0,
+  scores_json         TEXT NOT NULL,
+  state_summary       TEXT NOT NULL,
+  created_at          TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_contrib_triage_contrib ON contribution_triages(contribution_id);
+CREATE INDEX IF NOT EXISTS idx_contrib_triage_intent  ON contribution_triages(intent);
+CREATE INDEX IF NOT EXISTS idx_contrib_triage_urgency ON contribution_triages(urgency);
+
+-- Metadados bíblicos e homiléticos dos louvores (migração 033).
+CREATE TABLE IF NOT EXISTS praise_biblical (
+  praise_id                   TEXT PRIMARY KEY REFERENCES praises(id) ON DELETE CASCADE,
+  tem_citacao_direta          INTEGER NOT NULL DEFAULT 0,
+  referencia_principal        TEXT,
+  resumo_uma_linha            TEXT,
+  resumo_formatado            TEXT,
+  citacoes_diretas_json       TEXT NOT NULL DEFAULT '[]',
+  mensagem_central            TEXT,
+  temas_homileticos_json      TEXT NOT NULL DEFAULT '[]',
+  passagem_origem_direta      TEXT,
+  pericopes_relacionadas_json TEXT NOT NULL DEFAULT '[]',
+  created_at                  TEXT DEFAULT (datetime('now')),
+  updated_at                  TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_praise_biblical_ref ON praise_biblical(referencia_principal);

@@ -19,12 +19,34 @@ falhas aparecem no formulario e permitem uma nova tentativa.
 
 Uploads e contribuicoes compartilham a validacao estrutural de partitura:
 ZIP ate 16 MiB, 128 entradas, 8 MiB por entrada, 16 MiB descomprimidos,
-razao de expansao maxima 200, XML ate 4 MiB, container ate 64 KiB e
-profundidade XML ate 64. Caminhos inseguros, CRC divergente e arquivos
-truncados sao rejeitados.
+razao de expansao maxima 200, XML ate 4 MiB (MSCX em MSCZ ate 8 MiB),
+container ate 64 KiB e profundidade XML ate 64. Caminhos inseguros, CRC
+divergente e arquivos truncados sao rejeitados. Containers MSCZ podem listar
+arquivos auxiliares, mas devem apontar para exatamente um MSCX e cada referencia
+deve existir e ser segura. Arquivos MSS tambem sao analisados como XML.
 
 DOCTYPEs PUBLIC oficiais do MusicXML sao aceitos sem resolucao externa.
 DTD arbitraria, entidades e subconjuntos internos permanecem proibidos.
+Instrucoes `xml-stylesheet` e elementos `script` em MusicXML sao rejeitados.
+MusicXML precisa de lista de partes com `score-part` e ao menos um compasso
+em uma parte; essa triagem nao e uma validacao completa do schema musical.
+
+## Bloqueio de curadoria de contribuicoes
+
+O prompt de curadoria ja anunciava `add_material` antes desta entrega; este PR
+acrescenta os formatos de partitura ao anuncio. O executor nao implementa essa
+operacao: aprovar um plano que a contenha retorna erro e tarefas anteriores
+podem ja ter sido aplicadas. O plano tambem nao identifica qual arquivo da
+contribuicao deve ser promovido. Nao aprovar plano vazio como alternativa:
+o executor pode marca-lo como aplicado sem cadastrar o material.
+
+A promocao automatica continua bloqueada. Uma implementacao futura precisa
+definir um contrato explicito de arquivo e categoria, conferir que o arquivo
+pertence a contribuicao e passou no scan, e cobrir autorizacao, idempotencia,
+concorrencia, copia R2/D1 e recuperacao de falhas com testes de ponta a ponta.
+Outra opcao e o curador cadastrar manualmente pelo upload administrativo, com
+procedimento e decisao da contribuicao definidos separadamente; isso nao torna
+o plano automatico executavel.
 
 ## Contrato de leitura
 

@@ -374,8 +374,12 @@ export type PlpcgCatalogKind = {
  * `assets/praises/<praiseId>/<materialId>.<type>` direto, sem mapa de
  * alias como `audio` → `mp3`). `youtube` fica de fora de propósito: não tem
  * objeto no R2, o material vive só por `url`.
+ * Partituras mantêm a extensão mscz/mxl/musicxml; SoundFonts são assets
+ * compartilhados, não materiais de louvor.
  */
-const CATALOG_R2_TYPES = new Set(['pdf', 'mp3', 'audio', 'chord', 'gestures']);
+const CATALOG_R2_TYPES = new Set([
+  'pdf', 'mp3', 'audio', 'chord', 'gestures', 'mscz', 'mxl', 'musicxml',
+]);
 
 /** r2_key que o app reconstrói para este material; `null` quando o tipo não vive no R2. */
 export function derivedCatalogR2Key(praiseId: string, materialId: string, type: string): string | null {

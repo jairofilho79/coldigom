@@ -1,4 +1,5 @@
 import { looksLikeText, sniffType, type DeclaredType } from './sniff';
+import { scoreStructuralReason } from './scoreStructure';
 
 export type StructuralVerdict = {
   status: 'limpa' | 'suspeita';
@@ -91,6 +92,12 @@ function id3ApicTooLarge(bytes: Uint8Array): boolean {
 }
 
 export function checkStructural(bytes: Uint8Array, declared: DeclaredType): StructuralVerdict {
+  if (declared === 'mscz' || declared === 'mxl' || declared === 'musicxml') {
+    const reason = scoreStructuralReason(bytes, declared);
+    return reason
+      ? { status: 'suspeita', detectedType: null, tokens: [], reason }
+      : { status: 'limpa', detectedType: declared, tokens: [] };
+  }
   if (declared === 'txt' || declared === 'chordpro') {
     // Texto não tem assinatura binária de cabeçalho para conferir contra os 16
     // primeiros bytes — a checagem real é sobre o buffer inteiro (tamanho e UTF-8).
@@ -101,7 +108,7 @@ export function checkStructural(bytes: Uint8Array, declared: DeclaredType): Stru
 
   const head = bytes.subarray(0, 16);
   const sniffed = sniffType(head);
-  const detectedType: DeclaredType | null = sniffed === 'text' ? null : sniffed;
+  const detectedType: DeclaredType | null = sniffed === 'text' || sniffed === 'zip' ? null : sniffed;
   if (sniffed !== declared) {
     return { status: 'suspeita', detectedType, tokens: [], reason: 'signature_mismatch' };
   }

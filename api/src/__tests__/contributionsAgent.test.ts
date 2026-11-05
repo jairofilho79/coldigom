@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { app } from '../index';
 import { planContribution } from '../agent/planner';
 import { executePlan } from '../agent/executor';
+import * as addMaterialModule from '../agent/addMaterial';
 
 const TEST_JWT_SECRET = '0123456789abcdef0123456789abcdef';
 const TEST_WEB_ORIGIN = 'https://web.example';
@@ -140,6 +141,77 @@ describe('AI Agent Planner & Executor', () => {
     const updateContrib = executedQueries.find((q) => q.sql.includes('UPDATE contributions'));
     expect(updateContrib).toBeDefined();
     expect(updateContrib?.bindings).toContain('admin@coldigom.com');
+  });
+
+  it('executePlan entrega materiais criados no próprio plano ao serviço de materiais', async () => {
+    const canonicalPlan = {
+      summary: 'Criar louvor e adicionar partitura',
+      todos: ['Criar louvor', 'Adicionar partitura'],
+      tasks: [
+        {
+          id: 'create_praise',
+          operation: 'create_praise',
+          params: { name: 'Louvor novo' },
+        },
+        {
+          id: 'add_material',
+          operation: 'add_material',
+          depends_on: ['create_praise'],
+          params: {
+            praise_id: 'task:create_praise.result.id',
+            attachment_id: 'file-1',
+            material_kind_id: 'kind-score',
+            type: 'musicxml',
+          },
+        },
+      ],
+    };
+    const planRow = {
+      id: 'plan-material',
+      contribution_id: 'contrib-material',
+      plan_json: JSON.stringify(canonicalPlan),
+      status: 'pending_approval',
+    };
+    const executedQueries: { sql: string; bindings: unknown[] }[] = [];
+    const mockDb = {
+      prepare: vi.fn((sql: string) => ({
+        bind: vi.fn((...bindings: unknown[]) => ({
+          first: vi.fn(async () => {
+            if (sql.includes('FROM collaboration_plans')) return planRow;
+            if (sql.includes('FROM collaboration_task_executions')) return null;
+            return null;
+          }),
+          run: vi.fn(async () => {
+            executedQueries.push({ sql, bindings });
+            return { meta: { changes: 1 } };
+          }),
+        })),
+      })),
+    };
+    const materialResult = { material_id: 'material-1', r2_key: 'assets/praises/praise-1/material-1.musicxml' };
+    const addMaterialSpy = vi
+      .spyOn(addMaterialModule, 'addContributionMaterial')
+      .mockResolvedValue(materialResult);
+
+    try {
+      const env = { DB: mockDb, ASSETS: {} } as unknown as Parameters<typeof executePlan>[0];
+      const result = await executePlan(env, 'plan-material', 'admin@coldigom.com');
+
+      expect(result.ok).toBe(true);
+      expect(result.executedCount).toBe(2);
+      expect(addMaterialSpy).toHaveBeenCalledOnce();
+      const [, contributionId, params, , createdPraiseIds] = addMaterialSpy.mock.calls[0];
+      expect(contributionId).toBe('contrib-material');
+      expect(params.praise_id).toBe(executedQueries.find((query) => query.sql.includes('INSERT INTO praises'))?.bindings[0]);
+      expect(createdPraiseIds.has(String(params.praise_id))).toBe(true);
+      expect(
+        executedQueries.some(
+          (query) => query.sql.includes("SET status = 'completed'") && query.bindings[0] === JSON.stringify(materialResult)
+        )
+      ).toBe(true);
+    } finally {
+      addMaterialSpy.mockRestore();
+    }
   });
 
   it('executePlan resolve dependências dinâmicas entre tarefas encadeadas', async () => {
@@ -598,9 +670,9 @@ describe('MCP Tools & Workers AI Flow', () => {
     };
 
     const mockDb = {
-      prepare: vi.fn(() => ({
+      prepare: vi.fn((sql: string) => ({
         bind: vi.fn(() => ({
-          first: vi.fn(async () => planRow),
+          first: vi.fn(async () => sql.includes('FROM collaboration_plans') ? planRow : null),
           run: vi.fn(async () => ({ meta: { changes: 1 } })),
         })),
       })),
@@ -683,4 +755,3 @@ describe('MCP Tools & Workers AI Flow', () => {
     expect(approveRes.status).toBe(404);
   });
 });
-

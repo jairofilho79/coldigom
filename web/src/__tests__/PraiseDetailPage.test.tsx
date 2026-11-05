@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PraiseDetailPage } from '../pages/PraiseDetailPage';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -1885,6 +1885,103 @@ describe('Adicionar um único material (painel de admin)', () => {
     const painel = heading.closest('.materials-panel') as HTMLElement;
     return { user, painel };
   }
+
+  it.each([
+    ['mscz', 'Partitura MSCZ (MuseScore)'],
+    ['mxl', 'Partitura MXL'],
+    ['musicxml', 'Partitura MusicXML'],
+  ])('adiciona %s sem conversão, preservando a categoria instrumental', async (type, label) => {
+    vi.mocked(getMaterialKinds).mockResolvedValueOnce([{ id: 'violin', name: 'Violino' }]);
+    vi.mocked(bulkUploadMaterials).mockResolvedValue({
+      ...mockPraiseDetail,
+      materials: [...mockPraiseDetail.materials, {
+        id: 'score-1', praise_id: mockPraiseDetail.id, material_kind: 'violin',
+        material_kind_name: 'Violino', type, r2_key: `assets/score.${type}`, source_material_id: null,
+      }],
+    });
+    const { user, painel } = await abrirPainelAdicionar();
+    await user.click(within(painel).getByLabelText('Tipo do material'));
+    await user.click(screen.getByRole('option', { name: label }));
+    const add = within(painel).getByRole('button', { name: 'Adicionar material' });
+    expect(add).toBeDisabled();
+    const input = within(painel).getByLabelText('Escolher partitura');
+    expect(input).toHaveAttribute('accept', expect.stringContaining(`.${type}`));
+    expect(within(painel).getByText(/leitura.*coldigui/i)).toBeTruthy();
+
+    const score = new File(['score'], `Louvor.${type.toUpperCase()}`);
+    await user.upload(input, score);
+    expect(within(painel).getByText(score.name)).toBeTruthy();
+    expect(add).toBeEnabled();
+    await user.click(add);
+    await waitFor(() => expect(bulkUploadMaterials).toHaveBeenCalledWith(
+      mockPraiseDetail.id, [{ file: score, material_kind: 'violin', type, notes: null }]
+    ));
+    expect(convertAudioToMp3).not.toHaveBeenCalled();
+    expect(await within(painel).findByRole('status')).toHaveTextContent('Material adicionado');
+    expect(screen.getByRole('link', { name: /Violino/i })).toHaveAttribute('href', `http://localhost:8787/assets/score.${type}`);
+  });
+
+  it('limpa o arquivo ao trocar o formato da partitura', async () => {
+    const { user, painel } = await abrirPainelAdicionar();
+    await user.click(within(painel).getByLabelText('Tipo do material'));
+    await user.click(screen.getByRole('option', { name: 'Partitura MSCZ (MuseScore)' }));
+    await user.upload(within(painel).getByLabelText('Escolher partitura'), new File(['score'], 'score.mscz'));
+    expect(within(painel).getByRole('button', { name: 'Adicionar material' })).toBeEnabled();
+    await user.click(within(painel).getByLabelText('Tipo do material'));
+    await user.click(screen.getByRole('option', { name: 'Partitura MXL' }));
+    expect(within(painel).queryByText('score.mscz')).toBeNull();
+    expect(within(painel).getByRole('button', { name: 'Adicionar material' })).toBeDisabled();
+  });
+
+  it.each([
+    ['mscz', 'Partitura MSCZ (MuseScore)', 16],
+    ['mxl', 'Partitura MXL', 16],
+    ['musicxml', 'Partitura MusicXML', 4],
+  ])('informa tamanho excessivo de %s sem enviar', async (type, label, limit) => {
+    const { user, painel } = await abrirPainelAdicionar();
+    await user.click(within(painel).getByLabelText('Tipo do material'));
+    await user.click(screen.getByRole('option', { name: String(label) }));
+    const large = new File(['x'], `large.${type}`);
+    Object.defineProperty(large, 'size', { value: Number(limit) * 1024 * 1024 + 1 });
+    await user.upload(within(painel).getByLabelText('Escolher partitura'), large);
+    expect(within(painel).getByRole('alert')).toHaveTextContent(new RegExp(`limite de ${limit} MB`, 'i'));
+    expect(within(painel).getByRole('button', { name: 'Adicionar material' })).toBeDisabled();
+    expect(bulkUploadMaterials).not.toHaveBeenCalled();
+  });
+
+  it('informa extensão incompatível mesmo se o seletor de arquivos for contornado', async () => {
+    const { painel } = await abrirPainelAdicionar();
+    const user = userEvent.setup({ applyAccept: false });
+    await user.click(within(painel).getByLabelText('Tipo do material'));
+    await user.click(screen.getByRole('option', { name: 'Partitura MXL' }));
+    await user.upload(within(painel).getByLabelText('Escolher partitura'), new File(['score'], 'renamed.zip'));
+    expect(within(painel).getByRole('alert')).toHaveTextContent(/extensão.*\.mxl/i);
+    expect(within(painel).getByRole('button', { name: 'Adicionar material' })).toBeDisabled();
+    expect(bulkUploadMaterials).not.toHaveBeenCalled();
+  });
+
+  it('mostra envio em andamento, erro estrutural e permite tentar novamente', async () => {
+    let rejectUpload!: (error: Error) => void;
+    vi.mocked(bulkUploadMaterials)
+      .mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectUpload = reject; }))
+      .mockResolvedValueOnce(mockPraiseDetail);
+    const { user, painel } = await abrirPainelAdicionar();
+    await user.click(within(painel).getByLabelText('Tipo do material'));
+    await user.click(screen.getByRole('option', { name: 'Partitura MSCZ (MuseScore)' }));
+    await user.upload(within(painel).getByLabelText('Escolher partitura'), new File(['fake'], 'score.mscz'));
+    await user.click(within(painel).getByRole('button', { name: 'Adicionar material' }));
+    expect(within(painel).getByRole('status')).toHaveTextContent(/enviando material/i);
+    expect(within(painel).getByRole('button', { name: /enviando/i })).toBeDisabled();
+    expect(within(painel).getByLabelText('Escolher partitura')).toBeDisabled();
+    expect(within(painel).getByLabelText('Tipo do material')).toBeDisabled();
+    await act(async () => rejectUpload(new Error('Partitura inválida ou insegura: score.mscz')));
+    expect(within(painel).getByRole('alert')).toHaveTextContent('Partitura inválida ou insegura');
+    expect(within(painel).getByText('score.mscz')).toBeTruthy();
+    await user.click(within(painel).getByRole('button', { name: 'Adicionar material' }));
+    await waitFor(() => expect(bulkUploadMaterials).toHaveBeenCalledTimes(2));
+    expect(await within(painel).findByRole('status')).toHaveTextContent('Material adicionado');
+    expect(within(painel).queryByRole('alert')).toBeNull();
+  });
 
   it('adiciona um material do tipo YouTube por link', async () => {
     (createMaterial as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -3816,5 +3913,4 @@ describe('Mais mensagens de erro sem instância de Error', () => {
     });
   });
 });
-
 

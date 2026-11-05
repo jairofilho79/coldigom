@@ -53,10 +53,12 @@
     "wrangler": "4.93.1"
   },
   "dependencies": {
+    "@aws-crypto/crc32": "^5.2.0",
     "@hono/node-server": "^1.13.7",
     "fflate": "^0.8.3",
     "hono": "^4.6.14",
     "jose": "^6.2.3",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "saxes": "^6.0.0"
   }
 }

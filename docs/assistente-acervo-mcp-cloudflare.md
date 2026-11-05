@@ -96,7 +96,7 @@ Não enviar o backend inteiro nem dump do schema a cada contribuição. A curado
 | `detach_tag` | Desassociação existente em `praises.ts`. | Vínculo exato e efeitos de classificação na prévia. |
 | `group_praises` | Rota de agrupamento existente. | Semântica quando há grupos prévios, membros afetados, identidade do grupo e concorrência; não presumir fusão de grupos inteira. |
 | `ungroup_praises` | Suporte explícito não confirmado. | Verificar suporte e definir destino dos membros, grupo residual e guardas; não escrever `group_id` livre como substituto. |
-| `add_material` | Criação/uploads existentes em `praises.ts`. | Categoria/tipo, anexo aprovado, tamanho, conteúdo, objeto e vínculo exatos. |
+| `add_material` | Implementado no executor para anexos limpos da própria contribuição: PDF, MP3, ChordPro, MSCZ, MXL e MusicXML; também cria material `gestures` vazio e editável. | Exige material_kind_id existente, tipo compatível, alvo ligado à contribuição ou criado no plano, scan completo, checksum/tamanho verificados e publicação idempotente em R2/D1. Não aceita URL; `gestures` não usa anexo e só aceita vínculo opcional a PDF do mesmo louvor. Notas são obrigatórias somente para distinguir materiais de mesma categoria. |
 | `update_material` | PATCH e escrita de conteúdo existentes. | Distinguir metadados de conteúdo; revisão, versões, links e efeitos no dicionário. |
 | `move_material` | PATCH com `praise_id` existente. | Material/origem/destino exatos; vínculos e objeto; preservação de proveniência de merge. |
 | `remove_material` | DELETE de material existente. | Preview de referências, gestos e R2; política de retenção e reconciliação. Risco alto se destruir conteúdo. |
@@ -267,7 +267,7 @@ Esta sequência é uma recomendação para planejamento futuro, **não autoriza�
 1. **Inventário:** mapear capacidade, origem da regra (rota/serviço/script), testes, autorização, efeitos e lacunas. Confirmar entrada coldigui, identidade de serviço, backup e políticas de recuperação.
 2. **Leitura + planejamento:** MCP delimitado, pacote de conhecimento e planos/prévias persistidos, sem escrita automática. Medir qualidade, ambiguidade, custos e tentativa de injeção.
 3. **Tags, metadados e criação:** habilitar pequeno subconjunto após contratos, guardas de conflito, idempotência e aprovação autenticada. Testar inclusive criação seguida de referência de resultado.
-4. **Materiais/storage:** conteúdo, anexos, movimento e reconciliação D1/R2; testar falha entre gravações, revisão, referências e versões.
+4. **Materiais/storage:** `add_material` v1 cobre anexos limpos e a criação de `gestures` vazio; outros fluxos de conteúdo, movimentos e reconciliação D1/R2 continuam exigindo implementação e testes próprios para revisão, referências, versões e falhas parciais.
 5. **Agrupamento, merge e destrutivos:** definir primeiro as semânticas ausentes, prévias completas, retenção e recuperação; habilitar por capacidade, com limites explícitos.
 6. **Operação contínua:** UI no coldigom para aprovar/rejeitar e acompanhar tarefas, expiração, conflitos, parcial e reconciliação; templates revisados para casos frequentes.
 

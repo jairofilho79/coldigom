@@ -89,6 +89,20 @@ function deps(db: D1Database, r2: R2Bucket, over: Partial<ScanDeps> = {}): ScanD
 }
 
 describe('scanContribution', () => {
+  it('MusicXML validado segue para VT e sai da quarentena sem conversao', async () => {
+    const xml = enc('<?xml version="1.0"?><score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>');
+    const file = { ...FILE, declared_type: 'musicxml', original_name: 'voz.musicxml', r2_key: 'quarantine/c1/f1.musicxml' };
+    const { db, fileRows, contribs } = statefulDb(CONTRIB, [file]);
+    const r2 = r2With({ 'quarantine/c1/f1.musicxml': xml });
+    const lookup = vi.fn(vtClean.lookupHash);
+    const out = await scanContribution(deps(db, r2, { vt: { ...vtClean, lookupHash: lookup } }), { contributionId: 'c1', phase: 'submit', attempt: 0 });
+    expect(out).toEqual({ kind: 'done', status: 'pendente' });
+    expect(lookup).toHaveBeenCalledOnce();
+    expect(contribs.get('c1')).toMatchObject({ scan_status: 'limpa' });
+    expect(fileRows.get('f1')).toMatchObject({ detected_type: 'musicxml', r2_key: 'contributions/c1/f1.musicxml' });
+    expect(r2.store.get('contributions/c1/f1.musicxml')).toEqual(xml);
+  });
+
   it('pdf limpo + VT conhecido: move para contributions/, pendente/limpa', async () => {
     const { db, contribs, fileRows } = statefulDb(CONTRIB, [FILE]);
     const r2 = r2With({ 'quarantine/c1/f1.pdf': PDF });

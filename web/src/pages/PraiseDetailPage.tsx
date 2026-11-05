@@ -80,10 +80,23 @@ const MATERIAL_TYPE_OPTIONS = [
   { value: 'youtube', label: 'YouTube' },
   { value: 'pdf', label: 'PDF' },
   { value: 'mp3', label: 'MP3' },
+  { value: 'mscz', label: 'Partitura MSCZ (MuseScore)' },
+  { value: 'mxl', label: 'Partitura MXL' },
+  { value: 'musicxml', label: 'Partitura MusicXML' },
   { value: 'chord', label: 'Cifra' },
 ] as const;
 
-type MaterialFormType = 'youtube' | 'pdf' | 'mp3' | 'chord';
+type MaterialFormType = (typeof MATERIAL_TYPE_OPTIONS)[number]['value'];
+
+const SCORE_UPLOAD_FORMATS = {
+  mscz: { label: 'MSCZ', accept: '.mscz,application/vnd.musescore', maxMB: 16 },
+  mxl: { label: 'MXL', accept: '.mxl,application/vnd.recordare.musicxml', maxMB: 16 },
+  musicxml: { label: 'MusicXML', accept: '.musicxml,application/vnd.recordare.musicxml+xml', maxMB: 4 },
+} as const;
+
+function scoreUploadFormat(type: MaterialFormType) {
+  return type === 'mscz' || type === 'mxl' || type === 'musicxml' ? SCORE_UPLOAD_FORMATS[type] : null;
+}
 
 type NewMaterialForm = {
   material_kind: string;
@@ -171,8 +184,22 @@ function consumirRascunho(rota: string): Rascunho | null {
 function canSubmitNewMaterial(mat: NewMaterialForm): boolean {
   if (!mat.material_kind) return false;
   if (mat.type === 'youtube') return mat.url.trim().length > 0;
-  if (mat.type === 'pdf' || mat.type === 'mp3') return mat.file !== null;
+  if (mat.type === 'pdf' || mat.type === 'mp3' || scoreUploadFormat(mat.type)) {
+    return mat.file !== null && !scoreUploadError(mat);
+  }
   return false;
+}
+
+function scoreUploadError(mat: NewMaterialForm): string | null {
+  const format = scoreUploadFormat(mat.type);
+  if (!format || !mat.file) return null;
+  if (!mat.file.name.toLowerCase().endsWith(`.${mat.type}`)) {
+    return `A extensão da partitura deve ser .${mat.type}.`;
+  }
+  if (mat.file.size > format.maxMB * 1024 * 1024) {
+    return `Partitura acima do limite de ${format.maxMB} MB.`;
+  }
+  return null;
 }
 
 function ContributionCallout({
@@ -326,6 +353,10 @@ export function PraiseDetailPage() {
   const [materialKinds, setMaterialKinds] = useState<MaterialKind[]>([]);
   const [categoriasErro, setCategoriasErro] = useState<string | null>(null);
   const [newMat, setNewMat] = useState<NewMaterialForm>({ ...DEFAULT_NEW_MAT });
+  const [addingMaterial, setAddingMaterial] = useState(false);
+  const [newMatFeedback, setNewMatFeedback] = useState<{ error: boolean; message: string } | null>(null);
+  const scoreFormat = scoreUploadFormat(newMat.type);
+  const newMatFileError = scoreUploadError(newMat);
   const [bulkFiles, setBulkFiles] = useState<BulkFileItem[]>([]);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [isConvertingBulk, setIsConvertingBulk] = useState(false);
@@ -2256,7 +2287,7 @@ export function PraiseDetailPage() {
           </h2>
 
           <div className="materials-admin">
-            <div className="materials-panel materials-admin-new">
+            <div className="materials-panel materials-admin-new" aria-busy={addingMaterial}>
               <h3 className="materials-panel-title">Adicionar material</h3>
               <div className="edit-grid">
                 <div className="edit-field">
@@ -2264,6 +2295,7 @@ export function PraiseDetailPage() {
                     id="new-mat-kind"
                     label="Categoria"
                     value={newMat.material_kind}
+                    disabled={savingMaterials}
                     onChange={(material_kind) => setNewMat((s) => ({ ...s, material_kind }))}
                     options={materialKindOptions}
                   />
@@ -2273,7 +2305,9 @@ export function PraiseDetailPage() {
                     id="new-mat-type"
                     label="Tipo do material"
                     value={newMat.type}
+                    disabled={savingMaterials}
                     onChange={(type) => {
+                      setNewMatFeedback(null);
                       setNewMat((s) => ({
                         ...s,
                         type: type as MaterialFormType,
@@ -2344,6 +2378,32 @@ export function PraiseDetailPage() {
                   </div>
                 )}
 
+                {scoreFormat && (
+                  <div className="edit-field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Arquivo de partitura ({scoreFormat.label})</label>
+                    <StyledFileInput
+                      label="Escolher partitura"
+                      accept={scoreFormat.accept}
+                      disabled={savingMaterials}
+                      selectedName={newMat.file?.name ?? null}
+                      onChange={(files) => {
+                        setNewMatFeedback(null);
+                        setNewMat((s) => ({ ...s, file: files[0] ?? null }));
+                      }}
+                    />
+                    <p className="materials-panel-help">
+                      Até {scoreFormat.maxMB} MB. Escolha a categoria de voz ou instrumento acima.
+                      O coldigom cadastra o arquivo; a leitura da partitura acontece no coldigui.
+                    </p>
+                  </div>
+                )}
+
+                {newMatFileError && <p role="alert">{newMatFileError}</p>}
+                {addingMaterial && <p role="status">Enviando material…</p>}
+                {newMatFeedback && (
+                  <p role={newMatFeedback.error ? 'alert' : 'status'}>{newMatFeedback.message}</p>
+                )}
+
                 <div className="edit-actions">
                   <button
                     type="button"
@@ -2351,8 +2411,10 @@ export function PraiseDetailPage() {
                     disabled={!id || savingMaterials || !canSubmitNewMaterial(newMat)}
                     onClick={async () => {
                       if (!id || !canSubmitNewMaterial(newMat)) return;
+                      setAddingMaterial(true);
                       setSavingMaterials(true);
                       setError(null);
+                      setNewMatFeedback(null);
                       try {
                         const notesVal = newMat.notes.trim() || null;
                         let updated: PraiseDetail;
@@ -2363,7 +2425,7 @@ export function PraiseDetailPage() {
                             url: newMat.url.trim(),
                             notes: notesVal,
                           });
-                        } else if (newMat.type === 'pdf' || newMat.type === 'mp3') {
+                        } else if (newMat.type === 'pdf' || newMat.type === 'mp3' || scoreFormat) {
                           let fileToUpload = newMat.file!;
                           if (newMat.type === 'mp3') {
                             const ext = fileToUpload.name.split('.').pop()?.toLowerCase() || '';
@@ -2389,14 +2451,16 @@ export function PraiseDetailPage() {
                         }
                         aplicarEscrita(updated);
                         setNewMat({ ...DEFAULT_NEW_MAT, material_kind: newMat.material_kind });
+                        setNewMatFeedback({ error: false, message: 'Material adicionado.' });
                       } catch (err) {
-                        setError(err instanceof Error ? err.message : 'Falha ao criar material');
+                        setNewMatFeedback({ error: true, message: err instanceof Error ? err.message : 'Falha ao criar material' });
                       } finally {
+                        setAddingMaterial(false);
                         setSavingMaterials(false);
                       }
                     }}
                   >
-                    Adicionar material
+                    {addingMaterial ? 'Enviando…' : 'Adicionar material'}
                   </button>
                 </div>
               </div>

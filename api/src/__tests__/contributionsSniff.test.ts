@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { zipSync } from 'fflate';
 
-import { declaredTypeFromName, headMatchesDeclared, safeOriginalName, sniffType } from '../contributions/sniff';
+import { CONTENT_TYPES, declaredTypeFromName, headMatchesDeclared, safeOriginalName, sniffType } from '../contributions/sniff';
 
 const enc = (s: string) => new TextEncoder().encode(s);
 
@@ -56,5 +57,52 @@ describe('safeOriginalName', () => {
   it('tira aspas e DEL (0x7f)', () => {
     expect(safeOriginalName('a"bc.pdf')).toBe('abc.pdf');
     expect(safeOriginalName('a\x7fbc.pdf')).toBe('abc.pdf');
+  });
+});
+
+describe('sniff — partituras editáveis', () => {
+  const musicxml = enc('<?xml version="1.0"?><score-partwise version="4.0"><part-list/></score-partwise>');
+  const mscz = zipSync({
+    'META-INF/container.xml': enc('<container><rootfiles><rootfile full-path="score.mscx"/></rootfiles></container>'),
+    'score.mscx': enc('<museScore version="4.0"><Score/></museScore>'),
+  });
+
+  it('aceita somente as três extensões explícitas, sem alias xml/mscx/zip', () => {
+    for (const type of ['mscz', 'mxl', 'musicxml'] as const) {
+      expect(declaredTypeFromName(`partitura.${type.toUpperCase()}`)).toBe(type);
+    }
+    for (const ext of ['xml', 'mscx', 'zip', 'musicxml.exe']) {
+      expect(declaredTypeFromName(`partitura.${ext}`)).toBeNull();
+    }
+    expect(CONTENT_TYPES).toMatchObject({
+      mscz: 'application/vnd.musescore',
+      mxl: 'application/vnd.recordare.musicxml',
+      musicxml: 'application/vnd.recordare.musicxml+xml',
+    });
+  });
+
+  it('ZIP é só candidato: não inventa mscz/mxl pela assinatura PK', () => {
+    expect(sniffType(mscz.subarray(0, 16))).toBe('zip');
+    expect(headMatchesDeclared(mscz.subarray(0, 16), 'mscz')).toBe(true);
+    expect(headMatchesDeclared(mscz.subarray(0, 16), 'mxl')).toBe(true);
+    expect(headMatchesDeclared(enc('PK'), 'mscz')).toBe(false);
+    expect(headMatchesDeclared(enc('PK\x05\x06'), 'mxl')).toBe(false);
+    expect(headMatchesDeclared(musicxml, 'mscz')).toBe(false);
+    expect(headMatchesDeclared(mscz, 'musicxml')).toBe(false);
+    expect(headMatchesDeclared(mscz, 'pdf')).toBe(false);
+  });
+
+  it('MusicXML preserva o sniff de texto e admite prólogo na janela de 16 bytes', () => {
+    expect(sniffType(musicxml)).toBe('text');
+    expect(headMatchesDeclared(musicxml.subarray(0, 16), 'musicxml')).toBe(true);
+    expect(headMatchesDeclared(enc('\ufeff<score-timewise version="4.0"/>'), 'musicxml')).toBe(true);
+    expect(headMatchesDeclared(enc('<score-partwise'), 'musicxml')).toBe(true);
+    expect(headMatchesDeclared(enc('<!-- exportado pelo editor -->'), 'musicxml')).toBe(true);
+    expect(headMatchesDeclared(enc('<html/>'), 'musicxml')).toBe(false);
+    expect(headMatchesDeclared(enc('<museScore/>'), 'musicxml')).toBe(false);
+    expect(headMatchesDeclared(enc('<score-partwise-fake/>'), 'musicxml')).toBe(false);
+    expect(headMatchesDeclared(enc('texto qualquer'), 'musicxml')).toBe(false);
+    expect(headMatchesDeclared(musicxml, 'txt')).toBe(true);
+    expect(headMatchesDeclared(musicxml, 'chordpro')).toBe(true);
   });
 });

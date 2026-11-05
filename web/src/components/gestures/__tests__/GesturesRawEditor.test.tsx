@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { GestureDocument } from '../../../lib/gestures/schema';
@@ -36,6 +36,76 @@ const indiceExemplo: Indice = {
 };
 
 describe('GesturesRawEditor', () => {
+  it('indenta e desindenta o texto com Tab e Shift+Tab', async () => {
+    const onRawChange = vi.fn();
+    const props = {
+      raw: 'linha',
+      onRawChange,
+      doc: docExemplo,
+      indice: indiceExemplo,
+      foco: null,
+      onFoco: vi.fn(),
+      onMudar: vi.fn(),
+    };
+    const { rerender } = render(<GesturesRawEditor {...props} />);
+    const textarea = screen.getByRole('textbox', { name: 'Documento de gestos (JSON raw)' }) as HTMLTextAreaElement;
+    textarea.setSelectionRange(0, 0);
+    fireEvent.keyDown(textarea, { key: 'Tab' });
+    expect(onRawChange).toHaveBeenLastCalledWith('  linha');
+    await waitFor(() => expect(textarea.selectionStart).toBe(2));
+
+    rerender(<GesturesRawEditor {...props} raw="  linha" />);
+    textarea.setSelectionRange(2, 2);
+    fireEvent.keyDown(textarea, { key: 'Tab', shiftKey: true });
+    expect(onRawChange).toHaveBeenLastCalledWith('linha');
+    await waitFor(() => expect(textarea.selectionStart).toBe(0));
+    rerender(<GesturesRawEditor {...props} raw="linha" />);
+    onRawChange.mockClear();
+    fireEvent.keyDown(textarea, { key: 'Tab', shiftKey: true });
+    expect(onRawChange).not.toHaveBeenCalled();
+  });
+
+  it('sincroniza alterações e foco quando o usuário seleciona um item', () => {
+    const raw = JSON.stringify(docExemplo, null, 2);
+    const onFoco = vi.fn();
+    const onRawChange = vi.fn();
+    render(
+      <GesturesRawEditor raw={raw} onRawChange={onRawChange} doc={docExemplo}
+        indice={indiceExemplo} foco={null} onFoco={onFoco} onMudar={vi.fn()} />
+    );
+    const textarea = screen.getByRole('textbox', { name: 'Documento de gestos (JSON raw)' }) as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: 'alterado' } });
+    expect(onRawChange).toHaveBeenCalledWith('alterado');
+    const start = raw.indexOf('e473b25ea89b');
+    textarea.setSelectionRange(start, start);
+    fireEvent.select(textarea);
+    expect(onFoco).toHaveBeenLastCalledWith([0]);
+    const end = raw.indexOf('e114cea04d3c') + 12;
+    textarea.setSelectionRange(start, end);
+    fireEvent.click(textarea);
+    expect(onFoco).toHaveBeenLastCalledWith([0]);
+    fireEvent.keyUp(textarea, { key: 'ArrowDown' });
+  });
+
+  it('mostra erro de validação e permite abrir e fechar o seletor externamente', async () => {
+    const props = {
+      raw: JSON.stringify(docExemplo, null, 2),
+      onRawChange: vi.fn(),
+      doc: docExemplo,
+      indice: indiceExemplo,
+      foco: [0],
+      onFoco: vi.fn(),
+      onMudar: vi.fn(),
+      erroValidacao: 'Documento inválido',
+    };
+    const { rerender } = render(<GesturesRawEditor {...props} abrirSeletor={0} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Documento inválido');
+    rerender(<GesturesRawEditor {...props} abrirSeletor={1} />);
+    expect(screen.getByRole('dialog', { name: 'Escolher gesto' })).toBeInTheDocument();
+    await userEvent.setup().keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('renderiza textarea com o JSON e a barra de ações', () => {
     const raw = JSON.stringify(docExemplo, null, 2);
     render(

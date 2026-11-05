@@ -79,6 +79,26 @@ async function upload(
 const item = (type: string, material_kind = 'violin'): Item => ({ key: 'file', material_kind, type });
 
 describe('admin score upload', () => {
+  it('aceita MXL com media-type omitido e PDF alternativo', async () => {
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8('<container><rootfiles><rootfile full-path="main.xml"/><rootfile full-path="part.pdf" media-type="application/pdf"/></rootfiles></container>'),
+      'main.xml': strToU8(MUSICXML),
+      'part.pdf': strToU8('%PDF-1.7\n%%EOF'),
+    });
+    const { response, assets, db } = await upload([item('mxl')], [file(bytes, 'score.mxl')]);
+    expect(response.status).toBe(200);
+    expect(assets.put).toHaveBeenCalledOnce();
+    expect(db.batch).toHaveBeenCalledOnce();
+  });
+
+  it('recusa referências de partes divergentes antes de gravar', async () => {
+    const xml = MUSICXML.replace('<part id="P1">', '<part id="P2">');
+    const { response, assets, db } = await upload([item('musicxml')], [file(strToU8(xml), 'invalida.musicxml')]);
+    expect(response.status).toBe(400);
+    expect(assets.put).not.toHaveBeenCalled();
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
   it('aceita container MuseScore com arquivos auxiliares preservando o original', async () => {
     const paths = ['style.mss', 'score.mscx', 'thumbnail.png', 'audio.json', 'view.json'];
     const bytes = zipSync({

@@ -24,12 +24,18 @@ container ate 64 KiB e profundidade XML ate 64. Caminhos inseguros, CRC
 divergente e arquivos truncados sao rejeitados. Containers MSCZ podem listar
 arquivos auxiliares, mas devem apontar para exatamente um MSCX e cada referencia
 deve existir e ser segura. Arquivos MSS tambem sao analisados como XML.
+Em MXL, o primeiro rootfile deve ser MusicXML partwise ou timewise; o
+`media-type` pode ser omitido. Rootfiles posteriores podem apontar para
+outras representacoes, como PDF ou audio, desde que os caminhos sejam seguros,
+unicos e existentes. Opus nao e aceito por esta triagem.
 
 DOCTYPEs PUBLIC oficiais do MusicXML sao aceitos sem resolucao externa.
 DTD arbitraria, entidades e subconjuntos internos permanecem proibidos.
 Instrucoes `xml-stylesheet` e elementos `script` em MusicXML sao rejeitados.
-MusicXML precisa de lista de partes com `score-part` e ao menos um compasso
-em uma parte; essa triagem nao e uma validacao completa do schema musical.
+MusicXML precisa de lista de partes com `score-part` identificado, `part-name`
+e ao menos um compasso em uma parte. IDs de `score-part` nao podem se repetir
+e as partes musicais devem referenciar um ID declarado. Essa triagem nao e
+uma validacao completa do schema musical.
 
 ## Bloqueio de curadoria de contribuicoes
 

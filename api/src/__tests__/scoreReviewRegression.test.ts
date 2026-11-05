@@ -19,6 +19,64 @@ function museScoreArchive(score = '<museScore><Score/></museScore>', styleXml = 
 }
 
 describe('regressões da revisão de partituras', () => {
+  it.each([
+    ['score.musicxml', undefined],
+    ['score.xml', 'application/vnd.recordare.musicxml+xml'],
+    ['score', undefined],
+  ])('aceita primeiro rootfile MusicXML %s com media-type opcional e PDF alternativo', (name, media) => {
+    const root = `<rootfile full-path="${name}"${media ? ` media-type="${media}"` : ''}/>`;
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8(`<container><rootfiles>${root}<rootfile full-path="partitura.pdf" media-type="application/pdf"/></rootfiles></container>`),
+      [name]: strToU8(partwise),
+      'partitura.pdf': strToU8('%PDF-1.7\n%%EOF'),
+    });
+    expect(checkStructural(bytes, 'mxl').status).toBe('limpa');
+  });
+
+  it.each([
+    '<rootfile full-path="main.xml"/><rootfile full-path="../bad.pdf"/>',
+    '<rootfile full-path="main.xml"/><rootfile full-path="missing.pdf"/>',
+    '<rootfile full-path="main.xml"/><rootfile full-path="main.xml"/>',
+    '<rootfile full-path="part.pdf" media-type="application/pdf"/><rootfile full-path="main.xml"/>',
+    '<rootfile full-path="META-INF/container.xml"/>',
+  ])('mantém segurança e prioridade do primeiro rootfile MXL: %s', (rootfiles) => {
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8(`<container><rootfiles>${rootfiles}</rootfiles></container>`),
+      'main.xml': strToU8(partwise),
+      'part.pdf': strToU8('%PDF-1.7\n%%EOF'),
+    });
+    expect(checkStructural(bytes, 'mxl').status).toBe('suspeita');
+  });
+
+  it('analisa XML auxiliar e rootfile sem extensão para impedir DTD', () => {
+    const bad = '<!DOCTYPE x [<!ENTITY x SYSTEM "file:///etc/passwd">]><x>&x;</x>';
+    for (const [main, auxiliary] of [[bad, '<x/>'], [partwise, bad]]) {
+      const bytes = zipSync({
+        'META-INF/container.xml': strToU8('<container><rootfiles><rootfile full-path="main"/><rootfile full-path="other.xml"/></rootfiles></container>'),
+        'main': strToU8(main),
+        'other.xml': strToU8(auxiliary),
+      });
+      expect(checkStructural(bytes, 'mxl')).toMatchObject({ status: 'suspeita', reason: 'score_dtd_forbidden' });
+    }
+  });
+
+  it.each([
+    '<score-partwise><part-list><score-part/></part-list><part id="P1"><measure/></part></score-partwise>',
+    '<score-partwise><part-list><score-part id="P1"/></part-list><part id="P1"><measure/></part></score-partwise>',
+    '<score-partwise><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><part id="P2"><measure/></part></score-partwise>',
+    '<score-timewise><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><measure><part id="P2"/></measure></score-timewise>',
+    '<score-timewise><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><measure><part/></measure></score-timewise>',
+    '<score-partwise><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P1"><part-name>B</part-name></score-part></part-list><part id="P1"><measure/></part></score-partwise>',
+    '<score-partwise xmlns:x="urn:foreign"><x:part-list><score-part id="P1"><part-name>A</part-name></score-part></x:part-list><part id="P1"><measure/></part></score-partwise>',
+    '<score-partwise xmlns:x="urn:foreign"><part-list><score-part id="P1"><x:part-name>A</x:part-name></score-part></part-list><part id="P1"><measure/></part></score-partwise>',
+  ])('recusa score-part ou referência de parte inválida', (xml) => {
+    expect(checkStructural(strToU8(xml), 'musicxml').status).toBe('suspeita');
+  });
+
+  it('aceita part-name vazio, permitido pelo tipo string do MusicXML', () => {
+    expect(checkStructural(strToU8(partwise.replace('<part-name>Voz</part-name>', '<part-name/>')), 'musicxml').status).toBe('limpa');
+  });
+
   it('aceita container MuseScore 4 com cinco arquivos e MSCX acima de 4 MiB', () => {
     const score = `<museScore><Score><!--${'a'.repeat(5 * 1024 * 1024)}--></Score></museScore>`;
     expect(checkStructural(museScoreArchive(score), 'mscz').status).toBe('limpa');

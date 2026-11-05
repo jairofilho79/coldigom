@@ -40,7 +40,9 @@ type XmlInfo = {
   root: string;
   uri: string;
   scores: number;
-  scoreParts: number;
+  scoreParts: Set<string>;
+  partReferences: string[];
+  invalidParts: boolean;
   musicalMeasures: number;
   rootfiles: { path: string; media?: string }[];
 };
@@ -55,10 +57,14 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
   } catch {
     return fail('score_invalid_xml');
   }
-  const info: XmlInfo = { root: '', uri: '', scores: 0, scoreParts: 0, musicalMeasures: 0, rootfiles: [] };
+  const info: XmlInfo = {
+    root: '', uri: '', scores: 0, scoreParts: new Set(), partReferences: [], invalidParts: false,
+    musicalMeasures: 0, rootfiles: [],
+  };
   const parser = new SaxesParser({ xmlns: true });
   const ancestors: string[] = [];
   let doctype: { root: string; version: string } | undefined;
+  let scorePartHasName = false;
   parser.on('error', () => fail('score_invalid_xml'));
   parser.on('processinginstruction', ({ target }) => {
     if (target.toLowerCase() === 'xml-stylesheet') fail('score_invalid_xml');
@@ -96,7 +102,22 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
         info.rootfiles.push({ path, media });
       }
       if (ancestors.length === 2 && ancestors[1] === 'part-list' && tag.local === 'score-part') {
-        info.scoreParts++;
+        const id = tag.attributes.id?.value;
+        if (!id || /\s/u.test(id) || info.scoreParts.has(id)) info.invalidParts = true;
+        else info.scoreParts.add(id);
+        scorePartHasName = false;
+      }
+      if (ancestors.length === 3 && ancestors[1] === 'part-list'
+        && ancestors[2] === 'score-part' && tag.local === 'part-name') {
+        scorePartHasName = true;
+      }
+      if (tag.local === 'part' && (
+        (info.root === 'score-partwise' && ancestors.length === 1)
+        || (info.root === 'score-timewise' && ancestors.length === 2 && ancestors[1] === 'measure')
+      )) {
+        const id = tag.attributes.id?.value;
+        if (!id || /\s/u.test(id)) info.invalidParts = true;
+        else info.partReferences.push(id);
       }
       if (ancestors.length === 2 && (
         (info.root === 'score-partwise' && ancestors[1] === 'part' && tag.local === 'measure')
@@ -108,7 +129,12 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
     // Namespace diferente não pode forjar a hierarquia do container.
     ancestors.push(tag.uri === info.uri ? tag.local : '');
   });
-  parser.on('closetag', () => { ancestors.pop(); });
+  parser.on('closetag', () => {
+    if (ancestors.length === 3 && ancestors[1] === 'part-list' && ancestors[2] === 'score-part' && !scorePartHasName) {
+      info.invalidParts = true;
+    }
+    ancestors.pop();
+  });
   parser.write(xml).close();
   return info;
 }
@@ -116,7 +142,8 @@ function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowD
 function isMusicXml(info: XmlInfo): boolean {
   return (info.root === 'score-partwise' || info.root === 'score-timewise')
     && (info.uri === '' || info.uri === MUSICXML_NS)
-    && info.scoreParts > 0 && info.musicalMeasures > 0;
+    && !info.invalidParts && info.scoreParts.size > 0 && info.musicalMeasures > 0
+    && info.partReferences.length > 0 && info.partReferences.every((id) => info.scoreParts.has(id));
 }
 
 function xmlEntry(name: string): boolean {
@@ -231,19 +258,17 @@ function readArchive(bytes: Uint8Array, type: ScoreType): { documents: Map<strin
       if (size > Math.max(1, entry.size) * MAX_RATIO) fail('score_expansion_limit');
       if (size > entry.originalSize) fail('score_invalid_archive');
       checksum.update(chunk);
-      if (xmlEntry(file.name)) chunks.push(chunk);
+      chunks.push(chunk);
       if (final) {
         if (size !== entry.originalSize || checksum.digest() !== entry.checksum) fail('score_invalid_archive');
         completed++;
-        if (xmlEntry(file.name)) {
-          const output = new Uint8Array(size);
-          let offset = 0;
-          for (const part of chunks) {
-            output.set(part, offset);
-            offset += part.length;
-          }
-          documents.set(file.name, output);
+        const output = new Uint8Array(size);
+        let offset = 0;
+        for (const part of chunks) {
+          output.set(part, offset);
+          offset += part.length;
         }
+        documents.set(file.name, output);
       }
     };
     file.start();
@@ -283,20 +308,21 @@ export function scoreStructuralReason(bytes: Uint8Array, type: ScoreType): strin
       if (!names.has(rootfile.path)) fail('score_missing_target');
       paths.add(rootfile.path);
     }
-    const targets = type === 'mscz' ? info.rootfiles.filter((f) => /\.mscx$/i.test(f.path)) : info.rootfiles;
+    const targets = type === 'mscz' ? info.rootfiles.filter((f) => /\.mscx$/i.test(f.path)) : info.rootfiles.slice(0, 1);
     if (targets.length !== 1) fail('score_invalid_container');
     const target = targets[0];
+    if (target.path === CONTAINER) fail('score_container_mismatch');
     if (type === 'mscz') {
       if (!/\.mscx$/i.test(target.path)
         || (target.media !== undefined && !['application/x-musescore', 'application/vnd.musescore'].includes(target.media))) {
         fail('score_container_mismatch');
       }
-    } else if (!/\.(?:xml|musicxml)$/i.test(target.path) || target.media !== MUSICXML_MEDIA) {
+    } else if (target.media !== undefined && target.media !== MUSICXML_MEDIA) {
       fail('score_container_mismatch');
     }
     if (!documents.has(target.path)) fail('score_missing_target');
     for (const [name, content] of documents) {
-      if (name === CONTAINER) continue;
+      if (name === CONTAINER || (name !== target.path && !xmlEntry(name))) continue;
       const doc = parseXml(content, false, type === 'mscz' && /\.mscx$/i.test(name) ? MAX_ENTRY : MAX_XML, !/\.mss$/i.test(name));
       if (name === target.path) {
         const matches = type === 'mscz'

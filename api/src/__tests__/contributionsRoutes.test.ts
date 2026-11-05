@@ -199,6 +199,84 @@ describe('POST /api/contributions', () => {
     expect(res.status).toBe(413);
     expect(await res.json()).toMatchObject({ error: 'payload_too_large' });
   });
+
+  it('payload mínimo { body: "Texto do relato" } é aceito com 201, kind=other, title derivado e device=null', async () => {
+    const { db, chamadas } = fakeDb();
+    const res = await app.request(
+      '/api/contributions',
+      { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart({ body: 'Texto do relato' }) },
+      env(db, fakeR2())
+    );
+    expect(res.status).toBe(201);
+    const corpo = (await res.json()) as { id: string; status: string };
+    expect(corpo.status).toBe('pendente');
+    const insert = chamadas.find((c) => c.sql.startsWith('INSERT INTO contributions'))!;
+    expect(insert.bindings[4]).toBe('other'); // kind
+    expect(insert.bindings[5]).toBeNull(); // subkind
+    expect(insert.bindings[9]).toBe('Texto do relato'); // title
+    expect(insert.bindings[10]).toBe('Texto do relato'); // body
+    expect(insert.bindings[13]).toBeNull(); // device
+  });
+
+  it('device opcional sem same_device é persistido em D1', async () => {
+    const { db, chamadas } = fakeDb();
+    const payload = { body: 'Problema no app', device: { os: 'Android 14', model: 'Pixel 7' } };
+    const res = await app.request(
+      '/api/contributions',
+      { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(payload) },
+      env(db, fakeR2())
+    );
+    expect(res.status).toBe(201);
+    const insert = chamadas.find((c) => c.sql.startsWith('INSERT INTO contributions'))!;
+    expect(insert.bindings[13]).toBe(JSON.stringify({ os: 'Android 14', model: 'Pixel 7' }));
+  });
+
+  it('kind=other aceita anexos (pdf) e links externos', async () => {
+    const { db, chamadas } = fakeDb();
+    const r2 = fakeR2();
+    const payload = {
+      body: 'Partitura com nova harmonia',
+      links: ['https://youtu.be/abc', 'https://drive.google.com/file/d/123/view'],
+      target: { source: 'plpcg', praiseId: 'p1' },
+    };
+    const res = await app.request(
+      '/api/contributions',
+      { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(payload, [{ name: 'partitura.pdf', bytes: PDF }]) },
+      env(db, r2)
+    );
+    expect(res.status).toBe(201);
+    const { id, status } = (await res.json()) as { id: string; status: string };
+    expect(status).toBe('recebida');
+    expect(enviados).toEqual([{ contributionId: id, phase: 'submit', attempt: 0 }]);
+    const insert = chamadas.find((c) => c.sql.startsWith('INSERT INTO contributions'))!;
+    expect(insert.bindings[4]).toBe('other');
+    expect(insert.bindings[6]).toBe('plpcg'); // target_source
+    expect(insert.bindings[7]).toBe('p1'); // target_praise_id
+  });
+
+  it('mantém compatibilidade com clientes legados enviando kind, subkind, fields, title e device completo', async () => {
+    const { db, chamadas } = fakeDb();
+    const legado = {
+      kind: 'wrong_info',
+      subkind: 'metadata',
+      title: 'Tom incorreto',
+      body: 'O tom correto deste hino é Sol maior',
+      fields: { field: 'tonality', current: 'C', proposed: 'G' },
+      device: { platform: 'web', same_device: true },
+    };
+    const res = await app.request(
+      '/api/contributions',
+      { method: 'POST', headers: { authorization: 'Bearer sess_a' }, body: multipart(legado) },
+      env(db, fakeR2())
+    );
+    expect(res.status).toBe(201);
+    const insert = chamadas.find((c) => c.sql.startsWith('INSERT INTO contributions'))!;
+    expect(insert.bindings[4]).toBe('wrong_info');
+    expect(insert.bindings[5]).toBe('metadata');
+    expect(insert.bindings[9]).toBe('Tom incorreto');
+    expect(insert.bindings[11]).toBe(JSON.stringify({ field: 'tonality', current: 'C', proposed: 'G' }));
+    expect(insert.bindings[13]).toBe(JSON.stringify({ platform: 'web', same_device: true }));
+  });
 });
 
 const ROW = { id: 'c1', user_id: 'u1', user_email: 'a@b.c', user_name: 'Ana', kind: 'improvement', subkind: 'feature', target_source: null, target_praise_id: null, target_material_id: null, title: 'T', body: 'B', fields: '{}', links: '[{"url":"https://youtu.be/a","host":"youtu.be","safe_browsing":"clean"}]', device: '{"platform":"web"}', app_route: '/', app_version: '1.0', status: 'pendente', scan_status: 'limpa', scan_report: null, decided_at: null, decided_by: null, decision_note: null, created_at: '2026-09-17 10:00:00', updated_at: '2026-09-17 10:00:00' };

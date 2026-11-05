@@ -319,6 +319,15 @@ export function registerMaterialsRoutes(app: App): void {
       bindings.push(valor);
     }
 
+    if ('notes' in body) {
+      if (body.notes !== null && typeof body.notes !== 'string') {
+        return c.json({ error: "Field 'notes' must be a string or null" }, 400);
+      }
+      const valor = typeof body.notes === 'string' && body.notes.trim().length > 0 ? body.notes.trim() : null;
+      sets.push(`notes = ?`);
+      bindings.push(valor);
+    }
+
     if (sets.length === 0) return c.json({ error: 'No fields to update' }, 400);
 
     try {

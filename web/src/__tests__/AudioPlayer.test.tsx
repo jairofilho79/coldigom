@@ -390,6 +390,94 @@ describe('AudioPlayer — modo de edição', () => {
     fireEvent.click(remover[remover.length - 1]);
     expect(onDelete).toHaveBeenCalledWith('m2');
   });
+
+  it('permite selecionar faixas com checkbox quando onToggleSelect é fornecido', () => {
+    const onToggleSelect = vi.fn();
+    render(
+      <AudioPlayer
+        materials={[faixa(1), faixa(2)]}
+        getAssetUrl={urlDoAsset}
+        admin={{
+          materialKindOptions: [{ value: 'mp3', label: 'MP3' }],
+          saving: false,
+          onUpdateKind: vi.fn().mockResolvedValue(undefined),
+          onDelete: vi.fn(),
+          selectedIds: new Set(['m1']),
+          onToggleSelect,
+        }}
+      />
+    );
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes.length).toBeGreaterThan(0);
+    expect(checkboxes[0]).toBeChecked();
+
+    fireEvent.click(checkboxes[checkboxes.length - 1]);
+    expect(onToggleSelect).toHaveBeenCalledWith('m2', true);
+  });
+
+  it('permite selecionar faixa única pelo cabeçalho quando materials.length <= 1', () => {
+    const onToggleSelect = vi.fn();
+    render(
+      <AudioPlayer
+        materials={[faixa(1)]}
+        getAssetUrl={urlDoAsset}
+        admin={{
+          materialKindOptions: [{ value: 'mp3', label: 'MP3' }],
+          saving: false,
+          onUpdateKind: vi.fn().mockResolvedValue(undefined),
+          onDelete: vi.fn(),
+          selectedIds: new Set(),
+          onToggleSelect,
+        }}
+      />
+    );
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).not.toBeChecked();
+
+    fireEvent.click(checkbox);
+    expect(onToggleSelect).toHaveBeenCalledWith('m1', true);
+  });
+
+  it('clicar em abrir faixa externa não propaga evento', () => {
+    render(
+      <AudioPlayer
+        materials={[faixa(1), faixa(2)]}
+        getAssetUrl={urlDoAsset}
+      />
+    );
+
+    const links = screen.getAllByLabelText('Abrir em nova aba');
+    expect(links.length).toBe(2);
+    fireEvent.click(links[0]);
+  });
+
+  it('atualiza a faixa selecionada quando highlightMaterialId muda', () => {
+    const { rerender } = render(
+      <AudioPlayer
+        materials={[faixa(1), faixa(2)]}
+        getAssetUrl={urlDoAsset}
+        highlightMaterialId="m1"
+      />
+    );
+
+    rerender(
+      <AudioPlayer
+        materials={[faixa(1), faixa(2)]}
+        getAssetUrl={urlDoAsset}
+        highlightMaterialId="m2"
+      />
+    );
+
+    rerender(
+      <AudioPlayer
+        materials={[faixa(1), faixa(2)]}
+        getAssetUrl={urlDoAsset}
+        highlightMaterialId={undefined}
+      />
+    );
+  });
 });
 
 describe('nome acessível das faixas no modo admin', () => {

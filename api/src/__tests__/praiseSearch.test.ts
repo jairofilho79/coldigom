@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWhereClause, escapeLikePattern } from '../praiseQuery';
+import { buildFtsMatchQuery, buildWhereClause, escapeLikePattern } from '../praiseQuery';
 
 describe('escapeLikePattern', () => {
   it('neutraliza os curingas do LIKE', () => {
@@ -18,6 +18,32 @@ describe('escapeLikePattern', () => {
 
   it('deixa texto comum intacto', () => {
     expect(escapeLikePattern('Graça')).toBe('Graça');
+  });
+});
+
+describe('buildFtsMatchQuery', () => {
+  it('busca de uma palavra vira prefixo simples', () => {
+    expect(buildFtsMatchQuery('graça')).toBe('"graça"*');
+  });
+
+  it('busca de várias palavras vira frase (adjacente, na ordem), não AND de termos soltos', () => {
+    // Antes: '"a"* AND "ti"* AND "pertence"*' casava linhas onde cada
+    // palavra aparecia solta em qualquer canto (nome OU letra, qualquer
+    // ordem) — 17 de 22 resultados reais para "a ti pertence" não tinham
+    // a frase em lugar nenhum. Frase exige adjacência, na mesma coluna.
+    expect(buildFtsMatchQuery('a ti pertence')).toBe('"a ti pertence"*');
+  });
+
+  it('pontuação na query vira espaço, não quebra a frase', () => {
+    expect(buildFtsMatchQuery('A ti, pertence')).toBe('"A ti pertence"*');
+  });
+
+  it('aspas na query são removidas na tokenização, não vazam pro MATCH', () => {
+    expect(buildFtsMatchQuery('diz "aleluia" hoje')).toBe('"diz aleluia hoje"*');
+  });
+
+  it('query sem termo aproveitável (só pontuação) fica vazia', () => {
+    expect(buildFtsMatchQuery('!!!')).toBe('');
   });
 });
 

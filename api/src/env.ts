@@ -30,6 +30,7 @@ export type Env = {
   VIRUSTOTAL_API_KEY?: string;
   SAFE_BROWSING_API_KEY?: string;
   CONTRIB_SCAN?: Queue<ContribScanMessage>;
+  AI?: { run: (model: string, input: unknown) => Promise<unknown> };
 };
 
 /** O app tipado, para os módulos de rota receberem sem repetir a assinatura. */

@@ -1,0 +1,389 @@
+-- Cópia congelada do schema.sql antes da migração 025 (DROP COLUMN praises.category). Não editar.
+-- Schema for coldigom D1 Database
+-- Based on PRD requirements
+
+-- Table: praises (Louvores)
+-- Main table for storing praise/hymn information
+CREATE TABLE IF NOT EXISTS praises (
+    id TEXT PRIMARY KEY,           -- UUID, PK
+    name TEXT NOT NULL,            -- Nome do louvor
+    number TEXT,                   -- Número na coletânea
+    author TEXT,                   -- Autor/Tradutor
+    rhythm TEXT,                   -- Ritmo
+    tonality TEXT,                 -- Tom
+    category TEXT,                 -- Categoria
+    lyrics TEXT,                   -- Letra completa
+    group_id TEXT,                 -- Shared id for same song / different arrangements
+    short_id TEXT,                 -- Id curto do louvor (migração 023): hex, único, imutável, atribuído pelo gatilho
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Table: praise_materials (Arquivos)
+-- Stores file references for each praise
+CREATE TABLE IF NOT EXISTS praise_materials (
+    id TEXT PRIMARY KEY,           -- UUID, PK
+    praise_id TEXT NOT NULL,       -- FK to praises.id
+    material_kind TEXT NOT NULL,   -- UUID ref to material_kinds.id
+    type TEXT NOT NULL,            -- pdf, mp3, chord, gestures
+    r2_key TEXT,                   -- Path in R2 bucket (NULL when url is present)
+    file_path_legacy TEXT,         -- Legacy file path
+    source_material_id TEXT,       -- For derivative materials (auto-relationship, no FK constraint)
+    merged_from_praise_id TEXT,    -- Source praise id when material was moved in a merge (duplicate removed)
+    url TEXT,                      -- External link (YouTube, Google Drive, Spotify, etc.)
+    is_reviewed INTEGER NOT NULL DEFAULT 0,  -- Passou por revisão humana
+    reviewed_at TEXT,              -- Quando foi marcado como revisado
+    reviewed_by TEXT,              -- Quem marcou
+    notes TEXT,                    -- Anotação rápida do arranjo/material (ex: I, II, Cifrado)
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
+);
+
+-- Table: praise_tags
+-- Many-to-many relationship between praises and tags
+CREATE TABLE IF NOT EXISTS praise_tags (
+    praise_id TEXT NOT NULL,
+    tag_id TEXT NOT NULL,
+    PRIMARY KEY (praise_id, tag_id),
+    FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+-- Table: tags
+-- Lookup table for praise tags (one-level hierarchy: root or subtag)
+CREATE TABLE IF NOT EXISTS tags (
+    id TEXT PRIMARY KEY,           -- UUID
+    name TEXT NOT NULL,            -- Tag name
+    parent_id TEXT,                -- NULL = root; otherwise must reference a root tag
+    FOREIGN KEY (parent_id) REFERENCES tags(id) ON DELETE RESTRICT
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_root_name ON tags(name) WHERE parent_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_child_name ON tags(parent_id, name) WHERE parent_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tags_parent_id ON tags(parent_id);
+
+-- Table: material_kind_classes
+-- Classes do filtro «Materiais» do app (migração 024): Metais, Banda…
+CREATE TABLE IF NOT EXISTS material_kind_classes (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    sort_order INTEGER NOT NULL UNIQUE
+);
+
+INSERT OR IGNORE INTO material_kind_classes (id, label, sort_order) VALUES
+    ('regencia', 'Regência e geral', 10),
+    ('letra', 'Letra e projeção', 20),
+    ('vozes', 'Vozes', 30),
+    ('madeiras', 'Madeiras', 40),
+    ('metais', 'Metais', 50),
+    ('percussao', 'Percussão', 60),
+    ('banda', 'Banda', 70),
+    ('cordas', 'Cordas', 80),
+    ('audio', 'Áudio e acompanhamento', 90),
+    ('midi', 'MIDI de ensaio', 100);
+
+-- Table: material_kinds
+-- Lookup table for material types (Audio, Score, MIDI, Lyrics, Chord Chart, Vozes, Instrumentos, etc.)
+-- class_id/parent_id/sort_order (migração 024): classe, família de um nível (pai raiz,
+-- mesma classe) e ordem de grade dentro da classe.
+CREATE TABLE IF NOT EXISTS material_kinds (
+    id TEXT PRIMARY KEY,           -- UUID
+    name TEXT NOT NULL UNIQUE,     -- Canonical kind name (ingestion source language)
+    class_id TEXT REFERENCES material_kind_classes(id) ON DELETE SET NULL,
+    parent_id TEXT REFERENCES material_kinds(id) ON DELETE RESTRICT,
+    sort_order INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_material_kinds_parent_id ON material_kinds(parent_id);
+
+-- Display labels per locale (pt-BR first; SSOT for UI strings)
+CREATE TABLE IF NOT EXISTS material_kind_translations (
+    material_kind_id TEXT NOT NULL,
+    locale TEXT NOT NULL,
+    label TEXT NOT NULL,
+    PRIMARY KEY (material_kind_id, locale),
+    FOREIGN KEY (material_kind_id) REFERENCES material_kinds(id) ON DELETE CASCADE
+);
+
+-- Indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_praise_materials_praise_id ON praise_materials(praise_id);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_material_kind ON praise_materials(material_kind);
+CREATE INDEX IF NOT EXISTS idx_mk_translations_locale ON material_kind_translations(locale);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_source_material_id ON praise_materials(source_material_id);
+CREATE INDEX IF NOT EXISTS idx_praise_materials_merged_from ON praise_materials(merged_from_praise_id);
+CREATE INDEX IF NOT EXISTS idx_praise_tags_praise_id ON praise_tags(praise_id);
+CREATE INDEX IF NOT EXISTS idx_praise_tags_tag_id ON praise_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_praises_name ON praises(name);
+CREATE INDEX IF NOT EXISTS idx_praises_number ON praises(number);
+CREATE INDEX IF NOT EXISTS idx_praises_group_id ON praises(group_id);
+-- Filtros e a tela de opções: /api/praises/filters faz três SELECT DISTINCT
+-- sobre estas colunas a cada carregamento, e eram varreduras completas.
+CREATE INDEX IF NOT EXISTS idx_praises_rhythm ON praises(rhythm);
+CREATE INDEX IF NOT EXISTS idx_praises_tonality ON praises(tonality);
+CREATE INDEX IF NOT EXISTS idx_praises_category ON praises(category);
+
+-- Auth: rotating refresh tokens (opaque value hashed at rest; access JWT is short-lived in cookie)
+CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
+    id TEXT PRIMARY KEY,
+    user_sub TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    revoked_at INTEGER,
+    replaced_by TEXT,
+    user_claims TEXT,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    FOREIGN KEY (replaced_by) REFERENCES auth_refresh_tokens(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_token_hash ON auth_refresh_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_user_sub ON auth_refresh_tokens(user_sub);
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_expires ON auth_refresh_tokens(expires_at);
+
+-- OAuth PKCE state (no cookies — Safari/Pages proxy)
+CREATE TABLE IF NOT EXISTS oauth_pending (
+    state TEXT PRIMARY KEY,
+    code_verifier TEXT NOT NULL,
+    redirect_to TEXT NOT NULL,
+    purpose TEXT NOT NULL DEFAULT 'login',
+    expires_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_pending_expires ON oauth_pending(expires_at);
+
+-- One-time code to hand tokens to SPA after OAuth redirect
+CREATE TABLE IF NOT EXISTS auth_exchange_codes (
+    code TEXT PRIMARY KEY,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    user_json TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_exchange_expires ON auth_exchange_codes(expires_at);
+
+-- Google Drive import
+CREATE TABLE IF NOT EXISTS google_drive_credentials (
+    user_sub TEXT PRIMARY KEY,
+    refresh_token_enc TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS drive_scans (
+    id TEXT PRIMARY KEY,
+    user_sub TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    root_id TEXT NOT NULL,
+    root_kind TEXT NOT NULL,
+    status TEXT NOT NULL,
+    error TEXT,
+    skipped_json TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_drive_scans_user ON drive_scans(user_sub);
+
+CREATE TABLE IF NOT EXISTS drive_scan_files (
+    id TEXT PRIMARY KEY,
+    scan_id TEXT NOT NULL,
+    drive_file_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    rel_path TEXT NOT NULL,
+    mime_type TEXT,
+    size_bytes INTEGER,
+    FOREIGN KEY (scan_id) REFERENCES drive_scans(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_drive_scan_files_scan ON drive_scan_files(scan_id);
+
+CREATE TABLE IF NOT EXISTS import_jobs (
+    id TEXT PRIMARY KEY,
+    praise_id TEXT NOT NULL,
+    user_sub TEXT NOT NULL,
+    status TEXT NOT NULL,
+    total_count INTEGER NOT NULL DEFAULT 0,
+    done_count INTEGER NOT NULL DEFAULT 0,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    skipped_count INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (praise_id) REFERENCES praises(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_import_jobs_praise ON import_jobs(praise_id);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_user ON import_jobs(user_sub);
+
+CREATE TABLE IF NOT EXISTS import_job_items (
+    id TEXT PRIMARY KEY,
+    job_id TEXT NOT NULL,
+    drive_file_id TEXT NOT NULL,
+    material_kind TEXT NOT NULL,
+    type TEXT NOT NULL,
+    file_path_legacy TEXT,
+    status TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    error TEXT,
+    material_id TEXT,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (job_id) REFERENCES import_jobs(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_import_job_items_job ON import_job_items(job_id);
+CREATE INDEX IF NOT EXISTS idx_import_job_items_status ON import_job_items(job_id, status);
+
+CREATE TABLE IF NOT EXISTS raw_chordpros (
+    id TEXT PRIMARY KEY,
+    source_pdf_material_id TEXT NOT NULL,
+    praise_id TEXT,
+    praise_name TEXT,
+    kind_label TEXT,
+    source_filename TEXT NOT NULL,
+    title TEXT,
+    subtitle TEXT,
+    content TEXT NOT NULL,
+    validated INTEGER NOT NULL DEFAULT 0,
+    debug_batch TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_raw_chordpros_validated ON raw_chordpros(validated);
+CREATE INDEX IF NOT EXISTS idx_raw_chordpros_pdf ON raw_chordpros(source_pdf_material_id);
+CREATE INDEX IF NOT EXISTS idx_raw_chordpros_debug_batch ON raw_chordpros(debug_batch);
+
+-- Full-text search virtual table for lyrics and name
+CREATE VIRTUAL TABLE IF NOT EXISTS praises_fts USING fts5(
+    name,
+    lyrics,
+    content='praises',
+    content_rowid='rowid'
+);
+
+-- Triggers to keep FTS in sync
+CREATE TRIGGER IF NOT EXISTS praises_ai AFTER INSERT ON praises BEGIN
+    INSERT INTO praises_fts(rowid, name, lyrics) VALUES (new.rowid, new.name, new.lyrics);
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_ad AFTER DELETE ON praises BEGIN
+    INSERT INTO praises_fts(praises_fts, rowid, name, lyrics) VALUES('delete', old.rowid, old.name, old.lyrics);
+END;
+
+-- Só as colunas indexadas: o UPDATE do gatilho de short_id (migração 023) roda
+-- antes do praises_ai e não pode mandar ao FTS um 'delete' de linha não indexada.
+CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE OF name, lyrics ON praises BEGIN
+    INSERT INTO praises_fts(praises_fts, rowid, name, lyrics) VALUES('delete', old.rowid, old.name, old.lyrics);
+    INSERT INTO praises_fts(rowid, name, lyrics) VALUES (new.rowid, new.name, new.lyrics);
+END;
+
+-- Fila de revisão da validação (migração 017). Ver migrations/017_validation_findings.sql.
+CREATE TABLE IF NOT EXISTS validation_findings (
+  id             TEXT PRIMARY KEY,        -- finding_id determinístico
+  run_id         TEXT NOT NULL,
+  detector       TEXT NOT NULL,
+  target_type    TEXT NOT NULL,           -- material | praise
+  target_id      TEXT NOT NULL,
+  praise_id      TEXT,                    -- para agrupar na tela
+  action         TEXT NOT NULL,
+  field          TEXT,
+  current_value  TEXT,
+  proposed_value TEXT,
+  confidence     TEXT NOT NULL,           -- alta | media | baixa | discussao
+  evidence       TEXT NOT NULL,           -- JSON
+  status         TEXT NOT NULL DEFAULT 'pendente',  -- pendente|discussao|aprovado|rejeitado|aplicado
+  decided_at     TEXT,
+  decided_by     TEXT,
+  decision_note  TEXT,
+  created_at     TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_vf_status_conf ON validation_findings(status, confidence);
+CREATE INDEX IF NOT EXISTS idx_vf_detector ON validation_findings(detector);
+CREATE INDEX IF NOT EXISTS idx_vf_praise ON validation_findings(praise_id);
+
+-- Gestos CIAs: dicionário, versão (ETag) e uso por material. Ver migrations/018_gestures.sql.
+CREATE TABLE IF NOT EXISTS gesture_dictionary (
+  id               TEXT PRIMARY KEY,                       -- 12 hex
+  name             TEXT NOT NULL,
+  description      TEXT NOT NULL DEFAULT '',
+  example_triggers TEXT NOT NULL DEFAULT '[]',              -- JSON: string[]
+  image_key        TEXT,                                    -- assets/cia/gestures/{id}.png
+  gif_key          TEXT,                                    -- assets/cia/gestures/{id}.gif
+  status           TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'deprecated')),
+  replaced_by      TEXT,                                    -- id do gesto que o substituiu
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS gesture_dictionary_meta (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  version INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO gesture_dictionary_meta (id, version) VALUES (1, 0);
+
+CREATE TABLE IF NOT EXISTS gesture_usage (
+  material_id TEXT NOT NULL,
+  gesture_id  TEXT NOT NULL,
+  count       INTEGER NOT NULL,
+  PRIMARY KEY (material_id, gesture_id),
+  FOREIGN KEY (material_id) REFERENCES praise_materials(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_gesture_usage_gesture ON gesture_usage(gesture_id);
+
+-- Crosswalk PLPCG → coldigom (migração 019; spec docs/superpowers/specs/2026-09-15-migracao-plpcg-design.md §8.1).
+-- Uma linha por pdf_id do PLPCG apontando o material do coldigom que o substitui.
+-- Sem FK, como o resto: quem escreve é scripts/validate-acervo/core/plpcg_apply.py;
+-- quem lê é GET /api/plpcg/manifest e /api/plpcg/resolve/:shortId.
+CREATE TABLE IF NOT EXISTS plpcg_crosswalk (
+  pdf_id             TEXT PRIMARY KEY,                       -- base64 urlsafe do caminho do PDF no PLPCG
+  short_id           TEXT NOT NULL,                          -- o ?s= dos links antigos
+  group_id           TEXT NOT NULL,                          -- 'NNN:slug' | 'avulso:slug' — o louvor no PLPCG
+  praise_id          TEXT NOT NULL,
+  praise_material_id TEXT NOT NULL,
+  evidencia          TEXT NOT NULL,                          -- 'num+slug+hash+path' | 'site:é este' …
+  confianca          TEXT NOT NULL,                          -- alta | media | humano
+  decidido_por       TEXT NOT NULL,                          -- detector | jairo
+  run_id             TEXT NOT NULL,                          -- o run do apply que escreveu (undo)
+  created_at         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_short ON plpcg_crosswalk(short_id);
+CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id);
+
+-- short_id do praise (migração 023; spec coldigui 2026-09-23-fim-fonte-plpcg §7.1).
+-- A coluna está no CREATE TABLE praises acima. O contador começa em 0 num D1 novo;
+-- quem atribui é o gatilho praises_short_id_ai, em todo INSERT, por qualquer porta.
+CREATE TABLE IF NOT EXISTS app_meta (
+  key   TEXT PRIMARY KEY,
+  value INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO app_meta (key, value) VALUES ('short_id_next', 0);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_praises_short_id ON praises(short_id);
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_ai AFTER INSERT ON praises
+WHEN NEW.short_id IS NULL
+BEGIN
+  UPDATE praises
+  SET short_id = (SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next')
+  WHERE id = NEW.id;
+  UPDATE app_meta SET value = value + 1 WHERE key = 'short_id_next';
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_bi BEFORE INSERT ON praises
+WHEN NEW.short_id IS NOT NULL AND (
+  NEW.short_id GLOB '*[^0-9a-f]*'
+  OR length(NEW.short_id) < 3
+  OR (length(NEW.short_id) > 3 AND substr(NEW.short_id, 1, 1) = '0')
+  OR length(NEW.short_id) > length((SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next'))
+  OR (
+    length(NEW.short_id) = length((SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next'))
+    AND NEW.short_id >= (SELECT printf('%03x', value) FROM app_meta WHERE key = 'short_id_next')
+  )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'praises.short_id: só um valor já emitido pode ser reposto');
+END;
+
+CREATE TRIGGER IF NOT EXISTS praises_short_id_bu BEFORE UPDATE OF short_id ON praises
+WHEN OLD.short_id IS NOT NULL AND NEW.short_id IS NOT OLD.short_id
+BEGIN
+  SELECT RAISE(ABORT, 'praises.short_id é imutável');
+END;

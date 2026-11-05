@@ -1,4 +1,4 @@
-import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding } from '../types';
+import type { ApiResponse, Praise, PraiseDetail, MaterialKind, Tag, PaginationInfo, FilterOptions, SortField, FindingDecision, FindingListParams, ValidationFinding, AdminContribution, ContributionListParams, CollaborationPlan, PlanTaskItem } from '../types';
 import { fatiarLote } from '../lib/uploadLimits';
 import { mensagemAmigavel, mensagemDeRede } from './mensagensDeErro';
 import type { GestureDictionary, GestureEntry } from '../lib/gestures/dictionary';
@@ -203,7 +203,6 @@ export interface SearchParams {
   tags?: string[];
   rhythm?: string[];
   tonality?: string[];
-  category?: string[];
   materialKinds?: string[];
   numberMin?: number;
   numberMax?: number;
@@ -224,7 +223,6 @@ export async function searchPraises(
   if (params.tags && params.tags.length > 0) urlParams.set('tags', params.tags.join(','));
   if (params.rhythm && params.rhythm.length > 0) urlParams.set('rhythm', params.rhythm.join(','));
   if (params.tonality && params.tonality.length > 0) urlParams.set('tonality', params.tonality.join(','));
-  if (params.category && params.category.length > 0) urlParams.set('category', params.category.join(','));
   if (params.materialKinds && params.materialKinds.length > 0) {
     urlParams.set('materialKinds', params.materialKinds.join(','));
   }
@@ -260,7 +258,6 @@ export async function getFilterOptions(params: SearchParams = {}): Promise<Filte
   if (params.tags?.length) urlParams.set('tags', params.tags.join(','));
   if (params.rhythm?.length) urlParams.set('rhythm', params.rhythm.join(','));
   if (params.tonality?.length) urlParams.set('tonality', params.tonality.join(','));
-  if (params.category?.length) urlParams.set('category', params.category.join(','));
   if (params.materialKinds?.length) urlParams.set('materialKinds', params.materialKinds.join(','));
   // Ver a nota em searchPraises: `null` chega aqui pela serialização da
   // FilterBar, e `null !== undefined` deixava o `.toString()` explodir.
@@ -291,7 +288,6 @@ export type CreatePraiseInput = {
   author?: string | null;
   rhythm?: string | null;
   tonality?: string | null;
-  category?: string | null;
   lyrics?: string | null;
   tag_ids?: string[];
 };
@@ -308,9 +304,21 @@ export async function createPraise(body: CreatePraiseInput): Promise<PraiseDetai
   return response.data;
 }
 
+export async function duplicatePraise(praiseId: string, name?: string): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/duplicate`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(name ? { name } : {}),
+    }
+  );
+  return response.data;
+}
+
 export async function updatePraise(
   id: string,
-  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'category' | 'lyrics'>>,
+  updates: Partial<Pick<Praise, 'name' | 'number' | 'author' | 'rhythm' | 'tonality' | 'lyrics'>>,
   /**
    * `updated_at` que a tela carregou. Vai como `if_updated_at`; se alguém gravou
    * no meio, o servidor responde 409 em vez de deixar a última escrita vencer em
@@ -327,6 +335,16 @@ export async function updatePraise(
     }
   );
   return response.data;
+}
+
+export async function deletePraise(id: string): Promise<{ ok: boolean }> {
+  const response = await fetchJson<{ ok: boolean }>(
+    `${API_BASE_URL}/api/praises/${id}`,
+    {
+      method: 'DELETE',
+    }
+  );
+  return response;
 }
 
 export async function groupPraise(id: string, targetPraiseId: string): Promise<PraiseDetail> {
@@ -366,6 +384,7 @@ export async function createMaterial(praiseId: string, material: {
   type: string;
   url?: string;
   source_material_id?: string;
+  notes?: string | null;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/praises/${praiseId}/materials`,
@@ -385,6 +404,7 @@ export async function updateMaterial(materialId: string, updates: {
   is_reviewed?: boolean;
   /** Move o material para outro louvor; a resposta continua sendo o louvor de origem. */
   praise_id?: string;
+  notes?: string | null;
 }): Promise<PraiseDetail> {
   const response = await fetchJson<ApiResponse<PraiseDetail>>(
     `${API_BASE_URL}/api/materials/${materialId}`,
@@ -428,11 +448,43 @@ export async function deleteMaterial(materialId: string): Promise<PraiseDetail> 
   return response.data;
 }
 
+export async function bulkMoveMaterials(
+  praiseId: string,
+  materialIds: string[],
+  destinationPraiseId: string
+): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/materials/bulk-move`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ material_ids: materialIds, destination_praise_id: destinationPraiseId }),
+    }
+  );
+  return response.data;
+}
+
+export async function bulkDeleteMaterials(
+  praiseId: string,
+  materialIds: string[]
+): Promise<PraiseDetail> {
+  const response = await fetchJson<ApiResponse<PraiseDetail>>(
+    `${API_BASE_URL}/api/praises/${praiseId}/materials/bulk-delete`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ material_ids: materialIds }),
+    }
+  );
+  return response.data;
+}
+
 type ItemDeLote = {
   file: File;
   material_kind: string;
   type: string;
   file_path_legacy?: string;
+  notes?: string | null;
 };
 
 async function enviarUmLote(praiseId: string, itens: ItemDeLote[]): Promise<PraiseDetail> {
@@ -445,6 +497,7 @@ async function enviarUmLote(praiseId: string, itens: ItemDeLote[]): Promise<Prai
       material_kind: it.material_kind,
       type: it.type,
       file_path_legacy: it.file_path_legacy,
+      notes: it.notes ?? undefined,
     };
   });
   form.append('items', JSON.stringify(meta));
@@ -618,7 +671,6 @@ export type MergePraisesInput = {
     author: string | null;
     rhythm: string | null;
     tonality: string | null;
-    category: string | null;
     lyrics: string | null;
   };
   tag_ids: string[];
@@ -885,4 +937,110 @@ export function getAssetUrl(r2Key: string): string {
   const key = r2Key.replace(/^\//, '');
   return API_BASE_URL ? `${API_BASE_URL}/${key}` : `/${key}`;
 }
+
+// ---------- Contribuições & Assistente de Acervo (IA / MCP) ----------
+
+export async function listAdminContributions(
+  params: ContributionListParams = {}
+): Promise<{ data: AdminContribution[]; pagination: PaginationInfo }> {
+  const urlParams = new URLSearchParams();
+  if (params.status) urlParams.set('status', params.status);
+  if (params.kind) urlParams.set('kind', params.kind);
+  if (params.praise) urlParams.set('praise', params.praise);
+  if (params.page) urlParams.set('page', params.page.toString());
+
+  const response = await fetchJson<ApiResponse<AdminContribution[]>>(
+    `${API_BASE_URL}/api/admin/contributions?${urlParams}`
+  );
+  return {
+    data: response.data,
+    pagination: response.pagination!,
+  };
+}
+
+export async function getAdminContribution(id: string): Promise<AdminContribution> {
+  const response = await fetchJson<ApiResponse<AdminContribution>>(
+    `${API_BASE_URL}/api/admin/contributions/${id}`
+  );
+  return response.data;
+}
+
+export async function generateAdminContributionPlan(
+  id: string
+): Promise<{ ok: boolean; planId: string; plan: CollaborationPlan }> {
+  return fetchJson<{ ok: boolean; planId: string; plan: CollaborationPlan }>(
+    `${API_BASE_URL}/api/admin/contributions/${id}/plan`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    }
+  );
+}
+
+export async function approveAdminContributionPlan(
+  id: string,
+  opts: {
+    planId?: string;
+    planHash?: string;
+    decisionNote?: string;
+    tasks?: PlanTaskItem[];
+    summary?: string;
+    todos?: string[];
+  } = {}
+): Promise<{ ok: boolean; message: string; executed_tasks: number }> {
+  return fetchJson<{ ok: boolean; message: string; executed_tasks: number }>(
+    `${API_BASE_URL}/api/admin/contributions/${id}/approve`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        plan_id: opts.planId,
+        plan_hash: opts.planHash,
+        decision_note: opts.decisionNote,
+        tasks: opts.tasks,
+        summary: opts.summary,
+        todos: opts.todos,
+      }),
+    }
+  );
+}
+
+export async function patchAdminContribution(
+  id: string,
+  status: 'recebida' | 'pendente' | 'em_analise' | 'aceita' | 'recusada' | 'aplicada',
+  decisionNote?: string
+): Promise<{ ok: boolean }> {
+  return fetchJson<{ ok: boolean }>(
+    `${API_BASE_URL}/api/admin/contributions/${id}`,
+    {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        status,
+        decision_note: decisionNote,
+      }),
+    }
+  );
+}
+
+export async function fetchAdminContributionFile(
+  contributionId: string,
+  fileId: string
+): Promise<{ blob: Blob; contentType: string; filename: string }> {
+  const headers = { ...authHeaders() };
+  const res = await fetch(
+    `${API_BASE_URL}/api/admin/contributions/${contributionId}/files/${fileId}`,
+    { credentials: 'include', headers }
+  );
+  if (!res.ok) {
+    throw new Error('Não foi possível carregar o arquivo ou arquivo em quarentena');
+  }
+  const contentType = res.headers.get('content-type') || 'application/octet-stream';
+  const disposition = res.headers.get('content-disposition') || '';
+  const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="([^"]+)"/);
+  const filename = match ? decodeURIComponent(match[1] || match[2]) : 'anexo';
+  const blob = await res.blob();
+  return { blob, contentType, filename };
+}
+
 

@@ -5,10 +5,11 @@ import type { GestureEntry, Indice } from '../../lib/gestures/dictionary';
 import { achatar, chaveDoCaminho, irmaosContiguos, ordenar, pai, type Caminho, type Cartao } from '../../lib/gestures/flatten';
 import {
   adicionarLinha, definirInstrucao, definirRepeticoes, desagrupar, editarLinha, editarTexto, envolver, inserirApos, mover,
-  novoGesto, podeDesagrupar, podeEnvolver, remover, removerLinha, trocarGesto, type EspecDeBloco, type Resultado,
+  novoGesto, remover, removerLinha, trocarGesto, type EspecDeBloco, type Resultado,
 } from '../../lib/gestures/edit';
 import { ROTULOS_DE_INSTRUCAO } from '../../lib/gestures/render';
 import { GesturePicker } from './GesturePicker';
+import { GesturesToolbar } from './GesturesToolbar';
 import { GestureThumb } from './GestureThumb';
 
 type Props = {
@@ -75,9 +76,6 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
   };
 
   const envolverEm = (espec: EspecDeBloco) => aplicar(envolver(doc, selecionados, espec));
-  const motivoEnvolver = (espec: EspecDeBloco) => (selecionados.length ? podeEnvolver(doc, selecionados, espec) : 'Selecione um cartão.');
-  const motivoDesagrupar = foco ? podeDesagrupar(doc, foco) : 'Selecione um bloco.';
-
   const inserir = (item: Item) => aplicar(inserirApos(doc, foco, item));
 
   const renderCartao = (c: Cartao) => {
@@ -224,33 +222,19 @@ export function GesturesEditor({ doc, indice, foco, onFoco, onMudar, erroNoCamin
 
   return (
     <div className="ge-editor">
-      <div className="ge-barra" role="toolbar" aria-label="Ações do editor">
-        <button type="button" className="ge-btn" onClick={() => setPicker({ modo: 'inserir', caminho: foco })}>Adicionar gesto</button>
-        <button type="button" className="ge-btn" onClick={() => inserir({ type: 'instruction', kind: 'instruments' })}>Adicionar instrução</button>
-        <button type="button" className="ge-btn" onClick={() => inserir({ type: 'text', text: '' })}>Adicionar texto</button>
-        <span className="ge-barra-sep" />
-        <input type="number" min={2} aria-label="Vezes" className="ge-input ge-input--n" value={vezes} onChange={(e) => setVezes(Math.max(2, Number(e.target.value) || 2))} />
-        {(
-          [
-            [`Repetir ${vezes}x`, { type: 'repeat', count: vezes }],
-            ['Coro', { type: 'coro' }],
-            ['Link', { type: 'link' }],
-            ['Final', { type: 'final' }],
-          ] as [string, EspecDeBloco][]
-        ).map(([rotulo, espec]) => {
-          const motivo = motivoEnvolver(espec);
-          return (
-            <button key={rotulo} type="button" className="ge-btn" disabled={!!motivo} title={motivo ?? undefined} onClick={() => envolverEm(espec)}>
-              {rotulo}
-            </button>
-          );
-        })}
-        <button type="button" className="ge-btn" disabled={!!motivoDesagrupar} title={motivoDesagrupar ?? undefined} onClick={() => foco && aplicar(desagrupar(doc, foco))}>Desagrupar</button>
-        <span className="ge-barra-sep" />
-        <button type="button" className="ge-btn" disabled={!foco} onClick={() => foco && aplicar(mover(doc, foco, -1))}>Mover para cima</button>
-        <button type="button" className="ge-btn" disabled={!foco} onClick={() => foco && aplicar(mover(doc, foco, 1))}>Mover para baixo</button>
-        <button type="button" className="ge-btn ge-btn--perigo" disabled={!foco} onClick={() => foco && aplicar(remover(doc, foco))}>Remover</button>
-      </div>
+      <GesturesToolbar
+        doc={doc}
+        foco={foco}
+        selecionados={selecionados}
+        vezes={vezes}
+        onMudarVezes={setVezes}
+        onAdicionarGesto={() => setPicker({ modo: 'inserir', caminho: foco })}
+        onInserir={inserir}
+        onEnvolver={envolverEm}
+        onDesagrupar={() => foco && aplicar(desagrupar(doc, foco))}
+        onMover={(dir) => foco && aplicar(mover(doc, foco, dir))}
+        onRemover={() => foco && aplicar(remover(doc, foco))}
+      />
 
       <div className="ge-lista" role="listbox" aria-label="Cartões do documento">
         {cartoes.length === 0 ? <p className="ge-vazio">Documento vazio. Comece por "Adicionar gesto".</p> : cartoes.map(renderCartao)}

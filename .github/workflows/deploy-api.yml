@@ -15,10 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 22: os testes de SQL de verdade usam node:sqlite (não existe no 20), e o
+      # wrangler 4.93 do package.json já declara engines.node >= 22.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: api/package-lock.json
 

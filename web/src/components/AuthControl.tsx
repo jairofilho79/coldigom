@@ -1,23 +1,23 @@
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { getLoginUrl } from '../services/api';
 
 type AuthControlProps = {
   children?: React.ReactNode;
-  /** Tamanho (px) do avatar exibido ao lado do nome, quando `user.picture` existe. */
+  /** Tamanho (px) do avatar exibido no botão de perfil. */
   avatarSize?: number;
   /** Chamado depois que o `logout()` resolve, para quem precisa limpar estado local (ex.: fechar edição). */
   onAfterLogout?: () => void;
   /**
-   * Rótulo antes do nome, ex.: "Logado como". A PraiseDetailPage tinha esse texto antes
-   * da extração deste componente e o perdeu na mudança; a HomePage nunca teve, e por
-   * isso o prefixo é opcional em vez de fixo aqui dentro.
+   * Rótulo antes do nome no menu de perfil, ex.: "Logado como". A PraiseDetailPage usa esse texto.
    */
   prefixo?: string;
 };
 
 /**
- * Controle de sessão. Estava duplicado inline na HomePage e na PraiseDetailPage,
- * com textos divergentes; aqui o texto é um só.
+ * Controle de sessão.
+ * Quando o usuário está autenticado, exibe as ações filhas e, ao final, o botão de perfil
+ * (com avatar ou fallback). Ao clicar no botão de perfil, abre um menu com os dados do usuário e a opção "Sair".
  */
 export function AuthControl({
   children,
@@ -26,6 +26,32 @@ export function AuthControl({
   prefixo,
 }: AuthControlProps) {
   const { user, ready, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   // Enquanto a sessão não resolveu, não mostrar nada: piscar "Entrar" para quem
   // já está logado é pior que esperar.
@@ -40,40 +66,74 @@ export function AuthControl({
   }
 
   const handleLogout = async () => {
+    setIsOpen(false);
     await logout();
     onAfterLogout?.();
   };
 
+  const displayName = user.name || user.email || '';
+
   return (
     <>
-      {user.picture ? (
-        // Decorativo: o nome já aparece ao lado em texto, então alt="" evita ruído em leitor de tela.
-        <img
-          className="auth-avatar"
-          src={user.picture}
-          alt=""
-          width={avatarSize}
-          height={avatarSize}
-        />
-      ) : null}
-      {/* O <strong> é do prefixo, não do componente: a regra `.auth-user strong` do
-          global.css existe para separar o rótulo do nome, e só há rótulo quando há
-          prefixo. Sem prefixo (HomePage) o markup fica igual ao que já estava na tela —
-          este componente não muda a aparência de quem não pediu nada. */}
-      <span className="auth-user">
-        {prefixo ? (
-          <>
-            {`${prefixo} `}
-            <strong>{user.name || user.email}</strong>
-          </>
-        ) : (
-          user.name || user.email
-        )}
-      </span>
       {children}
-      <button type="button" className="auth-btn" onClick={() => void handleLogout()}>
-        Sair
-      </button>
+      <div className="auth-profile-container" ref={menuRef}>
+        <button
+          type="button"
+          className="auth-profile-btn"
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
+          aria-label={displayName ? `Perfil de ${displayName}` : 'Perfil do usuário'}
+          title={displayName || 'Perfil do usuário'}
+        >
+          {user.picture ? (
+            <img
+              className="auth-avatar"
+              src={user.picture}
+              alt=""
+              width={avatarSize}
+              height={avatarSize}
+            />
+          ) : (
+            <span
+              className="auth-avatar auth-avatar-fallback"
+              style={{ width: avatarSize, height: avatarSize }}
+              aria-hidden="true"
+            >
+              {(displayName || '?')[0].toUpperCase()}
+            </span>
+          )}
+        </button>
+
+        {isOpen && (
+          <div
+            className="auth-profile-menu"
+            role="menu"
+            aria-label="Menu de perfil"
+          >
+            <div className="auth-profile-menu-header">
+              {prefixo ? (
+                <div className="auth-profile-menu-prefix">{prefixo}</div>
+              ) : null}
+              <div className="auth-profile-menu-name">
+                <strong>{user.name || user.email}</strong>
+              </div>
+              {user.name && user.email ? (
+                <div className="auth-profile-menu-email">{user.email}</div>
+              ) : null}
+            </div>
+            <div className="auth-profile-menu-divider" />
+            <button
+              type="button"
+              className="auth-profile-menu-item"
+              role="menuitem"
+              onClick={() => void handleLogout()}
+            >
+              Sair
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 }

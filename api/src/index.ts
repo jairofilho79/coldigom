@@ -18,6 +18,7 @@ import { registerDriveRoutes } from './routes/drive';
 import { registerGesturesRoutes } from './routes/gestures';
 import { registerHealthRoutes } from './routes/health';
 import { registerMaterialsRoutes } from './routes/materials';
+import { registerPlpcgRoutes } from './routes/plpcg';
 import { registerPraisesRoutes } from './routes/praises';
 import { registerTagsRoutes } from './routes/tags';
 import { registerValidationRoutes } from './routes/validation';
@@ -75,6 +76,7 @@ app.use('/*', async (c, next) => {
 
 registerAuthRoutes(app);
 registerPraisesRoutes(app);
+registerPlpcgRoutes(app);
 registerMaterialsRoutes(app);
 registerGesturesRoutes(app);
 registerTagsRoutes(app);

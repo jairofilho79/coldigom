@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const CSV_PATH = path.join(REPO_ROOT, 'storage/material_kinds_unique.csv');
-const SQL_PATH = path.join(REPO_ROOT, 'api/migrations/002_material_kind_translations_pt-BR.sql');
+const MIGRATIONS_DIR = path.join(REPO_ROOT, 'api/migrations');
 const OUT_PATH = path.join(REPO_ROOT, 'web/src/lib/materialKindInference/aliases.generated.ts');
 
 type AliasEntry = { kindId: string; alias: string };
@@ -30,8 +30,7 @@ function parseCsv(content: string): AliasEntry[] {
 
 function parsePtBrSql(content: string): AliasEntry[] {
   const entries: AliasEntry[] = [];
-  const re =
-    /INSERT OR REPLACE INTO material_kind_translations \(material_kind_id, locale, label\) VALUES \('([^']+)', 'pt-BR', '([^']+)'\)/g;
+  const re = /\('([0-9a-fA-F-]+)',\s*'pt-BR',\s*'([^']+)'\)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(content)) !== null) {
     entries.push({ kindId: m[1], alias: m[2] });
@@ -41,8 +40,16 @@ function parsePtBrSql(content: string): AliasEntry[] {
 
 function main(): void {
   const csv = fs.readFileSync(CSV_PATH, 'utf-8');
-  const sql = fs.readFileSync(SQL_PATH, 'utf-8');
-  const all = [...parseCsv(csv), ...parsePtBrSql(sql)];
+  const sqlEntries: AliasEntry[] = [];
+  const migrationFiles = fs
+    .readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+  for (const file of migrationFiles) {
+    const content = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf-8');
+    sqlEntries.push(...parsePtBrSql(content));
+  }
+  const all = [...parseCsv(csv), ...sqlEntries];
 
   const byKind = new Map<string, Set<string>>();
   for (const { kindId, alias } of all) {

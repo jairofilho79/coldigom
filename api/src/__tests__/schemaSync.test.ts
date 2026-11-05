@@ -60,4 +60,98 @@ describe('schema.sql acompanha as migrações', () => {
       expect(schema).toContain(c);
     }
   });
+
+  it('019: a tabela plpcg_crosswalk e os dois índices estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '019_plpcg_crosswalk.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS plpcg_crosswalk (',
+      'CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_short ON plpcg_crosswalk(short_id)',
+      'CREATE INDEX IF NOT EXISTS idx_plpcg_crosswalk_praise ON plpcg_crosswalk(praise_id)',
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+    const colunas = ['pdf_id TEXT PRIMARY KEY', 'short_id TEXT NOT NULL', 'group_id TEXT NOT NULL',
+      'praise_id TEXT NOT NULL', 'praise_material_id TEXT NOT NULL', 'evidencia TEXT NOT NULL',
+      'confianca TEXT NOT NULL', 'decidido_por TEXT NOT NULL', 'run_id TEXT NOT NULL',
+      "created_at TEXT NOT NULL DEFAULT (datetime('now'))"];
+    for (const c of colunas) {
+      expect(mig).toContain(c);
+      expect(schema).toContain(c);
+    }
+  });
+
+  it('023: short_id, índice único, app_meta, gatilhos de short_id e o praises_au novo estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '023_praise_short_id.sql'), 'utf8'));
+    expect(mig).toContain('ALTER TABLE praises ADD COLUMN short_id TEXT');
+    expect(schema).toMatch(/CREATE TABLE IF NOT EXISTS praises \([^;]* short_id TEXT,/);
+    expect(schema).toContain("INSERT OR IGNORE INTO app_meta (key, value) VALUES ('short_id_next', 0)");
+    const gatilhos = mig.match(/CREATE TRIGGER IF NOT EXISTS praises_(?:au|short_id_\w+) .*? END;/g) ?? [];
+    expect(gatilhos).toHaveLength(4);
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS app_meta ( key TEXT PRIMARY KEY, value INTEGER NOT NULL );',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_praises_short_id ON praises(short_id);',
+      'CREATE TRIGGER IF NOT EXISTS praises_au AFTER UPDATE OF name, lyrics ON praises BEGIN',
+      ...gatilhos,
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+  });
+
+  it('024: tabela material_kind_classes, colunas e índices no material_kinds estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '024_material_kind_classes.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS material_kind_classes (',
+      'sort_order INTEGER NOT NULL UNIQUE',
+      'REFERENCES material_kind_classes(id) ON DELETE SET NULL',
+      'REFERENCES material_kinds(id) ON DELETE RESTRICT',
+      'CREATE INDEX IF NOT EXISTS idx_material_kinds_parent_id ON material_kinds(parent_id)',
+      "('metais', 'Metais', 50)",
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+  });
+
+  it('025: praises sem category e sem idx_praises_category no schema.sql', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '025_drop_praise_category.sql'), 'utf8'));
+    expect(mig).toContain('DROP INDEX IF EXISTS idx_praises_category;');
+    expect(mig).toContain('ALTER TABLE praises DROP COLUMN category;');
+    expect(schema).not.toContain('idx_praises_category');
+    const praises = schema.slice(schema.indexOf('CREATE TABLE IF NOT EXISTS praises ('));
+    expect(praises.slice(0, praises.indexOf(');'))).not.toMatch(/\bcategory\b/);
+  });
+
+  it('033: a tabela praise_biblical e o índice estão nos dois', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '033_praise_biblical.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TABLE IF NOT EXISTS praise_biblical (',
+      'CREATE INDEX IF NOT EXISTS idx_praise_biblical_ref ON praise_biblical(referencia_principal);',
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+    const colunas = [
+      'praise_id TEXT PRIMARY KEY REFERENCES praises(id) ON DELETE CASCADE',
+      'tem_citacao_direta INTEGER NOT NULL DEFAULT 0',
+      'referencia_principal TEXT',
+      'resumo_uma_linha TEXT',
+      'resumo_formatado TEXT',
+      "citacoes_diretas_json TEXT NOT NULL DEFAULT '[]'",
+      'mensagem_central TEXT',
+      "temas_homileticos_json TEXT NOT NULL DEFAULT '[]'",
+      'passagem_origem_direta TEXT',
+      "pericopes_relacionadas_json TEXT NOT NULL DEFAULT '[]'",
+    ];
+    for (const c of colunas) {
+      expect(mig).toContain(c);
+      expect(schema).toContain(c);
+    }
+  });
 });

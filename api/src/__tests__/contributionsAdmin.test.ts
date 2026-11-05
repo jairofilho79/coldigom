@@ -131,3 +131,72 @@ describe('PATCH /api/admin/contributions/:id', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('GET /api/admin/contributions/:id', () => {
+  it('devolve detalhe da contribuição com target praise data', async () => {
+    const { db: d } = db({ primeira: { ...ROW, target_praise_id: 'p1' }, arquivos: [FILE] });
+    const res = await pedir('/api/admin/contributions/c1', {}, d);
+    expect(res.status).toBe(200);
+    const corpo = (await res.json()) as { data: Record<string, unknown> };
+    expect(corpo.data.id).toBe('c1');
+    expect(corpo.data.fields).toEqual({ field: 'tonality', current: 'Dm', proposed: 'Em' });
+  });
+
+  it('contribuição inexistente → 404', async () => {
+    const { db: d } = db({ primeira: null });
+    const res = await pedir('/api/admin/contributions/nao-existe', {}, d);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /api/admin/contributions/:id/approve', () => {
+  it('aprova e executa tarefas editadas pelo curador', async () => {
+    const planRow = {
+      id: 'plan_curator',
+      contribution_id: 'c1',
+      version: 1,
+      model_name: 'curator_edit',
+      summary: 'Ajuste manual de tom',
+      todos: '["Executar edit_praise_metadata"]',
+      plan_json: JSON.stringify({
+        summary: 'Ajuste manual de tom',
+        todos: ['Executar edit_praise_metadata'],
+        tasks: [
+          {
+            id: 'task_1',
+            operation: 'edit_praise_metadata',
+            params: { praise_id: 'p1', fields: { tonality: 'Em' } },
+          },
+        ],
+      }),
+      plan_hash: 'hash_test',
+      status: 'pending_approval',
+    };
+    const { db: d, chamadas } = db({ primeira: planRow });
+    const customTasks = [
+      {
+        id: 'task_1',
+        operation: 'edit_praise_metadata',
+        params: { praise_id: 'p1', fields: { tonality: 'Em' } },
+      },
+    ];
+    const res = await pedir(
+      '/api/admin/contributions/c1/approve',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          tasks: customTasks,
+          summary: 'Ajuste manual de tom',
+          decision_note: 'Aprovado pelo curador',
+        }),
+      },
+      d
+    );
+    expect(res.status).toBe(200);
+    const corpo = (await res.json()) as { ok: boolean };
+    expect(corpo.ok).toBe(true);
+    const insertPlan = chamadas.find((c) => c.sql.includes('INSERT INTO collaboration_plans'));
+    expect(insertPlan).toBeDefined();
+    expect(insertPlan?.sql).toContain('curator_edit');
+  });
+});

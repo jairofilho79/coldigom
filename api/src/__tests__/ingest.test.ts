@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { resolveLocalFile } from '../../scripts/ingest';
+import { praiseInsertSql, resolveLocalFile } from '../../scripts/ingest';
 
 describe('resolveLocalFile', () => {
   it('finds file with material_id.type pattern', () => {
@@ -38,5 +38,18 @@ describe('resolveLocalFile', () => {
 
     expect(found).toBe(filePath);
     fs.rmSync(dir, { recursive: true });
+  });
+});
+
+describe('praiseInsertSql', () => {
+  it('ignora praise_category de ZIPs antigos', () => {
+    const sql = praiseInsertSql({
+      praise_id: 'p1',
+      praise_name: "D'Ávila",
+      praise_category: 'Clamor',
+    } as Parameters<typeof praiseInsertSql>[0] & { praise_category: string });
+    expect(sql).toBe(
+      "INSERT INTO praises (id, name, number, author, rhythm, tonality, lyrics) VALUES ('p1', 'D''Ávila', NULL, NULL, NULL, NULL, NULL);"
+    );
   });
 });

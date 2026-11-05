@@ -82,7 +82,10 @@ describe('checkStructural — texto', () => {
 });
 
 describe('checkStructural — partituras editáveis', () => {
-  const musicxml = '<score-partwise version="4.0"><part-list/><part id="P1"><measure number="1"/></part></score-partwise>';
+  const partList = '<part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list>';
+  const partwiseBody = `${partList}<part id="P1"><measure number="1"/></part>`;
+  const timewiseBody = `${partList}<measure number="1"><part id="P1"/></measure>`;
+  const musicxml = `<score-partwise version="4.0">${partwiseBody}</score-partwise>`;
   const mscx = '<museScore version="4.0"><Score><Staff id="1"><Measure/></Staff></Score></museScore>';
   const container = (target: string, media?: string) =>
     `<container><rootfiles><rootfile full-path="${target}"${media ? ` media-type="${media}"` : ''}/></rootfiles></container>`;
@@ -104,7 +107,7 @@ describe('checkStructural — partituras editáveis', () => {
   it('valida MusicXML partwise/timewise e containers MSCZ/MXL reais (stored e deflate)', () => {
     expect(checkStructural(enc(`\ufeff<?xml version="1.0"?>${musicxml}`), 'musicxml'))
       .toEqual({ status: 'limpa', detectedType: 'musicxml', tokens: [] });
-    expect(checkStructural(enc('<score-timewise version="4.0"><part-list/></score-timewise>'), 'musicxml').status).toBe('limpa');
+    expect(checkStructural(enc(`<score-timewise version="4.0">${timewiseBody}</score-timewise>`), 'musicxml').status).toBe('limpa');
     for (const type of ['mscz', 'mxl'] as const) {
       expect(checkStructural(scoreZip(type), type)).toEqual({ status: 'limpa', detectedType: type, tokens: [] });
     }
@@ -266,14 +269,14 @@ describe('checkStructural — partituras editáveis', () => {
   it.each(publicScores)('aceita PUBLIC oficial MusicXML $version $kind cru e em MXL', ({ version, kind }) => {
     const root = `score-${kind.toLowerCase()}`;
     const dtd = publicDoctype(root, version, kind, `http://www.musicxml.org/dtds/${kind.toLowerCase()}.dtd`);
-    const xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${dtd}\n<${root}${version === '1.0' ? '' : ` version="${version}"`}><part-list/></${root}>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${dtd}\n<${root}${version === '1.0' ? '' : ` version="${version}"`}>${kind === 'Partwise' ? partwiseBody : timewiseBody}</${root}>`;
     expect(checkStructural(enc(xml), 'musicxml')).toEqual({ status: 'limpa', detectedType: 'musicxml', tokens: [] });
     expect(checkStructural(scoreZip('mxl', {}, xml), 'mxl')).toEqual({ status: 'limpa', detectedType: 'mxl', tokens: [] });
   });
 
   it('aceita aspas simples, URL HTTPS exata e entidades XML predefinidas, sem carregar a DTD', () => {
     const dtd = `<!DOCTYPE score-partwise PUBLIC '-//Recordare//DTD MusicXML 4.0 Partwise//EN' 'https://www.musicxml.org/dtds/partwise.dtd'>`;
-    const xml = dtd + '<score-partwise version="4.0"><work><work-title>A &amp; B</work-title></work><part-list/></score-partwise>';
+    const xml = dtd + `<score-partwise version="4.0"><work><work-title>A &amp; B</work-title></work>${partwiseBody}</score-partwise>`;
     expect(checkStructural(enc(xml), 'musicxml').status).toBe('limpa');
     expect(checkStructural(scoreZip('mxl', {}, xml), 'mxl').status).toBe('limpa');
   });
@@ -346,7 +349,7 @@ describe('checkStructural — partituras editáveis', () => {
     rejected(scoreZip('mscz', {
       'unused.xml': enc('<!DOCTYPE fake><fake/>'),
     }), 'mscz', 'score_dtd_forbidden');
-    expect(checkStructural(enc('<!-- <!DOCTYPE fake> --><score-partwise>A &amp; B</score-partwise>'), 'musicxml').status).toBe('limpa');
+    expect(checkStructural(enc(`<!-- <!DOCTYPE fake> --><score-partwise>A &amp; B${partwiseBody}</score-partwise>`), 'musicxml').status).toBe('limpa');
   });
 
   it('limita XML a 4 MiB, container a 64 KiB, arquivo a 16 MiB e profundidade a 64', () => {
@@ -356,11 +359,11 @@ describe('checkStructural — partituras editáveis', () => {
       'META-INF/container.xml': enc(' '.repeat(64 * 1024 + 1)),
     }), 'mscz', 'score_container_too_large');
     rejected(enc(`<score-partwise>${'<a>'.repeat(64)}${'</a>'.repeat(64)}</score-partwise>`), 'musicxml', 'score_xml_too_deep');
-    const atLimit = enc(`<score-partwise>${'<a>'.repeat(63)}${'</a>'.repeat(63)}</score-partwise>`);
+    const atLimit = enc(`<score-partwise>${'<a>'.repeat(63)}${'</a>'.repeat(63)}${partwiseBody}</score-partwise>`);
     expect(checkStructural(atLimit, 'musicxml').status).toBe('limpa');
     const open = '<score-partwise>';
     const close = '</score-partwise>';
-    expect(checkStructural(enc(open + ' '.repeat(4 * 1024 * 1024 - open.length - close.length) + close), 'musicxml').status).toBe('limpa');
+    expect(checkStructural(enc(open + partwiseBody + ' '.repeat(4 * 1024 * 1024 - open.length - partwiseBody.length - close.length) + close), 'musicxml').status).toBe('limpa');
     const xml = container('scores/main.mscx');
     expect(checkStructural(scoreZip('mscz', {
       'META-INF/container.xml': [enc(' '.repeat(64 * 1024 - xml.length) + xml), { level: 0 }],

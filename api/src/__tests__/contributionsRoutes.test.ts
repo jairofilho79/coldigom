@@ -63,9 +63,27 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('POST /api/contributions', () => {
+  it.each([
+    '<?editor version="1"?><score-partwise><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>',
+    '<m:score-partwise xmlns:m="http://www.musicxml.org/ns/musicxml"><m:part-list><m:score-part id="P1"><m:part-name>Voz</m:part-name></m:score-part></m:part-list><m:part id="P1"><m:measure number="1"/></m:part></m:score-partwise>',
+  ])('aceita contribuição MusicXML com prólogo ou namespace válido', async (xml) => {
+    const { db } = fakeDb();
+    const r2 = fakeR2();
+    const res = await app.request('/api/contributions', {
+      method: 'POST',
+      headers: { authorization: 'Bearer sess_score_test' },
+      body: multipart({ ...BASE, kind: 'content', subkind: 'add_material' }, [
+        { name: 'voz.musicxml', bytes: new TextEncoder().encode(xml) },
+      ]),
+    }, env(db, r2));
+    expect(res.status).toBe(201);
+    expect(Array.from(r2.objetos.keys())[0]).toMatch(/\.musicxml$/);
+    expect(enviados).toHaveLength(1);
+  });
+
   it('aceita MusicXML com DOCTYPE PUBLIC oficial sem declaração XML', async () => {
     const xml = '<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'
-      + '<score-partwise version="4.0"><part-list/></score-partwise>';
+      + '<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>';
     const { db, chamadas } = fakeDb();
     const r2 = fakeR2();
     const res = await app.request('/api/contributions', {

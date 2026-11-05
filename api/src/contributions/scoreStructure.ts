@@ -40,11 +40,13 @@ type XmlInfo = {
   root: string;
   uri: string;
   scores: number;
+  scoreParts: number;
+  musicalMeasures: number;
   rootfiles: { path: string; media?: string }[];
 };
 
-function parseXml(bytes: Uint8Array, container = false): XmlInfo {
-  if (bytes.length > (container ? MAX_CONTAINER : MAX_XML)) {
+function parseXml(bytes: Uint8Array, container = false, maxXml = MAX_XML, allowDoctype = true): XmlInfo {
+  if (bytes.length > (container ? MAX_CONTAINER : maxXml)) {
     fail(container ? 'score_container_too_large' : 'score_xml_too_large');
   }
   let xml: string;
@@ -53,12 +55,16 @@ function parseXml(bytes: Uint8Array, container = false): XmlInfo {
   } catch {
     return fail('score_invalid_xml');
   }
-  const info: XmlInfo = { root: '', uri: '', scores: 0, rootfiles: [] };
+  const info: XmlInfo = { root: '', uri: '', scores: 0, scoreParts: 0, musicalMeasures: 0, rootfiles: [] };
   const parser = new SaxesParser({ xmlns: true });
   const ancestors: string[] = [];
   let doctype: { root: string; version: string } | undefined;
   parser.on('error', () => fail('score_invalid_xml'));
+  parser.on('processinginstruction', ({ target }) => {
+    if (target.toLowerCase() === 'xml-stylesheet') fail('score_invalid_xml');
+  });
   parser.on('doctype', (declaration) => {
+    if (!allowDoctype) fail('score_dtd_forbidden');
     // Só reconhece a declaração inerte inteira: nada de subset, entidades ou
     // SYSTEM isolado. saxes não carrega nem resolve o recurso externo.
     const match = /^[ \t\r\n]*(score-partwise|score-timewise|container)[ \t\r\n]+PUBLIC[ \t\r\n]+(["'])([^"']+)\2[ \t\r\n]+(["'])([^"']+)\4[ \t\r\n]*$/.exec(declaration);
@@ -86,10 +92,19 @@ function parseXml(bytes: Uint8Array, container = false): XmlInfo {
       if (container && ancestors.join('/') === 'container/rootfiles' && tag.local === 'rootfile') {
         const path = tag.attributes['full-path']?.value;
         const media = tag.attributes['media-type']?.value;
-        if (!path || info.rootfiles.length) fail('score_invalid_container');
+        if (!path) fail('score_invalid_container');
         info.rootfiles.push({ path, media });
       }
+      if (ancestors.length === 2 && ancestors[1] === 'part-list' && tag.local === 'score-part') {
+        info.scoreParts++;
+      }
+      if (ancestors.length === 2 && (
+        (info.root === 'score-partwise' && ancestors[1] === 'part' && tag.local === 'measure')
+        || (info.root === 'score-timewise' && ancestors[1] === 'measure' && tag.local === 'part')
+      )) info.musicalMeasures++;
     }
+    if ((info.root === 'score-partwise' || info.root === 'score-timewise')
+      && tag.local.toLowerCase() === 'script') fail('score_invalid_xml');
     // Namespace diferente não pode forjar a hierarquia do container.
     ancestors.push(tag.uri === info.uri ? tag.local : '');
   });
@@ -100,11 +115,12 @@ function parseXml(bytes: Uint8Array, container = false): XmlInfo {
 
 function isMusicXml(info: XmlInfo): boolean {
   return (info.root === 'score-partwise' || info.root === 'score-timewise')
-    && (info.uri === '' || info.uri === MUSICXML_NS);
+    && (info.uri === '' || info.uri === MUSICXML_NS)
+    && info.scoreParts > 0 && info.musicalMeasures > 0;
 }
 
 function xmlEntry(name: string): boolean {
-  return /\.(?:xml|musicxml|mscx)$/i.test(name);
+  return /\.(?:xml|musicxml|mscx|mss)$/i.test(name);
 }
 
 /**
@@ -112,7 +128,7 @@ function xmlEntry(name: string): boolean {
  * blocos de 1 KiB. Não confiamos no tamanho declarado para alocar a saída.
  * Cabeçalhos locais e diretório precisam descrever as mesmas entradas.
  */
-function readArchive(bytes: Uint8Array): Map<string, Uint8Array> {
+function readArchive(bytes: Uint8Array, type: ScoreType): { documents: Map<string, Uint8Array>; names: Set<string> } {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let end = bytes.length - 22;
   while (end >= Math.max(0, bytes.length - 65557)
@@ -173,7 +189,8 @@ function readArchive(bytes: Uint8Array): Map<string, Uint8Array> {
       }
       if (entry.originalSize > MAX_ENTRY) fail('score_entry_too_large');
       if (entry.name === CONTAINER && entry.originalSize > MAX_CONTAINER) fail('score_container_too_large');
-      if (xmlEntry(entry.name) && entry.originalSize > MAX_XML) fail('score_xml_too_large');
+      const maxXml = type === 'mscz' && /\.mscx$/i.test(entry.name) ? MAX_ENTRY : MAX_XML;
+      if (xmlEntry(entry.name) && entry.originalSize > maxXml) fail('score_xml_too_large');
       declaredTotal += entry.originalSize;
       if (declaredTotal > MAX_EXPANDED) fail('score_expanded_too_large');
       if (entry.originalSize > Math.max(1, entry.size) * MAX_RATIO) fail('score_expansion_limit');
@@ -236,7 +253,7 @@ function readArchive(bytes: Uint8Array): Map<string, Uint8Array> {
     unzip.push(bytes.subarray(offset, offset + 1024), offset + 1024 >= bytes.length);
   }
   if (seen.size !== entries.size || completed !== entries.size) fail('score_invalid_archive');
-  return documents;
+  return { documents, names: new Set(entries.keys()) };
 }
 
 /** Sem I/O, resolução de entidades, extração em disco ou confiança na extensão. */
@@ -252,15 +269,23 @@ export function scoreStructuralReason(bytes: Uint8Array, type: ScoreType): strin
     if (!(bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 3 && bytes[3] === 4)) {
       fail('signature_mismatch');
     }
-    const documents = readArchive(bytes);
+    const { documents, names } = readArchive(bytes, type);
     const container = documents.get(CONTAINER);
     if (!container) fail('score_missing_container');
     const info = parseXml(container, true);
-    if (info.root !== 'container' || (info.uri !== '' && info.uri !== CONTAINER_NS) || info.rootfiles.length !== 1) {
+    if (info.root !== 'container' || (info.uri !== '' && info.uri !== CONTAINER_NS) || !info.rootfiles.length) {
       fail('score_invalid_container');
     }
-    const target = info.rootfiles[0];
-    if (!safePath(target.path)) fail('score_unsafe_path');
+    const paths = new Set<string>();
+    for (const rootfile of info.rootfiles) {
+      if (!safePath(rootfile.path)) fail('score_unsafe_path');
+      if (paths.has(rootfile.path)) fail('score_invalid_container');
+      if (!names.has(rootfile.path)) fail('score_missing_target');
+      paths.add(rootfile.path);
+    }
+    const targets = type === 'mscz' ? info.rootfiles.filter((f) => /\.mscx$/i.test(f.path)) : info.rootfiles;
+    if (targets.length !== 1) fail('score_invalid_container');
+    const target = targets[0];
     if (type === 'mscz') {
       if (!/\.mscx$/i.test(target.path)
         || (target.media !== undefined && !['application/x-musescore', 'application/vnd.musescore'].includes(target.media))) {
@@ -272,7 +297,7 @@ export function scoreStructuralReason(bytes: Uint8Array, type: ScoreType): strin
     if (!documents.has(target.path)) fail('score_missing_target');
     for (const [name, content] of documents) {
       if (name === CONTAINER) continue;
-      const doc = parseXml(content);
+      const doc = parseXml(content, false, type === 'mscz' && /\.mscx$/i.test(name) ? MAX_ENTRY : MAX_XML, !/\.mss$/i.test(name));
       if (name === target.path) {
         const matches = type === 'mscz'
           ? doc.root === 'museScore' && doc.uri === '' && doc.scores === 1

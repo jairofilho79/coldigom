@@ -62,7 +62,7 @@ export function headMatchesDeclared(head: Uint8Array, declared: DeclaredType): b
   if (declared === 'mscz' || declared === 'mxl') return sniffed === 'zip';
   if (declared === 'musicxml') {
     // Isso é triagem; XML completo, root e DTD são conferidos no estrutural.
-    return sniffed === 'text' && /^\s*(?:<\?xml(?:\s|$)|<!--|<!DOCTYPE\s+score-(?:partwise|timewise)(?:\s|$)|<score-(?:partwise|timewise)(?:[\s/>]|$))/
+    return sniffed === 'text' && /^\s*(?:<\?[A-Za-z_:][\w.:-]*(?:[\s?]|$)|<!--|<!DOCTYPE\s+score-(?:partwise|timewise)(?:\s|$)|<(?:[A-Za-z_][\w.-]*:)?score-(?:partwise|timewise)(?:[\s/>]|$))/
       .test(new TextDecoder().decode(head));
   }
   if (declared === 'txt' || declared === 'chordpro') return sniffed === 'text';

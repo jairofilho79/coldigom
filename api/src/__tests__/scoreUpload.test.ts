@@ -5,7 +5,7 @@ import { app } from '../index';
 
 const SECRET = '0123456789abcdef0123456789abcdef';
 const ORIGIN = 'https://web.example';
-const MUSICXML = '<score-partwise version="4.0"><part-list/></score-partwise>';
+const MUSICXML = '<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Voz</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>';
 const SCORE_TYPES = ['mscz', 'mxl', 'musicxml'] as const;
 type ScoreType = (typeof SCORE_TYPES)[number];
 type Item = { key: string; material_kind: string; type: string };
@@ -79,6 +79,46 @@ async function upload(
 const item = (type: string, material_kind = 'violin'): Item => ({ key: 'file', material_kind, type });
 
 describe('admin score upload', () => {
+  it('aceita container MuseScore com arquivos auxiliares preservando o original', async () => {
+    const paths = ['style.mss', 'score.mscx', 'thumbnail.png', 'audio.json', 'view.json'];
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8(`<container><rootfiles>${paths.map((path) => `<rootfile full-path="${path}"/>`).join('')}</rootfiles></container>`),
+      'score.mscx': strToU8('<museScore><Score/></museScore>'),
+      'style.mss': strToU8('<museScore><Style/></museScore>'),
+      'thumbnail.png': new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
+      'audio.json': strToU8('{}'),
+      'view.json': strToU8('{}'),
+    });
+    const { response, assets, db } = await upload([item('mscz')], [file(bytes, 'score.mscz')]);
+    expect(response.status).toBe(200);
+    expect(assets.put).toHaveBeenCalledOnce();
+    expect(db.batch).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    '<score-partwise/>',
+    '<score-partwise><script>garbage</script></score-partwise>',
+  ])('recusa MusicXML sem conteúdo musical antes de gravar', async (xml) => {
+    const { response, assets, db } = await upload(
+      [item('musicxml')], [file(strToU8(xml), 'invalida.musicxml')]
+    );
+    expect(response.status).toBe(400);
+    expect(assets.put).not.toHaveBeenCalled();
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
+  it('recusa MSCZ com DTD em estilo MSS antes de gravar', async () => {
+    const bytes = zipSync({
+      'META-INF/container.xml': strToU8('<container><rootfiles><rootfile full-path="score.mscx"/><rootfile full-path="style.mss"/></rootfiles></container>'),
+      'score.mscx': strToU8('<museScore><Score/></museScore>'),
+      'style.mss': strToU8('<!DOCTYPE museScore [<!ENTITY x SYSTEM "file:///etc/passwd">]><museScore>&x;</museScore>'),
+    });
+    const { response, assets, db } = await upload([item('mscz')], [file(bytes, 'score.mscz')]);
+    expect(response.status).toBe(400);
+    expect(assets.put).not.toHaveBeenCalled();
+    expect(db.batch).not.toHaveBeenCalled();
+  });
+
   it.each(SCORE_TYPES)('cadastra %s com extensão bruta, categoria instrumental/vocal e MIME canônico', async (type) => {
     const kind = type === 'musicxml' ? 'soprano' : 'violin';
     const { response, assets, db } = await upload(

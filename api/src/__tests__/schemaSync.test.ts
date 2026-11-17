@@ -172,4 +172,17 @@ describe('schema.sql acompanha as migrações', () => {
       expect(schema).toContain(c);
     }
   });
+
+  it('035: gatilhos limitam a gravação de notes no schema e na migração', () => {
+    const schema = normal(readFileSync(resolve(RAIZ, 'schema.sql'), 'utf8'));
+    const mig = normal(readFileSync(resolve(RAIZ, 'migrations', '035_praise_material_notes_guard.sql'), 'utf8'));
+    for (const trecho of [
+      'CREATE TRIGGER IF NOT EXISTS praise_materials_notes_bi BEFORE INSERT ON praise_materials',
+      'CREATE TRIGGER IF NOT EXISTS praise_materials_notes_bu BEFORE UPDATE OF notes ON praise_materials',
+      "SELECT RAISE(ABORT, 'Notas exigem outro material do mesmo tipo no mesmo louvor')",
+    ]) {
+      expect(mig, `migração sem: ${trecho}`).toContain(trecho);
+      expect(schema, `schema.sql sem: ${trecho}`).toContain(trecho);
+    }
+  });
 });
